@@ -10,19 +10,21 @@ import { getScene } from '@/lib/sand/gallery'
 import { recordClip, downloadClip, pickFormat, RecordUnsupported } from '@/lib/sand/record'
 
 /**
- * 격자 해상도 — 16:9 고정.
+ * 격자 해상도 — 2:1 고정, 72만 셀.
  *
  * 왜 뷰포트에 맞춰 동적으로 안 잡는가:
- *   공유 URL이 격자 크기(w,h)를 담는다. 격자가 뷰포트마다 다르면 16:9 모니터에서
+ *   공유 URL이 격자 크기(w,h)를 담는다. 격자가 뷰포트마다 다르면 넓은 모니터에서
  *   만든 링크가 노트북에서 안 열린다. 링크 이식성이 이 제품의 핵심 장치이므로
  *   격자는 고정하고 화면에는 레터박스로 맞춘다.
  *
- * 왜 16:9인가: 대부분의 화면 비율이라 레터박스 여백이 최소가 되고,
- *   그 비율로 표시하면 셀이 정확히 정사각형이 된다.
- *   (이전 800×500 격자를 1.88 뷰포트에 늘려서 셀이 가로로 찌그러져 있었다.)
+ * 왜 2:1인가:
+ *   캔버스는 도크 위 영역에 들어가므로 항상 '높이에 갇힌' 상태다. 즉 세로가 꽉 차면
+ *   가로에 여백이 남는다. 16:9(1.78)일 때 전형적 창에서 가로 200px가 놀았다.
+ *   2:1로 넓히면 같은 높이에서 캔버스가 더 크다. 그 비율로 표시하면 셀은 정사각형.
+ *   더 넓히면(21:9 등) 낙하 거리가 짧아져 낙사가 심심해진다 — 2:1이 균형점.
  */
-const W = 960
-const H = 540
+const W = 1200
+const H = 600
 
 const PAINTABLE = PRESETS.filter((m) => m.slug !== 'empty')
 
@@ -282,7 +284,7 @@ export default function SandCanvas() {
         <button style={S.ghost} onClick={publish} disabled={busy}>
           {busy ? 'Publishing…' : 'Publish'}
         </button>
-        <a style={{ ...S.ghost, textDecoration: 'none', lineHeight: '1.6' }} href="/gallery/">
+        <a style={{ ...S.ghost, textDecoration: 'none', lineHeight: '1.6' }} href="/gallery">
           Gallery
         </a>
         <button
@@ -320,16 +322,16 @@ const S: Record<string, React.CSSProperties> = {
     top: 0,
     left: 0,
     right: 0,
-    bottom: 76,
+    bottom: 56,
     display: 'grid',
     placeItems: 'center',
-    padding: '12px 12px 0',
+    padding: '8px 8px 0',
   },
   canvas: {
     display: 'block',
     maxWidth: '100%',
     maxHeight: '100%',
-    aspectRatio: '16 / 9',
+    aspectRatio: '2 / 1',
     touchAction: 'none',
     cursor: 'crosshair',
     borderRadius: 10,
@@ -367,12 +369,12 @@ const S: Record<string, React.CSSProperties> = {
     bottom: 0,
     left: 0,
     right: 0,
-    height: 76,
+    height: 56,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    padding: '0 16px',
+    gap: 10,
+    padding: '0 14px',
   },
   chips: { display: 'flex', gap: 9, alignItems: 'center' },
   chip: {

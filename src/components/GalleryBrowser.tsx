@@ -92,8 +92,8 @@ export default function GalleryBrowser() {
                 <img
                   src={`/api/scenes/${s.id}/thumb`}
                   alt={s.title}
-                  width={384}
-                  height={216}
+                  width={420}
+                  height={210}
                   loading="lazy"
                   style={S.thumb}
                 />
@@ -158,7 +158,7 @@ const S: Record<string, React.CSSProperties> = {
   thumb: {
     width: '100%',
     height: 'auto',
-    aspectRatio: '16 / 9',
+    aspectRatio: '2 / 1',
     borderRadius: 9,
     background: '#0d1017',
     border: '1px solid rgba(255,255,255,0.07)',

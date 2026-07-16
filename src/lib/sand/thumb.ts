@@ -14,8 +14,8 @@
 import { hexToRgb, type Material } from './materials'
 
 /** 갤러리 카드 크기. 너무 크면 D1 행이 무겁고, 너무 작으면 뭘 그렸는지 안 보인다. */
-export const THUMB_W = 384
-export const THUMB_H = 216
+export const THUMB_W = 420
+export const THUMB_H = 210
 
 /**
  * 셀 격자 → PNG base64 (data: 접두사 없음).
