@@ -1,0 +1,25 @@
+{
+  "name": "sandlab",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3120",
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "deploy": "next build && wrangler deploy"
+  },
+  "dependencies": {
+    "next": "^15.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@webgpu/types": "^0.1.52",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.110.0"
+  }
+}
