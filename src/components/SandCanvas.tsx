@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { SandEngine, WebGPUUnsupported } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
-import { buildShareUrl, readShareUrl } from '@/lib/sand/urlState'
+import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
+import { uploadScene } from '@/lib/sand/gallery'
+import { makeThumb, isBlank } from '@/lib/sand/thumb'
+import { getScene } from '@/lib/sand/gallery'
+import { recordClip, downloadClip, pickFormat, RecordUnsupported } from '@/lib/sand/record'
 
 /**
  * 격자 해상도 — 16:9 고정.
@@ -31,6 +35,8 @@ export default function SandCanvas() {
   const [radius, setRadius] = useState(6)
   const [toast, setToast] = useState<string | null>(null)
   const [fps, setFps] = useState(0)
+  const [rec, setRec] = useState<number | null>(null) // null=대기, 0..1=녹화중
+  const [busy, setBusy] = useState(false)
   const idx = useRef(buildIndex(PRESETS))
 
   useEffect(() => {
@@ -43,7 +49,20 @@ export default function SandCanvas() {
       .init()
       .then(async () => {
         if (disposed) return
-        const restored = await readShareUrl()
+        // #s=<id> = 갤러리 장면. #g=<blob> = URL 내장 장면.
+        // 갤러리 경로가 있어야 URL 예산(6000자)을 넘는 복잡한 장면도 공유된다.
+        const sm = location.hash.match(/[#&]s=([A-Za-z0-9_-]{6,16})/)
+        let restored = null
+        if (sm) {
+          try {
+            const sc = await getScene(sm[1])
+            restored = await decodeScene(sc.data)
+          } catch {
+            /* 삭제됐거나 잘못된 id — 빈 화면으로 시작한다 */
+          }
+        } else {
+          restored = await readShareUrl()
+        }
         if (!disposed && restored && restored.w === W && restored.h === H) eng.upload(restored.cells)
         if (disposed) return
         engineRef.current = eng
@@ -109,14 +128,56 @@ export default function SandCanvas() {
     setTimeout(() => setToast(null), 2600)
   }
 
+  const record = useCallback(async () => {
+    const canvas = canvasRef.current
+    if (!canvas || rec !== null) return
+    try {
+      setRec(0)
+      const clip = await recordClip({ canvas, durationMs: 3000, onProgress: setRec })
+      downloadClip(clip, `sandlab-${Date.now()}`)
+      flash(`${clip.format.label} saved · ${(clip.bytes / 1e6).toFixed(1)} MB — post it, don't link it.`)
+    } catch (e) {
+      flash(e instanceof RecordUnsupported ? e.message : 'Recording failed.')
+    } finally {
+      setRec(null)
+    }
+  }, [rec])
+
+  const publish = useCallback(async () => {
+    const eng = engineRef.current
+    if (!eng || busy) return
+    setBusy(true)
+    try {
+      const cells = await eng.readback()
+      if (isBlank(cells, W * H)) return flash('Draw something first.')
+      const title = window.prompt('Title for the gallery?', '')
+      if (title === null) return
+      const [data, thumb] = await Promise.all([
+        encodeScene(cells, W, H),
+        makeThumb(cells, W, H, PRESETS),
+      ])
+      const { id } = await uploadScene({ title, data, thumb, w: W, h: H })
+      const url = `${location.origin}/#s=${id}`
+      history.replaceState(null, '', url)
+      await navigator.clipboard.writeText(url).catch(() => {})
+      flash('Published to the gallery — link copied.')
+    } catch (e) {
+      flash(e instanceof Error ? e.message : 'Publish failed.')
+    } finally {
+      setBusy(false)
+    }
+  }, [busy])
+
   const share = useCallback(async () => {
     const eng = engineRef.current
     if (!eng) return
     const cells = await eng.readback()
     const res = await buildShareUrl(cells, W, H)
     if (!res.ok) {
-      // 정직하게: 왜 안 되는지 숫자로 알려준다. "다시 시도"는 조언이 아니다.
-      return flash(`Scene is ${(res.size / res.budget).toFixed(1)}x too big for a link. Erase some and retry.`)
+      // 막다른 길로 두지 않는다 — 갤러리는 크기 제한이 없으므로 그쪽으로 보낸다.
+      return flash(
+        `Too detailed for a link (${(res.size / res.budget).toFixed(1)}x over). Use Publish instead.`,
+      )
     }
     history.replaceState(null, '', res.url)
     await navigator.clipboard.writeText(res.url).catch(() => {})
@@ -215,11 +276,28 @@ export default function SandCanvas() {
         <button style={S.ghost} onClick={() => engineRef.current?.clear()}>
           Clear
         </button>
-        <button style={S.primary} onClick={share}>
-          Share link
+        <button style={S.ghost} onClick={share}>
+          Copy link
+        </button>
+        <button style={S.ghost} onClick={publish} disabled={busy}>
+          {busy ? 'Publishing…' : 'Publish'}
+        </button>
+        <a style={{ ...S.ghost, textDecoration: 'none', lineHeight: '1.6' }} href="/gallery/">
+          Gallery
+        </a>
+        <button
+          style={{ ...S.primary, opacity: rec !== null ? 0.75 : 1, minWidth: 104 }}
+          onClick={record}
+          disabled={rec !== null}
+          title="Record 3 seconds and download — post the clip, not the link"
+        >
+          {rec !== null ? `Recording ${(3 - rec * 3).toFixed(1)}s` : 'Record 3s clip'}
         </button>
       </div>
 
+      {rec !== null && (
+        <div style={{ ...S.recRing, clipPath: `inset(0 ${(1 - rec) * 100}% 0 0)` }} />
+      )}
       <div style={S.hint}>Right-click to erase</div>
       {toast && <div style={S.toast}>{toast}</div>}
     </div>
@@ -345,6 +423,18 @@ const S: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     boxShadow: '0 3px 16px rgba(59,109,255,0.4)',
     whiteSpace: 'nowrap',
+  },
+  // 녹화 진행 바 — 화면 최상단. 지금 뭘 담고 있는지 보이지 않으면 사람은 안 누른다.
+  recRing: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    background: 'linear-gradient(90deg, #ff3b6d, #ff8f3b)',
+    boxShadow: '0 0 14px rgba(255,59,109,0.8)',
+    pointerEvents: 'none',
+    transition: 'clip-path 80ms linear',
   },
   hint: {
     position: 'absolute',

@@ -2,9 +2,18 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "sandlab",
   "compatibility_date": "2026-07-16",
+  "main": "worker/index.ts",
   "assets": {
     "directory": "./out",
+    "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "sandlab-gallery",
+      "database_id": "75e9cf5f-82b9-4784-9a5b-cec215df3909"
+    }
+  ]
 }

@@ -132,6 +132,26 @@ function rleDecode(b: Uint8Array): { cells: Uint32Array<ArrayBuffer>; w: number;
   return { cells, w, h }
 }
 
+/** 갤러리 업로드용 — URL 예산과 무관하게 인코딩만. */
+export async function encodeScene(
+  cells: Uint32Array<ArrayBuffer>,
+  w: number,
+  h: number,
+): Promise<string> {
+  return toB64Url(await deflate(rleEncode(cells, w, h)))
+}
+
+/** 갤러리에서 받은 장면 복원. */
+export async function decodeScene(
+  enc: string,
+): Promise<{ cells: Uint32Array<ArrayBuffer>; w: number; h: number } | null> {
+  try {
+    return rleDecode(await inflate(fromB64Url(enc)))
+  } catch {
+    return null
+  }
+}
+
 export type ShareResult =
   | { ok: true; url: string }
   | { ok: false; reason: 'too-large'; size: number; budget: number }
