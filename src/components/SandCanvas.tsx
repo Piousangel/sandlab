@@ -41,6 +41,22 @@ export default function SandCanvas() {
   const [busy, setBusy] = useState(false)
   const idx = useRef(buildIndex(PRESETS))
 
+  // 도크는 좁은 화면에서 여러 줄로 접힌다(모바일). 캔버스 영역(stage)이 도크를 가리거나
+  // 도크에 가리지 않도록, 도크의 실제 높이를 재서 stage.bottom을 거기에 맞춘다.
+  // 인라인 스타일이라 미디어쿼리를 못 써서 측정 기반으로 간다 — 데스크톱(한 줄)도 그대로 동작.
+  const dockRef = useRef<HTMLDivElement>(null)
+  const [dockH, setDockH] = useState(56)
+  useEffect(() => {
+    const el = dockRef.current
+    if (!el) return
+    const measure = () => setDockH(el.offsetHeight)
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -205,7 +221,7 @@ export default function SandCanvas() {
 
   return (
     <div style={S.root}>
-      <div style={S.stage}>
+      <div style={{ ...S.stage, bottom: dockH }}>
         <canvas
           ref={canvasRef}
           width={W}
@@ -230,7 +246,7 @@ export default function SandCanvas() {
         </div>
       )}
 
-      <div style={S.dock}>
+      <div ref={dockRef} style={S.dock}>
         <div style={S.chips}>
           {PAINTABLE.map((m) => {
             const on = sel === m.slug
@@ -369,14 +385,26 @@ const S: Record<string, React.CSSProperties> = {
     bottom: 0,
     left: 0,
     right: 0,
-    height: 56,
+    minHeight: 56,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    padding: '0 14px',
+    // 좁은 화면에서 여러 줄로 접힌다 — 접힌 높이는 ResizeObserver가 재서 stage가 비켜준다.
+    // 데스크톱에선 한 줄에 다 들어가 wrap이 일어나지 않으므로 외형 변화 없다.
+    flexWrap: 'wrap',
+    rowGap: 8,
+    columnGap: 10,
+    padding: '8px 14px',
   },
-  chips: { display: 'flex', gap: 9, alignItems: 'center' },
+  // 칩 컨테이너도 접혀야 한다 — 원소 18개는 그 자체로 폰 폭을 넘는다.
+  chips: {
+    display: 'flex',
+    gap: 9,
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    rowGap: 8,
+  },
   chip: {
     width: 19,
     height: 19,
