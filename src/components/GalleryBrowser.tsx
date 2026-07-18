@@ -130,13 +130,25 @@ export default function GalleryBrowser() {
         </div>
       )}
 
+      {/* 카드 호버 신호 — 인라인 스타일은 :hover를 못 하므로 여기서만 최소 CSS를 주입한다.
+          썸네일=본체이고 관람→열기→리믹스→재게시가 이 장르의 생존 루프라, 리믹스 초대를 표면화한다. */}
+      <style>{`
+        .sl-card { transition: transform 130ms ease; }
+        .sl-card:hover { transform: translateY(-3px); }
+        .sl-card .sl-thumb-img { transition: border-color 130ms ease, box-shadow 130ms ease; }
+        .sl-card:hover .sl-thumb-img { border-color: rgba(255,255,255,0.22); box-shadow: 0 12px 30px rgba(0,0,0,0.55); }
+        .sl-remix { opacity: 0; transform: translateY(4px); transition: opacity 130ms ease, transform 130ms ease; }
+        .sl-card:hover .sl-remix { opacity: 1; transform: translateY(0); }
+        @media (hover: none) { .sl-remix { opacity: 1; transform: none; } }
+      `}</style>
+
       <div style={S.grid}>
         {scenes.map((s) => {
           const v = voted[s.id] ?? s.votes
           const did = hasVoted(s.id)
           return (
-            <div key={s.id} style={S.card}>
-              <a href={`/#s=${s.id}`} style={S.thumbLink} title="Open in Sandlab">
+            <div key={s.id} className="sl-card" style={S.card}>
+              <a href={`/#s=${s.id}`} style={S.thumbLink} title="Open & remix in Sandlab">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`/api/scenes/${s.id}/thumb`}
@@ -144,8 +156,12 @@ export default function GalleryBrowser() {
                   width={420}
                   height={210}
                   loading="lazy"
+                  className="sl-thumb-img"
                   style={S.thumb}
                 />
+                <span className="sl-remix" style={S.remixBadge}>
+                  ↻ Remix
+                </span>
               </a>
               <div style={S.meta}>
                 <span style={S.title} title={s.title}>
@@ -155,9 +171,9 @@ export default function GalleryBrowser() {
                   onClick={() => vote(s.id)}
                   disabled={did}
                   style={{ ...S.vote, ...(did ? S.voteOn : null) }}
-                  title={did ? 'Voted' : 'Vote'}
+                  title={did ? 'Voted' : 'Give this an upvote'}
                 >
-                  ▲ {v}
+                  ▲ <strong style={{ fontWeight: 700 }}>{v}</strong>
                 </button>
               </div>
               <span style={S.age}>{ago(s.createdAt)}</span>
@@ -203,7 +219,22 @@ const S: Record<string, React.CSSProperties> = {
   },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(258px, 1fr))', gap: 16 },
   card: { display: 'flex', flexDirection: 'column', gap: 6 },
-  thumbLink: { display: 'block', lineHeight: 0 },
+  thumbLink: { display: 'block', lineHeight: 0, position: 'relative' },
+  remixBadge: {
+    position: 'absolute',
+    right: 8,
+    bottom: 8,
+    background: 'rgba(11,14,19,0.82)',
+    color: '#eef1f6',
+    border: '1px solid rgba(255,255,255,0.18)',
+    borderRadius: 7,
+    padding: '4px 9px',
+    fontSize: 11.5,
+    fontWeight: 600,
+    lineHeight: 1.2,
+    backdropFilter: 'blur(6px)',
+    pointerEvents: 'none',
+  },
   thumb: {
     width: '100%',
     height: 'auto',
