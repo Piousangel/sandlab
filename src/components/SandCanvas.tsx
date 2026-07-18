@@ -6,7 +6,8 @@ import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
 import { uploadScene, getScene, listScenes, type SceneMeta } from '@/lib/sand/gallery'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
-import { recordClip, downloadClip, RecordUnsupported } from '@/lib/sand/record'
+// record.ts는 mediabunny(~대용량 코덱)를 정적 import한다. 방문자 대부분이 안 누르는 녹화 기능이므로
+// 랜딩 초기 JS에서 분리한다 — record() 호출 시점에 동적 import(아래).
 
 /**
  * 격자 해상도 — 2:1 고정, 72만 셀.
@@ -208,11 +209,13 @@ export default function SandCanvas() {
     if (!canvas || rec !== null) return
     try {
       setRec(0)
+      const { recordClip, downloadClip } = await import('@/lib/sand/record')
       const clip = await recordClip({ canvas, durationMs: 10000, onProgress: setRec })
       downloadClip(clip, `sandlab-${Date.now()}`)
       flash(`${clip.format.label} saved · ${(clip.bytes / 1e6).toFixed(1)} MB — post it, don't link it.`)
     } catch (e) {
-      flash(e instanceof RecordUnsupported ? e.message : 'Recording failed.')
+      // RecordUnsupported는 동적 모듈의 클래스라 instanceof 대신 name으로 식별한다.
+      flash(e instanceof Error && e.name === 'RecordUnsupported' ? e.message : 'Recording failed.')
     } finally {
       setRec(null)
     }
@@ -352,26 +355,28 @@ export default function SandCanvas() {
         <div style={S.chips}>
           {PAINTABLE.map((m) => {
             const on = sel === m.slug
-            return (
-              <button
-                key={m.slug}
-                onClick={() => {
-                  setSel(m.slug)
-                  setErasing(false) // 재료를 고르면 지우개 모드 해제
-                }}
-                title={m.name}
-                aria-label={m.name}
-                style={{
-                  ...S.chip,
-                  background: m.color,
-                  transform: on ? 'scale(1.28)' : 'scale(1)',
-                  boxShadow: on
-                    ? `0 0 0 2px #0b0e13, 0 0 0 3.5px #fff, 0 0 14px ${m.color}`
-                    : m.emissive > 0.5
-                      ? `0 0 10px ${m.color}88`
-                      : 'inset 0 0 0 1px #ffffff22',
-                }}
-              />
+            const dot = {
+              ...S.chip,
+              background: m.color,
+              transform: on ? 'scale(1.28)' : 'scale(1)',
+              boxShadow: on
+                ? `0 0 0 2px #0b0e13, 0 0 0 3.5px #fff, 0 0 14px ${m.color}`
+                : m.emissive > 0.5
+                  ? `0 0 10px ${m.color}88`
+                  : 'inset 0 0 0 1px #ffffff22',
+            }
+            const pick = () => {
+              setSel(m.slug)
+              setErasing(false) // 재료를 고르면 지우개 모드 해제
+            }
+            // 터치: 시각 점은 19px 유지하되 탭 영역만 40px로 키운다(오탭 방지, WCAG 근접).
+            // 마우스: 그대로 19px 버튼(정밀 포인터라 히트영역 확장 불필요).
+            return coarse ? (
+              <button key={m.slug} onClick={pick} title={m.name} aria-label={m.name} style={S.chipHit}>
+                <span style={dot} />
+              </button>
+            ) : (
+              <button key={m.slug} onClick={pick} title={m.name} aria-label={m.name} style={dot} />
             )
           })}
         </div>
@@ -554,6 +559,7 @@ const S: Record<string, React.CSSProperties> = {
     rowGap: 8,
   },
   chip: {
+    display: 'block',
     width: 19,
     height: 19,
     borderRadius: '50%',
@@ -561,6 +567,17 @@ const S: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     padding: 0,
     transition: 'transform 110ms cubic-bezier(.2,.9,.3,1.2), box-shadow 110ms',
+  },
+  // 터치 히트영역 래퍼 — 40px 탭 타깃, 안엔 19px 점만 보인다. 투명.
+  chipHit: {
+    width: 40,
+    height: 40,
+    padding: 0,
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    display: 'grid',
+    placeItems: 'center',
   },
   sep: { width: 1, height: 22, background: 'rgba(255,255,255,0.10)' },
   selName: {

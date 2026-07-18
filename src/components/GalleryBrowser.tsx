@@ -74,10 +74,26 @@ export default function GalleryBrowser() {
 
       {!loading && !err && scenes.length === 0 && (
         <div style={S.empty}>
-          <p style={{ margin: '0 0 6px', fontSize: 16 }}>Nothing here yet.</p>
-          <p style={{ margin: 0, opacity: 0.55, fontSize: 13.5 }}>
-            Make something and hit <strong>Publish</strong>. Yours will be the first.
-          </p>
+          {sort === 'hot' ? (
+            // hot은 최근 7일만 본다. 이 창이 비었다고 갤러리가 죽은 게 아니다 —
+            // 옛 씬은 Newest에 있으므로 그쪽 탈출구를 준다.
+            <>
+              <p style={{ margin: '0 0 6px', fontSize: 16 }}>A quiet week.</p>
+              <p style={{ margin: '0 0 14px', opacity: 0.55, fontSize: 13.5 }}>
+                Nothing published in the last 7 days — but older scenes are still here.
+              </p>
+              <button onClick={() => setSort('new')} style={S.seeNewest}>
+                See all newest →
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{ margin: '0 0 6px', fontSize: 16 }}>Nothing here yet.</p>
+              <p style={{ margin: 0, opacity: 0.55, fontSize: 13.5 }}>
+                Make something and hit <strong>Publish</strong>. Yours will be the first.
+              </p>
+            </>
+          )}
         </div>
       )}
 
@@ -186,4 +202,15 @@ const S: Record<string, React.CSSProperties> = {
   },
   voteOn: { background: '#3b6dff', borderColor: '#3b6dff', cursor: 'default' },
   age: { fontSize: 11, opacity: 0.3 },
+  seeNewest: {
+    background: '#3b6dff',
+    color: '#fff',
+    border: '1px solid #3b6dff',
+    borderRadius: 8,
+    padding: '8px 14px',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    boxShadow: '0 3px 16px rgba(59,109,255,0.35)',
+  },
 }
