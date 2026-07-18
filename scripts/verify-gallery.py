@@ -18,6 +18,18 @@ def call(path, data=None, method=None):
         try: return e.code, json.loads(body)
         except Exception: return e.code, body
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *a, **k): return None
+
+def get_raw(path, follow=True):
+    """JSON이 아닌 원문 응답(HTML 등). follow=False면 리다이렉트를 안 따라가 302를 그대로 본다."""
+    opener = urllib.request.build_opener(*([] if follow else [_NoRedirect]))
+    try:
+        with opener.open(B+path, timeout=10) as r:
+            return r.status, dict(r.headers), r.read().decode('utf-8','replace')
+    except urllib.error.HTTPError as e:
+        return e.code, dict(e.headers), e.read().decode('utf-8','replace')
+
 b64url = lambda b: base64.urlsafe_b64encode(b).decode().rstrip('=')
 scene = bytes([1, 0xC0,0x07, 0x9C,0x04, 7, 0x80,0x80,0x1F])   # v=1, w=960, h=540, RLE
 DATA  = b64url(zlib.compress(scene, 9)[2:-4])
@@ -61,6 +73,34 @@ except Exception as e:
 print("\n=== 단건 조회 ===")
 s, r = call(f"/api/scenes/{sid}")
 check(s == 200 and r.get('data') == DATA, "장면 데이터 무손실 왕복")
+
+print("\n=== ?meta=1 (data 제외, 표수 최신) ===")
+s, r = call(f"/api/scenes/{sid}?meta=1")
+check(s == 200 and 'data' not in r, "meta=1이면 무거운 data 제외")
+check(isinstance(r, dict) and r.get('votes') is not None, "meta에도 votes 포함")
+_, hd, _ = get_raw(f"/api/scenes/{sid}?meta=1")
+check('no-store' in (hd.get('Cache-Control','')), "meta는 no-store(표수가 최신이어야 함)")
+
+print("\n=== 씬 공유 OG (/s/:id) ===")
+st, hd, html = get_raw(f"/s/{sid}")
+check(st == 200, f"/s/:id 200 → {st}")
+check(f"/api/scenes/{sid}/thumb" in html, "og:image가 씬 썸네일을 가리킴")
+check('summary_large_image' in html, "twitter 대형 카드")
+check(f"#s={sid}" in html and 'location.replace' in html, "브라우저는 #s=id로 리다이렉트")
+st, _, _ = get_raw("/s/ZZZZZZZZ", follow=False)
+check(st == 302, f"형식 맞지만 없는 id → 302 홈 (got {st})")
+st, _, _ = get_raw("/s/bad!!id", follow=False)
+check(st == 302, f"잘못된 형식 id → 302 홈 (got {st})")
+
+print("\n=== 제목 HTML 이스케이프 (OG 인젝션 방지) ===")
+evil = '<img src=x onerror=alert(1)>'
+s, r = call("/api/scenes", {"title":evil,"data":DATA,"thumb":THUMB,"w":960,"h":540})
+if s == 200:
+    _, _, html = get_raw(f"/s/{r['id']}")
+    check('<img src=x onerror' not in html, "악성 제목이 OG에 원문 그대로 안 들어감")
+    check('&lt;img' in html, "제목이 HTML 이스케이프됨(&lt;)")
+else:
+    check(False, f"이스케이프 테스트 업로드 실패({s}) — 레이트리밋일 수 있음")
 
 print("\n=== 투표 ===")
 s, r = call(f"/api/scenes/{sid}/vote", method="POST"); check(s == 200 and r.get('votes') == 1, f"첫 투표 → {r}")
