@@ -70,8 +70,10 @@ function readVarint(b: Uint8Array, p: { i: number }): number {
 async function deflate(b: Uint8Array): Promise<Uint8Array> {
   const cs = new CompressionStream('deflate-raw')
   const w = cs.writable.getWriter()
-  w.write(b as unknown as BufferSource)
-  w.close()
+  // write/close 프라미스를 붙잡지 않으면 불량 입력 시 unhandled rejection이 된다.
+  // 실제 오류는 readable 쪽(arrayBuffer)에서 표면화되므로 여기선 삼킨다.
+  w.write(b as unknown as BufferSource).catch(() => {})
+  w.close().catch(() => {})
   const buf = await new Response(cs.readable).arrayBuffer()
   return new Uint8Array(buf)
 }
@@ -79,8 +81,9 @@ async function deflate(b: Uint8Array): Promise<Uint8Array> {
 async function inflate(b: Uint8Array): Promise<Uint8Array> {
   const ds = new DecompressionStream('deflate-raw')
   const w = ds.writable.getWriter()
-  w.write(b as unknown as BufferSource)
-  w.close()
+  // 깨진 공유 링크를 열면 여기서 reject된다 — 붙잡지 않으면 콘솔에 unhandled rejection이 찍힌다.
+  w.write(b as unknown as BufferSource).catch(() => {})
+  w.close().catch(() => {})
   const buf = await new Response(ds.readable).arrayBuffer()
   return new Uint8Array(buf)
 }
