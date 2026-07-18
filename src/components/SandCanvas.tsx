@@ -178,9 +178,12 @@ export default function SandCanvas() {
     if (eng) eng.brush.mat = 0xffffffff
   }
 
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const flash = (m: string) => {
+    // 이전 타이머를 지운다 — 안 그러면 2.6초 내 겹친 토스트를 stale 타이머가 조기에 지운다.
+    if (toastTimer.current) clearTimeout(toastTimer.current)
     setToast(m)
-    setTimeout(() => setToast(null), 2600)
+    toastTimer.current = setTimeout(() => setToast(null), 2600)
   }
 
   // 공유 패널 버튼 핸들러 — 사용자의 새 클릭/탭(fresh activation)으로 구동되므로

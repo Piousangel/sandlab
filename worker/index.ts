@@ -127,6 +127,13 @@ export default {
     if (voteM && request.method === 'POST') {
       const id = voteM[1]
       if (!isValidId(id)) return err('bad id')
+      // 씬이 실재하는지 '먼저' 확인한다. 안 하면 형식만 맞는 가짜 id로 votes 테이블에
+      // orphan row를 무제한 삽입할 수 있다(레이트리밋 없는 저비용 D1 스토리지 남용).
+      const scene = await env.DB.prepare('SELECT votes FROM scenes WHERE id=?')
+        .bind(id)
+        .first<{ votes: number }>()
+      if (!scene) return err('not found', 404)
+
       const hash = await ipHash(request)
       // IP당 장면당 1표. localStorage만으론 시크릿 창 한 번에 뚫린다.
       const dup = await env.DB.prepare('SELECT 1 FROM votes WHERE scene=? AND ip=?')
@@ -134,13 +141,17 @@ export default {
         .first()
       if (dup) return err('already voted', 409)
 
-      await env.DB.batch([
-        env.DB.prepare('INSERT INTO votes (scene, ip, created_at) VALUES (?,?,?)').bind(id, hash, Date.now()),
-        env.DB.prepare('UPDATE scenes SET votes = votes + 1 WHERE id=?').bind(id),
-      ])
+      try {
+        await env.DB.batch([
+          env.DB.prepare('INSERT INTO votes (scene, ip, created_at) VALUES (?,?,?)').bind(id, hash, Date.now()),
+          env.DB.prepare('UPDATE scenes SET votes = votes + 1 WHERE id=?').bind(id),
+        ])
+      } catch {
+        // dup 체크 통과 후 동시 요청이 먼저 INSERT하면 PK(scene,ip) 위반 → 500 대신 409로 매핑.
+        return err('already voted', 409)
+      }
       const row = await env.DB.prepare('SELECT votes FROM scenes WHERE id=?').bind(id).first<{ votes: number }>()
-      if (!row) return err('not found', 404)
-      return json({ votes: row.votes })
+      return json({ votes: row?.votes ?? scene.votes + 1 })
     }
 
     // ── 단건 조회 ──
@@ -191,8 +202,14 @@ export default {
       const hash = await ipHash(request)
       if (await tooManyUploads(env, hash)) return err('too many uploads, try later', 429)
 
-      // 썸네일 base64 → 바이트
-      const bin = atob(thumb)
+      // 썸네일 base64 → 바이트. 정규식이 문자 집합만 보므로(길이·패딩 위치는 아님)
+      // atob가 던질 수 있다 — try/catch로 감싸 500 대신 400을 준다.
+      let bin: string
+      try {
+        bin = atob(thumb)
+      } catch {
+        return err('bad thumb')
+      }
       const bytes = new Uint8Array(bin.length)
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
 

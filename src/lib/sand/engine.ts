@@ -54,6 +54,9 @@ export class SandEngine {
   private tick = 0
   private raf = 0
   private running = false
+  // init()은 await 지점(requestAdapter/requestDevice)에서 언마운트될 수 있다. destroy()가 그때
+  // 이 플래그를 세우면 init이 이미 만든 것을 정리하고 조기 반환해 device 누수를 막는다.
+  private disposed = false
 
   /** 성능 관측 — 실제 FPS. 해상도 판단 근거가 필요하다. */
   fps = 0
@@ -82,7 +85,13 @@ export class SandEngine {
     }
     const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' })
     if (!adapter) throw new WebGPUUnsupported('No GPU adapter available.')
+    if (this.disposed) return // 언마운트됨 — device조차 만들지 않는다
     this.device = await adapter.requestDevice()
+    if (this.disposed) {
+      // requestDevice await 도중 언마운트됨 — 방금 만든 device만 정리하고 나머지 생성을 건너뛴다.
+      this.device.destroy()
+      return
+    }
 
     const ctx = this.canvas.getContext('webgpu')
     if (!ctx) throw new WebGPUUnsupported('Could not create a WebGPU canvas context.')
@@ -333,6 +342,7 @@ export class SandEngine {
   }
 
   destroy() {
+    this.disposed = true // init이 아직 await 중이면 이 플래그로 조기 반환·정리하게 한다
     this.stop()
     this.cells.forEach((b) => b.destroy())
     this.lightA?.destroy()
@@ -340,5 +350,8 @@ export class SandEngine {
     this.params?.destroy()
     this.propsBuf?.destroy()
     this.rxBuf?.destroy()
+    // device를 해제하면 파이프라인/바인드그룹/셰이더모듈 등 종속 리소스가 전부 회수된다.
+    // (개별 destroy API가 없는 것들이라 device 파괴에 의존한다.)
+    this.device?.destroy()
   }
 }

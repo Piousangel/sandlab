@@ -88,39 +88,51 @@ export async function recordClip(o: RecordOpts): Promise<Clip> {
   }
 
   // ── 1) 캡처 (화면 그대로, 블룸 포함) ──
+  // captureStream 트랙은 어떤 경로로 나가든 반드시 정리해야 한다(누수 방지) → 전체를 try/finally로.
   const stream = o.canvas.captureStream(fps)
-  const rec = new MediaRecorder(stream, {
-    mimeType: mime,
-    videoBitsPerSecond: 12_000_000, // 낙사는 고주파 디테일이라 비트레이트를 아끼면 뭉갠다
-  })
-
-  const chunks: Blob[] = []
-  rec.ondataavailable = (e) => {
-    if (e.data.size > 0) chunks.push(e.data)
-  }
-  const recStopped = new Promise<void>((resolve, reject) => {
-    rec.onstop = () => resolve()
-    rec.onerror = () => reject(new Error('Recording failed.'))
-  })
-
-  const startedAt = performance.now()
-  rec.start()
-
   let raf = 0
-  const tick = () => {
-    const t = Math.min(1, (performance.now() - startedAt) / durationMs)
-    o.onProgress?.(t)
-    if (t < 1) raf = requestAnimationFrame(tick)
+  let raw: Blob
+  try {
+    const rec = new MediaRecorder(stream, {
+      mimeType: mime,
+      videoBitsPerSecond: 12_000_000, // 낙사는 고주파 디테일이라 비트레이트를 아끼면 뭉갠다
+    })
+
+    const chunks: Blob[] = []
+    rec.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data)
+    }
+    // reject 대신 항상 resolve하고 에러는 플래그로 본다 — await 전에 에러가 나도 unhandled rejection이 없다.
+    let recError = false
+    const recStopped = new Promise<void>((resolve) => {
+      rec.onstop = () => resolve()
+      rec.onerror = () => {
+        recError = true
+        resolve()
+      }
+    })
+
+    const startedAt = performance.now()
+    rec.start()
+
+    const tick = () => {
+      const t = Math.min(1, (performance.now() - startedAt) / durationMs)
+      o.onProgress?.(t)
+      if (t < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+
+    await sleep(durationMs)
+    // 이미 에러/정지 상태면 stop()이 InvalidStateError를 던진다 — 상태를 보고 부른다.
+    if (rec.state !== 'inactive') rec.stop()
+    await recStopped
+    if (recError) throw new Error('Recording failed.')
+
+    raw = new Blob(chunks, { type: mime })
+  } finally {
+    cancelAnimationFrame(raf)
+    stream.getTracks().forEach((t) => t.stop())
   }
-  raf = requestAnimationFrame(tick)
-
-  await sleep(durationMs)
-  cancelAnimationFrame(raf)
-  rec.stop()
-  stream.getTracks().forEach((t) => t.stop())
-  await recStopped
-
-  const raw = new Blob(chunks, { type: mime })
   if (raw.size === 0) throw new Error('Recording produced no data.')
 
   // ── 2) 표준 mp4로 리먹스 (QuickTime 호환) ──

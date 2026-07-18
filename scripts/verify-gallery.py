@@ -49,7 +49,9 @@ sid = r.get('id')
 print("\n=== 잘못된 입력 거부 ===")
 check(call("/api/scenes", {"title":"x","data":"!!!","thumb":THUMB,"w":960,"h":540})[0] == 400, "잘못된 data 거부")
 check(call("/api/scenes", {"title":"x","data":DATA,"thumb":THUMB,"w":99999,"h":540})[0] == 400, "잘못된 크기 거부")
-check(call("/api/scenes", {"title":"x","data":DATA,"thumb":"!!!","w":960,"h":540})[0] == 400, "잘못된 thumb 거부")
+check(call("/api/scenes", {"title":"x","data":DATA,"thumb":"!!!","w":960,"h":540})[0] == 400, "잘못된 thumb 거부(charset)")
+# charset은 통과하지만 atob가 던지는 thumb("A": 길이 mod4 아님) → 500 아닌 400이어야 한다
+check(call("/api/scenes", {"title":"x","data":DATA,"thumb":"A","w":960,"h":540})[0] == 400, "atob 실패 thumb → 400(500 아님)")
 
 print("\n=== 목록 ===")
 s, r = call("/api/scenes?sort=hot")
@@ -109,6 +111,8 @@ s, r = call(f"/api/scenes/{sid}/vote", method="POST"); check(s == 409, "같은 I
 print("\n=== 없는 id ===")
 check(call("/api/scenes/nonexistent99")[0] == 404, "없는 장면 404")
 check(call("/api/scenes/!!!")[0] in (400, 404), "잘못된 id 형식 거부")
+# 형식은 맞지만 없는 씬에 투표 → 404, orphan 투표 row를 만들지 않아야 함
+check(call("/api/scenes/zzzzzz/vote", method="POST")[0] == 404, "없는 씬 투표 거부(404, orphan 방지)")
 
 print("\n=== 레이트리밋 (시간당 12건) ===")
 codes = [call("/api/scenes", {"title":f"s{i}","data":DATA,"thumb":THUMB,"w":960,"h":540})[0] for i in range(14)]
