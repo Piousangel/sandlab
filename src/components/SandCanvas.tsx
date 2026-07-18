@@ -4,9 +4,8 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { SandEngine, WebGPUUnsupported } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
-import { uploadScene } from '@/lib/sand/gallery'
+import { uploadScene, getScene, listScenes, type SceneMeta } from '@/lib/sand/gallery'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
-import { getScene } from '@/lib/sand/gallery'
 import { recordClip, downloadClip, RecordUnsupported } from '@/lib/sand/record'
 
 /**
@@ -43,6 +42,9 @@ export default function SandCanvas() {
   const [hasDrawn, setHasDrawn] = useState(false)
   // 지우개 모드. 데스크톱은 우클릭으로도 지우지만 터치엔 우클릭이 없어 이 토글이 유일한 지우기 수단이다.
   const [erasing, setErasing] = useState(false)
+  // WebGPU 미지원 방문자(클립을 클릭하는 인앱 웹뷰 등)를 텍스트 벽에서 버리지 않는다 —
+  // 갤러리는 순수 <img> PNG라 WebGPU 없이 100% 보인다. 최근 씬 썸네일을 관람 탈출구로 보여준다.
+  const [errScenes, setErrScenes] = useState<SceneMeta[]>([])
   // 터치(coarse pointer)에선 우클릭이 없다 — 힌트/안내 문구를 포인터 타입에 맞춘다.
   const [coarse, setCoarse] = useState(false)
   const idx = useRef(buildIndex(PRESETS))
@@ -55,6 +57,14 @@ export default function SandCanvas() {
     mq.addEventListener('change', on)
     return () => mq.removeEventListener('change', on)
   }, [])
+
+  // WebGPU가 없을 때만 최근 씬을 불러온다 — 관람 모드용.
+  useEffect(() => {
+    if (!err) return
+    listScenes('new')
+      .then((r) => setErrScenes((r.scenes ?? []).slice(0, 6)))
+      .catch(() => {})
+  }, [err])
 
   // 도크는 좁은 화면에서 여러 줄로 접힌다(모바일). 캔버스 영역(stage)이 도크를 가리거나
   // 도크에 가리지 않도록, 도크의 실제 높이를 재서 stage.bottom을 거기에 맞춘다.
@@ -165,6 +175,29 @@ export default function SandCanvas() {
     setTimeout(() => setToast(null), 2600)
   }
 
+  // 링크를 내보낸다 — 폰에선 시스템 공유 시트(탭 한 번에 메시지/스토리/디스코드로),
+  // 데스크톱·미지원에선 클립보드 폴백. 공유 링크가 이 제품의 핵심 자산이라 확산 마찰을 없앤다.
+  const shareLink = async (url: string, published: boolean) => {
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: 'Sandlab', url })
+        return flash(published ? 'Published — shared.' : 'Shared.')
+      } catch (e) {
+        // 사용자가 공유 시트를 닫은 경우(AbortError)는 실패가 아니다 — 클립보드로 내려가지 않는다.
+        if (e instanceof Error && e.name === 'AbortError') {
+          return flash(published ? 'Published to the gallery.' : 'Ready to share.')
+        }
+        // 그 외 오류만 클립보드로 폴백
+      }
+    }
+    await navigator.clipboard.writeText(url).catch(() => {})
+    flash(
+      published
+        ? 'Published to the gallery — link copied.'
+        : 'Link copied — it opens exactly this scene.',
+    )
+  }
+
   const record = useCallback(async () => {
     const canvas = canvasRef.current
     if (!canvas || rec !== null) return
@@ -194,10 +227,9 @@ export default function SandCanvas() {
         makeThumb(cells, W, H, PRESETS),
       ])
       const { id } = await uploadScene({ title, data, thumb, w: W, h: H })
-      const url = `${location.origin}/#s=${id}`
-      history.replaceState(null, '', url)
-      await navigator.clipboard.writeText(url).catch(() => {})
-      flash('Published to the gallery — link copied.')
+      // 현재 탭 상태는 기존 해시 경로로(리로드해도 이 씬), 공유는 OG가 붙는 경로형 링크로.
+      history.replaceState(null, '', `${location.origin}/#s=${id}`)
+      await shareLink(`${location.origin}/s/${id}`, true)
     } catch (e) {
       flash(e instanceof Error ? e.message : 'Publish failed.')
     } finally {
@@ -217,18 +249,46 @@ export default function SandCanvas() {
       )
     }
     history.replaceState(null, '', res.url)
-    await navigator.clipboard.writeText(res.url).catch(() => {})
-    flash('Link copied — it opens exactly this scene.')
+    await shareLink(res.url, false)
   }, [])
 
   if (err) {
     return (
       <div style={S.errWrap}>
         <div style={S.errCard}>
-          <h2 style={{ margin: '0 0 10px', fontSize: 19 }}>WebGPU isn&apos;t available</h2>
-          <p style={{ margin: '0 0 14px', opacity: 0.72, fontSize: 14, lineHeight: 1.55 }}>{err}</p>
-          <p style={{ margin: 0, fontSize: 13, opacity: 0.5, lineHeight: 1.6 }}>
-            Works in Chrome/Edge 113+, and Safari 26+ (macOS Tahoe, iOS 26).
+          <h2 style={{ margin: '0 0 10px', fontSize: 19 }}>Your browser can&apos;t run the sandbox</h2>
+          <p style={{ margin: '0 0 14px', opacity: 0.72, fontSize: 14, lineHeight: 1.55 }}>
+            The playground needs WebGPU, which this browser doesn&apos;t expose. But you can still
+            browse what people have made.
+          </p>
+
+          {errScenes.length > 0 && (
+            <div style={S.errThumbs}>
+              {errScenes.map((s) => (
+                <a
+                  key={s.id}
+                  href={`/gallery`}
+                  title={s.title}
+                  style={S.errThumb}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/api/scenes/${s.id}/thumb`}
+                    alt={s.title}
+                    loading="lazy"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                </a>
+              ))}
+            </div>
+          )}
+
+          <a href="/gallery" style={S.errCta}>
+            Browse the gallery →
+          </a>
+
+          <p style={{ margin: '16px 0 0', fontSize: 12.5, opacity: 0.42, lineHeight: 1.6 }}>
+            To create your own: Chrome/Edge 113+, or Safari 26+ (macOS Tahoe, iOS 26).
             <br />
             In Firefox, enable <code style={S.code}>dom.webgpu.enabled</code> in{' '}
             <code style={S.code}>about:config</code>.
@@ -259,7 +319,7 @@ export default function SandCanvas() {
 
       <div style={S.brand}>
         <span style={{ fontWeight: 650, letterSpacing: -0.2 }}>Sandlab</span>
-        <span style={S.brandSub}>GPU sand · no install</span>
+        <span style={S.brandSub}>no install · no sign-up · share as a link</span>
       </div>
 
       {ready && (
@@ -547,6 +607,30 @@ const S: Record<string, React.CSSProperties> = {
   },
   errWrap: { position: 'fixed', inset: 0, display: 'grid', placeItems: 'center', padding: 20 },
   errCard: { ...glass, maxWidth: 480, padding: 26, borderRadius: 14 },
+  errThumbs: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: 8,
+    margin: '0 0 16px',
+  },
+  errThumb: {
+    display: 'block',
+    aspectRatio: '2 / 1',
+    borderRadius: 8,
+    overflow: 'hidden',
+    border: '1px solid rgba(255,255,255,0.10)',
+  },
+  errCta: {
+    display: 'inline-block',
+    background: '#3b6dff',
+    color: '#fff',
+    textDecoration: 'none',
+    borderRadius: 9,
+    padding: '10px 16px',
+    fontSize: 13.5,
+    fontWeight: 600,
+    boxShadow: '0 3px 16px rgba(59,109,255,0.4)',
+  },
   code: {
     background: 'rgba(255,255,255,0.07)',
     padding: '1px 5px',

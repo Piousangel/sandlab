@@ -42,6 +42,16 @@ function json(data: unknown, status = 200): Response {
 
 const err = (msg: string, status = 400) => json({ error: msg }, status)
 
+/** HTML 속성 인젝션 방지 — 씬 제목이 사용자 입력이므로 반드시 이스케이프한다. */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function clientIp(req: Request): string {
   return req.headers.get('cf-connecting-ip') || '0.0.0.0'
 }
@@ -198,6 +208,51 @@ export default {
         .run()
 
       return json({ id })
+    }
+
+    // ── 씬 공유 링크 /s/:id — 크롤러용 OG 프리뷰 + 브라우저용 리다이렉트 ──
+    // 제품 논지의 심장: 공유된 링크가 씬 썸네일을 물어야 한다. 해시(#s=id)는 서버로 안 와서
+    // 크롤러가 못 읽는다. 그래서 경로형 링크를 만들어 여기서 OG 메타를 심어 준다.
+    const shareM = p.match(/^\/s\/([^/]+)$/)
+    if (shareM && request.method === 'GET') {
+      const id = shareM[1]
+      if (isValidId(id)) {
+        const row = await env.DB.prepare('SELECT title FROM scenes WHERE id=?')
+          .bind(id)
+          .first<{ title: string }>()
+        if (row) {
+          const origin = url.origin
+          const title = escapeHtml(row.title?.trim() || 'A scene on Sandlab')
+          const img = `${origin}/api/scenes/${id}/thumb`
+          const pageUrl = `${origin}/s/${id}`
+          // 크롤러는 이 메타를 읽는다. 브라우저는 JS로 기존에 동작하는 해시 경로(#s=id)로 즉시 이동한다.
+          const redirect = `${origin}/#s=${id}`
+          const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title} · Sandlab</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sandlab">
+<meta property="og:title" content="${title} · Sandlab">
+<meta property="og:description" content="A falling-sand scene made in Sandlab. Open it, remix it, share your own — no install, no sign-up.">
+<meta property="og:image" content="${img}">
+<meta property="og:image:width" content="420">
+<meta property="og:image:height" content="210">
+<meta property="og:url" content="${pageUrl}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${title} · Sandlab">
+<meta name="twitter:image" content="${img}">
+<link rel="canonical" href="${pageUrl}">
+<script>location.replace(${JSON.stringify(redirect)})</script>
+</head><body style="margin:0;background:#07090D;color:#eef1f6;font-family:system-ui,sans-serif">
+<noscript><a href="${redirect}" style="color:#8ea0bf">Open this scene in Sandlab</a></noscript>
+</body></html>`
+          return new Response(html, {
+            headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' },
+          })
+        }
+      }
+      // 잘못된/삭제된 id → 앱 홈으로 보낸다(막다른 404 대신).
+      return Response.redirect(`${url.origin}/`, 302)
     }
 
     return env.ASSETS.fetch(request)
