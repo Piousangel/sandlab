@@ -3,39 +3,58 @@
  *
  * 왜 이게 최우선인가:
  *   1차 자료 두 곳(Sandspiel 제작자 글, Powder Toy 커뮤니티)이 독립적으로 같은 말을 한다:
- *   "썸네일/첫 3초가 본체다. 초기 몇 표가 전부다."
- *   그리고 이 장르가 퍼지는 곳(r/Simulated 등)은 링크가 아니라 영상 커뮤니티다.
+ *   "썸네일/첫 몇 초가 본체다. 초기 몇 표가 전부다."
+ *   그리고 이 장르가 퍼지는 곳은 링크가 아니라 영상 커뮤니티다.
  *   시뮬레이션은 움직임이 본체라 정지 이미지로는 자기를 설명하지 못한다.
  *
- * 왜 OG 카드가 아니라 파일 다운로드인가:
- *   공유 URL이 `#g=...` 프래그먼트인데 프래그먼트는 서버로 전송되지 않는다.
- *   크롤러는 해시를 절대 못 본다 → 장면별 OG 미리보기는 서버 없이는 불가능하다.
- *   대신 사용자가 mp4를 커뮤니티에 직접 올리면 클립 자체가 미리보기다. 더 낫다.
+ * 왜 캡처와 컨테이너를 분리하는가 (두 단계):
+ *   1) 캡처: canvas.captureStream() + MediaRecorder.
+ *      captureStream은 컴포지터에서 '프레젠트된' 프레임을 가져온다 — 블룸/톤매핑까지 화면 그대로다.
+ *      WebGPU 캔버스에서 프레임이 안 비는 유일하게 신뢰할 수 있는 경로다.
+ *      (WebCodecs로 VideoFrame(canvas)를 직접 스냅샷하면 스왑체인이 프레젠트 후 무효화돼서
+ *       전 프레임이 빈다 — toDataURL이 비는 것과 같은 계열. 실제로 이 방식으로 테스트했다가 걸렸다.)
+ *   2) 컨테이너: MediaRecorder의 mp4는 항상 fragmented mp4(moof/mdat 반복)라
+ *      Chrome/VLC/Reddit에선 되지만 macOS QuickTime·미리보기가 못 연다("파일은 받았는데 안 열림").
+ *      그래서 캡처 직후 mediabunny로 표준(non-fragmented, moov 정상 배치) mp4로 리먹스한다.
+ *      소스가 이미 H.264(mp4/avc1)면 재인코딩 없이 샘플만 복사 → 빠르고 무손실.
+ *      결과물은 QuickTime 포함 어디서나 열린다.
  */
+
+import {
+  Input,
+  Output,
+  Conversion,
+  BlobSource,
+  Mp4OutputFormat,
+  BufferTarget,
+  ALL_FORMATS,
+} from 'mediabunny'
 
 export type ClipFormat = { mime: string; ext: string; label: string }
 
+const MP4: ClipFormat = { mime: 'video/mp4', ext: 'mp4', label: 'MP4' }
+
 /**
- * 포맷 선택 — mp4를 최우선한다.
- * webm은 다운로드는 되지만 X(트위터)가 업로드를 거부하고 일부 클라이언트가 재생 못 한다.
- * 배급이 목적인 파일이 배급처에서 안 열리면 의미가 없다.
+ * 캡처 포맷 후보 — mp4/H.264를 최우선한다.
+ * H.264면 리먹스 단계에서 재인코딩 없이 샘플 복사가 되어 빠르고 무손실이다.
+ * webm은 최후의 폴백 — 이 경우 리먹스가 avc로 트랜스코딩한다(조금 느리지만 결과는 표준 mp4).
  */
-const CANDIDATES: ClipFormat[] = [
-  { mime: 'video/mp4;codecs=avc1.42E01E', ext: 'mp4', label: 'MP4' },
-  { mime: 'video/mp4', ext: 'mp4', label: 'MP4' },
-  { mime: 'video/webm;codecs=vp9', ext: 'webm', label: 'WebM' },
-  { mime: 'video/webm;codecs=vp8', ext: 'webm', label: 'WebM' },
-  { mime: 'video/webm', ext: 'webm', label: 'WebM' },
+const CAPTURE_CANDIDATES = [
+  'video/mp4;codecs=avc1.42E01E',
+  'video/mp4',
+  'video/webm;codecs=vp9',
+  'video/webm;codecs=vp8',
+  'video/webm',
 ]
 
-export function pickFormat(): ClipFormat | null {
+function pickCaptureMime(): string | null {
   if (typeof MediaRecorder === 'undefined') return null
-  return CANDIDATES.find((c) => MediaRecorder.isTypeSupported(c.mime)) ?? null
+  return CAPTURE_CANDIDATES.find((m) => MediaRecorder.isTypeSupported(m)) ?? null
 }
 
 export interface RecordOpts {
   canvas: HTMLCanvasElement
-  /** 녹화 길이(ms). 3초 = 스크롤을 멈추게 하는 길이이자 대부분의 피드가 자동재생하는 길이. */
+  /** 녹화 길이(ms). 10초 = 낙사가 쌓였다 무너지는 한 사이클을 여유 있게 담는 길이. 피드는 자동재생·루프라 길이 제약 없음. */
   durationMs?: number
   fps?: number
   /** 0..1 진행률 */
@@ -56,19 +75,22 @@ export class RecordUnsupported extends Error {
   }
 }
 
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
+
 export async function recordClip(o: RecordOpts): Promise<Clip> {
-  const durationMs = o.durationMs ?? 3000
+  const durationMs = o.durationMs ?? 10000
   const fps = o.fps ?? 60
 
-  const format = pickFormat()
-  if (!format) throw new RecordUnsupported('This browser cannot record video from a canvas.')
+  const mime = pickCaptureMime()
+  if (!mime) throw new RecordUnsupported('This browser cannot record video from a canvas.')
   if (typeof o.canvas.captureStream !== 'function') {
     throw new RecordUnsupported('canvas.captureStream is unavailable in this browser.')
   }
 
+  // ── 1) 캡처 (화면 그대로, 블룸 포함) ──
   const stream = o.canvas.captureStream(fps)
   const rec = new MediaRecorder(stream, {
-    mimeType: format.mime,
+    mimeType: mime,
     videoBitsPerSecond: 12_000_000, // 낙사는 고주파 디테일이라 비트레이트를 아끼면 뭉갠다
   })
 
@@ -76,8 +98,7 @@ export async function recordClip(o: RecordOpts): Promise<Clip> {
   rec.ondataavailable = (e) => {
     if (e.data.size > 0) chunks.push(e.data)
   }
-
-  const done = new Promise<void>((resolve, reject) => {
+  const recStopped = new Promise<void>((resolve, reject) => {
     rec.onstop = () => resolve()
     rec.onerror = () => reject(new Error('Recording failed.'))
   })
@@ -86,21 +107,47 @@ export async function recordClip(o: RecordOpts): Promise<Clip> {
   rec.start()
 
   let raf = 0
-  const tickProgress = () => {
+  const tick = () => {
     const t = Math.min(1, (performance.now() - startedAt) / durationMs)
     o.onProgress?.(t)
-    if (t < 1) raf = requestAnimationFrame(tickProgress)
+    if (t < 1) raf = requestAnimationFrame(tick)
   }
-  raf = requestAnimationFrame(tickProgress)
+  raf = requestAnimationFrame(tick)
 
-  await new Promise((r) => setTimeout(r, durationMs))
+  await sleep(durationMs)
   cancelAnimationFrame(raf)
   rec.stop()
   stream.getTracks().forEach((t) => t.stop())
-  await done
+  await recStopped
 
-  const blob = new Blob(chunks, { type: format.mime })
-  return { blob, format, bytes: blob.size, durationMs }
+  const raw = new Blob(chunks, { type: mime })
+  if (raw.size === 0) throw new Error('Recording produced no data.')
+
+  // ── 2) 표준 mp4로 리먹스 (QuickTime 호환) ──
+  const input = new Input({ source: new BlobSource(raw), formats: ALL_FORMATS })
+  const output = new Output({
+    format: new Mp4OutputFormat({ fastStart: 'in-memory' }),
+    target: new BufferTarget(),
+  })
+  let conversion: Conversion
+  try {
+    conversion = await Conversion.init({ input, output })
+    await conversion.execute()
+  } catch {
+    // 리먹스가 실패하면 최소한 원본(fragmented지만 재생은 되는)을 넘겨준다 — 빈손보단 낫다.
+    const isMp4 = mime.startsWith('video/mp4')
+    return {
+      blob: raw,
+      format: isMp4 ? MP4 : { mime: 'video/webm', ext: 'webm', label: 'WebM' },
+      bytes: raw.size,
+      durationMs,
+    }
+  }
+
+  const buffer = output.target.buffer
+  if (!buffer) throw new Error('Conversion produced no data.')
+  const blob = new Blob([buffer], { type: MP4.mime })
+  return { blob, format: MP4, bytes: blob.size, durationMs }
 }
 
 export function downloadClip(clip: Clip, name = 'sandlab') {

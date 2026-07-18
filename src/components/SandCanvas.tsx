@@ -7,7 +7,7 @@ import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/san
 import { uploadScene } from '@/lib/sand/gallery'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
 import { getScene } from '@/lib/sand/gallery'
-import { recordClip, downloadClip, pickFormat, RecordUnsupported } from '@/lib/sand/record'
+import { recordClip, downloadClip, RecordUnsupported } from '@/lib/sand/record'
 
 /**
  * 격자 해상도 — 2:1 고정, 72만 셀.
@@ -135,7 +135,7 @@ export default function SandCanvas() {
     if (!canvas || rec !== null) return
     try {
       setRec(0)
-      const clip = await recordClip({ canvas, durationMs: 3000, onProgress: setRec })
+      const clip = await recordClip({ canvas, durationMs: 10000, onProgress: setRec })
       downloadClip(clip, `sandlab-${Date.now()}`)
       flash(`${clip.format.label} saved · ${(clip.bytes / 1e6).toFixed(1)} MB — post it, don't link it.`)
     } catch (e) {
@@ -291,9 +291,9 @@ export default function SandCanvas() {
           style={{ ...S.primary, opacity: rec !== null ? 0.75 : 1, minWidth: 104 }}
           onClick={record}
           disabled={rec !== null}
-          title="Record 3 seconds and download — post the clip, not the link"
+          title="Record 10 seconds and download — post the clip, not the link"
         >
-          {rec !== null ? `Recording ${(3 - rec * 3).toFixed(1)}s` : 'Record 3s clip'}
+          {rec !== null ? `Recording ${(10 - rec * 10).toFixed(1)}s` : 'Record 10s clip'}
         </button>
       </div>
 
