@@ -17,6 +17,7 @@ import {
   type SceneMeta,
   type SortMode,
 } from '../src/lib/sand/gallery'
+import { escapeHtml } from '../src/lib/sand/html'
 
 interface D1Stmt {
   bind(...vals: unknown[]): D1Stmt
@@ -41,16 +42,6 @@ function json(data: unknown, status = 200): Response {
 }
 
 const err = (msg: string, status = 400) => json({ error: msg }, status)
-
-/** HTML 속성 인젝션 방지 — 씬 제목이 사용자 입력이므로 반드시 이스케이프한다. */
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
 
 function clientIp(req: Request): string {
   return req.headers.get('cf-connecting-ip') || '0.0.0.0'
