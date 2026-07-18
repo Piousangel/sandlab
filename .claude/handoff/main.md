@@ -68,9 +68,17 @@
 - [ ] LLM 원소 생성 (검증 완료, 의도적 보류)
 
 ### 자율 세션 로그 (사용자 부재 중, 감독형 사이클)
+**사이클 1 (완결):**
 - 기획: 6렌즈 감사 → 37발견 → 배급가중 백로그(doNow 11). 스크립트: workflows/scripts/sandlab-discover-*.js
 - 개발: 배급 클러스터 #1·#2·#3·#5·#6 구현·검증·배포·커밋(923978e)
-- 피드백: 4렌즈 리뷰+적대적검증 워크플로 실행(결과 반영은 이 로그 아래에 이어짐)
+- 피드백: 4렌즈 리뷰+적대적검증 → 5건 confirmed. 4건 수정·배포(296a965):
+  · #1/#3 share 거짓성공+activation 만료 → 지속 공유패널(새 제스처 Copy/Share+링크노출+Gallery CTA)
+  · #2 viewportFit:cover 회귀 → 도크·chrome safe-area 패딩
+  · #5 빈 관람모드 → og.png 브랜드 폴백
+  · #4 (씬 OG 420×210이 FB/링크드인 대형카드 임계 미달) → **보류**: 큰 OG는 썸네일 크기↔D1 무게
+    결정이 필요(MAX_THUMB_BYTES=120KB, 1200×630 PNG가 초과 위험). Twitter는 420폭이라 정상.
+    후속 방향: worker 즉석 OG 합성(/api/scenes/:id/og) 또는 업로드 시 대형썸네일 별도 저장.
+- 다음: #8(mediabunny 동적import) → #7(hot 빈상태) → #9(모바일 44px) 배치 예정.
 
 ## 함정 · 결정사항
 
@@ -108,8 +116,20 @@
   `ResizeObserver`로 도크 실제 높이를 재서 `stage.bottom`에 반영한다(인라인 스타일이라 미디어쿼리
   대신 측정 기반). 데스크톱은 한 줄 그대로. **이 컴포넌트는 전부 인라인 스타일이라 반응형은
   measure 기반으로 가야 한다** — CSS 미디어쿼리를 못 쓴다는 걸 기억하라.
-- **남은 모바일 폴백(미수정):** 빈 캔버스에 "그려보라" 온보딩이 없어 첫 방문자가 검은 void를 본다.
-  그리고 `hint`의 "Right-click to erase"는 터치엔 우클릭이 없어 무의미하다(`SandCanvas.tsx` `hint`).
+- **남은 모바일 폴백:** 빈 캔버스 온보딩·터치 힌트는 처리됨(위). 재료 칩 히트영역 44px(#9)은 미완.
+- **공유는 자동 호출하지 마라(activation).** `navigator.share`·`clipboard.writeText`는 transient
+  user activation(제스처, ~5초)이 필요한데, Publish는 prompt+업로드(네트워크 await) 뒤라 창이 만료된다.
+  그래서 자동 공유가 아니라 **지속 공유 패널**(`shared` 상태)로 링크를 남기고, 사용자의 새 클릭으로
+  Copy/Share를 구동한다(`SandCanvas.tsx`). 절대 clipboard 실패를 삼키고 'copied' 토스트를 내지 마라 —
+  거짓 성공이다. Copy link(share, 네트워크 없음)만 즉시 복사를 유지한다.
+- **씬 공유 링크는 `/s/:id`(경로형)다, `#s=id` 아니다.** 해시는 서버로 안 와서 크롤러가 OG를 못 읽는다.
+  `worker/index.ts`의 `/s/:id`가 크롤러엔 씬 썸네일 og:image+제목(HTML 이스케이프 필수)을 주고 브라우저는
+  `#s=id`로 리다이렉트한다. 현재 탭은 `#s=id`로 replaceState, 공유는 `/s/:id`로 복사한다.
+- **인라인 스타일이라 반응형은 measure/env() 기반.** 미디어쿼리 못 쓴다. 안전영역은 스타일 문자열에
+  `max(8px, env(safe-area-inset-bottom))`처럼 직접 넣는다(인라인에서 동작). viewportFit:'cover'와
+  safe-area 패딩은 항상 짝으로 — cover만 넣으면 iOS 도크가 홈인디케이터에 가린다(사이클1 피드백에서 걸림).
+- **OG/아이콘 PNG는 헤드리스 스크린샷으로 생성.** 이미지 라이브러리 없이 `public/og.png`(1200×630)·
+  `icon.png`를 HTML 카드→browse screenshot으로 만들었다(scratchpad/og-card.html, icon-card.html 참고).
 
 ## 왜 이 순서인가 (근거 — 뒤집으려면 이걸 먼저 반박하라)
 
