@@ -78,7 +78,17 @@
   · #4 (씬 OG 420×210이 FB/링크드인 대형카드 임계 미달) → **보류**: 큰 OG는 썸네일 크기↔D1 무게
     결정이 필요(MAX_THUMB_BYTES=120KB, 1200×630 PNG가 초과 위험). Twitter는 420폭이라 정상.
     후속 방향: worker 즉석 OG 합성(/api/scenes/:id/og) 또는 업로드 시 대형썸네일 별도 저장.
-- 다음: #8(mediabunny 동적import) → #7(hot 빈상태) → #9(모바일 44px) 배치 예정.
+**사이클 2 (개발 완료, 피드백 진행중):**
+- 개발: #8·#9·#7 구현·검증·배포·커밋(3b33693)
+  · #8 mediabunny 동적 import → 첫로드 JS **250kB→115kB(-135kB)**. 빌드 출력으로 확인.
+  · #9 재료 칩 coarse에서 40px 투명 히트영역(점은 19px). 하네스로 모바일 확인.
+  · #7 갤러리 hot 빈상태 → 'A quiet week + See all newest', new만 'Nothing here yet'. prod 확인.
+- 피드백: 단일 적대적 리뷰 에이전트(소규모 배치라 전체 워크플로 대신 비례적으로).
+
+**남은 doNow 백로그(다음 사이클 후보):**
+- #4 제작자 재방문 훅(My scenes localStorage + Publish CTA) — retention 엔진, M, 에이전트 구현가능
+- #11 갤러리 카드 위계 + 명시적 Remix 어포던스 — retention, M, 갤러리 폴리시
+- #10 랜딩 썸네일 스트립 — 갤러리 콘텐츠(씨앗) 전제라 needsUser 뒤
 
 ## 함정 · 결정사항
 
