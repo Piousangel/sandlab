@@ -41,6 +41,8 @@ export default function SandCanvas() {
   const [busy, setBusy] = useState(false)
   // 빈 캔버스 온보딩: 첫 방문자는 검은 상자만 보면 그릴 줄 모른다. 한 번이라도 그리면(또는 장면 복원 시) 끈다.
   const [hasDrawn, setHasDrawn] = useState(false)
+  // 지우개 모드. 데스크톱은 우클릭으로도 지우지만 터치엔 우클릭이 없어 이 토글이 유일한 지우기 수단이다.
+  const [erasing, setErasing] = useState(false)
   // 터치(coarse pointer)에선 우클릭이 없다 — 힌트/안내 문구를 포인터 타입에 맞춘다.
   const [coarse, setCoarse] = useState(false)
   const idx = useRef(buildIndex(PRESETS))
@@ -140,8 +142,8 @@ export default function SandCanvas() {
     const { x, y } = toGrid(e)
     eng.brush.x = x
     eng.brush.y = y
-    // 우클릭 = 지우개 (모드 전환 없이 지울 수 있어야 손이 안 끊긴다)
-    eng.brush.mat = e.button === 2 ? 0 : (idx.current.get(sel) ?? 0)
+    // 지우개 모드(터치) 또는 우클릭(데스크톱) = 지우기. 둘 다 mat=0.
+    eng.brush.mat = erasing || e.button === 2 ? 0 : (idx.current.get(sel) ?? 0)
     if (!hasDrawn) setHasDrawn(true) // 첫 붓질 → 온보딩 힌트 제거
   }
 
@@ -273,7 +275,10 @@ export default function SandCanvas() {
             return (
               <button
                 key={m.slug}
-                onClick={() => setSel(m.slug)}
+                onClick={() => {
+                  setSel(m.slug)
+                  setErasing(false) // 재료를 고르면 지우개 모드 해제
+                }}
                 title={m.name}
                 aria-label={m.name}
                 style={{
@@ -293,7 +298,7 @@ export default function SandCanvas() {
 
         <div style={S.sep} />
 
-        <span style={S.selName}>{PRESETS.find((m) => m.slug === sel)?.name}</span>
+        <span style={S.selName}>{erasing ? 'Erase' : PRESETS.find((m) => m.slug === sel)?.name}</span>
 
         <div style={S.sep} />
 
@@ -311,6 +316,14 @@ export default function SandCanvas() {
 
         <div style={S.sep} />
 
+        <button
+          style={{ ...S.ghost, ...(erasing ? S.ghostActive : null) }}
+          onClick={() => setErasing((v) => !v)}
+          aria-pressed={erasing}
+          title="Eraser — draw to remove (right-click also erases on desktop)"
+        >
+          Erase
+        </button>
         <button style={S.ghost} onClick={() => engineRef.current?.clear()}>
           Clear
         </button>
@@ -461,6 +474,14 @@ const S: Record<string, React.CSSProperties> = {
     padding: '6px 10px',
     fontSize: 11.5,
     cursor: 'pointer',
+  },
+  // 토글 활성 상태(지우개 ON) — 앱 액센트 색으로 지금 지우개 모드임을 명확히 보여준다.
+  ghostActive: {
+    opacity: 1,
+    color: '#cfe0ff',
+    background: 'rgba(59,109,255,0.18)',
+    border: '1px solid rgba(91,140,255,0.7)',
+    boxShadow: '0 0 0 1px rgba(91,140,255,0.25)',
   },
   primary: {
     background: '#3b6dff',
