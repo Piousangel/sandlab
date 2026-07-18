@@ -45,6 +45,12 @@ export default function SandCanvas() {
   // WebGPU 미지원 방문자(클립을 클릭하는 인앱 웹뷰 등)를 텍스트 벽에서 버리지 않는다 —
   // 갤러리는 순수 <img> PNG라 WebGPU 없이 100% 보인다. 최근 씬 썸네일을 관람 탈출구로 보여준다.
   const [errScenes, setErrScenes] = useState<SceneMeta[]>([])
+  const [errLoaded, setErrLoaded] = useState(false)
+  // Publish/Copy 성공 후 지속되는 공유 패널. navigator.share·clipboard는 transient activation을
+  // 요구하는데 업로드(네트워크 await) 뒤엔 그 창이 만료돼 있다. 그래서 자동 공유 대신,
+  // 사용자가 '새 제스처'로 눌러 공유/복사하게 링크를 눈앞에 남긴다(실패해도 링크 회수 가능).
+  const [shared, setShared] = useState<{ url: string; published: boolean } | null>(null)
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
   // 터치(coarse pointer)에선 우클릭이 없다 — 힌트/안내 문구를 포인터 타입에 맞춘다.
   const [coarse, setCoarse] = useState(false)
   const idx = useRef(buildIndex(PRESETS))
@@ -64,6 +70,7 @@ export default function SandCanvas() {
     listScenes('new')
       .then((r) => setErrScenes((r.scenes ?? []).slice(0, 6)))
       .catch(() => {})
+      .finally(() => setErrLoaded(true))
   }, [err])
 
   // 도크는 좁은 화면에서 여러 줄로 접힌다(모바일). 캔버스 영역(stage)이 도크를 가리거나
@@ -175,27 +182,25 @@ export default function SandCanvas() {
     setTimeout(() => setToast(null), 2600)
   }
 
-  // 링크를 내보낸다 — 폰에선 시스템 공유 시트(탭 한 번에 메시지/스토리/디스코드로),
-  // 데스크톱·미지원에선 클립보드 폴백. 공유 링크가 이 제품의 핵심 자산이라 확산 마찰을 없앤다.
-  const shareLink = async (url: string, published: boolean) => {
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share({ title: 'Sandlab', url })
-        return flash(published ? 'Published — shared.' : 'Shared.')
-      } catch (e) {
-        // 사용자가 공유 시트를 닫은 경우(AbortError)는 실패가 아니다 — 클립보드로 내려가지 않는다.
-        if (e instanceof Error && e.name === 'AbortError') {
-          return flash(published ? 'Published to the gallery.' : 'Ready to share.')
-        }
-        // 그 외 오류만 클립보드로 폴백
-      }
+  // 공유 패널 버튼 핸들러 — 사용자의 새 클릭/탭(fresh activation)으로 구동되므로
+  // navigator.share·clipboard가 안정적으로 동작한다. 성공/실패를 정직하게 보고한다.
+  const copyShared = async () => {
+    if (!shared) return
+    try {
+      await navigator.clipboard.writeText(shared.url)
+      flash('Link copied.')
+    } catch {
+      // 클립보드가 막히면 거짓 성공 대신 링크를 직접 집어가게 안내한다.
+      flash('Copy blocked — tap the link to select it.')
     }
-    await navigator.clipboard.writeText(url).catch(() => {})
-    flash(
-      published
-        ? 'Published to the gallery — link copied.'
-        : 'Link copied — it opens exactly this scene.',
-    )
+  }
+  const shareShared = async () => {
+    if (!shared) return
+    try {
+      await navigator.share({ title: 'Sandlab', url: shared.url })
+    } catch (e) {
+      if (!(e instanceof Error && e.name === 'AbortError')) copyShared()
+    }
   }
 
   const record = useCallback(async () => {
@@ -229,7 +234,8 @@ export default function SandCanvas() {
       const { id } = await uploadScene({ title, data, thumb, w: W, h: H })
       // 현재 탭 상태는 기존 해시 경로로(리로드해도 이 씬), 공유는 OG가 붙는 경로형 링크로.
       history.replaceState(null, '', `${location.origin}/#s=${id}`)
-      await shareLink(`${location.origin}/s/${id}`, true)
+      setShared({ url: `${location.origin}/s/${id}`, published: true })
+      flash('Published to the gallery.')
     } catch (e) {
       flash(e instanceof Error ? e.message : 'Publish failed.')
     } finally {
@@ -249,7 +255,15 @@ export default function SandCanvas() {
       )
     }
     history.replaceState(null, '', res.url)
-    await shareLink(res.url, false)
+    setShared({ url: res.url, published: false })
+    // Copy link는 네트워크가 없어 activation이 살아있다 — 즉시 복사를 시도하되 정직하게.
+    // 실패해도 패널에 링크가 남아 회수 가능하므로 거짓 'copied'를 내지 않는다.
+    try {
+      await navigator.clipboard.writeText(res.url)
+      flash('Link copied.')
+    } catch {
+      /* 패널의 Copy 버튼(새 제스처)으로 다시 시도 가능 */
+    }
   }, [])
 
   if (err) {
@@ -281,6 +295,12 @@ export default function SandCanvas() {
                 </a>
               ))}
             </div>
+          )}
+
+          {/* 갤러리가 아직 비어 있으면 빈손 CTA 대신 브랜드 카드로 최소한의 시각을 준다. */}
+          {errLoaded && errScenes.length === 0 && (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src="/og.png" alt="Sandlab" style={S.errHero} />
           )}
 
           <a href="/gallery" style={S.errCta}>
@@ -409,6 +429,35 @@ export default function SandCanvas() {
       {rec !== null && (
         <div style={{ ...S.recRing, clipPath: `inset(0 ${(1 - rec) * 100}% 0 0)` }} />
       )}
+
+      {shared && (
+        <div style={{ ...S.sharePanel, bottom: dockH + 14 }}>
+          <span style={S.sharePanelMsg}>
+            {shared.published ? 'Published to the gallery' : 'Link ready'}
+          </span>
+          <input
+            readOnly
+            value={shared.url}
+            onFocus={(e) => e.currentTarget.select()}
+            style={S.shareInput}
+          />
+          <button style={S.sharePrimary} onClick={copyShared}>
+            Copy
+          </button>
+          {canShare && (
+            <button style={S.sharePrimary} onClick={shareShared}>
+              Share
+            </button>
+          )}
+          <a style={{ ...S.ghost, textDecoration: 'none', lineHeight: '1.6' }} href="/gallery">
+            Gallery
+          </a>
+          <button style={S.shareClose} onClick={() => setShared(null)} aria-label="Dismiss">
+            ×
+          </button>
+        </div>
+      )}
+
       {!coarse && <div style={S.hint}>Right-click to erase</div>}
       {toast && <div style={S.toast}>{toast}</div>}
     </div>
@@ -449,7 +498,8 @@ const S: Record<string, React.CSSProperties> = {
   },
   brand: {
     position: 'absolute',
-    top: 18,
+    // cover 확장 시 iOS 상태바(시계·배터리)와 겹치지 않게 안전영역만큼 내린다.
+    top: 'max(18px, env(safe-area-inset-top))',
     left: 20,
     display: 'flex',
     alignItems: 'baseline',
@@ -462,7 +512,7 @@ const S: Record<string, React.CSSProperties> = {
   brandSub: { fontSize: 11.5, opacity: 0.45, letterSpacing: 0.2 },
   stat: {
     position: 'absolute',
-    top: 20,
+    top: 'max(20px, env(safe-area-inset-top))',
     right: 20,
     fontSize: 11,
     color: '#eef1f6',
@@ -487,7 +537,12 @@ const S: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
     rowGap: 8,
     columnGap: 10,
-    padding: '8px 14px',
+    paddingTop: 8,
+    paddingLeft: 14,
+    paddingRight: 14,
+    // viewportFit:'cover'가 레이아웃을 홈인디케이터 밑까지 확장하므로, 안전영역만큼 하단을 띄운다.
+    // 이 패딩은 dockRef.offsetHeight에 포함돼 ResizeObserver→stage.bottom이 자동으로 비켜준다.
+    paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
   },
   // 칩 컨테이너도 접혀야 한다 — 원소 18개는 그 자체로 폰 폭을 넘는다.
   chips: {
@@ -605,8 +660,65 @@ const S: Record<string, React.CSSProperties> = {
     boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
     whiteSpace: 'nowrap',
   },
+  // Publish/Copy 성공 후 지속되는 공유 패널 — 새 제스처로 눌러 공유/복사(activation 안전).
+  sharePanel: {
+    ...glass,
+    position: 'absolute',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    padding: '9px 11px',
+    borderRadius: 12,
+    maxWidth: '92vw',
+    zIndex: 6,
+    boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+  },
+  sharePanelMsg: { fontSize: 12, fontWeight: 600, opacity: 0.85, color: '#eef1f6' },
+  shareInput: {
+    background: 'rgba(0,0,0,0.35)',
+    border: '1px solid rgba(255,255,255,0.14)',
+    borderRadius: 7,
+    color: '#cfe0ff',
+    fontSize: 12,
+    padding: '6px 8px',
+    width: 240,
+    maxWidth: '58vw',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+  },
+  sharePrimary: {
+    background: '#3b6dff',
+    color: '#fff',
+    border: '1px solid #3b6dff',
+    borderRadius: 8,
+    padding: '7px 12px',
+    fontSize: 12,
+    fontWeight: 600,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+  },
+  shareClose: {
+    background: 'transparent',
+    color: '#eef1f6',
+    opacity: 0.55,
+    border: 'none',
+    fontSize: 18,
+    lineHeight: 1,
+    cursor: 'pointer',
+    padding: '0 4px',
+  },
   errWrap: { position: 'fixed', inset: 0, display: 'grid', placeItems: 'center', padding: 20 },
   errCard: { ...glass, maxWidth: 480, padding: 26, borderRadius: 14 },
+  errHero: {
+    width: '100%',
+    borderRadius: 8,
+    margin: '0 0 16px',
+    display: 'block',
+    border: '1px solid rgba(255,255,255,0.10)',
+  },
   errThumbs: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
