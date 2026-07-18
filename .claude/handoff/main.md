@@ -98,7 +98,20 @@
   Yours가 씬 blob 전체를 받던 것 → `?meta=1` meta-only 조회(no-store로 표수 최신),
   listMine 원소 검증, Yours 셀프투표 차단(표수 표시로). 비결함 지적은 반증 확인 후 유지.
 
-**자율 세션 총계:** 4 사이클, 기획 1 + 피드백 3 워크플로/리뷰, 커밋 ~18개. 전부 배포·푸시됨.
+**하드닝 사이클 (완료):**
+- 유닛 테스트 29개 도입(vitest) → urlState inflate unhandled-rejection 버그 발견·수정.
+- verify-gallery.py에 배급 라우트(/s/:id OG·이스케이프·?meta=1·atob→400·없는씬투표→404) 회귀 추가.
+- escapeHtml을 테스트된 공유 모듈로 추출(인젝션 벡터 5종).
+- 버그 헌트 워크플로(4슬라이스+적대적검증) → 9 confirmed, agent-safe 8건 수정(53e5e44):
+  worker orphan 투표 DoS·atob 500·투표 race, engine device 누수·init 취소불가, record 스트림 정리, flash 타이머.
+  · **남은 1건(needsUser):** 멀티터치 — 한 손가락 up/cancel이 모든 포인터 그리기를 중단
+    (SandCanvas onUp/onDown이 pointerId 미구분). 수정은 시각 결과가 바뀌어 WebGPU 실기기 검증 필요.
+    fix 방향: 활성 pointerId를 ref에 기록해 그 포인터만 onMove/onUp 처리(단일 브러시 유지).
+
+**팀 체제 (신규, 사용자 지시):** `.claude/team/charter.md` — 10 페르소나 + 불변 원칙 + 운영 루프.
+"쉬지 않고 끊임없이 발전" 목표로 도메인 연구(→ `.claude/team/references/`) → 개발 루프를 계속 돈다.
+
+**자율 세션 총계:** 제품 4 사이클 + 하드닝 1 + 연구 진행중. 워크플로/리뷰 다수. 커밋 ~25개. 전부 배포·푸시.
 클립 QuickTime 버그(사용자 최초 지적)·모바일 전면·씬별 OG(핵심 논지)·첫로드 -135kB·
 재방문 엔진까지. 모든 변경은 headless로 검증 가능한 것만 — 시뮬 시각/실기기/실사용자
 필요 항목은 손대지 않고 needsUser로 남김.
