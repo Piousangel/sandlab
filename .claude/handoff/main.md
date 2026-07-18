@@ -208,20 +208,25 @@ Yours 탭, Remix, hot/new)이 전부 '갤러리에 볼 게 있다'를 전제한�
 - typecheck: **통과** (`pnpm typecheck`)
 - build: **통과** (`pnpm build` → static export)
 - Margolus 불변식: **7/7 통과** — `node scripts/verify-margolus.mjs`
-- 갤러리 API: **17/17 통과** — `python3 scripts/verify-gallery.py`
-  (사전에 `npx wrangler dev --port 8799 --local` 필요)
+- 유닛 테스트: **24/24 통과** — `pnpm test` (vitest). urlState 왕복·materials 무결성·
+  gallery(cleanTitle/isValidId/listMine)·thumb.isBlank. **테스트 도입 중 실버그 발견·수정**:
+  urlState inflate/deflate가 writer 프라미스를 안 붙잡아 깨진 공유 링크마다 unhandled rejection.
+- 갤러리 API + 배급 라우트: **전부 통과** — `python3 scripts/verify-gallery.py`
+  (사전에 `npx wrangler dev --port 8799 --local` 필요). /s/:id OG·이스케이프·?meta=1 커버 추가됨.
+  주의: 로컬 D1이 누적되면 레이트리밋에 걸리니 실행 전 `wrangler d1 execute sandlab-gallery
+  --local --command "DELETE FROM scenes; DELETE FROM votes;"`로 비운다.
 - URL 예산 측정: `node scripts/verify-url.mjs` — **의도적으로 실패(exit 1)한다.**
   복잡한 장면이 URL 예산 초과라는 걸 기록하는 게 목적. 고쳐야 할 실패가 아니라 측정값이다.
 - lint: **미실행** (eslint 설정 파일 자체가 없음 — `package.json`에 스크립트만 있다)
-- test: **없음** (vitest 미설정. 위 3개 스크립트가 사실상의 테스트다)
 - 프로덕션 헬스: `curl -s -o /dev/null -w '%{http_code}' https://sandlab.piousangel.workers.dev/` → 200
 
 ### 재현 명령
 
 ```bash
 cd /Users/hyunseok/Desktop/Code/sandlab
+pnpm test                              # vitest 유닛 24개
 npx wrangler dev --port 8799 --local   # 8799 — 앱 전체 + API. 3120 아님!
-python3 scripts/verify-gallery.py      # 별도 셸에서
+python3 scripts/verify-gallery.py      # 별도 셸에서 (D1 비우고 실행 권장, 위 주의 참조)
 node scripts/verify-margolus.mjs
 pnpm run deploy                        # 'run' 필수
 ```
