@@ -113,3 +113,34 @@ export async function voteScene(id: string): Promise<number> {
   markVoted(id)
   return r.votes
 }
+
+/**
+ * 내가 올린 씬 — 로그인 없는 재방문 엔진.
+ * 이 장르의 유일한 재방문 이유는 "내 게 표 받았나?"(Powder Toy/Sandspiel 1차 자료).
+ * 계정이 없으므로 브라우저 localStorage에 내가 만든 id를 남겨 갤러리 'Yours'에서 표를 확인한다.
+ */
+const MINE_KEY = 'sandlab.mine'
+export interface MineEntry {
+  id: string
+  title: string
+  at: number
+}
+
+export function rememberMine(id: string, title: string) {
+  try {
+    const m = JSON.parse(localStorage.getItem(MINE_KEY) || '[]') as MineEntry[]
+    const next = [{ id, title, at: Date.now() }, ...m.filter((e) => e.id !== id)].slice(0, 200)
+    localStorage.setItem(MINE_KEY, JSON.stringify(next))
+  } catch {
+    /* 프라이빗 모드 등 — 저장 실패해도 게시 자체는 성공했으니 조용히 넘어간다 */
+  }
+}
+
+export function listMine(): MineEntry[] {
+  try {
+    const m = JSON.parse(localStorage.getItem(MINE_KEY) || '[]') as MineEntry[]
+    return Array.isArray(m) ? m : []
+  } catch {
+    return []
+  }
+}

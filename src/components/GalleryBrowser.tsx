@@ -1,7 +1,19 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { listScenes, voteScene, hasVoted, type SceneMeta, type SortMode } from '@/lib/sand/gallery'
+import {
+  listScenes,
+  getScene,
+  listMine,
+  voteScene,
+  hasVoted,
+  type SceneMeta,
+  type SceneFull,
+  type SortMode,
+} from '@/lib/sand/gallery'
+
+// 서버 정렬(hot/new) + 로컬 'mine'(내가 올린 것). mine은 서버 정렬이 아니라 localStorage 기반.
+type Tab = SortMode | 'mine'
 
 /**
  * 갤러리 — 관객 층.
@@ -14,20 +26,31 @@ import { listScenes, voteScene, hasVoted, type SceneMeta, type SortMode } from '
  * 그럼 아무도 두 번 올리지 않는다.
  */
 export default function GalleryBrowser() {
-  const [sort, setSort] = useState<SortMode>('hot')
+  const [sort, setSort] = useState<Tab>('hot')
   const [scenes, setScenes] = useState<SceneMeta[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState<string | null>(null)
   const [voted, setVoted] = useState<Record<string, number>>({})
 
-  const load = useCallback(async (mode: SortMode) => {
+  const load = useCallback(async (mode: Tab) => {
     setLoading(true)
     setErr(null)
     try {
-      const r = await listScenes(mode)
-      setScenes(r.scenes)
-      setTotal(r.total)
+      if (mode === 'mine') {
+        // 내가 올린 id들을 각각 조회한다. 삭제된 씬은 건너뛴다. 개인 목록이라 수가 적다.
+        const mine = listMine()
+        const settled = await Promise.allSettled(mine.map((e) => getScene(e.id)))
+        const found = settled
+          .filter((s): s is PromiseFulfilledResult<SceneFull> => s.status === 'fulfilled')
+          .map((s) => s.value)
+        setScenes(found)
+        setTotal(found.length)
+      } else {
+        const r = await listScenes(mode)
+        setScenes(r.scenes)
+        setTotal(r.total)
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Failed to load')
     } finally {
@@ -56,13 +79,13 @@ export default function GalleryBrowser() {
           ← Sandlab
         </a>
         <div style={S.tabs}>
-          {(['hot', 'new'] as SortMode[]).map((m) => (
+          {(['hot', 'new', 'mine'] as Tab[]).map((m) => (
             <button
               key={m}
               onClick={() => setSort(m)}
               style={{ ...S.tab, ...(sort === m ? S.tabOn : null) }}
             >
-              {m === 'hot' ? 'Hot this week' : 'Newest'}
+              {m === 'hot' ? 'Hot this week' : m === 'new' ? 'Newest' : 'Yours'}
             </button>
           ))}
         </div>
@@ -74,7 +97,17 @@ export default function GalleryBrowser() {
 
       {!loading && !err && scenes.length === 0 && (
         <div style={S.empty}>
-          {sort === 'hot' ? (
+          {sort === 'mine' ? (
+            <>
+              <p style={{ margin: '0 0 6px', fontSize: 16 }}>Nothing of yours yet.</p>
+              <p style={{ margin: '0 0 14px', opacity: 0.55, fontSize: 13.5 }}>
+                Publish a scene and it shows up here — come back to see its votes climb.
+              </p>
+              <a href="/" style={S.seeNewest}>
+                Make one →
+              </a>
+            </>
+          ) : sort === 'hot' ? (
             // hot은 최근 7일만 본다. 이 창이 비었다고 갤러리가 죽은 게 아니다 —
             // 옛 씬은 Newest에 있으므로 그쪽 탈출구를 준다.
             <>

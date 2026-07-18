@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { SandEngine, WebGPUUnsupported } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
-import { uploadScene, getScene, listScenes, type SceneMeta } from '@/lib/sand/gallery'
+import { uploadScene, getScene, listScenes, rememberMine, type SceneMeta } from '@/lib/sand/gallery'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
 // record.ts는 mediabunny(~대용량 코덱)를 정적 import한다. 방문자 대부분이 안 누르는 녹화 기능이므로
 // 랜딩 초기 JS에서 분리한다 — record() 호출 시점에 동적 import(아래).
@@ -235,6 +235,7 @@ export default function SandCanvas() {
         makeThumb(cells, W, H, PRESETS),
       ])
       const { id } = await uploadScene({ title, data, thumb, w: W, h: H })
+      rememberMine(id, title || 'Untitled') // 재방문 훅: 내가 올린 씬으로 기록
       // 현재 탭 상태는 기존 해시 경로로(리로드해도 이 씬), 공유는 OG가 붙는 경로형 링크로.
       history.replaceState(null, '', `${location.origin}/#s=${id}`)
       setShared({ url: `${location.origin}/s/${id}`, published: true })
