@@ -39,7 +39,20 @@ export default function SandCanvas() {
   const [fps, setFps] = useState(0)
   const [rec, setRec] = useState<number | null>(null) // null=대기, 0..1=녹화중
   const [busy, setBusy] = useState(false)
+  // 빈 캔버스 온보딩: 첫 방문자는 검은 상자만 보면 그릴 줄 모른다. 한 번이라도 그리면(또는 장면 복원 시) 끈다.
+  const [hasDrawn, setHasDrawn] = useState(false)
+  // 터치(coarse pointer)에선 우클릭이 없다 — 힌트/안내 문구를 포인터 타입에 맞춘다.
+  const [coarse, setCoarse] = useState(false)
   const idx = useRef(buildIndex(PRESETS))
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return
+    const mq = window.matchMedia('(pointer: coarse)')
+    const on = () => setCoarse(mq.matches)
+    on()
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
 
   // 도크는 좁은 화면에서 여러 줄로 접힌다(모바일). 캔버스 영역(stage)이 도크를 가리거나
   // 도크에 가리지 않도록, 도크의 실제 높이를 재서 stage.bottom을 거기에 맞춘다.
@@ -81,7 +94,10 @@ export default function SandCanvas() {
         } else {
           restored = await readShareUrl()
         }
-        if (!disposed && restored && restored.w === W && restored.h === H) eng.upload(restored.cells)
+        if (!disposed && restored && restored.w === W && restored.h === H) {
+          eng.upload(restored.cells)
+          setHasDrawn(true) // 복원된 장면은 빈 게 아니므로 온보딩 힌트를 띄우지 않는다
+        }
         if (disposed) return
         engineRef.current = eng
         eng.start()
@@ -126,6 +142,7 @@ export default function SandCanvas() {
     eng.brush.y = y
     // 우클릭 = 지우개 (모드 전환 없이 지울 수 있어야 손이 안 끊긴다)
     eng.brush.mat = e.button === 2 ? 0 : (idx.current.get(sel) ?? 0)
+    if (!hasDrawn) setHasDrawn(true) // 첫 붓질 → 온보딩 힌트 제거
   }
 
   const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -233,6 +250,9 @@ export default function SandCanvas() {
           onPointerCancel={onUp}
           onContextMenu={(e) => e.preventDefault()}
         />
+        {ready && !hasDrawn && (
+          <div style={S.onboard}>{coarse ? 'Drag to pour sand' : 'Click and drag to pour sand'}</div>
+        )}
       </div>
 
       <div style={S.brand}>
@@ -316,7 +336,7 @@ export default function SandCanvas() {
       {rec !== null && (
         <div style={{ ...S.recRing, clipPath: `inset(0 ${(1 - rec) * 100}% 0 0)` }} />
       )}
-      <div style={S.hint}>Right-click to erase</div>
+      {!coarse && <div style={S.hint}>Right-click to erase</div>}
       {toast && <div style={S.toast}>{toast}</div>}
     </div>
   )
@@ -465,6 +485,21 @@ const S: Record<string, React.CSSProperties> = {
     boxShadow: '0 0 14px rgba(255,59,109,0.8)',
     pointerEvents: 'none',
     transition: 'clip-path 80ms linear',
+  },
+  // 빈 캔버스 중앙 온보딩 — pointerEvents none이라 그 위로 바로 그릴 수 있다.
+  onboard: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    pointerEvents: 'none',
+    userSelect: 'none',
+    color: '#eef1f6',
+    opacity: 0.4,
+    fontSize: 15,
+    fontWeight: 500,
+    letterSpacing: 0.3,
+    textShadow: '0 1px 12px rgba(0,0,0,0.9)',
   },
   hint: {
     position: 'absolute',
