@@ -77,6 +77,11 @@ export function getScene(id: string) {
   return req<SceneFull>(`/api/scenes/${encodeURIComponent(id)}`)
 }
 
+/** 메타만(씬 blob 제외) — 카드 표시에 data가 필요 없을 때. Yours 탭이 이걸 쓴다. */
+export function getSceneMeta(id: string) {
+  return req<SceneMeta>(`/api/scenes/${encodeURIComponent(id)}?meta=1`)
+}
+
 export function uploadScene(body: { title: string; data: string; thumb: string; w: number; h: number }) {
   return req<{ id: string }>('/api/scenes', {
     method: 'POST',
@@ -138,8 +143,9 @@ export function rememberMine(id: string, title: string) {
 
 export function listMine(): MineEntry[] {
   try {
-    const m = JSON.parse(localStorage.getItem(MINE_KEY) || '[]') as MineEntry[]
-    return Array.isArray(m) ? m : []
+    const m = JSON.parse(localStorage.getItem(MINE_KEY) || '[]')
+    // 원소 형태까지 검증한다 — 수동 조작/구버전으로 오염된 배열이 렌더를 죽이지 않게.
+    return Array.isArray(m) ? m.filter((e) => e && isValidId(e.id)) : []
   } catch {
     return []
   }

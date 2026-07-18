@@ -157,17 +157,22 @@ export default {
     if (oneM && request.method === 'GET') {
       const id = oneM[1]
       if (!isValidId(id)) return err('bad id')
-      const row = await env.DB.prepare(
-        'SELECT id,title,votes,created_at AS createdAt,w,h,data FROM scenes WHERE id=?',
-      )
+      // ?meta=1 이면 씬 blob(data)을 빼고 메타만 준다 — Yours 탭처럼 표시에 data가 불필요할 때
+      // 수백 KB를 낭비하지 않는다. 컬럼은 고정 상수라 인젝션 없음.
+      const metaOnly = url.searchParams.get('meta') != null
+      const cols = metaOnly
+        ? 'id,title,votes,created_at AS createdAt,w,h'
+        : 'id,title,votes,created_at AS createdAt,w,h,data'
+      const row = await env.DB.prepare(`SELECT ${cols} FROM scenes WHERE id=?`)
         .bind(id)
-        .first<SceneMeta & { data: string }>()
+        .first<SceneMeta & { data?: string }>()
       if (!row) return err('not found', 404)
       return new Response(JSON.stringify(row), {
         headers: {
           'content-type': 'application/json; charset=utf-8',
-          // 장면 데이터는 불변(표만 변함) — 캐시해도 안전하다.
-          'cache-control': 'public, max-age=3600',
+          // 메타는 표수가 최신이어야 하므로 캐시하지 않는다(Yours 재방문 payoff).
+          // 풀 데이터는 불변(표만 변함)이라 캐시 안전.
+          'cache-control': metaOnly ? 'no-store' : 'public, max-age=3600',
         },
       })
     }

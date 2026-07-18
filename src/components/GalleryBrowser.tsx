@@ -3,12 +3,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
   listScenes,
-  getScene,
+  getSceneMeta,
   listMine,
   voteScene,
   hasVoted,
   type SceneMeta,
-  type SceneFull,
   type SortMode,
 } from '@/lib/sand/gallery'
 
@@ -40,9 +39,9 @@ export default function GalleryBrowser() {
       if (mode === 'mine') {
         // 내가 올린 id들을 각각 조회한다. 삭제된 씬은 건너뛴다. 개인 목록이라 수가 적다.
         const mine = listMine()
-        const settled = await Promise.allSettled(mine.map((e) => getScene(e.id)))
+        const settled = await Promise.allSettled(mine.map((e) => getSceneMeta(e.id)))
         const found = settled
-          .filter((s): s is PromiseFulfilledResult<SceneFull> => s.status === 'fulfilled')
+          .filter((s): s is PromiseFulfilledResult<SceneMeta> => s.status === 'fulfilled')
           .map((s) => s.value)
         setScenes(found)
         setTotal(found.length)
@@ -167,14 +166,21 @@ export default function GalleryBrowser() {
                 <span style={S.title} title={s.title}>
                   {s.title}
                 </span>
-                <button
-                  onClick={() => vote(s.id)}
-                  disabled={did}
-                  style={{ ...S.vote, ...(did ? S.voteOn : null) }}
-                  title={did ? 'Voted' : 'Give this an upvote'}
-                >
-                  ▲ <strong style={{ fontWeight: 700 }}>{v}</strong>
-                </button>
+                {sort === 'mine' ? (
+                  // 자기 씬엔 투표하지 않는다 — 표는 지켜보는 신호다("come back to see its votes climb").
+                  <span style={S.voteStatic} title="Votes on your scene">
+                    ▲ <strong style={{ fontWeight: 700 }}>{v}</strong>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => vote(s.id)}
+                    disabled={did}
+                    style={{ ...S.vote, ...(did ? S.voteOn : null) }}
+                    title={did ? 'Voted' : 'Give this an upvote'}
+                  >
+                    ▲ <strong style={{ fontWeight: 700 }}>{v}</strong>
+                  </button>
+                )}
               </div>
               <span style={S.age}>{ago(s.createdAt)}</span>
             </div>
@@ -265,6 +271,16 @@ const S: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   voteOn: { background: '#3b6dff', borderColor: '#3b6dff', cursor: 'default' },
+  voteStatic: {
+    border: '1px solid rgba(255,255,255,0.10)',
+    color: '#eef1f6',
+    opacity: 0.75,
+    borderRadius: 7,
+    padding: '3px 8px',
+    fontSize: 11.5,
+    fontVariantNumeric: 'tabular-nums',
+    flexShrink: 0,
+  },
   age: { fontSize: 11, opacity: 0.3 },
   seeNewest: {
     background: '#3b6dff',
