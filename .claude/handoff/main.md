@@ -111,6 +111,18 @@
 **팀 체제 (신규, 사용자 지시):** `.claude/team/charter.md` — 10 페르소나 + 불변 원칙 + 운영 루프.
 "쉬지 않고 끊임없이 발전" 목표로 도메인 연구(→ `.claude/team/references/`) → 개발 루프를 계속 돈다.
 
+**연구 사이클 1 (부분 성공):** distribution·analytics 페르소나가 훌륭한 1차자료 연구 →
+`references/distribution.md`·`analytics.md`에 축적. (historian·sim은 스키마 재시도 초과로 실패,
+community·visual은 스텁 출력 → 재실행 대상.) 종합 결론: **다음 지렛대는 신규 기능이 아니라
+이미 가진 자산의 배선 + 그걸 판단할 계측.**
+- **개발: Analytics Engine 계측 구현(2c20e077).** worker의 share_open/upload/vote 3지점에 비차단·
+  쿠키리스·프라이버시 보존 writeDataPoint(event_type·referrer host·country·scene_id, per-user 없음).
+  **needsUser: Analytics Engine을 대시보드에서 활성화**해야 켜진다(계정 토글, CLI 불가, code 10089).
+  켜는 법은 `wrangler.jsonc` 주석 참조 — 활성화 후 바인딩 주석 풀고 deploy하면 배급 퍼널이 잡힌다.
+  현재는 `env.AE` 미바인딩이라 track()이 no-op(무해). 이게 "배급을 데이터로 판단"의 전제.
+- 연구 백로그(다음): og:video/twitter:player(클립 저장 선행 필요), 무음 루프 MP4, /s/:id referrer로
+  배급 투자처 측정(AE 활성화 후), D1 백필 지표(주간 신규 씬·업로드→최소1표 도달률).
+
 **자율 세션 총계:** 제품 4 사이클 + 하드닝 1 + 연구 진행중. 워크플로/리뷰 다수. 커밋 ~25개. 전부 배포·푸시.
 클립 QuickTime 버그(사용자 최초 지적)·모바일 전면·씬별 OG(핵심 논지)·첫로드 -135kB·
 재방문 엔진까지. 모든 변경은 headless로 검증 가능한 것만 — 시뮬 시각/실기기/실사용자

@@ -16,4 +16,9 @@
       "database_id": "75e9cf5f-82b9-4784-9a5b-cec215df3909"
     }
   ]
+  // 배급 퍼널 계측 (Analytics Engine) — 코드는 worker/index.ts에 준비돼 있고 env.AE가 없으면
+  // no-op이다. 켜려면: (1) 대시보드에서 Analytics Engine 활성화
+  //   https://dash.cloudflare.com/f9ca01fb346f810310bfb49234926972/workers/analytics-engine
+  // (2) 아래 주석을 풀고 `pnpm run deploy`. 그러면 share_open/upload/vote가 집계된다(쿠키·동의배너 0).
+  // "analytics_engine_datasets": [{ "binding": "AE", "dataset": "sandlab_events" }]
 }

@@ -29,9 +29,40 @@ interface D1Database {
   prepare(query: string): D1Stmt
   batch(stmts: D1Stmt[]): Promise<unknown>
 }
+interface AnalyticsEngine {
+  writeDataPoint(event: { blobs?: (string | null)[]; doubles?: number[]; indexes?: string[] }): void
+}
 interface Env {
   ASSETS: { fetch(req: Request): Promise<Response> }
   DB: D1Database
+  // 선택 바인딩 — 없어도(로컬/미프로비저닝) 계측만 no-op이고 요청은 정상 동작한다.
+  AE?: AnalyticsEngine
+}
+
+/**
+ * 배급 퍼널 계측 — 비차단·프라이버시 보존. 절대 요청을 깨뜨리지 않는다(전부 try/catch).
+ * per-user 식별자 없음: event_type · referrer host · country · scene_id(선택)만 집계한다.
+ * 활성화 이벤트 = 페이지뷰가 아니라 '씬을 공유/업로드/투표함'(허영지표 배제).
+ */
+function track(env: Env, event: string, req: Request, sceneId = '') {
+  try {
+    if (!env.AE) return
+    let ref = ''
+    try {
+      ref = new URL(req.headers.get('referer') || '').hostname
+    } catch {
+      /* referer 없음/불량 — 빈 값 */
+    }
+    const cf = (req as { cf?: { country?: string } }).cf
+    const country = typeof cf?.country === 'string' ? cf.country : ''
+    env.AE.writeDataPoint({
+      blobs: [event, ref, country, sceneId],
+      doubles: [1],
+      indexes: [event], // 저카디널리티 샘플링 키
+    })
+  } catch {
+    /* 계측 실패는 조용히 무시 — 요청 처리에 영향 없음 */
+  }
 }
 
 function json(data: unknown, status = 200): Response {
@@ -150,6 +181,7 @@ export default {
         // dup 체크 통과 후 동시 요청이 먼저 INSERT하면 PK(scene,ip) 위반 → 500 대신 409로 매핑.
         return err('already voted', 409)
       }
+      track(env, 'vote', request, id)
       const row = await env.DB.prepare('SELECT votes FROM scenes WHERE id=?').bind(id).first<{ votes: number }>()
       return json({ votes: row?.votes ?? scene.votes + 1 })
     }
@@ -220,6 +252,8 @@ export default {
         .bind(id, cleanTitle(body.title), data, bytes, Date.now(), w, h, hash)
         .run()
 
+      // 활성화 이벤트: 실제 씬 게시(페이지뷰가 아니라 이게 진짜 신호).
+      track(env, 'upload', request, id)
       return json({ id })
     }
 
@@ -234,6 +268,8 @@ export default {
           .bind(id)
           .first<{ title: string }>()
         if (row) {
+          // 공유 링크 인바운드 — 배급이 어디(Reddit/Discord/X)에 착지하는지 referrer로 집계.
+          track(env, 'share_open', request, id)
           const origin = url.origin
           const title = escapeHtml(row.title?.trim() || 'A scene on Sandlab')
           const img = `${origin}/api/scenes/${id}/thumb`
