@@ -17,6 +17,14 @@ WebGPU 낙사 구현 기법. "싸구려 데모"와 "살아있는 물질"을 가�
 3. **[tech-health] 엄격한 ping-pong 더블버퍼**(read N, write N+1, 한 패스 내 read-after-write 금지) — 현재 엔진이 이미 cells[2] 더블버퍼 사용.
 4. **[agentSafe/시각검증 필요] 가스/불/연기용 경량 속도장(velocity/wind field)** — granular solid엔 미적용. Sandspiel이 Pavel Dobryakov WebGL fluid 차용. "살아있는" 느낌의 원천이나 시각 검증 필요.
 
+## 코드 검증 결과 (닫힌 질문)
+- **현 엔진은 naive 2-step Margolus다.** `engine.ts:238`이 `writeParams(this.tick % 2)`로 offset을
+  0/1만 교대한다(shader.ts:114 `let o = i32(P.offset)`). 연구(arXiv:2008.06341)에 따르면 2-step은
+  **방향 편향**(모래가 한쪽으로 미세하게 쏠림)을 낳고, 해법은 확률적 4-step z자 사이클이다.
+  **주의: verify-margolus 7/7(질량 보존)은 방향 편향과 별개 속성이므로, 불변식이 통과해도 편향은 남을 수 있다.**
+  → 개선 후보지만 **needsUser**: 4-step 변경은 시뮬 시각 결과가 바뀌어 WebGPU 실기기 검증 + Margolus
+  불변식 재검증이 필요. "시뮬에 더 붓지 마라" 원칙과도 저울질(배급 지렛대가 아님).
+
 ## 열린 질문
-- 현재 engine.ts가 2-step vs 4-step z-Margolus 중 무엇인가 (방향 편향 여부) — 코드 확인 후 verify-margolus 불변식과 대조.
+- 4-step z-Margolus로 바꾸면 실제로 편향이 눈에 띄게 줄고 클립 매력도가 오르나 (WebGPU 시각 A/B).
 - 속도장 추가가 성능(72만 셀 100fps)을 얼마나 깎나 — 실측 필요(WebGPU).
