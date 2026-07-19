@@ -149,6 +149,12 @@ Yours 탭, Remix, hot/new)이 전부 '갤러리에 볼 게 있다'를 전제한�
 붙이는 건 인계서가 경고한 '배급 회피의 세련된 형태'다. 의심하라.
 
 **남은 백로그 (needsUser — 실사용자/WebGPU 시각/실기기 필요):**
+- **커스텀 도메인 확보 ← 씨앗·배급 게시보다 먼저 할 무비용 창.** 현재 `*.workers.dev`는 신뢰도·기억성이
+  낮고 일부 플랫폼이 스팸 필터에서 깐깐하게 본다. 지금 밖에 나간 링크가 0개라 도메인 전환이 무마찰
+  (나중에 바꾸면 /s/:id·#g= 링크 전부 깨짐). 구매: Cloudflare Registrar(원가·네임서버 단계 없음) 또는
+  가비아(구매 후 네임서버를 Cloudflare로 변경 → Worker Custom Domain 추가). `.kr` 금지(글로벌 토이).
+  브랜드는 'Sandlab' 유지, TLD만 결정. 사용자가 사면 에이전트가 `layout.tsx`의 SITE 상수 한 줄 바꾸고
+  배포(worker는 url.origin이라 자동 적응). **이름 후보: sandlab.app / .fun / .gg / playsandlab.com 등.**
 - 갤러리 씨앗 15~50건 ← 진짜 병목. 사용자 Publish.
 - #10 랜딩 썸네일 스트립(씨앗 전제) · 클립 워터마크(오프스크린 합성 실기기 검증) ·
   Web Share files(실기기) · 모바일 Record feature-detect(iOS 실기기) ·
