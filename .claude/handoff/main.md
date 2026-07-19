@@ -123,6 +123,18 @@ community·visual은 스텁 출력 → 재실행 대상.) 종합 결론: **다�
 - 연구 백로그(다음): og:video/twitter:player(클립 저장 선행 필요), 무음 루프 MP4, /s/:id referrer로
   배급 투자처 측정(AE 활성화 후), D1 백필 지표(주간 신규 씬·업로드→최소1표 도달률).
 
+**연구 사이클 2 + 개발 (완료):** historian·sim·community 페르소나 1차자료 →
+`references/{genre-history,simulation,community}.md`. (visual은 또 스텁 실패 → 재시도 대상.)
+세 페르소나가 독립 수렴: **성장 엔진 = 시뮬 깊이가 아니라 마찰 없는 발행+리믹스 루프.**
+- **개발: 리믹스 계보(lineage) 구현·배포(61fd44d).** scenes.parent 컬럼(로컬·원격 D1 반영),
+  업로드가 parent 저장, 단건조회가 parent+remixCount 노출, SandCanvas가 #s=id 원본을 추적해
+  Publish 시 parent 전송, 갤러리 카드에 '↻ N'(리믹스 수, Yours 귀환 훅)+'↦ remix'(원본으로).
+  verify-gallery.py에 계보 회귀 추가. 리믹스 착지는 이미 배선돼 있었으므로 이건 그 위의 계보 계층.
+- 커뮤니티 연구 남은 agent-safe 백로그(다음): 창작자 귀환 훅 'Yours 소식' 요약(remixCount 이미 노출),
+  신참 보호 Fresh 레인(Powder Toy 4표·20뷰 임계), vote-decay 자동큐레이션(dan-ball 12h, 스케일 전).
+- 시뮬 연구 메모: 4-step z-Margolus가 방향편향을 없앤다(현 engine.ts가 2-step인지 확인 필요, 변경은
+  WebGPU 시각검증 needsUser). 픽셀당 발광 확대·속도장(가스)도 needsUser.
+
 **자율 세션 총계:** 제품 4 사이클 + 하드닝 1 + 연구 진행중. 워크플로/리뷰 다수. 커밋 ~25개. 전부 배포·푸시.
 클립 QuickTime 버그(사용자 최초 지적)·모바일 전면·씬별 OG(핵심 논지)·첫로드 -135kB·
 재방문 엔진까지. 모든 변경은 headless로 검증 가능한 것만 — 시뮬 시각/실기기/실사용자
