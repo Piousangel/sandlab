@@ -1,0 +1,14 @@
+import type { MetadataRoute } from 'next'
+import { SITE } from '@/lib/site'
+
+// 정적 export에 필요 — 빌드 때 sitemap.xml 파일로 굽는다.
+export const dynamic = 'force-static'
+
+// 정적 export 시 빌드 때 sitemap.xml로 생성된다. 씬 페이지(/s/:id)는 무한·동적이라 넣지 않는다
+// (색인할 UGC가 쌓이면 그때 동적 사이트맵을 연다 — references/discovery 참조).
+export default function sitemap(): MetadataRoute.Sitemap {
+  return [
+    { url: SITE, changeFrequency: 'weekly', priority: 1 },
+    { url: `${SITE}/gallery`, changeFrequency: 'daily', priority: 0.8 },
+  ]
+}

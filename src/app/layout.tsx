@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-
-const SITE = 'https://sandlab.piousangel.workers.dev'
+import { SITE } from '@/lib/site'
 
 // 쐐기(wedge)는 '테크 스펙'이 아니라 '무설치·무가입·링크로 공유'다.
 // 핸드오프 근거: fps·셀 수는 자랑이지 제품이 아니다. 방문자에게 제일 약한 쐐기를 먼저 보이지 않는다.
@@ -25,6 +24,22 @@ export const metadata: Metadata = {
     images: ['/og.png'],
   },
   icons: { icon: '/icon.png', apple: '/icon.png' },
+  alternates: { canonical: SITE },
+}
+
+// 구조화 데이터 — 크롤러/AI 답변 그라운딩용. WebSite + 무설치 브라우저 게임.
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'VideoGame',
+  name: 'Sandlab',
+  url: SITE,
+  applicationCategory: 'Game',
+  operatingSystem: 'Web browser (WebGPU)',
+  browserRequirements: 'Requires WebGPU (Chrome/Edge 113+, Safari 26+)',
+  genre: 'Falling-sand simulation',
+  description: TAGLINE,
+  image: `${SITE}/og.png`,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
 }
 
 export const viewport: Viewport = {
@@ -46,6 +61,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           overscrollBehavior: 'none',
         }}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
         {children}
       </body>
     </html>
