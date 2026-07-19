@@ -129,6 +129,18 @@ export default function GalleryBrowser() {
         </div>
       )}
 
+      {/* 창작자 귀환 훅 — "네 작품에 무슨 일이 있었나"를 한 줄로. 댓글 없는 커뮤니티의 재방문 신호는
+          표·리믹스 카운트뿐이므로(Sandspiel), Yours 재방문 시 그 합계를 되돌려준다. */}
+      {sort === 'mine' && !loading && scenes.length > 0 && (
+        <p style={S.mineDigest}>
+          {scenes.length} scene{scenes.length > 1 ? 's' : ''} ·{' '}
+          <strong>{scenes.reduce((n, s) => n + (s.votes || 0), 0)}</strong> vote
+          {scenes.reduce((n, s) => n + (s.votes || 0), 0) === 1 ? '' : 's'} ·{' '}
+          <strong>{scenes.reduce((n, s) => n + (s.remixCount || 0), 0)}</strong> remix
+          {scenes.reduce((n, s) => n + (s.remixCount || 0), 0) === 1 ? '' : 'es'}
+        </p>
+      )}
+
       {/* 카드 호버 신호 — 인라인 스타일은 :hover를 못 하므로 여기서만 최소 CSS를 주입한다.
           썸네일=본체이고 관람→열기→리믹스→재게시가 이 장르의 생존 루프라, 리믹스 초대를 표면화한다. */}
       <style>{`
@@ -297,6 +309,13 @@ const S: Record<string, React.CSSProperties> = {
     fontWeight: 600,
   },
   lineageLink: { fontSize: 11, opacity: 0.5, color: '#eef1f6', textDecoration: 'none' },
+  mineDigest: {
+    margin: '0 0 16px',
+    fontSize: 13,
+    opacity: 0.7,
+    color: '#eef1f6',
+    fontVariantNumeric: 'tabular-nums',
+  },
   voteStatic: {
     border: '1px solid rgba(255,255,255,0.10)',
     color: '#eef1f6',
