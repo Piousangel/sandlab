@@ -12,7 +12,9 @@ CREATE TABLE IF NOT EXISTS scenes (
   created_at INTEGER NOT NULL,
   w          INTEGER NOT NULL,
   h          INTEGER NOT NULL,
-  ip         TEXT NOT NULL    -- SHA-256 앞 12바이트. 원본 IP는 저장하지 않는다.
+  ip         TEXT NOT NULL,   -- SHA-256 앞 12바이트. 원본 IP는 저장하지 않는다.
+  parent     TEXT             -- 리믹스 계보: 이 작품이 파생된 원본 씬 id. 원작은 NULL.
+                              -- (댓글 없이 크리에이터를 잇는 리텐션 플라이휠 — Sandspiel 리믹스 문화)
 );
 
 -- hot 랭킹: 최근 1주일 이내 + 표 순 (Powder Toy FP 복제).
@@ -21,6 +23,8 @@ CREATE INDEX IF NOT EXISTS idx_scenes_hot ON scenes(created_at DESC, votes DESC)
 CREATE INDEX IF NOT EXISTS idx_scenes_new ON scenes(created_at DESC);
 -- 업로드 레이트리밋 조회용
 CREATE INDEX IF NOT EXISTS idx_scenes_ip ON scenes(ip, created_at);
+-- 리믹스 카운트(이 씬에서 파생된 작품 수) 조회용
+CREATE INDEX IF NOT EXISTS idx_scenes_parent ON scenes(parent);
 
 CREATE TABLE IF NOT EXISTS votes (
   scene      TEXT NOT NULL,

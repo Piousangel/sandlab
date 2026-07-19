@@ -32,6 +32,10 @@ export interface SceneMeta {
   createdAt: number
   w: number
   h: number
+  /** 리믹스 계보: 이 씬이 파생된 원본 id (원작은 null/미포함). 단건 조회에서만 채워진다. */
+  parent?: string | null
+  /** 이 씬에서 파생된 리믹스 수. 단건 조회에서만 채워진다. */
+  remixCount?: number
 }
 
 export interface SceneFull extends SceneMeta {
@@ -82,7 +86,15 @@ export function getSceneMeta(id: string) {
   return req<SceneMeta>(`/api/scenes/${encodeURIComponent(id)}?meta=1`)
 }
 
-export function uploadScene(body: { title: string; data: string; thumb: string; w: number; h: number }) {
+export function uploadScene(body: {
+  title: string
+  data: string
+  thumb: string
+  w: number
+  h: number
+  /** 리믹스일 때 원본 씬 id. 원작이면 생략. */
+  parent?: string | null
+}) {
   return req<{ id: string }>('/api/scenes', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

@@ -55,6 +55,8 @@ export default function SandCanvas() {
   // 터치(coarse pointer)에선 우클릭이 없다 — 힌트/안내 문구를 포인터 타입에 맞춘다.
   const [coarse, setCoarse] = useState(false)
   const idx = useRef(buildIndex(PRESETS))
+  // 리믹스 계보: 공유 링크(#s=id)로 로드한 원본 씬 id. Publish 시 parent로 보내 계보를 잇는다.
+  const loadedSceneId = useRef<string | null>(null)
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return
@@ -108,6 +110,7 @@ export default function SandCanvas() {
           try {
             const sc = await getScene(sm[1])
             restored = await decodeScene(sc.data)
+            loadedSceneId.current = sm[1] // 이 씬을 리믹스하면 계보 원본이 된다
           } catch {
             /* 삭제됐거나 잘못된 id — 빈 화면으로 시작한다 */
           }
@@ -237,8 +240,16 @@ export default function SandCanvas() {
         encodeScene(cells, W, H),
         makeThumb(cells, W, H, PRESETS),
       ])
-      const { id } = await uploadScene({ title, data, thumb, w: W, h: H })
+      const { id } = await uploadScene({
+        title,
+        data,
+        thumb,
+        w: W,
+        h: H,
+        parent: loadedSceneId.current, // 공유 링크로 로드한 원본이 있으면 계보를 잇는다
+      })
       rememberMine(id, title || 'Untitled') // 재방문 훅: 내가 올린 씬으로 기록
+      loadedSceneId.current = id // 이후 재발행은 방금 올린 내 씬의 리믹스가 된다
       // 현재 탭 상태는 기존 해시 경로로(리로드해도 이 씬), 공유는 OG가 붙는 경로형 링크로.
       history.replaceState(null, '', `${location.origin}/#s=${id}`)
       setShared({ url: `${location.origin}/s/${id}`, published: true })

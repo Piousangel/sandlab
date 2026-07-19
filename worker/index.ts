@@ -194,9 +194,10 @@ export default {
       // ?meta=1 이면 씬 blob(data)을 빼고 메타만 준다 — Yours 탭처럼 표시에 data가 불필요할 때
       // 수백 KB를 낭비하지 않는다. 컬럼은 고정 상수라 인젝션 없음.
       const metaOnly = url.searchParams.get('meta') != null
-      const cols = metaOnly
-        ? 'id,title,votes,created_at AS createdAt,w,h'
-        : 'id,title,votes,created_at AS createdAt,w,h,data'
+      // parent(계보 원본) + remixCount(이 씬에서 파생된 작품 수)를 항상 포함한다.
+      const base = 'id,title,votes,created_at AS createdAt,w,h,parent,' +
+        '(SELECT COUNT(*) FROM scenes r WHERE r.parent=scenes.id) AS remixCount'
+      const cols = metaOnly ? base : `${base},data`
       const row = await env.DB.prepare(`SELECT ${cols} FROM scenes WHERE id=?`)
         .bind(id)
         .first<SceneMeta & { data?: string }>()
@@ -213,7 +214,14 @@ export default {
 
     // ── 업로드 ──
     if (p === '/api/scenes' && request.method === 'POST') {
-      let body: { title?: unknown; data?: unknown; thumb?: unknown; w?: unknown; h?: unknown }
+      let body: {
+        title?: unknown
+        data?: unknown
+        thumb?: unknown
+        w?: unknown
+        h?: unknown
+        parent?: unknown
+      }
       try {
         body = await request.json()
       } catch {
@@ -224,6 +232,8 @@ export default {
       const thumb = String(body.thumb ?? '')
       const w = Number(body.w)
       const h = Number(body.h)
+      // 리믹스 계보: 유효한 id면 원본으로 기록, 아니면(원작) null. 자기참조는 무의미하니 무시.
+      const parent = typeof body.parent === 'string' && isValidId(body.parent) ? body.parent : null
 
       if (!/^[A-Za-z0-9_-]+$/.test(data) || data.length > MAX_SCENE_BYTES) return err('bad scene data')
       if (!/^[A-Za-z0-9+/=]+$/.test(thumb) || thumb.length > MAX_THUMB_BYTES) return err('bad thumb')
@@ -247,9 +257,9 @@ export default {
 
       const id = newId()
       await env.DB.prepare(
-        'INSERT INTO scenes (id,title,data,thumb,votes,created_at,w,h,ip) VALUES (?,?,?,?,0,?,?,?,?)',
+        'INSERT INTO scenes (id,title,data,thumb,votes,created_at,w,h,ip,parent) VALUES (?,?,?,?,0,?,?,?,?,?)',
       )
-        .bind(id, cleanTitle(body.title), data, bytes, Date.now(), w, h, hash)
+        .bind(id, cleanTitle(body.title), data, bytes, Date.now(), w, h, hash, parent)
         .run()
 
       // 활성화 이벤트: 실제 씬 게시(페이지뷰가 아니라 이게 진짜 신호).

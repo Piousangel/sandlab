@@ -182,7 +182,24 @@ export default function GalleryBrowser() {
                   </button>
                 )}
               </div>
-              <span style={S.age}>{ago(s.createdAt)}</span>
+              <div style={S.footer}>
+                <span style={S.age}>{ago(s.createdAt)}</span>
+                {/* 리믹스 계보 — 단건 조회(Yours 탭)에서만 채워진다. "네 작품에 무슨 일이" 귀환 훅. */}
+                {s.remixCount != null && s.remixCount > 0 && (
+                  <span style={S.lineage} title={`${s.remixCount} remix${s.remixCount > 1 ? 'es' : ''} of this`}>
+                    ↻ {s.remixCount}
+                  </span>
+                )}
+                {s.parent && (
+                  <a
+                    href={`/#s=${s.parent}`}
+                    style={S.lineageLink}
+                    title="Open the original this was remixed from"
+                  >
+                    ↦ remix
+                  </a>
+                )}
+              </div>
             </div>
           )
         })}
@@ -271,6 +288,15 @@ const S: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   voteOn: { background: '#3b6dff', borderColor: '#3b6dff', cursor: 'default' },
+  footer: { display: 'flex', alignItems: 'center', gap: 10 },
+  lineage: {
+    fontSize: 11,
+    opacity: 0.6,
+    color: '#cfe0ff',
+    fontVariantNumeric: 'tabular-nums',
+    fontWeight: 600,
+  },
+  lineageLink: { fontSize: 11, opacity: 0.5, color: '#eef1f6', textDecoration: 'none' },
   voteStatic: {
     border: '1px solid rgba(255,255,255,0.10)',
     color: '#eef1f6',

@@ -83,6 +83,20 @@ check(isinstance(r, dict) and r.get('votes') is not None, "meta에도 votes 포�
 _, hd, _ = get_raw(f"/api/scenes/{sid}?meta=1")
 check('no-store' in (hd.get('Cache-Control','')), "meta는 no-store(표수가 최신이어야 함)")
 
+print("\n=== 리믹스 계보 (parent / remixCount) ===")
+s, r = call("/api/scenes", {"title":"remix of first","data":DATA,"thumb":THUMB,"w":960,"h":540,"parent":sid})
+check(s == 200 and 'id' in r, f"리믹스 업로드(parent={sid}) → {r}")
+bid = r.get('id')
+s, r = call(f"/api/scenes/{bid}?meta=1")
+check(s == 200 and r.get('parent') == sid, f"자식이 parent를 기록 → parent={r.get('parent')}")
+s, r = call(f"/api/scenes/{sid}?meta=1")
+check(s == 200 and r.get('remixCount') == 1, f"원본 remixCount=1 → {r.get('remixCount')}")
+# 잘못된 형식 parent는 무시(원작으로 저장)
+s, r = call("/api/scenes", {"title":"bad parent","data":DATA,"thumb":THUMB,"w":960,"h":540,"parent":"nope!!"})
+if s == 200:
+    _, r2 = call(f"/api/scenes/{r['id']}?meta=1")
+    check(r2.get('parent') in (None, ''), "잘못된 형식 parent는 무시(null)")
+
 print("\n=== 씬 공유 OG (/s/:id) ===")
 st, hd, html = get_raw(f"/s/{sid}")
 check(st == 200, f"/s/:id 200 → {st}")
