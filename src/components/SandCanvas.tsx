@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, Fragment } from 'react'
 import { SandEngine, WebGPUUnsupported } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
@@ -444,14 +444,14 @@ export default function SandCanvas() {
 
       <div ref={dockRef} style={S.dock}>
         <div style={S.chips}>
-          {PAINTABLE.map((m) => {
+          {PAINTABLE.map((m, i) => {
             const on = sel === m.slug
             const dot = {
               ...S.chip,
               background: m.color,
-              transform: on ? 'scale(1.28)' : 'scale(1)',
+              transform: on ? 'scale(1.32)' : 'scale(1)',
               boxShadow: on
-                ? `0 0 0 2px #0b0e13, 0 0 0 3.5px #fff, 0 0 14px ${m.color}`
+                ? `0 0 0 2px #0b0e13, 0 0 0 3.5px #fff, 0 0 16px ${m.color}, 0 0 6px 1px #f5a62366`
                 : m.emissive > 0.5
                   ? `0 0 10px ${m.color}88`
                   : 'inset 0 0 0 1px #ffffff22',
@@ -460,14 +460,21 @@ export default function SandCanvas() {
               setSel(m.slug)
               setErasing(false) // 재료를 고르면 지우개 모드 해제
             }
-            // 터치: 시각 점은 19px 유지하되 탭 영역만 40px로 키운다(오탭 방지, WCAG 근접).
-            // 마우스: 그대로 19px 버튼(정밀 포인터라 히트영역 확장 불필요).
-            return coarse ? (
-              <button key={m.slug} onClick={pick} title={m.name} aria-label={m.name} style={S.chipHit}>
+            // 움직임 타입(고정·가루·액체·기체) 경계에 구분선 — 18개 칩의 그룹을 읽히게.
+            const groupBreak = i > 0 && PAINTABLE[i - 1].movement !== m.movement
+            // 터치: 시각 점은 19px 유지하되 탭 영역만 40px로(오탭 방지). 마우스: 19px 버튼.
+            const chip = coarse ? (
+              <button onClick={pick} title={m.name} aria-label={m.name} style={S.chipHit}>
                 <span style={dot} />
               </button>
             ) : (
-              <button key={m.slug} onClick={pick} title={m.name} aria-label={m.name} style={dot} />
+              <button onClick={pick} title={m.name} aria-label={m.name} style={dot} />
+            )
+            return (
+              <Fragment key={m.slug}>
+                {groupBreak && <span style={S.chipSep} />}
+                {chip}
+              </Fragment>
             )
           })}
         </div>
@@ -697,6 +704,15 @@ const S: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     padding: 0,
     transition: 'transform 110ms cubic-bezier(.2,.9,.3,1.2), box-shadow 110ms',
+  },
+  // 움직임 타입 그룹 구분선 (고정·가루·액체·기체)
+  chipSep: {
+    width: 1,
+    height: 16,
+    background: 'rgba(255,255,255,0.13)',
+    margin: '0 3px',
+    alignSelf: 'center',
+    flexShrink: 0,
   },
   // 터치 히트영역 래퍼 — 40px 탭 타깃, 안엔 19px 점만 보인다. 투명.
   chipHit: {
