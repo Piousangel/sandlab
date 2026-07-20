@@ -50,7 +50,7 @@ export default function SandCanvas() {
   // Publish/Copy 성공 후 지속되는 공유 패널. navigator.share·clipboard는 transient activation을
   // 요구하는데 업로드(네트워크 await) 뒤엔 그 창이 만료돼 있다. 그래서 자동 공유 대신,
   // 사용자가 '새 제스처'로 눌러 공유/복사하게 링크를 눈앞에 남긴다(실패해도 링크 회수 가능).
-  const [shared, setShared] = useState<{ url: string; published: boolean } | null>(null)
+  const [shared, setShared] = useState<{ url: string; published: boolean; thumb?: string } | null>(null)
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
   // 터치(coarse pointer)에선 우클릭이 없다 — 힌트/안내 문구를 포인터 타입에 맞춘다.
   const [coarse, setCoarse] = useState(false)
@@ -87,6 +87,21 @@ export default function SandCanvas() {
     const el = dockRef.current
     if (!el) return
     const measure = () => setDockH(el.offsetHeight)
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // 세로 폰(h>w)에선 2:1 캔버스가 얇은 밴드가 되고 아래가 큰 검정 → 그 공간을 브랜딩으로 채운다.
+  // h>w는 세로 폰/태블릿만 정확히 잡고 모든 landscape 데스크톱을 배제(절대값 임계의 오발동 회피).
+  const stageRef = useRef<HTMLDivElement>(null)
+  const [narrow, setNarrow] = useState(false)
+  useEffect(() => {
+    const el = stageRef.current
+    if (!el) return
+    const measure = () => setNarrow(el.clientHeight > el.clientWidth)
     measure()
     if (typeof ResizeObserver === 'undefined') return
     const ro = new ResizeObserver(measure)
@@ -299,7 +314,8 @@ export default function SandCanvas() {
       loadedSceneId.current = id // 이후 재발행은 방금 올린 내 씬의 리믹스가 된다
       // 현재 탭 상태는 기존 해시 경로로(리로드해도 이 씬), 공유는 OG가 붙는 경로형 링크로.
       history.replaceState(null, '', `${location.origin}/#s=${id}`)
-      setShared({ url: `${location.origin}/s/${id}`, published: true })
+      // 방금 만든 씬 썸네일을 공유 패널에 보여준다 — "내가 만든 게 이렇게 나왔다" 자부심 모먼트.
+      setShared({ url: `${location.origin}/s/${id}`, published: true, thumb })
       flash('Published to the gallery.')
     } catch (e) {
       flash(e instanceof Error ? e.message : 'Publish failed.')
@@ -320,7 +336,14 @@ export default function SandCanvas() {
       )
     }
     history.replaceState(null, '', res.url)
-    setShared({ url: res.url, published: false })
+    // 공유 패널에도 씬 프리뷰를 — 실패해도 optional이라 링크 흐름은 무손상.
+    let thumb: string | undefined
+    try {
+      thumb = await makeThumb(cells, W, H, PRESETS)
+    } catch {
+      /* 프리뷰만 생략 */
+    }
+    setShared({ url: res.url, published: false, thumb })
     // Copy link는 네트워크가 없어 activation이 살아있다 — 즉시 복사를 시도하되 정직하게.
     // 실패해도 패널에 링크가 남아 회수 가능하므로 거짓 'copied'를 내지 않는다.
     try {
@@ -385,7 +408,7 @@ export default function SandCanvas() {
 
   return (
     <div style={S.root}>
-      <div style={{ ...S.stage, bottom: dockH }}>
+      <div ref={stageRef} style={{ ...S.stage, bottom: dockH, ...(narrow ? S.stageNarrow : null) }}>
         <canvas
           ref={canvasRef}
           width={W}
@@ -399,6 +422,12 @@ export default function SandCanvas() {
         />
         {ready && !hasDrawn && (
           <div style={S.onboard}>{coarse ? 'Drag to pour sand' : 'Click and drag to pour sand'}</div>
+        )}
+        {narrow && (
+          <div style={S.stageFill}>
+            <span style={S.stageFillWord}>Sandlab</span>
+            {!hasDrawn && <span style={S.stageFillSub}>Pour it. Watch it fall. Share the link.</span>}
+          </div>
         )}
       </div>
 
@@ -499,6 +528,10 @@ export default function SandCanvas() {
 
       {shared && (
         <div style={{ ...S.sharePanel, bottom: dockH + 14 }}>
+          {shared.thumb && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={`data:image/png;base64,${shared.thumb}`} alt="Your scene" style={S.shareThumb} />
+          )}
           <span style={S.sharePanelMsg}>
             {shared.published ? 'Published to the gallery' : 'Link ready'}
           </span>
@@ -549,10 +582,44 @@ const S: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 56,
-    display: 'grid',
-    placeItems: 'center',
+    // flex column — 데스크톱은 자식(canvas)이 하나라 여전히 정중앙. 세로 폰에선 canvas를 위로
+    // 붙이고 남는 큰 검정을 브랜딩으로 채운다(stageNarrow/stageFill).
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: '8px 8px 0',
   },
+  // 세로 폰: canvas를 상단에 붙이고 아래 데드스페이스를 채운다.
+  stageNarrow: {
+    justifyContent: 'flex-start',
+    paddingTop: 'max(56px, env(safe-area-inset-top))',
+  },
+  // 검정 데드스페이스 대신 바닥에서 올라오는 앰버 듄 글로우 + 브랜드 히어로.
+  stageFill: {
+    flex: 1,
+    minHeight: 0,
+    alignSelf: 'stretch',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    textAlign: 'center',
+    padding: '26px 20px',
+    background:
+      'radial-gradient(130% 90% at 50% 118%, rgba(245,166,35,0.16), rgba(245,166,35,0.03) 46%, transparent 72%)',
+    pointerEvents: 'none',
+    userSelect: 'none',
+  },
+  stageFillWord: {
+    fontSize: 26,
+    fontWeight: 700,
+    letterSpacing: -0.4,
+    color: '#f5d9a6',
+    textShadow: '0 2px 20px rgba(0,0,0,0.6)',
+  },
+  stageFillSub: { fontSize: 13, opacity: 0.62, color: '#eef1f6', maxWidth: 280, lineHeight: 1.5 },
   canvas: {
     display: 'block',
     maxWidth: '100%',
@@ -771,6 +838,19 @@ const S: Record<string, React.CSSProperties> = {
     boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
   },
   sharePanelMsg: { fontSize: 12, fontWeight: 600, opacity: 0.85, color: '#eef1f6' },
+  // 방금 만든 씬 프리뷰 — 패널이 flexWrap이라 flexBasis 100%가 컨트롤 위 독립 행으로 밀어 올린다.
+  shareThumb: {
+    flexBasis: '100%',
+    width: '100%',
+    maxWidth: 264,
+    margin: '0 auto',
+    aspectRatio: '2 / 1',
+    borderRadius: 8,
+    objectFit: 'cover',
+    display: 'block',
+    border: '1px solid rgba(255,255,255,0.14)',
+    boxShadow: '0 6px 20px rgba(0,0,0,0.45)',
+  },
   shareInput: {
     background: 'rgba(0,0,0,0.35)',
     border: '1px solid rgba(255,255,255,0.14)',
