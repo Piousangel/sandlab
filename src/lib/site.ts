@@ -5,4 +5,4 @@
  * metadataBase·OG·canonical·sitemap·robots가 전부 이걸 참조하므로 도메인 전환이 한 곳으로 끝난다.
  * (worker의 /s/:id·공유 링크는 url.origin을 써서 자동 적응 — 코드 변경 불필요.)
  */
-export const SITE = 'https://sandlab.piousangel.workers.dev'
+export const SITE = 'https://sandlab.app'

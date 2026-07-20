@@ -15,7 +15,9 @@
       "database_name": "sandlab-gallery",
       "database_id": "75e9cf5f-82b9-4784-9a5b-cec215df3909"
     }
-  ]
+  ],
+  // 커스텀 도메인. Cloudflare Registrar로 구매해 계정 내 zone이므로 배포 시 DNS+인증서 자동 발급.
+  "routes": [{ "pattern": "sandlab.app", "custom_domain": true }]
   // 배급 퍼널 계측 (Analytics Engine) — 코드는 worker/index.ts에 준비돼 있고 env.AE가 없으면
   // no-op이다. 켜려면: (1) 대시보드에서 Analytics Engine 활성화
   //   https://dash.cloudflare.com/f9ca01fb346f810310bfb49234926972/workers/analytics-engine
