@@ -348,7 +348,10 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
 
   // 녹화 중에만 우하단 워터마크 — 공유되는 모든 클립이 곧 광고. (P.recording != 0)
   if (P.recording != 0u) {
-    let wmMin = vec2<f32>(0.695, 0.902);
+    // UV 영역 종횡비를 텍스처(512x96=5.33:1)에 맞춘다. 2:1 캔버스에서 영역 폭 0.289 →
+    // 물리폭 346.8px, 5.33:1이려면 물리높이 65px = uv 0.108 → wmMin.y = 0.964-0.108.
+    // (안 맞추면 글자가 가로로 ~1.75배 늘어난다.)
+    let wmMin = vec2<f32>(0.695, 0.856);
     let wmMax = vec2<f32>(0.984, 0.964);
     if (in.uv.x >= wmMin.x && in.uv.x <= wmMax.x && in.uv.y >= wmMin.y && in.uv.y <= wmMax.y) {
       let luv = (in.uv - wmMin) / (wmMax - wmMin);

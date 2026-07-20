@@ -422,13 +422,15 @@ export default function SandCanvas() {
           onPointerCancel={onUp}
           onContextMenu={(e) => e.preventDefault()}
         />
-        {ready && !hasDrawn && (
+        {/* 온보딩 힌트는 캔버스 위 정중앙 — narrow(세로 폰)에선 캔버스가 상단 밴드라 stage 50%가
+            듄 영역에 떨어져 어긋난다. 그래서 narrow에선 숨기고 아래 stageFillSub가 안내를 대신한다. */}
+        {ready && !hasDrawn && !narrow && (
           <div style={S.onboard}>{coarse ? 'Drag to pour sand' : 'Click and drag to pour sand'}</div>
         )}
         {narrow && (
           <div style={S.stageFill}>
             <span style={S.stageFillWord}>Sandlab</span>
-            {!hasDrawn && <span style={S.stageFillSub}>Pour it. Watch it fall. Share the link.</span>}
+            {!hasDrawn && <span style={S.stageFillSub}>Drag on the canvas to pour sand. Share the link.</span>}
           </div>
         )}
       </div>
