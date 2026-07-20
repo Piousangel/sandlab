@@ -169,6 +169,13 @@ export default function GalleryBrowser() {
                   loading="lazy"
                   className="sl-thumb-img"
                   style={S.thumb}
+                  onError={(e) => {
+                    // 썸네일 로드 실패(삭제·손상·네트워크) 시 깨진 아이콘 대신 그라디언트 플레이스홀더로.
+                    // "썸네일=본체" 장르에서 깨진 카드는 '고장난 사이트' 신호라 반드시 우아하게 떨어져야 한다.
+                    const img = e.currentTarget
+                    img.removeAttribute('src')
+                    img.style.background = 'linear-gradient(135deg, #1a1410, #0c0a08)'
+                  }}
                 />
                 <span className="sl-remix" style={S.remixBadge}>
                   ↻ Remix
@@ -299,12 +306,12 @@ const S: Record<string, React.CSSProperties> = {
     fontVariantNumeric: 'tabular-nums',
     flexShrink: 0,
   },
-  voteOn: { background: '#3b6dff', borderColor: '#3b6dff', cursor: 'default' },
+  voteOn: { background: '#f5a623', borderColor: '#f5a623', color: '#1a1206', cursor: 'default' },
   footer: { display: 'flex', alignItems: 'center', gap: 10 },
   lineage: {
     fontSize: 11,
-    opacity: 0.6,
-    color: '#cfe0ff',
+    opacity: 0.62,
+    color: '#f0c98a',
     fontVariantNumeric: 'tabular-nums',
     fontWeight: 600,
   },
@@ -328,14 +335,14 @@ const S: Record<string, React.CSSProperties> = {
   },
   age: { fontSize: 11, opacity: 0.3 },
   seeNewest: {
-    background: '#3b6dff',
-    color: '#fff',
-    border: '1px solid #3b6dff',
+    background: '#f5a623',
+    color: '#1a1206',
+    border: '1px solid #f5a623',
     borderRadius: 8,
     padding: '8px 14px',
     fontSize: 13,
     fontWeight: 600,
     cursor: 'pointer',
-    boxShadow: '0 3px 16px rgba(59,109,255,0.35)',
+    boxShadow: '0 3px 16px rgba(245,166,35,0.35)',
   },
 }
