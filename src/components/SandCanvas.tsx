@@ -507,7 +507,8 @@ export default function SandCanvas() {
             onFocus={(e) => e.currentTarget.select()}
             style={S.shareInput}
           />
-          <button style={S.sharePrimary} onClick={copyShared}>
+          {/* 주액션은 항상 하나만: 모바일엔 Share가 자연스러우니 Copy는 고스트로, 데스크톱엔 Copy가 주액션. */}
+          <button style={canShare ? S.ghost : S.sharePrimary} onClick={copyShared}>
             Copy
           </button>
           {canShare && (
