@@ -34,5 +34,31 @@
 - 발사 전 새 기능 추가(배급 회피). 씨앗+발사가 먼저.
 - 신규/저karma 계정으로 서브레딧 발사(자동필터). 계정 적격성 미리 확인.
 
-## 미완 (다음 연구: coldstart·monetization·visual 페르소나 재시도 필요 — 3사이클 연속 스키마 실패)
-- 구체적 서브레딧별 규칙·karma 임계, 게시 시각 데이터, 수익화 심화(워터마크 클립 업셀 등)는 재조사 대상.
+## 심화 (병렬 탐색 coldstart 연구, 출처 있음)
+
+### 게시 시각 하드코딩 (KST 변환 포함)
+- **HN Show HN**: 화~목 08~10시 ET = **KST 21~23시**. 첫 60~90분 표 속도가 순위 결정. 일요일 저녁도 2순위.
+  월 아침·금 오후 회피. → okara.ai/blog/show-hn-front-page
+- **Reddit**: 평일 06~09시 ET = **KST 19~22시**, 화·수 선호. **"30분 내 10표 > 3시간에 20표"**(decay ~12.5h). → upvote.net
+- **Product Hunt**: 00:01 PST 게시로 24시간 확보(낮은 우선순위 채널 — 무가입 토이라 badge 실익 낮음). → calmops.com
+- **댓글 = 초기엔 업보트의 ~2배 모멘텀**(HN·Reddit 공통). 5업보트+10댓글 > 15업보트+0.
+
+### 발사 = "게시 1회"가 아니라 "첫 90분 라이브 응대"
+게시 직후 90분간 스레드 붙박이, **모든 댓글에 창작자가 직접 답**(+ "물+불 섞으면?" 류 질문에 즉석에서 씬을
+그려 링크로 응답). 낙사 토이는 이런 질문이 자연 발생 → 즉답이 곧 랭킹 연료.
+
+### sandlab의 구조적 무기
+- **r/InternetIsBeautiful은 가입/로그인 벽 제품을 automod로 거른다.** sandlab은 무계정 원클릭이라 경쟁 UGC
+  토이 대부분이 못 통과하는 벽을 **애초에 통과**. 발사 카피에 "no signup, one link" 자체를 후크로. → refined.so
+- **단, karma 있는 오래된 계정으로 게시**(신선 계정 자동필터). r/entrepreneur는 서브karma 10 최소. 발사 전 체크: 게시 계정 karma/나이.
+
+### WebGPU 호환성 마찰 선제 방어
+동종 WebGPU 낙사 Show HN(2023)의 첫 마찰이 "안 돌아감/프리즈". sandlab은 (a) **관람모드**(계정불요, WebGPU
+없어도 갤러리 보임)가 폴백 자산, (b) 게시 본문에 "works in Chrome/Edge, Safari 26+" 한 줄 선명시로 "안
+돌아간다" 첫 댓글 무력화. → news.ycombinator.com/item?id=36106262
+
+### 추가 채널
+- **itch.io**: 브라우저 플레이 전환 37% vs 다운로드 6%. 내부 배너 CTR(썸네일)이 트래픽 좌우 → 무음 클립 자산 재활용. release announcement는 큐레이터가 매일 봄. → howtomarketagame.com
+- **PROCJAM(절차생성 잼), r/proceduralgeneration, r/PlayMyGame, r/IndieDev** — 잼은 "진행 중 공유" 장려 → 과정 노출로 씨앗.
+
+## 미완 (visual 페르소나 3사이클 연속 실패 — design.md의 크리틱으로 대체 충당됨)
