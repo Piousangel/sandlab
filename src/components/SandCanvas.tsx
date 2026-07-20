@@ -41,6 +41,8 @@ export default function SandCanvas() {
   const [busy, setBusy] = useState(false)
   // 빈 캔버스 온보딩: 첫 방문자는 검은 상자만 보면 그릴 줄 모른다. 한 번이라도 그리면(또는 장면 복원 시) 끈다.
   const [hasDrawn, setHasDrawn] = useState(false)
+  // 남의 씬(#s=id)을 열고 착지했을 때만 뜨는 리믹스 안내 배너. 첫 붓질/× 에 소멸.
+  const [remix, setRemix] = useState<{ id: string; title: string } | null>(null)
   // 지우개 모드. 데스크톱은 우클릭으로도 지우지만 터치엔 우클릭이 없어 이 토글이 유일한 지우기 수단이다.
   const [erasing, setErasing] = useState(false)
   // WebGPU 미지원 방문자(클립을 클릭하는 인앱 웹뷰 등)를 텍스트 벽에서 버리지 않는다 —
@@ -123,11 +125,13 @@ export default function SandCanvas() {
         // 갤러리 경로가 있어야 URL 예산(6000자)을 넘는 복잡한 장면도 공유된다.
         const sm = location.hash.match(/[#&]s=([A-Za-z0-9_-]{6,16})/)
         let restored = null
+        let remixMeta: { id: string; title: string } | null = null
         if (sm) {
           try {
             const sc = await getScene(sm[1])
             restored = await decodeScene(sc.data)
             loadedSceneId.current = sm[1] // 이 씬을 리믹스하면 계보 원본이 된다
+            remixMeta = { id: sm[1], title: sc.title } // 착지 배너용(제목은 서버에서 이미 정제됨)
           } catch {
             /* 삭제됐거나 잘못된 id — 빈 화면으로 시작한다 */
           }
@@ -137,6 +141,8 @@ export default function SandCanvas() {
         if (!disposed && restored && restored.w === W && restored.h === H) {
           eng.upload(restored.cells)
           setHasDrawn(true) // 복원된 장면은 빈 게 아니므로 온보딩 힌트를 띄우지 않는다
+          // 남의 씬을 링크로 열었다 → "이거 리믹스할 수 있다"를 알린다(링크 클릭자 = 최고 전환 후보).
+          if (remixMeta) setRemix(remixMeta)
         }
         if (disposed) return
         engineRef.current = eng
@@ -217,6 +223,7 @@ export default function SandCanvas() {
     e.currentTarget.setPointerCapture(e.pointerId)
     const eng = engineRef.current
     if (!eng) return
+    if (remix) setRemix(null) // 첫 붓질 = 리믹스 시작 → 안내 배너 소멸
     // 첫 상호작용: 앰비언트 데모를 즉시 멈추고(ref) 캔버스를 비워 사용자에게 깨끗한 시작을 준다.
     if (!interacted.current) {
       interacted.current = true
@@ -431,6 +438,19 @@ export default function SandCanvas() {
           <div style={S.stageFill}>
             <span style={S.stageFillWord}>Sandlab</span>
             {!hasDrawn && <span style={S.stageFillSub}>Drag on the canvas to pour sand. Share the link.</span>}
+          </div>
+        )}
+        {remix && (
+          <div style={S.remixBanner}>
+            <span style={S.remixText}>
+              Remixing <strong style={{ fontWeight: 600 }}>“{remix.title}”</strong> — draw on it, then Publish your own.
+            </span>
+            <a href={`/s/${remix.id}`} target="_blank" rel="noopener noreferrer" style={S.remixLink}>
+              original&nbsp;↗
+            </a>
+            <button onClick={() => setRemix(null)} style={S.remixClose} aria-label="Dismiss">
+              ×
+            </button>
           </div>
         )}
       </div>
@@ -816,6 +836,46 @@ const S: Record<string, React.CSSProperties> = {
     fontWeight: 500,
     letterSpacing: 0.3,
     textShadow: '0 1px 12px rgba(0,0,0,0.9)',
+  },
+  // 리믹스 착지 배너 — 캔버스 상단. 컨테이너는 pointerEvents:none(그리기 방해 안 함),
+  // 링크·× 만 auto. 첫 붓질 또는 × 로 소멸.
+  remixBanner: {
+    ...glass,
+    position: 'absolute',
+    top: 14,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    maxWidth: 'calc(100% - 20px)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    padding: '7px 8px 7px 13px',
+    borderRadius: 10,
+    color: '#eef1f6',
+    fontSize: 12.5,
+    boxShadow: '0 6px 24px rgba(0,0,0,0.45)',
+    pointerEvents: 'none',
+    zIndex: 6,
+  },
+  remixText: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 },
+  remixLink: {
+    pointerEvents: 'auto',
+    color: '#f5c98a',
+    textDecoration: 'none',
+    fontWeight: 600,
+    flexShrink: 0,
+  },
+  remixClose: {
+    pointerEvents: 'auto',
+    flexShrink: 0,
+    background: 'transparent',
+    border: 'none',
+    color: '#eef1f6',
+    opacity: 0.55,
+    fontSize: 17,
+    lineHeight: 1,
+    cursor: 'pointer',
+    padding: '0 2px',
   },
   hint: {
     position: 'absolute',
