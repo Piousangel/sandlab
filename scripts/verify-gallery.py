@@ -105,6 +105,12 @@ s, r = call("/api/scenes", {"title":"bad parent","data":DATA,"thumb":THUMB,"w":9
 if s == 200:
     _, r2 = call(f"/api/scenes/{r['id']}?meta=1")
     check(r2.get('parent') in (None, ''), "잘못된 형식 parent는 무시(null)")
+# 계보가 hot/new 공개 리스트에도 실린다(Yours뿐 아니라 모든 방문자에게 ↻N·remix 노출)
+for sort in ("new", "hot"):
+    _, lst = call(f"/api/scenes?sort={sort}")
+    byid = {x['id']: x for x in lst.get('scenes', [])}
+    check(byid.get(sid, {}).get('remixCount') == 1, f"{sort} 리스트에 원본 remixCount=1 노출 → {byid.get(sid,{}).get('remixCount')}")
+    check(byid.get(bid, {}).get('parent') == sid, f"{sort} 리스트에 자식 parent 노출 → {byid.get(bid,{}).get('parent')}")
 
 print("\n=== 씬 공유 OG (/s/:id) ===")
 st, hd, html = get_raw(f"/s/{sid}")

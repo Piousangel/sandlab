@@ -129,10 +129,16 @@ export default {
       // hot = 최근 1주일 이내 + 표 순. Powder Toy FP 복제.
       // 이 창이 없으면 오래된 히트작이 영원히 상단을 점거해 신규가 절대 안 보인다.
       const since = Date.now() - HOT_WINDOW_DAYS * 86400_000
+      // 계보(parent + remixCount)를 리스트에도 실어 hot/new 카드의 ↻N 배지·remix 링크가
+      // Yours뿐 아니라 모든 방문자에게 뜬다 — 리믹스 붙은 씬 = "이어 그릴 만한 씨앗" 발견 신호.
+      // idx_scenes_parent가 서브쿼리를 커버(단건 조회가 이미 같은 패턴을 프로덕션에서 돌림).
+      const cols =
+        'id,title,votes,created_at AS createdAt,w,h,parent,' +
+        '(SELECT COUNT(*) FROM scenes r WHERE r.parent=scenes.id) AS remixCount'
       const q =
         sort === 'hot'
-          ? 'SELECT id,title,votes,created_at AS createdAt,w,h FROM scenes WHERE created_at>? ORDER BY votes DESC, created_at DESC LIMIT ? OFFSET ?'
-          : 'SELECT id,title,votes,created_at AS createdAt,w,h FROM scenes WHERE created_at>-1 ORDER BY created_at DESC LIMIT ? OFFSET ?'
+          ? `SELECT ${cols} FROM scenes WHERE created_at>? ORDER BY votes DESC, created_at DESC LIMIT ? OFFSET ?`
+          : `SELECT ${cols} FROM scenes WHERE created_at>-1 ORDER BY created_at DESC LIMIT ? OFFSET ?`
       const stmt =
         sort === 'hot'
           ? env.DB.prepare(q).bind(since, PAGE_SIZE, offset)
