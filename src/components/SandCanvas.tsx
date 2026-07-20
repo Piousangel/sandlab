@@ -476,7 +476,7 @@ export default function SandCanvas() {
         <button style={S.ghost} onClick={share}>
           Copy link
         </button>
-        <button style={S.ghost} onClick={publish} disabled={busy}>
+        <button style={S.publishBtn} onClick={publish} disabled={busy}>
           {busy ? 'Publishing…' : 'Publish'}
         </button>
         <a style={{ ...S.ghost, textDecoration: 'none', lineHeight: '1.6' }} href="/gallery">
@@ -667,6 +667,18 @@ const S: Record<string, React.CSSProperties> = {
     borderRadius: 8,
     padding: '6px 10px',
     fontSize: 11.5,
+    cursor: 'pointer',
+  },
+  // Publish는 리텐션 루프(발행→갤러리)의 관문 — 앰버 아웃라인으로 2차 강조해 파괴 액션 Clear와 구분.
+  publishBtn: {
+    background: 'rgba(245,166,35,0.10)',
+    color: '#f5c98a',
+    opacity: 1,
+    border: '1px solid rgba(245,166,35,0.55)',
+    borderRadius: 8,
+    padding: '6px 10px',
+    fontSize: 11.5,
+    fontWeight: 600,
     cursor: 'pointer',
   },
   // 토글 활성 상태(지우개 ON) — 브랜드 앰버로 지금 지우개 모드임을 보여준다.
