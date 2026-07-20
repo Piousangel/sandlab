@@ -57,6 +57,8 @@ export default function SandCanvas() {
   const idx = useRef(buildIndex(PRESETS))
   // 리믹스 계보: 공유 링크(#s=id)로 로드한 원본 씬 id. Publish 시 parent로 보내 계보를 잇는다.
   const loadedSceneId = useRef<string | null>(null)
+  // 사용자가 한 번이라도 캔버스를 건드렸는가 — 앰비언트 데모를 즉시(race 없이) 멈추는 데 쓴다.
+  const interacted = useRef(false)
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return
@@ -148,6 +150,45 @@ export default function SandCanvas() {
     if (eng) eng.brush.r = radius
   }, [radius, ready])
 
+  // 살아있는 첫 프레임 — 안 건드린 빈 캔버스에 재료를 은은히 흘려 넣는다.
+  // 클립을 보고 온 방문자가 '죽은 검은 박스'가 아니라 움직이는 장면(모래 쌓임·물 흐름·용암 발광)에
+  // 착지해 스크롤이 멈춘다(oddly-satisfying). 손대는 즉시 멈추고 캔버스를 비운다(onDown).
+  useEffect(() => {
+    if (!ready || hasDrawn) return
+    const eng = engineRef.current
+    if (!eng) return
+    let raf = 0
+    let t = 0
+    const savedR = eng.brush.r
+    eng.brush.r = 3 // 얇게 흘려 천천히 쌓이게
+    const palette = ['sand', 'water', 'sand', 'lava', 'plant'] // 색 대비 + 용암 발광 + 물↔용암 증기 반응
+    const tick = () => {
+      if (interacted.current) {
+        eng.brush.mat = 0xffffffff
+        return
+      }
+      t++
+      if (t < 900) {
+        // 부드럽게 좌우로 드리프트하는 수도꼭지 — 순간이동이 아니라 연속 스트림이라 선이 안 그어진다.
+        eng.brush.x = Math.floor(W * (0.5 + 0.4 * Math.sin(t * 0.011)))
+        eng.brush.y = Math.floor(H * 0.05)
+        eng.brush.mat = idx.current.get(palette[Math.floor(t / 80) % palette.length]) ?? 0
+      } else {
+        eng.brush.mat = 0xffffffff // 충분히 찼으면 멈추고 반응·정착만 살아있게 둔다
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => {
+      cancelAnimationFrame(raf)
+      const e = engineRef.current
+      if (e) {
+        e.brush.mat = 0xffffffff
+        e.brush.r = savedR
+      }
+    }
+  }, [ready, hasDrawn])
+
   const toGrid = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
     return {
@@ -160,6 +201,11 @@ export default function SandCanvas() {
     e.currentTarget.setPointerCapture(e.pointerId)
     const eng = engineRef.current
     if (!eng) return
+    // 첫 상호작용: 앰비언트 데모를 즉시 멈추고(ref) 캔버스를 비워 사용자에게 깨끗한 시작을 준다.
+    if (!interacted.current) {
+      interacted.current = true
+      if (!hasDrawn) eng.clear()
+    }
     const { x, y } = toGrid(e)
     eng.brush.x = x
     eng.brush.y = y
