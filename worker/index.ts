@@ -20,6 +20,8 @@ import {
   type SortMode,
 } from '../src/lib/sand/gallery'
 import { escapeHtml } from '../src/lib/sand/html'
+import { decodeScene } from '../src/lib/sand/urlState'
+import { isBlank } from '../src/lib/sand/thumb'
 
 interface D1Stmt {
   bind(...vals: unknown[]): D1Stmt
@@ -102,6 +104,18 @@ async function tooManyUploads(env: Env, hash: string): Promise<boolean> {
   return (row?.n ?? 0) >= UPLOADS_PER_HOUR
 }
 
+/** 투표 레이트리밋: 같은 IP가 시간당 N표. PK (scene,ip) 중복차단만으론 프록시/Tor 회전으로
+ *  씬마다 무한 적재가 가능해 랭킹 조작·D1 read 소모의 통로가 된다. IP당 시간당 상한으로 마찰을 준다. */
+const VOTES_PER_HOUR = 60
+
+async function tooManyVotes(env: Env, hash: string): Promise<boolean> {
+  const since = Date.now() - 3600_000
+  const row = await env.DB.prepare('SELECT COUNT(*) AS n FROM votes WHERE ip=? AND created_at>?')
+    .bind(hash, since)
+    .first<{ n: number }>()
+  return (row?.n ?? 0) >= VOTES_PER_HOUR
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
@@ -151,6 +165,8 @@ export default {
           'content-type': 'image/png',
           // 썸네일은 불변이라 오래 캐시한다 — D1 읽기를 아낀다.
           'cache-control': 'public, max-age=31536000, immutable',
+          // 명시 image/png를 브라우저가 다른 타입으로 스니핑하지 못하게(심층방어).
+          'x-content-type-options': 'nosniff',
         },
       })
     }
@@ -168,6 +184,7 @@ export default {
       if (!scene) return err('not found', 404)
 
       const hash = await ipHash(request)
+      if (await tooManyVotes(env, hash)) return err('too many votes, try later', 429)
       // IP당 장면당 1표. localStorage만으론 시크릿 창 한 번에 뚫린다.
       const dup = await env.DB.prepare('SELECT 1 FROM votes WHERE scene=? AND ip=?')
         .bind(id, hash)
@@ -246,6 +263,13 @@ export default {
       const hash = await ipHash(request)
       if (await tooManyUploads(env, hash)) return err('too many uploads, try later', 429)
 
+      // 서버측 씬 검증: 형식(정규식·길이)만 통과하고 디코드 불가/빈/폭탄인 data가 직접 API로
+      // 들어와 갤러리를 오염시키는 걸 막는다. 정상 클라이언트가 만든 data는 같은 코드로
+      // 인코딩·검증되므로 항상 통과한다. decodeScene은 inflate에 2MB 상한이 걸려 폭탄도 안전.
+      const decoded = await decodeScene(data)
+      if (!decoded || decoded.w !== w || decoded.h !== h) return err('bad scene data')
+      if (isBlank(decoded.cells, decoded.w * decoded.h)) return err('blank scene')
+
       // 썸네일 base64 → 바이트. 정규식이 문자 집합만 보므로(길이·패딩 위치는 아님)
       // atob가 던질 수 있다 — try/catch로 감싸 500 대신 400을 준다.
       let bin: string
@@ -256,12 +280,22 @@ export default {
       }
       const bytes = new Uint8Array(bin.length)
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+      // 실제 PNG인지 시그니처로 확인 — 동일출처에 임의 바이너리를 영구 호스팅하지 못하게.
+      const PNG_SIG = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+      if (bytes.length < 8 || PNG_SIG.some((v, i) => bytes[i] !== v)) return err('bad thumb')
+
+      // 계보(parent)가 실재하는지 확인 — 유령 id를 가리키는 dangling 계보를 막는다.
+      let parentId = parent
+      if (parentId) {
+        const pExists = await env.DB.prepare('SELECT 1 FROM scenes WHERE id=?').bind(parentId).first()
+        if (!pExists) parentId = null
+      }
 
       const id = newId()
       await env.DB.prepare(
         'INSERT INTO scenes (id,title,data,thumb,votes,created_at,w,h,ip,parent) VALUES (?,?,?,?,0,?,?,?,?,?)',
       )
-        .bind(id, cleanTitle(body.title), data, bytes, Date.now(), w, h, hash, parent)
+        .bind(id, cleanTitle(body.title), data, bytes, Date.now(), w, h, hash, parentId)
         .run()
 
       // 활성화 이벤트: 실제 씬 게시(페이지뷰가 아니라 이게 진짜 신호).
@@ -308,7 +342,11 @@ export default {
 <noscript><a href="${redirect}" style="color:#8ea0bf">Open this scene in Sandlab</a></noscript>
 </body></html>`
           return new Response(html, {
-            headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300' },
+            headers: {
+              'content-type': 'text/html; charset=utf-8',
+              'cache-control': 'public, max-age=300',
+              'x-content-type-options': 'nosniff',
+            },
           })
         }
       }

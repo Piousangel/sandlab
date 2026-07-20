@@ -30,6 +30,9 @@ export const URL_BUDGET = 6000
 /** 포맷 버전. 인코딩을 바꾸면 올린다 — 옛 링크를 조용히 깨뜨리지 않기 위해. */
 const V = 1
 
+/** 셀 수 상한. 격자 1200×600=720k 고정에 여유를 둔 값 — 디코드 시 과대 w,h 선할당 방어. */
+const MAX_CELLS = 1_200_000
+
 function toB64Url(bytes: Uint8Array): string {
   let s = ''
   const CH = 8192 // 인자 스프레드 한도 회피
@@ -78,14 +81,37 @@ async function deflate(b: Uint8Array): Promise<Uint8Array> {
   return new Uint8Array(buf)
 }
 
+/** 압축해제 출력 상한. 정상 최악 RLE(600획 난사)가 ~86KB이므로 2MB면 충분한 여유.
+ *  신뢰불가 입력(공유 링크·업로드 data)의 deflate 폭탄이 무한 팽창하는 걸 막는다. */
+const MAX_INFLATED = 2_097_152
+
 async function inflate(b: Uint8Array): Promise<Uint8Array> {
   const ds = new DecompressionStream('deflate-raw')
   const w = ds.writable.getWriter()
   // 깨진 공유 링크를 열면 여기서 reject된다 — 붙잡지 않으면 콘솔에 unhandled rejection이 찍힌다.
   w.write(b as unknown as BufferSource).catch(() => {})
   w.close().catch(() => {})
-  const buf = await new Response(ds.readable).arrayBuffer()
-  return new Uint8Array(buf)
+  // Response.arrayBuffer()는 출력을 무한 버퍼링한다 — 폭탄을 막으려면 청크 단위로 상한을 건다.
+  const reader = ds.readable.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.length
+    if (total > MAX_INFLATED) {
+      reader.cancel().catch(() => {})
+      throw new Error('inflate exceeded cap')
+    }
+    chunks.push(value)
+  }
+  const out = new Uint8Array(total)
+  let o = 0
+  for (const c of chunks) {
+    out.set(c, o)
+    o += c.length
+  }
+  return out
 }
 
 /**
@@ -122,7 +148,9 @@ function rleDecode(b: Uint8Array): { cells: Uint32Array<ArrayBuffer>; w: number;
   if (ver !== V) return null
   const w = readVarint(b, p)
   const h = readVarint(b, p)
-  if (w <= 0 || h <= 0 || w > 4096 || h > 4096) return null
+  // 격자는 1200×600(720k)로 고정이다. 작은 헤더가 w,h만 크게 실어 67MB(4096²)를 선할당하는
+  // 걸 막는다 — 어차피 소비처가 격자 크기 불일치 씬을 폐기하므로 여유(1.2M)만 허용한다.
+  if (w <= 0 || h <= 0 || w > 4096 || h > 4096 || w * h > MAX_CELLS) return null
 
   const cells = new Uint32Array(w * h).fill(EMPTY_ID)
   let i = 0

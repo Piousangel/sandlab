@@ -31,10 +31,14 @@ def get_raw(path, follow=True):
         return e.code, dict(e.headers), e.read().decode('utf-8','replace')
 
 b64url = lambda b: base64.urlsafe_b64encode(b).decode().rstrip('=')
-scene = bytes([1, 0xC0,0x07, 0x9C,0x04, 7, 0x80,0x80,0x1F])   # v=1, w=960, h=540, RLE
+scene = bytes([1, 0xC0,0x07, 0x9C,0x04, 7, 0x80,0x80,0x1F])   # v=1, w=960, h=540, RLE(mat=7=채움)
 DATA  = b64url(zlib.compress(scene, 9)[2:-4])
+blank_scene = bytes([1, 0xC0,0x07, 0x9C,0x04, 0, 0x80,0x80,0x1F])  # 같은 크기, mat=0=EMPTY → 빈 씬
+BLANK_DATA  = b64url(zlib.compress(blank_scene, 9)[2:-4])
+GARBAGE_DATA = b64url(b"not a valid deflate stream at all")      # charset OK, 디코드 불가
 PNG   = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
 THUMB = base64.b64encode(PNG).decode()
+NOTPNG = base64.b64encode(b"NOTAPNG!padding_bytes_here").decode()  # 유효 base64·충분한 길이지만 PNG 아님
 
 fails = []
 def check(c, m):
@@ -52,6 +56,11 @@ check(call("/api/scenes", {"title":"x","data":DATA,"thumb":THUMB,"w":99999,"h":5
 check(call("/api/scenes", {"title":"x","data":DATA,"thumb":"!!!","w":960,"h":540})[0] == 400, "잘못된 thumb 거부(charset)")
 # charset은 통과하지만 atob가 던지는 thumb("A": 길이 mod4 아님) → 500 아닌 400이어야 한다
 check(call("/api/scenes", {"title":"x","data":DATA,"thumb":"A","w":960,"h":540})[0] == 400, "atob 실패 thumb → 400(500 아님)")
+# 서버측 씬 검증(새 방어): 형식만 맞고 디코드 불가/빈 씬/PNG 아닌 thumb 거부
+check(call("/api/scenes", {"title":"x","data":GARBAGE_DATA,"thumb":THUMB,"w":960,"h":540})[0] == 400, "디코드 불가 data 거부(서버측 검증)")
+check(call("/api/scenes", {"title":"x","data":BLANK_DATA,"thumb":THUMB,"w":960,"h":540})[0] == 400, "빈 씬 거부(isBlank 서버측)")
+check(call("/api/scenes", {"title":"x","data":DATA,"thumb":THUMB,"w":800,"h":540})[0] == 400, "data 내부 w,h와 body 불일치 거부")
+check(call("/api/scenes", {"title":"x","data":DATA,"thumb":NOTPNG,"w":960,"h":540})[0] == 400, "PNG 아닌 thumb 거부(시그니처)")
 
 print("\n=== 목록 ===")
 s, r = call("/api/scenes?sort=hot")

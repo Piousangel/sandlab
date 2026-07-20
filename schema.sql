@@ -32,3 +32,6 @@ CREATE TABLE IF NOT EXISTS votes (
   created_at INTEGER NOT NULL,
   PRIMARY KEY (scene, ip)   -- IP당 장면당 1표. 중복은 DB가 막는다.
 );
+
+-- 투표 레이트리밋(IP당 시간당 상한) COUNT가 풀스캔 안 하도록.
+CREATE INDEX IF NOT EXISTS idx_votes_ip ON votes(ip, created_at);
