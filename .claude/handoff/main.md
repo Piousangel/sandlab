@@ -67,6 +67,20 @@
 - [ ] 붓질 저장 (URL 한계 근본 해결)
 - [ ] LLM 원소 생성 (검증 완료, 의도적 보류)
 
+### ☠️ 렌더 파이프라인 blank 버그 (워터마크 셰이더) — 수정·사용자 기기 검증 완료 (2026-07-20)
+**증상:** 캔버스에 아무것도 안 그려짐(자동 데모·드로잉 전부). 앱 UI는 정상, 에러 UI 없음.
+**근본원인:** RENDER_WGSL 워터마크 합성에서 `textureSample`을 per-fragment uv에 의존하는
+if(비균일 제어흐름) 안에서 호출 → WGSL 'must only be called from uniform control flow' 위반
+→ 셰이더 모듈 무효 → **렌더 파이프라인 전체 무효 → 모든 draw 실패 → 캔버스 완전 blank.**
+콘솔 에러 한 줄이 정확히 지목(systematic-debugging). **수정:** `textureSampleLevel(wmTex,wmSamp,luv,0.0)`
+— explicit LOD는 미분 안 써 비균일 제어흐름 합법(밉맵 없어 LOD0 정확, 이중선형 유지). 2c91ecd.
+**★교훈(트랩):** 이 버그는 워터마크 셰이더 도입 후 계속 있었는데, "검증"이 HTML 오버레이(온보딩
+q-onboard-fix.png)만 확인하고 **캔버스 픽셀을 실제로 안 봐서** 놓쳤다. blank였던 q-wm-fixed.png를
+browse 타이밍 탓으로 오판. **규칙: shader.ts/engine.ts 렌더 경로를 바꾸면 반드시 실제 렌더된
+캔버스 픽셀을 확인한다(browse 또는 사용자). blank 캡처는 타이밍 아티팩트가 아니라 RED FLAG로 취급.**
+Node엔 WebGPU 없어 오프라인 WGSL 검증 불가 — 렌더 변경은 실기기 확인이 유일한 진짜 검증.
+**남은 확인(가벼움):** 녹화 클립에 워터마크가 실제로 뜨는지(textureSampleLevel도 동일 시각결과라 거의 확실).
+
 ### ★ 도메인 sandlab.app 연결 완료 (2026-07-20) — 최대 레버 절반 실행됨
 사용자가 Cloudflare Registrar로 sandlab.app 구매 → 에이전트가 wrangler `custom_domain` route로
 붙이고(DNS+인증서 자동) SITE 상수 전환 → 배포. **검증: https://sandlab.app 200+SSL OK, API 200,
