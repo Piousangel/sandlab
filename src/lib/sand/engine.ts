@@ -14,6 +14,7 @@
 
 import { SIM_WGSL, BLOOM_WGSL, RENDER_WGSL } from './shader'
 import { packMaterials, type Material, EMPTY_ID } from './materials'
+import { SITE } from '../site'
 
 export interface EngineOpts {
   canvas: HTMLCanvasElement
@@ -33,6 +34,10 @@ export class SandEngine {
   private device!: GPUDevice
   private ctx!: GPUCanvasContext
   private cells: GPUBuffer[] = []
+  private watermark!: GPUTexture
+  private wmSampler!: GPUSampler
+  /** 녹화 중일 때만 렌더 셰이더가 워터마크를 합성한다(공유 클립 = 광고). */
+  recording = false
   private lightA!: GPUBuffer
   private lightB!: GPUBuffer
   private params!: GPUBuffer
@@ -125,6 +130,41 @@ export class SandEngine {
     this.rxBuf = d.createBuffer({ size: rx.byteLength, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST })
     d.queue.writeBuffer(this.rxBuf, 0, rx)
 
+    // ── 워터마크 텍스처 ──
+    // 도메인 호스트를 2D 캔버스에 그려 GPU 텍스처로. 녹화 중에만 렌더가 우하단에 합성한다.
+    // SITE에서 파생 → sandlab.app 도메인이 붙으면 워터마크도 자동으로 그 호스트가 된다.
+    {
+      const WMW = 512
+      const WMH = 96
+      const wc = document.createElement('canvas')
+      wc.width = WMW
+      wc.height = WMH
+      const wctx = wc.getContext('2d')
+      // 확정 브랜드 도메인. SITE 호스트(현 workers.dev)는 너무 길어 잘리므로 짧은 브랜드로 고정.
+      const label = 'sandlab.app'
+      void SITE // 도메인 붙으면 여기를 SITE 호스트로 바꿔도 됨(지금은 브랜드 고정)
+      if (wctx) {
+        wctx.clearRect(0, 0, WMW, WMH)
+        wctx.font = '700 62px ui-sans-serif, system-ui, -apple-system, sans-serif'
+        wctx.textAlign = 'right'
+        wctx.textBaseline = 'middle'
+        wctx.shadowColor = 'rgba(0,0,0,0.85)'
+        wctx.shadowBlur = 12
+        wctx.fillStyle = 'rgba(248, 226, 178, 0.96)'
+        wctx.fillText(label, WMW - 10, WMH / 2)
+      }
+      this.watermark = d.createTexture({
+        size: [WMW, WMH],
+        format: 'rgba8unorm',
+        usage:
+          GPUTextureUsage.TEXTURE_BINDING |
+          GPUTextureUsage.COPY_DST |
+          GPUTextureUsage.RENDER_ATTACHMENT,
+      })
+      d.queue.copyExternalImageToTexture({ source: wc }, { texture: this.watermark }, [WMW, WMH])
+      this.wmSampler = d.createSampler({ magFilter: 'linear', minFilter: 'linear' })
+    }
+
     const simMod = d.createShaderModule({ code: SIM_WGSL })
     const bloomMod = d.createShaderModule({ code: BLOOM_WGSL })
     const renderMod = d.createShaderModule({ code: RENDER_WGSL })
@@ -165,6 +205,8 @@ export class SandEngine {
         { binding: 1, visibility: GPUShaderStage.FRAGMENT, buffer: { type: 'uniform' } },
         { binding: 2, visibility: GPUShaderStage.FRAGMENT, buffer: { type: 'read-only-storage' } },
         { binding: 3, visibility: GPUShaderStage.FRAGMENT, buffer: { type: 'read-only-storage' } },
+        { binding: 4, visibility: GPUShaderStage.FRAGMENT, texture: { sampleType: 'float' } },
+        { binding: 5, visibility: GPUShaderStage.FRAGMENT, sampler: { type: 'filtering' } },
       ],
     })
     this.renderPipe = d.createRenderPipeline({
@@ -207,6 +249,8 @@ export class SandEngine {
             { binding: 1, resource: { buffer: this.params } },
             { binding: 2, resource: { buffer: this.propsBuf } },
             { binding: 3, resource: { buffer: this.lightA } },
+            { binding: 4, resource: this.watermark.createView() },
+            { binding: 5, resource: this.wmSampler },
           ],
         }),
       )
@@ -229,6 +273,7 @@ export class SandEngine {
     // 새 획의 첫 프레임이면 시작점 = 현재점 (직전 획 끝에서 선이 그어지면 안 된다)
     i[9] = this.prev.x < 0 ? this.brush.x : this.prev.x
     i[10] = this.prev.y < 0 ? this.brush.y : this.prev.y
+    u[11] = this.recording ? 1 : 0 // Params.recording — 녹화 중에만 워터마크 합성
     this.device.queue.writeBuffer(this.params, 0, p)
   }
 
@@ -350,6 +395,7 @@ export class SandEngine {
     this.params?.destroy()
     this.propsBuf?.destroy()
     this.rxBuf?.destroy()
+    this.watermark?.destroy()
     // device를 해제하면 파이프라인/바인드그룹/셰이더모듈 등 종속 리소스가 전부 회수된다.
     // (개별 destroy API가 없는 것들이라 device 파괴에 의존한다.)
     this.device?.destroy()

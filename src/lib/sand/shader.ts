@@ -23,7 +23,7 @@ const COMMON = /* wgsl */ `
 struct Params {
   width : u32, height : u32, offset : u32, tick : u32,
   matCount : u32, brushX : i32, brushY : i32, brushR : i32,
-  brushMat : u32, brushPX : i32, brushPY : i32, _p2 : u32,
+  brushMat : u32, brushPX : i32, brushPY : i32, recording : u32,
 };
 
 const MAX_RX : u32 = 4u;
@@ -283,6 +283,8 @@ ${COMMON}
 @group(0) @binding(1) var<uniform>       P     : Params;
 @group(0) @binding(2) var<storage, read> props : array<vec4<f32>>;
 @group(0) @binding(3) var<storage, read> light : array<vec4<f32>>;
+@group(0) @binding(4) var wmTex : texture_2d<f32>;
+@group(0) @binding(5) var wmSamp : sampler;
 
 struct VSOut { @builtin(position) pos : vec4<f32>, @location(0) uv : vec2<f32> };
 
@@ -342,6 +344,18 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
   // 은은한 비네트 — 중앙 발광으로 시선을 모으고 클립에 영화적 깊이. (1200x600 종횡비 보정)
   let dc = (in.uv - vec2<f32>(0.5)) * vec2<f32>(2.0, 1.0);
   let vig = 1.0 - dot(dc, dc) * 0.16;
-  return vec4<f32>(tonemap(lit) * vig, 1.0);
+  var outc = tonemap(lit) * vig;
+
+  // 녹화 중에만 우하단 워터마크 — 공유되는 모든 클립이 곧 광고. (P.recording != 0)
+  if (P.recording != 0u) {
+    let wmMin = vec2<f32>(0.695, 0.902);
+    let wmMax = vec2<f32>(0.984, 0.964);
+    if (in.uv.x >= wmMin.x && in.uv.x <= wmMax.x && in.uv.y >= wmMin.y && in.uv.y <= wmMax.y) {
+      let luv = (in.uv - wmMin) / (wmMax - wmMin);
+      let wm = textureSample(wmTex, wmSamp, luv);
+      outc = mix(outc, wm.rgb, wm.a * 0.9);
+    }
+  }
+  return vec4<f32>(outc, 1.0);
 }
 `

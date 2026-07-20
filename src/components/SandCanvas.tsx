@@ -277,6 +277,7 @@ export default function SandCanvas() {
     if (!canvas || rec !== null) return
     try {
       setRec(0)
+      if (engineRef.current) engineRef.current.recording = true // 클립에 워터마크 합성 ON
       const { recordClip, downloadClip } = await import('@/lib/sand/record')
       const clip = await recordClip({ canvas, durationMs: 10000, onProgress: setRec })
       downloadClip(clip, `sandlab-${Date.now()}`)
@@ -285,6 +286,7 @@ export default function SandCanvas() {
       // RecordUnsupported는 동적 모듈의 클래스라 instanceof 대신 name으로 식별한다.
       flash(e instanceof Error && e.name === 'RecordUnsupported' ? e.message : 'Recording failed.')
     } finally {
+      if (engineRef.current) engineRef.current.recording = false // 워터마크 OFF (평소엔 안 보임)
       setRec(null)
     }
   }, [rec])
