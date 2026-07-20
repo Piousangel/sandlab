@@ -67,6 +67,16 @@
 - [ ] 붓질 저장 (URL 한계 근본 해결)
 - [ ] LLM 원소 생성 (검증 완료, 의도적 보류)
 
+### 병렬 A/B/C/D 사이클 (사용자 지시 "인원 늘려 병렬")
+탐색은 병렬(연구·설계, 자유텍스트로 스키마 실패 0), 구현은 순차(같은 파일 충돌 방지). 오케스트레이션 성공.
+- **B 시뮬 시각**(a6bfb63): 불 색온도·발광 강화(em 1.9/glow 1.7/블룸 R7)·비네트·flicker·oil↔lava 발화 앰비언트·
+  acid/steam 발광. **시뮬 코어(simulate) 불변 → verify-margolus 유지.** WGSL은 실크롬 browse로 렌더 검증.
+- **A 디자인**(0ee4e15): 모바일 데드스페이스→앰버 듄 히어로(세로폰 h>w 감지) + 공유 패널 씬 썸네일 프리뷰.
+  앞선 배치: 앰버 브랜드 통일·워드마크·도크위계·공유패널·onError(622fb2a·88458b0·69c9155).
+- **C 연구**: references/monetization.md + launch-playbook.md 심화(게시시각 KST·velocity·IIB automod·WebGPU 방어).
+- **D 도메인**: sandlab.app 확정, `src/lib/site.ts` SITE 한 줄만 바꾸면 됨(도메인 붙으면). 스테이징 완료.
+- **남은 디자인**: #7 색 칩 그룹핑/선택링(low). design.md 참조.
+
 ### ⚡ 핵심 역량 (그동안 잘못 제약했던 것)
 **WebGPU 시뮬/비주얼도 에이전트가 시각 검증 가능하다** — 실크롬 browse 도구(`connect-chrome`)가
 WebGPU를 렌더한다(모래 낙하·발광 스크린샷 확인). "시뮬 시각검증은 needsUser"는 헤드리스 한정이지
