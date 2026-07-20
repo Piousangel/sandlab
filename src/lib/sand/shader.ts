@@ -355,7 +355,9 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
     let wmMax = vec2<f32>(0.984, 0.964);
     if (in.uv.x >= wmMin.x && in.uv.x <= wmMax.x && in.uv.y >= wmMin.y && in.uv.y <= wmMax.y) {
       let luv = (in.uv - wmMin) / (wmMax - wmMin);
-      let wm = textureSample(wmTex, wmSamp, luv);
+      // textureSampleLevel(explicit LOD)은 미분을 안 써서 비균일 제어흐름(uv 범위 if)에서 합법.
+      // textureSample을 여기서 쓰면 셰이더 모듈이 무효화돼 렌더 파이프라인 전체가 죽는다(캔버스 blank).
+      let wm = textureSampleLevel(wmTex, wmSamp, luv, 0.0);
       outc = mix(outc, wm.rgb, wm.a * 0.9);
     }
   }
