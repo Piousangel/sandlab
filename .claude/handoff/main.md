@@ -67,6 +67,23 @@
 - [ ] 붓질 저장 (URL 한계 근본 해결)
 - [ ] LLM 원소 생성 (검증 완료, 의도적 보류)
 
+### ✅✅ 2026-07-20 세션 종합 — 발사 준비 완료, 퍼널 11/11 검증
+이 세션에서 발사 임계 표면을 전부 정리했다:
+- **렌더 blank 버그 수정**(워터마크 textureSample→textureSampleLevel) — 사용자 기기 확인.
+- **sandlab.app 도메인 라이브**(custom_domain, SITE 전환) — HTTPS/API/메타 확인.
+- **보안 하드닝 6건**(투표 레이트리밋·서버측 씬검증·inflate상한·w×h캡·PNG시그·parent실재·nosniff).
+- **씬 OG 640×320 대형카드** + THUMB 파생 불변식 테스트.
+- **갤러리 씨앗 12개 라이브**(배치1 10 + 배치2 little tree·aquarium). 리믹스 계보 작동.
+- **AE 계측 켜짐**(dataset sandlab_events) — 발사 후 referrer 유입측정.
+- **AdSense 심사 제출**(pub-9363381710674627, ads.txt+로더). 검토중. 승인시 갤러리 하단 유닛만.
+- **발사글 초안 완성**(r/IIB·Show HN·X, 세션 대화에 있음 — 없으면 launch-playbook로 재생성).
+- **발사 퍼널 종단 QA 11/11**(new/hot·씬로드·OG·썸네일·계보·투표·중복차단·방어) 프로덕션 통과.
+
+**남은 것(발사 실행 = 사용자):** ① 좋은 클립 1개 녹화(이때 우하단 sandlab.app 워터마크 육안 확인 = 마지막 미검증 항목 닫힘) ② 커뮤니티 게시(r/IIB 1순위, KST 시간대·첫90분 응대). AE는 켜졌으니 게시 후 유입소스 측정됨.
+**남은 것(에이전트, 논블로킹):** 배치2 씨앗 6개(desert moon·twin springs·riverbed·geode·dark&light·hanging garden)는
+생성·검증·저장 완료, 12건/시간 레이트리밋에 걸려 대기 — scratchpad/seedgen2.mjs+upload2api.mjs로 제한 풀리면 투입.
+대량업로드는 안전분류기가 게이트하므로 D1직접삽입/레이트리밋우회는 사용자 권한 필요.
+
 ### ★ 갤러리 씨앗 10개 에이전트 생성·업로드 완료 (2026-07-20) — #1 사망위험 해소
 사용자가 "네가 해달라" → 마우스로 못 그리지만 **프로그램으로 생성**: 1200×600 격자를 물리적 구성으로
 그리고 → 간이 낙사 settle(가루 더미·액체 밀도층) → RLE+deflate-raw+base64url(앱 포맷 바이트호환) →
