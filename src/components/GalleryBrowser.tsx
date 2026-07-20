@@ -5,6 +5,8 @@ import {
   listScenes,
   getSceneMeta,
   listMine,
+  updateMineSeen,
+  mineDeltas,
   voteScene,
   hasVoted,
   type SceneMeta,
@@ -30,6 +32,8 @@ export default function GalleryBrowser() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState<string | null>(null)
+  // 창작자 귀환 델타 — 지난 Yours 방문 이후 늘어난 표·리믹스.
+  const [mineDelta, setMineDelta] = useState<{ votes: number; remix: number }>({ votes: 0, remix: 0 })
   const [voted, setVoted] = useState<Record<string, number>>({})
 
   const load = useCallback(async (mode: Tab) => {
@@ -43,6 +47,9 @@ export default function GalleryBrowser() {
         const found = settled
           .filter((s): s is PromiseFulfilledResult<SceneMeta> => s.status === 'fulfilled')
           .map((s) => s.value)
+        // 델타를 먼저 계산(기준선 갱신 전) → 그 뒤 현재값을 새 기준선으로 저장.
+        setMineDelta(mineDeltas(found, listMine()))
+        updateMineSeen(found.map((s) => ({ id: s.id, votes: s.votes || 0, remixCount: s.remixCount || 0 })))
         setScenes(found)
         setTotal(found.length)
       } else {
@@ -138,6 +145,18 @@ export default function GalleryBrowser() {
           {scenes.reduce((n, s) => n + (s.votes || 0), 0) === 1 ? '' : 's'} ·{' '}
           <strong>{scenes.reduce((n, s) => n + (s.remixCount || 0), 0)}</strong> remix
           {scenes.reduce((n, s) => n + (s.remixCount || 0), 0) === 1 ? '' : 'es'}
+          {(mineDelta.votes > 0 || mineDelta.remix > 0) && (
+            <span style={S.mineDeltaBadge}>
+              ↑{' '}
+              {[
+                mineDelta.votes > 0 ? `+${mineDelta.votes} vote${mineDelta.votes === 1 ? '' : 's'}` : null,
+                mineDelta.remix > 0 ? `+${mineDelta.remix} remix${mineDelta.remix === 1 ? '' : 'es'}` : null,
+              ]
+                .filter(Boolean)
+                .join(', ')}{' '}
+              since your last visit
+            </span>
+          )}
         </p>
       )}
 
@@ -333,6 +352,17 @@ const S: Record<string, React.CSSProperties> = {
     opacity: 0.7,
     color: '#eef1f6',
     fontVariantNumeric: 'tabular-nums',
+  },
+  // 귀환 델타 — "네가 없는 사이 자랐다". 앰버로 눈에 띄게(재방문 페이오프).
+  mineDeltaBadge: {
+    display: 'inline-block',
+    marginLeft: 8,
+    padding: '1px 8px',
+    borderRadius: 6,
+    background: 'rgba(245,166,35,0.14)',
+    color: '#f5c98a',
+    fontWeight: 600,
+    fontSize: 12,
   },
   voteStatic: {
     border: '1px solid rgba(255,255,255,0.10)',

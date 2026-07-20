@@ -146,16 +146,52 @@ export interface MineEntry {
   id: string
   title: string
   at: number
+  // 마지막으로 Yours에서 본 표·리믹스 수(기준선). 다음 방문에 그 이후 증가분을 델타로 보여준다.
+  seenVotes?: number
+  seenRemix?: number
 }
 
 export function rememberMine(id: string, title: string) {
   try {
     const m = JSON.parse(localStorage.getItem(MINE_KEY) || '[]') as MineEntry[]
-    const next = [{ id, title, at: Date.now() }, ...m.filter((e) => e.id !== id)].slice(0, 200)
+    // 새 씬은 0 기준선 — 첫 Yours 재방문에 "게시 후 받은 표·리믹스"가 통째로 델타로 뜬다.
+    const next = [{ id, title, at: Date.now(), seenVotes: 0, seenRemix: 0 }, ...m.filter((e) => e.id !== id)].slice(0, 200)
     localStorage.setItem(MINE_KEY, JSON.stringify(next))
   } catch {
     /* 프라이빗 모드 등 — 저장 실패해도 게시 자체는 성공했으니 조용히 넘어간다 */
   }
+}
+
+/** 현재 표·리믹스 수를 새 기준선으로 저장 → 다음 방문의 델타가 '이번 방문 이후'가 된다. */
+export function updateMineSeen(seen: { id: string; votes: number; remixCount: number }[]) {
+  try {
+    const m = JSON.parse(localStorage.getItem(MINE_KEY) || '[]') as MineEntry[]
+    const byId = new Map(seen.map((s) => [s.id, s]))
+    const next = m.map((e) => {
+      const s = byId.get(e.id)
+      return s ? { ...e, seenVotes: s.votes, seenRemix: s.remixCount } : e
+    })
+    localStorage.setItem(MINE_KEY, JSON.stringify(next))
+  } catch {
+    /* 저장 실패해도 델타만 못 볼 뿐, 표시엔 지장 없다 */
+  }
+}
+
+/** 창작자 귀환 델타 — 지난 방문 기준선 대비 늘어난 표·리믹스 합계. 순수 함수(테스트 대상).
+ *  기준선이 없는(구버전/미기록) 엔트리는 델타 0으로 둔다(허위 증가분 방지). 음수는 0으로 클램프. */
+export function mineDeltas(
+  current: { id: string; votes?: number; remixCount?: number }[],
+  entries: MineEntry[],
+): { votes: number; remix: number } {
+  const seen = new Map(entries.map((e) => [e.id, e]))
+  let votes = 0
+  let remix = 0
+  for (const s of current) {
+    const e = seen.get(s.id)
+    if (e && e.seenVotes !== undefined) votes += Math.max(0, (s.votes || 0) - e.seenVotes)
+    if (e && e.seenRemix !== undefined) remix += Math.max(0, (s.remixCount || 0) - e.seenRemix)
+  }
+  return { votes, remix }
 }
 
 export function listMine(): MineEntry[] {
