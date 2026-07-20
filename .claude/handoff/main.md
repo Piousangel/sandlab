@@ -75,7 +75,19 @@
   앞선 배치: 앰버 브랜드 통일·워드마크·도크위계·공유패널·onError(622fb2a·88458b0·69c9155).
 - **C 연구**: references/monetization.md + launch-playbook.md 심화(게시시각 KST·velocity·IIB automod·WebGPU 방어).
 - **D 도메인**: sandlab.app 확정, `src/lib/site.ts` SITE 한 줄만 바꾸면 됨(도메인 붙으면). 스테이징 완료.
-- **남은 디자인**: #7 색 칩 그룹핑/선택링(low). design.md 참조.
+- **디자인 백로그 전부 완료**: #7 색 칩 그룹 구분선+선택링(10ded2e). 크리틱 #1~8 처리 완료.
+
+### 🎯 최우선 다음-빌드: 클립 워터마크 (배급+수익화 훅, 신중한 별도 사이클)
+연구가 지목한 최상위 배급 레버 — 모든 공유 클립에 "sandlab.app" 워터마크를 얹으면 클립이 곧 광고이자
+워터마크-제거 업셀 훅(references/monetization.md). **단 안전 방식이 중요하다:**
+- ❌ **합성 캡처(2D 캔버스에 drawImage(webgpuCanvas) + 워터마크 → captureStream)는 금지.**
+  drawImage(webgpuCanvas)가 실패하면 검은 클립(검증된 핵심 자산을 깸)이고, 빈 씬vs실패 감지가 불안정.
+- ✅ **안전 방식 = 렌더 셰이더에 워터마크 텍스처.** 캡처 경로(captureStream(webgpuCanvas)) 무변 →
+  검증된 클립 그대로. 방법: (1) "sandlab.app"를 2D 캔버스에 렌더→GPUTexture(copyExternalImageToTexture),
+  (2) RENDER_WGSL 바인드그룹에 texture+sampler 추가, Params에 `recording:u32` 필드,
+  (3) fs에서 recording일 때 우하단 UV 영역에 워터마크 샘플·알파 합성, (4) record.ts 시작 전 engine에
+  recording 플래그 set, 끝나면 clear. WGSL/바인드그룹 surgery라 browse로 시각 검증(잠시 always-on으로 확인 후 게이팅).
+- 도메인 확정 전이면 "Sandlab"로, sandlab.app 붙은 뒤 "sandlab.app"로.
 
 ### ⚡ 핵심 역량 (그동안 잘못 제약했던 것)
 **WebGPU 시뮬/비주얼도 에이전트가 시각 검증 가능하다** — 실크롬 browse 도구(`connect-chrome`)가
