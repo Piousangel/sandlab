@@ -24,6 +24,10 @@ export const PAGE_SIZE = 24
 export const MAX_SCENE_BYTES = 200_000
 /** 640×320 다운샘플 PNG(base64)는 복잡한 씬도 여유. 넉넉히 잡아 upload가 'bad thumb'로 안 깨지게. */
 export const MAX_THUMB_BYTES = 300_000
+
+/** worker OG 메타가 썸네일 치수에서 파생되도록 재노출한다 — 손으로 맞추면 언젠가 desync되어
+ *  씬 공유 카드가 조용히 깨진다. 한 소스(thumb.ts)에서만 온다. */
+export { THUMB_W, THUMB_H } from './thumb'
 export const MAX_TITLE = 60
 
 export interface SceneMeta {

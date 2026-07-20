@@ -73,7 +73,10 @@
 - thumb.ts THUMB_W/H 640/320(makeThumb가 상수 기반이라 자동 반영), worker og:image:width/height 640/320,
   GalleryBrowser 카드 intrinsic 640/320. MAX_THUMB_BYTES 120K→300K(큰 썸네일도 upload 'bad thumb' 안 나게).
 - 무게 안전: 목록은 ?meta=1로 thumb 제외, thumb는 immutable 캐시 → read 비용 무영향.
-- typecheck·build·deploy 통과. 갤러리 비어 실제 씬 curl 불가지만 og는 정적 리터럴이라 배포로 확정.
+- typecheck·build·deploy 통과. 갤러리 비어 실제 씬 curl 불가지만 og는 배포로 확정.
+- **desync 방지 굳힘:** worker OG 메타를 THUMB_W/H에서 파생(gallery.ts가 thumb 상수 re-export → worker import
+  → `${THUMB_W}` 보간). 손으로 두 곳 맞추던 걸 한 소스로. + thumb.test.ts에 대형카드 임계(≥600×315)·2:1
+  불변식 테스트 2개(총 31 통과). 누가 상수를 낮추면 테스트가, 한쪽만 바꾸면 파생이 막는다.
 
 ### 최근변경 적대적 리뷰 사이클 (browse 저하 대비 코드 de-risk)
 browse가 반복 WebGPU 세션으로 저하돼 시각 검증이 막히자, 최근 무거운 변경(셰이더 비주얼·워터마크

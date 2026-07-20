@@ -12,6 +12,8 @@ import {
   PAGE_SIZE,
   MAX_SCENE_BYTES,
   MAX_THUMB_BYTES,
+  THUMB_W,
+  THUMB_H,
   cleanTitle,
   isValidId,
   type SceneMeta,
@@ -294,8 +296,8 @@ export default {
 <meta property="og:title" content="${title} · Sandlab">
 <meta property="og:description" content="A falling-sand scene made in Sandlab. Open it, remix it, share your own — no install, no sign-up.">
 <meta property="og:image" content="${img}">
-<meta property="og:image:width" content="640">
-<meta property="og:image:height" content="320">
+<meta property="og:image:width" content="${THUMB_W}">
+<meta property="og:image:height" content="${THUMB_H}">
 <meta property="og:url" content="${pageUrl}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${title} · Sandlab">
