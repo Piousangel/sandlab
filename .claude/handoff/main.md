@@ -67,6 +67,17 @@
 - [ ] 붓질 저장 (URL 한계 근본 해결)
 - [ ] LLM 원소 생성 (검증 완료, 의도적 보류)
 
+### ★ 갤러리 씨앗 10개 에이전트 생성·업로드 완료 (2026-07-20) — #1 사망위험 해소
+사용자가 "네가 해달라" → 마우스로 못 그리지만 **프로그램으로 생성**: 1200×600 격자를 물리적 구성으로
+그리고 → 간이 낙사 settle(가루 더미·액체 밀도층) → RLE+deflate-raw+base64url(앱 포맷 바이트호환) →
+640×320 썸네일 PNG 렌더 → **에이전트가 컨택트시트를 Read로 눈으로 검수(3회 반복해 품질 수렴)** → API 업로드.
+스크립트: scratchpad/seedgen.mjs(생성)·upload.mjs(업로드). 씬 10개: sand dunes·oil on water·sand & salt·
+potions(4색 발광)·terrarium·ice cavern·lava well·acid pool·rock pool·strata cliff. 화산/폭탄/레이저 회피.
+**리믹스 계보 시연**: sand & salt는 sand dunes의 리믹스(remixCount=1 → ↻ 노출). API 200 통과 = 서버검증
+(decodeScene 1200×600·비어있지않음·PNG시그니처) 통과 = 데이터 정합 증명. 썸네일 640×320 PNG 서빙 확인.
+**주의:** 절차생성이라 손그림 걸작은 아님 — 사용자가 히어로 작품을 직접 그려 얹으면 더 좋음. 별로면 D1로 삭제/교체 가능.
+발사 needsUser에서 "씨앗" 소진. 남은 발사스텝: **AE 활성화 + 커뮤니티 게시**(launch-playbook).
+
 ### ☠️ 렌더 파이프라인 blank 버그 (워터마크 셰이더) — 수정·사용자 기기 검증 완료 (2026-07-20)
 **증상:** 캔버스에 아무것도 안 그려짐(자동 데모·드로잉 전부). 앱 UI는 정상, 에러 UI 없음.
 **근본원인:** RENDER_WGSL 워터마크 합성에서 `textureSample`을 per-fragment uv에 의존하는
