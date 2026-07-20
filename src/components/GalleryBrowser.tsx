@@ -223,6 +223,17 @@ export default function GalleryBrowser() {
           )
         })}
       </div>
+      <div style={S.support}>
+        made by one person ·{' '}
+        <a
+          href="https://ko-fi.com/piousangel"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={S.supportLink}
+        >
+          ♥ support
+        </a>
+      </div>
     </main>
   )
 }
@@ -334,6 +345,9 @@ const S: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   age: { fontSize: 11, opacity: 0.3 },
+  // 후원 — 갤러리 하단 한 줄(무해·정적). 코어/캔버스 미학 불변. 모네타이제이션 원칙.
+  support: { textAlign: 'center', margin: '24px 0 10px', fontSize: 12, opacity: 0.5, color: '#eef1f6' },
+  supportLink: { color: '#f5c98a', textDecoration: 'none', fontWeight: 600 },
   seeNewest: {
     background: '#f5a623',
     color: '#1a1206',
