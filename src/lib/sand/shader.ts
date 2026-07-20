@@ -217,7 +217,7 @@ ${COMMON}
 @group(0) @binding(3) var<uniform>             P     : Params;
 @group(0) @binding(4) var<storage, read>       props : array<vec4<f32>>;
 
-const R : i32 = 6;
+const R : i32 = 7;
 
 fn wgt(d : i32) -> f32 {
   let x = f32(d) / f32(R);
@@ -238,7 +238,9 @@ fn seed(@builtin(global_invocation_id) gid : vec3<u32>) {
   let span = u32(props[m * 2u].w) / 100u;
   var k = 1.0;
   if (span > 0u) { k = f32(lifeOf(cell)) / f32(span); }
-  lightA[i] = vec4<f32>(col * em * k, 0.0);
+  // 셀마다 위상 다른 미세 flicker — 발광 후광이 정적이지 않고 '숨쉰다'(불·용암이 살아있게).
+  let flick = 0.9 + 0.1 * sin(f32(P.tick) * 0.35 + f32(i) * 0.013);
+  lightA[i] = vec4<f32>(col * em * k * flick, 0.0);
 }
 
 // 2) 수평 블러
@@ -318,17 +320,28 @@ fn fs(in : VSOut) -> @location(0) vec4<f32> {
   var k = 1.0;
   if (span > 0u) { k = 0.30 + 0.70 * f32(lifeOf(cell)) / f32(span); }
 
+  // 불 색온도 구배: 갓 생긴 심지는 백열, 사그라들며 원래 색(적열)으로.
+  // 발광+수명 물질(불)만 — 단일 주황 대신 뜨겁고 입체적인 불꽃.
+  var col2 = col;
+  if (em > 1.5 && span > 0u) {
+    let heat = f32(lifeOf(cell)) / f32(span);
+    col2 = mix(col, vec3<f32>(1.0, 0.93, 0.72), heat * heat * 0.5);
+  }
+
   // 셀마다 미세한 명도 편차 — 단색 덩어리로 안 보이게 (질감)
   let n = rand01(hash(x * 6151u + y * 3571u)) * 0.10 - 0.05;
-  var base = col * k * (1.0 + n);
+  var base = col2 * k * (1.0 + n);
 
   // 빈 공간은 배경. 그 위에 주변 발광이 얹힌다.
   if (mat == EMPTY) { base = vec3<f32>(0.027, 0.031, 0.043); }
 
-  // 자체 발광 + 주변에서 들어온 빛
+  // 자체 발광 + 주변에서 들어온 빛 (발광이 품질의 단일 최대 변수 — 넉넉히)
   let glow = light[i].xyz;
-  var lit = base + base * em * 1.6 + glow * 1.35;
+  var lit = base + base * em * 1.9 + glow * 1.7;
 
-  return vec4<f32>(tonemap(lit), 1.0);
+  // 은은한 비네트 — 중앙 발광으로 시선을 모으고 클립에 영화적 깊이. (1200x600 종횡비 보정)
+  let dc = (in.uv - vec2<f32>(0.5)) * vec2<f32>(2.0, 1.0);
+  let vig = 1.0 - dot(dc, dc) * 0.16;
+  return vec4<f32>(tonemap(lit) * vig, 1.0);
 }
 `

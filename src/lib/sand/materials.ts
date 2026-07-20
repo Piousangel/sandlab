@@ -116,7 +116,7 @@ export const PRESETS: Material[] = [
     ],
   },
   {
-    slug: 'acid', name: 'Acid', color: '#8CFF2E', density: 3, movement: 'liquid', lifetime: null, emissive: 0.9,
+    slug: 'acid', name: 'Acid', color: '#8CFF2E', density: 3, movement: 'liquid', lifetime: null, emissive: 1.1,
     reactions: [
       { with: 'metal', chance: 0.25, become: 'self', other: 'empty' },
       { with: 'stone', chance: 0.15, become: 'self', other: 'empty' },
@@ -143,7 +143,7 @@ export const PRESETS: Material[] = [
       { with: 'plant', chance: 0.3,  become: 'self', other: 'fire' },
     ],
   },
-  { slug: 'steam', name: 'Steam', color: '#D6E2EA', density: 1, movement: 'gas', lifetime: 160, emissive: 0.15, reactions: [] },
+  { slug: 'steam', name: 'Steam', color: '#D6E2EA', density: 1, movement: 'gas', lifetime: 160, emissive: 0.22, reactions: [] },
   { slug: 'smoke', name: 'Smoke',   color: '#4C5058', density: 1, movement: 'gas', lifetime: 120, emissive: 0, reactions: [] },
 ]
 

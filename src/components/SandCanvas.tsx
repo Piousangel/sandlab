@@ -161,7 +161,8 @@ export default function SandCanvas() {
     let t = 0
     const savedR = eng.brush.r
     eng.brush.r = 3 // 얇게 흘려 천천히 쌓이게
-    const palette = ['sand', 'water', 'sand', 'lava', 'plant'] // 색 대비 + 용암 발광 + 물↔용암 증기 반응
+    // 색 대비 + 용암 발광 + 물↔용암 증기 + oil↔lava 발화(자발적 불꽃 이벤트로 첫 프레임이 더 살아있게)
+    const palette = ['sand', 'water', 'lava', 'oil', 'plant', 'lava']
     const tick = () => {
       if (interacted.current) {
         eng.brush.mat = 0xffffffff
