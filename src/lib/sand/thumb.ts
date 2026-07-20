@@ -13,9 +13,11 @@
 
 import { hexToRgb, type Material } from './materials'
 
-/** 갤러리 카드 크기. 너무 크면 D1 행이 무겁고, 너무 작으면 뭘 그렸는지 안 보인다. */
-export const THUMB_W = 420
-export const THUMB_H = 210
+/** 갤러리 카드 + 씬 OG 이미지 크기. 640×320은 FB·링크드인·카톡 대형 카드 임계(600×315)를
+ *  넘겨 씬 공유가 큰 카드로 뜬다. 2:1은 격자(1200×600)와 동일 비율. 무게는 ?meta로 목록에서
+ *  제외되고 썸네일 자체는 immutable 캐시라 read 비용에 영향 없음. */
+export const THUMB_W = 640
+export const THUMB_H = 320
 
 /**
  * 셀 격자 → PNG base64 (data: 접두사 없음).

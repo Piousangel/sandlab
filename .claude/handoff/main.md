@@ -67,6 +67,14 @@
 - [ ] 붓질 저장 (URL 한계 근본 해결)
 - [ ] LLM 원소 생성 (검증 완료, 의도적 보류)
 
+### 씬 OG 대형 카드화 (browse-불필요 배급 개선)
+씬 공유 썸네일이 420×210이라 FB·링크드인·카톡 대형 카드 임계(600×315) 미달 → 작은 카드로 뜸(트위터만
+420에서 large 동작). 썸네일을 **640×320(2:1 유지)**으로 키워 전 플랫폼 대형 카드 확보.
+- thumb.ts THUMB_W/H 640/320(makeThumb가 상수 기반이라 자동 반영), worker og:image:width/height 640/320,
+  GalleryBrowser 카드 intrinsic 640/320. MAX_THUMB_BYTES 120K→300K(큰 썸네일도 upload 'bad thumb' 안 나게).
+- 무게 안전: 목록은 ?meta=1로 thumb 제외, thumb는 immutable 캐시 → read 비용 무영향.
+- typecheck·build·deploy 통과. 갤러리 비어 실제 씬 curl 불가지만 og는 정적 리터럴이라 배포로 확정.
+
 ### 최근변경 적대적 리뷰 사이클 (browse 저하 대비 코드 de-risk)
 browse가 반복 WebGPU 세션으로 저하돼 시각 검증이 막히자, 최근 무거운 변경(셰이더 비주얼·워터마크
 엔진 surgery·모바일 stage)을 3렌즈 적대적 리뷰 → **진짜 버그 2건 발견·수정(1c33620)**:

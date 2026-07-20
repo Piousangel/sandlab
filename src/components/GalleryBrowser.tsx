@@ -164,8 +164,8 @@ export default function GalleryBrowser() {
                 <img
                   src={`/api/scenes/${s.id}/thumb`}
                   alt={s.title}
-                  width={420}
-                  height={210}
+                  width={640}
+                  height={320}
                   loading="lazy"
                   className="sl-thumb-img"
                   style={S.thumb}

@@ -22,7 +22,8 @@ export const PAGE_SIZE = 24
 
 /** 장면 데이터 상한. deflate된 RLE 기준 최악(600획 난사)이 ~86KB였다. */
 export const MAX_SCENE_BYTES = 200_000
-export const MAX_THUMB_BYTES = 120_000
+/** 640×320 다운샘플 PNG(base64)는 복잡한 씬도 여유. 넉넉히 잡아 upload가 'bad thumb'로 안 깨지게. */
+export const MAX_THUMB_BYTES = 300_000
 export const MAX_TITLE = 60
 
 export interface SceneMeta {
