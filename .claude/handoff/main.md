@@ -77,17 +77,16 @@
 - **D 도메인**: sandlab.app 확정, `src/lib/site.ts` SITE 한 줄만 바꾸면 됨(도메인 붙으면). 스테이징 완료.
 - **디자인 백로그 전부 완료**: #7 색 칩 그룹 구분선+선택링(10ded2e). 크리틱 #1~8 처리 완료.
 
-### 🎯 최우선 다음-빌드: 클립 워터마크 (배급+수익화 훅, 신중한 별도 사이클)
-연구가 지목한 최상위 배급 레버 — 모든 공유 클립에 "sandlab.app" 워터마크를 얹으면 클립이 곧 광고이자
-워터마크-제거 업셀 훅(references/monetization.md). **단 안전 방식이 중요하다:**
-- ❌ **합성 캡처(2D 캔버스에 drawImage(webgpuCanvas) + 워터마크 → captureStream)는 금지.**
-  drawImage(webgpuCanvas)가 실패하면 검은 클립(검증된 핵심 자산을 깸)이고, 빈 씬vs실패 감지가 불안정.
-- ✅ **안전 방식 = 렌더 셰이더에 워터마크 텍스처.** 캡처 경로(captureStream(webgpuCanvas)) 무변 →
-  검증된 클립 그대로. 방법: (1) "sandlab.app"를 2D 캔버스에 렌더→GPUTexture(copyExternalImageToTexture),
-  (2) RENDER_WGSL 바인드그룹에 texture+sampler 추가, Params에 `recording:u32` 필드,
-  (3) fs에서 recording일 때 우하단 UV 영역에 워터마크 샘플·알파 합성, (4) record.ts 시작 전 engine에
-  recording 플래그 set, 끝나면 clear. WGSL/바인드그룹 surgery라 browse로 시각 검증(잠시 always-on으로 확인 후 게이팅).
-- 도메인 확정 전이면 "Sandlab"로, sandlab.app 붙은 뒤 "sandlab.app"로.
+### 🎯 클립 워터마크 (완료, dc01362) — 최상위 배급 레버
+모든 녹화 클립 우하단에 "sandlab.app" 워터마크 → 공유 클립이 곧 광고 + 제거 업셀 훅(monetization.md).
+**안전한 셰이더-텍스처 방식으로 구현**(합성 캡처는 검은클립 위험이라 배제):
+- Params 패딩 `_p2`→`recording` 재활용(구조체 크기 무변). engine이 "sandlab.app"를 2D→GPUTexture,
+  렌더 바인드그룹에 texture(4)+sampler(5). RENDER_WGSL이 recording일 때만 우하단 합성. record()가 토글.
+- **클립 캡처 경로(captureStream) 무변** → 검증된 클립 그대로, 워터마크는 렌더가 녹화 중 합성.
+- 검증: 임시 always-on 배포로 시뮬 정상 렌더 확인(WGSL·바인딩·copyExternalImageToTexture·플래그 유효).
+- **후속 (needsUser/browse회복 시):** 실제 녹화 클립을 받아 `inspect_clip.py`로 우하단 워터마크 표시를
+  최종 육안 확인(browse가 반복 세션으로 저하돼 이번엔 클립 녹화 스크린샷 미확보).
+- 워터마크 텍스트는 현재 "sandlab.app" 하드코딩(engine.ts). 도메인 붙어도 그대로 맞음.
 
 ### ⚡ 핵심 역량 (그동안 잘못 제약했던 것)
 **WebGPU 시뮬/비주얼도 에이전트가 시각 검증 가능하다** — 실크롬 browse 도구(`connect-chrome`)가
