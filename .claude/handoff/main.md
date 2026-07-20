@@ -67,6 +67,21 @@
 - [ ] 붓질 저장 (URL 한계 근본 해결)
 - [ ] LLM 원소 생성 (검증 완료, 의도적 보류)
 
+### ★ 도메인 sandlab.app 연결 완료 (2026-07-20) — 최대 레버 절반 실행됨
+사용자가 Cloudflare Registrar로 sandlab.app 구매 → 에이전트가 wrangler `custom_domain` route로
+붙이고(DNS+인증서 자동) SITE 상수 전환 → 배포. **검증: https://sandlab.app 200+SSL OK, API 200,
+canonical·OG·JSON-LD 전부 새 도메인.** workers.dev는 비활성(발사 통일). 클립 워터마크 'sandlab.app'가
+이제 진짜. **남은 발사 스텝: 씨앗 15~50개(사용자 직접 Publish) · AE 대시보드 활성화 · 커뮤니티 게시**
+(launch-playbook.md 순서대로). 도메인이 붙었으니 발사 링크·백링크가 영구 자산이 된다.
+
+### 발사 전 보안 감사 6건 수정 (무인증 공개 API 하드닝)
+3렌즈 병렬 적대적 감사(BLOCKER 0). 확정 REAL 6 전부 수정·배포·검증:
+투표 IP 레이트리밋(60/hr, idx_votes_ip prod 적용) · 서버측 씬 검증(decodeScene+isBlank로
+디코드불가/빈/폭탄/w·h불일치 차단) · inflate 2MB 상한(압축폭탄) · rleDecode w×h 캡(1.2M, 67MB 선할당
+차단) · PNG 시그니처 검증 · parent 실재 확인 · nosniff(thumb/OG). **verify-gallery.py 종단 검증:
+악성 5종 신규 거부 + 정상 업로드·기존 동작 전부 유지. unit 31 통과.** 미수정(문서화·발사후):
+COUNT(*) 풀스캔 최적화(성능), 오래된 row 프루닝 cron(스토리지, 70일+ 여유).
+
 ### 씬 OG 대형 카드화 (browse-불필요 배급 개선)
 씬 공유 썸네일이 420×210이라 FB·링크드인·카톡 대형 카드 임계(600×315) 미달 → 작은 카드로 뜸(트위터만
 420에서 large 동작). 썸네일을 **640×320(2:1 유지)**으로 키워 전 플랫폼 대형 카드 확보.
