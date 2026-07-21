@@ -74,9 +74,14 @@
 잡아 'Reload↻' 복구 카드 표시. + worker 최상위 try/catch(D1 blip→HTML 1101 대신 JSON 500) + a11y 번들
 (aria-live/label/pressed·reduced-motion). typecheck·35test·build·prod curl 통과. device-loss 런타임
 완전검증만 브라우저 필요.
-**감사 백로그(다음 사이클, 우선순위):** #2 init 로딩상태+ready전 입력피드백(도달 100%·첫5초) · #3 갤러리
-'Load more' 페이지네이션(씬>24면 나머지 도달불가 — worker offset 이미 지원) · #4 적응형 품질(저fps 블룸스킵)
-+고정 타임스텝(120Hz폰 물리 2배·발열). 모니터: COUNT(*)·hot소트·Yours N-fetch.
+**감사 4개 중 3개 완료:**
+- ✅ #1 device-loss 복구(d7285c3)
+- ✅ #3 'Load more' 페이지네이션(6bbb7a0) — listScenes(sort,offset) append+dedup, offset 계약 prod 확인
+- ✅ #2 init 로딩상태(c929111) — !ready 시 'Starting the sandbox…'
+- ⏸️ #4 적응형 품질(저fps 블룸스킵)+고정 타임스텝(120Hz폰 물리 2배) — **보류**: 프레임루프 재수정+물리
+  타이밍+블룸스킵 시각영향이라 browse 회복 후 시각검증과 함께가 안전(무검증 프레임루프 연속 수정 회피).
+  pickQuality/accumulator는 순수함수라 유닛테스트 가능하나, 실제 feel·블룸 시각은 사람 확인 필요.
+모니터(발사규모 비차단): COUNT(*)·hot소트·Yours N-fetch.
 
 ### 씨앗 품질 개선 — 심혈 아트 배치 (2026-07-21)
 사용자가 초기 씨앗을 "베이비 그림, 공유 민망"이라 지적. 정직히 인정: 낙사 매체는 인물/제품 등
