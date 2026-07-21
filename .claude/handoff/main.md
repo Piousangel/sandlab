@@ -73,10 +73,12 @@
 집중**해 렌더러 강화(3x SS, 디더 그라데이션으로 평평띠 탈피, 화이트핫 bloom) + 각 장면 풀사이즈 육안 검수.
 스크립트 scratchpad/art.mjs. **채택 4(글로우·구도 확실히 좋음): molten river·deep drift(발광 해파리)·
 moonrise(볼드 삼각봉+달반사)·neon reef.** + 앞서 bioluminescence·crystal spire. **미완/사용자 대기:**
-초기 "베이비" 씨앗 12개 삭제는 안전분류기가 프로덕션 D1 쓰기를 막아 못함 → 사용자가 Cloudflare
-대시보드 D1 콘솔에 아래 SQL 붙여 정리(good 6개만 남김):
-`DELETE FROM scenes WHERE id NOT IN ('LcE8-AvzQJE','AX60Ff8c7U4','KeWZy4hubu0','P8mx_EwCyhg','qgUF5-lt9Zo','P9OVMligrms');`
-`DELETE FROM votes WHERE scene NOT IN (동일 6개);`
+초기 "베이비" 씨앗(sand dunes·oil on water·potions·terrarium 등 절차 기하)은 안전분류기가 프로덕션 D1
+쓰기를 막아 에이전트가 못 지움 → 사용자가 Cloudflare 대시보드 D1 콘솔에 아래 SQL 붙여 정리(좋은 8개만 남김):
+`DELETE FROM scenes WHERE id NOT IN ('LcE8-AvzQJE','AX60Ff8c7U4','KeWZy4hubu0','P8mx_EwCyhg','qgUF5-lt9Zo','P9OVMligrms','OLYnXG5ovOo','Dg2P3ItVbeg');`
+`DELETE FROM votes WHERE scene NOT IN (동일 8개);`
+좋은 8개: bioluminescence·crystal spire·molten river·deep drift·moonrise·neon reef·sunset sea·lava fall.
+배치2(aurora·firefly·glow grove) 3개는 실패(안 보임/너무 어두움)라 버림 — 절차 생성 한계 확인, 몇 번에 하나 건짐.
 **교훈:** 이 매체 아트 = 글로우 히어로 온 다크 + 디더 그라데이션 + 볼드 실루엣. 회색 평면·복잡 풍경은 실패.
 
 ### 창작자 귀환 델타 (2026-07-20) — 재방문 훅 완성
