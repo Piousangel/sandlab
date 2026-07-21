@@ -35,6 +35,7 @@ export default function GalleryBrowser() {
   // 창작자 귀환 델타 — 지난 Yours 방문 이후 늘어난 표·리믹스.
   const [mineDelta, setMineDelta] = useState<{ votes: number; remix: number }>({ votes: 0, remix: 0 })
   const [voted, setVoted] = useState<Record<string, number>>({})
+  const [loadingMore, setLoadingMore] = useState(false)
 
   const load = useCallback(async (mode: Tab) => {
     setLoading(true)
@@ -67,6 +68,24 @@ export default function GalleryBrowser() {
   useEffect(() => {
     load(sort)
   }, [sort, load])
+
+  // 다음 페이지 append. 서버는 offset을 이미 지원(PAGE_SIZE=24). 씬>24(=발사 성공)일 때
+  // 나머지가 도달 불가하던 걸 막는다. mine 탭은 로컬 목록이라 페이지네이션 없음.
+  const loadMore = useCallback(async () => {
+    setLoadingMore(true)
+    try {
+      const r = await listScenes(sort as SortMode, scenes.length)
+      setScenes((prev) => {
+        const seen = new Set(prev.map((s) => s.id))
+        return [...prev, ...r.scenes.filter((s) => !seen.has(s.id))]
+      })
+      setTotal(r.total)
+    } catch {
+      /* 실패해도 기존 목록은 유지 — 버튼만 다시 눌러볼 수 있게 */
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [sort, scenes.length])
 
   const vote = async (id: string) => {
     if (hasVoted(id)) return
@@ -243,6 +262,13 @@ export default function GalleryBrowser() {
           )
         })}
       </div>
+      {sort !== 'mine' && scenes.length < total && !loading && (
+        <div style={S.moreWrap}>
+          <button onClick={loadMore} disabled={loadingMore} style={S.moreBtn}>
+            {loadingMore ? 'Loading…' : `Load more · ${total - scenes.length} more`}
+          </button>
+        </div>
+      )}
       <div style={S.support}>
         made by one person ·{' '}
         <a
@@ -379,6 +405,18 @@ const S: Record<string, React.CSSProperties> = {
   // 후원 — 갤러리 하단 한 줄(무해·정적). 코어/캔버스 미학 불변. 모네타이제이션 원칙.
   support: { textAlign: 'center', margin: '24px 0 10px', fontSize: 12, opacity: 0.5, color: '#eef1f6' },
   supportLink: { color: '#f5c98a', textDecoration: 'none', fontWeight: 600 },
+  moreWrap: { display: 'flex', justifyContent: 'center', margin: '26px 0 4px' },
+  moreBtn: {
+    background: 'rgba(255,255,255,0.05)',
+    color: '#eef1f6',
+    border: '1px solid rgba(255,255,255,0.14)',
+    borderRadius: 9,
+    padding: '10px 20px',
+    fontSize: 13.5,
+    fontWeight: 600,
+    cursor: 'pointer',
+    fontVariantNumeric: 'tabular-nums',
+  },
   seeNewest: {
     background: '#f5a623',
     color: '#1a1206',
