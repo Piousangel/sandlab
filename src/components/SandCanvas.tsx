@@ -32,6 +32,8 @@ export default function SandCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<SandEngine | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  // GPU 컨텍스트 손실(sleep/wake·모바일 GPU 회수·드라이버 TDR). 무신호 정지 대신 새로고침 안내.
+  const [lost, setLost] = useState(false)
   const [ready, setReady] = useState(false)
   const [sel, setSel] = useState('sand')
   const [radius, setRadius] = useState(6)
@@ -117,6 +119,10 @@ export default function SandCanvas() {
     let disposed = false
 
     const eng = new SandEngine({ canvas, width: W, height: H, materials: PRESETS })
+    // init resolve 전에 무장 — 손실이 언제 오든(로딩 중 포함) 신호를 받아 복구를 안내한다.
+    eng.onLost = () => {
+      if (!disposed) setLost(true)
+    }
     eng
       .init()
       .then(async () => {
@@ -176,6 +182,8 @@ export default function SandCanvas() {
   // 착지해 스크롤이 멈춘다(oddly-satisfying). 손대는 즉시 멈추고 캔버스를 비운다(onDown).
   useEffect(() => {
     if (!ready || hasDrawn) return
+    // 요청하지 않은 자동 모션이므로 reduced-motion 사용자에겐 돌리지 않는다(접근성).
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
     const eng = engineRef.current
     if (!eng) return
     let raf = 0
@@ -363,6 +371,31 @@ export default function SandCanvas() {
     }
   }, [])
 
+  if (lost) {
+    return (
+      <div style={S.errWrap}>
+        <div style={S.errCard}>
+          <h2 style={{ margin: '0 0 10px', fontSize: 19 }}>The GPU was interrupted</h2>
+          <p style={{ margin: '0 0 16px', opacity: 0.72, fontSize: 14, lineHeight: 1.55 }}>
+            Your device paused the graphics context (this can happen after sleep, or when another app
+            needs the GPU). Reload to pick up where the sandbox left off.
+          </p>
+          <button
+            onClick={() => location.reload()}
+            style={{ ...S.errCta, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Reload ↻
+          </button>
+          <p style={{ margin: '14px 0 0' }}>
+            <a href="/gallery" style={{ ...S.errCta, background: 'transparent', color: '#8ea0bf', boxShadow: 'none', padding: 0 }}>
+              or browse the gallery →
+            </a>
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (err) {
     return (
       <div style={S.errWrap}>
@@ -489,11 +522,11 @@ export default function SandCanvas() {
             const groupBreak = i > 0 && PAINTABLE[i - 1].movement !== m.movement
             // 터치: 시각 점은 19px 유지하되 탭 영역만 40px로(오탭 방지). 마우스: 19px 버튼.
             const chip = coarse ? (
-              <button onClick={pick} title={m.name} aria-label={m.name} style={S.chipHit}>
+              <button onClick={pick} title={m.name} aria-label={m.name} aria-pressed={!erasing && sel === m.slug} style={S.chipHit}>
                 <span style={dot} />
               </button>
             ) : (
-              <button onClick={pick} title={m.name} aria-label={m.name} style={dot} />
+              <button onClick={pick} title={m.name} aria-label={m.name} aria-pressed={!erasing && sel === m.slug} style={dot} />
             )
             return (
               <Fragment key={m.slug}>
@@ -517,6 +550,7 @@ export default function SandCanvas() {
             max={24}
             value={radius}
             onChange={(e) => setRadius(+e.target.value)}
+            aria-label="Brush size"
             style={S.range}
           />
           <span style={S.sizeNum}>{radius}</span>
@@ -592,7 +626,7 @@ export default function SandCanvas() {
       )}
 
       {!coarse && <div style={S.hint}>Right-click to erase</div>}
-      {toast && <div style={S.toast}>{toast}</div>}
+      {toast && <div style={S.toast} role="status" aria-live="polite">{toast}</div>}
     </div>
   )
 }

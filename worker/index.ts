@@ -120,8 +120,10 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
     const p = url.pathname
-
-    // ── 목록 ──
+    // 최상위 가드: D1 blip 등으로 핸들러가 throw하면 CF가 HTML 1101을 반환 → 클라의 res.json()이
+    // 파싱에서 throw → 갤러리와 WebGPU 폴백 탈출구가 동시에 깨진다. 여기서 잡아 JSON 500을 준다.
+    try {
+      // ── 목록 ──
     if (p === '/api/scenes' && request.method === 'GET') {
       const sort = (url.searchParams.get('sort') as SortMode) === 'new' ? 'new' : 'hot'
       const offset = Math.max(0, Math.min(5000, Number(url.searchParams.get('offset')) || 0))
@@ -360,6 +362,15 @@ export default {
       return Response.redirect(`${url.origin}/`, 302)
     }
 
-    return env.ASSETS.fetch(request)
+      return env.ASSETS.fetch(request)
+    } catch (e) {
+      console.error('worker error:', e)
+      return p.startsWith('/api/')
+        ? err('server error', 500)
+        : new Response('Service temporarily unavailable — please retry.', {
+            status: 503,
+            headers: { 'content-type': 'text/plain; charset=utf-8' },
+          })
+    }
   },
 }

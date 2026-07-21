@@ -89,6 +89,7 @@ export default function GalleryBrowser() {
             <button
               key={m}
               onClick={() => setSort(m)}
+              aria-pressed={sort === m}
               style={{ ...S.tab, ...(sort === m ? S.tabOn : null) }}
             >
               {m === 'hot' ? 'Hot this week' : m === 'new' ? 'Newest' : 'Yours'}

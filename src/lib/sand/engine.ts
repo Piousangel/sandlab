@@ -63,6 +63,11 @@ export class SandEngine {
   // 이 플래그를 세우면 init이 이미 만든 것을 정리하고 조기 반환해 device 누수를 막는다.
   private disposed = false
 
+  /** GPU 컨텍스트 손실(sleep/wake·모바일 GPU 회수·드라이버 TDR·크롬 컨텍스트 축출). 손실 시 채워진다.
+   *  없으면 프레임 루프가 조용히 죽고 재시작 경로가 없다 — 그래서 신호를 내보내 UI가 복구를 안내한다. */
+  lost: GPUDeviceLostInfo | null = null
+  onLost?: (info?: GPUDeviceLostInfo) => void
+
   /** 성능 관측 — 실제 FPS. 해상도 판단 근거가 필요하다. */
   fps = 0
   private frames = 0
@@ -97,6 +102,15 @@ export class SandEngine {
       this.device.destroy()
       return
     }
+    // 컨텍스트 손실 = 주 트리거. 손실 시 대부분의 WebGPU 호출은 동기 throw가 아니라 async no-op이
+    // 되므로(sleep/wake·TDR), frame의 try/catch만으론 못 잡는다. lost 프로미스로 확실히 잡는다.
+    // destroy()는 disposed=true를 device.destroy() '전에' 세우므로 우리 자신의 teardown은 걸러진다.
+    this.device.lost.then((info) => {
+      if (this.disposed) return
+      this.running = false
+      this.lost = info
+      this.onLost?.(info)
+    })
 
     const ctx = this.canvas.getContext('webgpu')
     if (!ctx) throw new WebGPUUnsupported('Could not create a WebGPU canvas context.')
@@ -279,6 +293,20 @@ export class SandEngine {
 
   private frame = (t: number) => {
     if (!this.running) return
+    try {
+      this.step(t)
+    } catch (e) {
+      // 동기 throw(예: getCurrentTexture) — device.lost 프로미스가 못 잡는 경로. 루프를 멈추고
+      // 신호를 낸다. 재스케줄하지 않는다(스핀 방지). 무신호 영구 사망 대신 UI가 복구를 안내한다.
+      this.running = false
+      this.lost = this.lost ?? ({ reason: 'unknown', message: String(e) } as GPUDeviceLostInfo)
+      this.onLost?.(this.lost ?? undefined)
+      return
+    }
+    this.raf = requestAnimationFrame(this.frame)
+  }
+
+  private step = (t: number) => {
     const d = this.device
     this.writeParams(this.tick % 2)
     const enc = d.createCommandEncoder()
@@ -346,7 +374,6 @@ export class SandEngine {
       this.frames = 0
       this.lastFpsAt = t
     }
-    this.raf = requestAnimationFrame(this.frame)
   }
 
   start() {
