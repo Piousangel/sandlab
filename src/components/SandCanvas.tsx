@@ -434,10 +434,11 @@ export default function SandCanvas() {
         {ready && !hasDrawn && !narrow && (
           <div style={S.onboard}>{coarse ? 'Drag to pour sand' : 'Click and drag to pour sand'}</div>
         )}
-        {narrow && (
+        {/* 좌상단에 이미 Sandlab 브랜드가 있어 중앙 금색 워드는 중복·공간낭비라 제거.
+            그리기 전 안내 힌트만(그린 뒤엔 블록 자체가 안 뜬다). */}
+        {narrow && !hasDrawn && (
           <div style={S.stageFill}>
-            <span style={S.stageFillWord}>Sandlab</span>
-            {!hasDrawn && <span style={S.stageFillSub}>Drag on the canvas to pour sand. Share the link.</span>}
+            <span style={S.stageFillSub}>Drag on the canvas to pour sand. Share the link.</span>
           </div>
         )}
         {remix && (
