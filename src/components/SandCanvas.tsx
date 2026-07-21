@@ -462,6 +462,9 @@ export default function SandCanvas() {
           onPointerCancel={onUp}
           onContextMenu={(e) => e.preventDefault()}
         />
+        {/* init(adapter→device→6 파이프라인 컴파일)은 저사양·초기방문에서 0.5~2초. 그동안 검은 박스에
+            탭이 조용히 버려지면 "고장"으로 오해해 이탈한다. 로딩 신호로 첫 5초 마찰을 없앤다. */}
+        {!ready && <div style={S.loading}>Starting the sandbox…</div>}
         {/* 온보딩 힌트는 캔버스 위 정중앙 — narrow(세로 폰)에선 캔버스가 상단 밴드라 stage 50%가
             듄 영역에 떨어져 어긋난다. 그래서 narrow에선 숨기고 아래 stageFillSub가 안내를 대신한다. */}
         {ready && !hasDrawn && !narrow && (
@@ -868,6 +871,20 @@ const S: Record<string, React.CSSProperties> = {
     color: '#eef1f6',
     opacity: 0.4,
     fontSize: 15,
+    fontWeight: 500,
+    letterSpacing: 0.3,
+    textShadow: '0 1px 12px rgba(0,0,0,0.9)',
+  },
+  loading: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    pointerEvents: 'none',
+    userSelect: 'none',
+    color: '#eef1f6',
+    opacity: 0.55,
+    fontSize: 14.5,
     fontWeight: 500,
     letterSpacing: 0.3,
     textShadow: '0 1px 12px rgba(0,0,0,0.9)',
