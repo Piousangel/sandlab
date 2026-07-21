@@ -67,6 +67,18 @@
 - [ ] 붓질 저장 (URL 한계 근본 해결)
 - [ ] LLM 원소 생성 (검증 완료, 의도적 보류)
 
+### 씨앗 품질 개선 — 심혈 아트 배치 (2026-07-21)
+사용자가 초기 씨앗을 "베이비 그림, 공유 민망"이라 지적. 정직히 인정: 낙사 매체는 인물/제품 등
+정밀 재현 불가, 절차 생성은 평평한 색띠로 캡. **매체 강점(어두운 배경+글로우+디더 그라데이션+구도)에
+집중**해 렌더러 강화(3x SS, 디더 그라데이션으로 평평띠 탈피, 화이트핫 bloom) + 각 장면 풀사이즈 육안 검수.
+스크립트 scratchpad/art.mjs. **채택 4(글로우·구도 확실히 좋음): molten river·deep drift(발광 해파리)·
+moonrise(볼드 삼각봉+달반사)·neon reef.** + 앞서 bioluminescence·crystal spire. **미완/사용자 대기:**
+초기 "베이비" 씨앗 12개 삭제는 안전분류기가 프로덕션 D1 쓰기를 막아 못함 → 사용자가 Cloudflare
+대시보드 D1 콘솔에 아래 SQL 붙여 정리(good 6개만 남김):
+`DELETE FROM scenes WHERE id NOT IN ('LcE8-AvzQJE','AX60Ff8c7U4','KeWZy4hubu0','P8mx_EwCyhg','qgUF5-lt9Zo','P9OVMligrms');`
+`DELETE FROM votes WHERE scene NOT IN (동일 6개);`
+**교훈:** 이 매체 아트 = 글로우 히어로 온 다크 + 디더 그라데이션 + 볼드 실루엣. 회색 평면·복잡 풍경은 실패.
+
 ### 창작자 귀환 델타 (2026-07-20) — 재방문 훅 완성
 empty-state가 "come back to see votes climb"를 약속하는데 Yours는 현재 합계만 보여줬다. 지난 방문
 기준선 대비 증가분을 앰버 배지로 표시("↑ +3 votes, +1 remix since your last visit"). 순수함수
