@@ -40,8 +40,8 @@ function boxBlur(buf,w,h,r){const tmp=new Float32Array(buf.length)
   for(let y=0;y<h;y++)for(let x=0;x<w;x++)for(let c=0;c<3;c++){let s=0,n=0;for(let k=-r;k<=r;k++){const yy=y+k;if(yy<0||yy>=h)continue;s+=tmp[(yy*w+x)*3+c];n++}buf[(y*w+x)*3+c]=s/n}}
 // ACES 필믹 톤맵
 function aces(x){return Math.min(1,Math.max(0,(x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14)))}
-export function renderScene(fn){
-  const a=g(); fn(a) // 씬이 격자를 채운다
+export function renderScene(fn){ const a=g(); fn(a); return renderCells(a) }
+export function renderCells(a){
   const base=new Float32Array(FW*FH*3), emit=new Float32Array(FW*FH*3)
   const sx=W/FW, sy=H/FH
   for(let y=0;y<FH;y++)for(let x=0;x<FW;x++){const m=a[((y*sy)|0)*W+((x*sx)|0)]&0xff;const c=COL[m]||COL[0];const e=EMIT[m]||0;const o=(y*FW+x)*3
@@ -73,7 +73,8 @@ export function renderScene(fn){
 // data 인코딩(업로드용, 앱 포맷)
 const Vv=1
 function pushVarint(o,v){while(v>=0x80){o.push((v&0x7f)|0x80);v>>>=7}o.push(v)}
-export function encodeScene(fn){const a=g();fn(a)
+export function encodeCells(a){
   const b=[];pushVarint(b,Vv);pushVarint(b,W);pushVarint(b,H);let rm=a[0]&0xff,rl=0
   for(let i=0;i<W*H;i++){const m=a[i]&0xff;if(m===rm)rl++;else{b.push(rm&0xff);pushVarint(b,rl);rm=m;rl=1}}b.push(rm&0xff);pushVarint(b,rl)
   return zlib.deflateRawSync(Buffer.from(b),{level:9}).toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+export function encodeScene(fn){const a=g();fn(a);return encodeCells(a)}
