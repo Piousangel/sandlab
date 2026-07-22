@@ -67,6 +67,19 @@
 - [ ] 붓질 저장 (URL 한계 근본 해결)
 - [ ] LLM 원소 생성 (검증 완료, 의도적 보류)
 
+### ★ 갤러리 아트 전면 재제작 — 시네마틱 렌더러 + 아트 카운슬 (2026-07-22)
+사용자가 기존 8개도 "진짜 구리다, 공유 민망"이라 지적(정당) → 절차 랜드스케이프 접근 폐기.
+**돌파구: (1) 시네마틱 렌더러**(scripts/art-render.mjs) — 4x SS + 멀티스케일 HDR bloom + ACES 톤맵 +
+비네트 + 블랙포인트 크러시. 발광 재료가 어두운 배경에 화이트핫으로 확 빛남. **(2) 아트 카운슬**(8에이전트
+×2씬, scripts/art-scenes.json) — 매체 강점(글로우·유기·상징·반응)에 맞는 정교한 씬 코드 생성.
+파싱→렌더→**에이전트가 풀사이즈 육안 심사**→큐레이션. **7개 신규 라이브(진짜 갤러리급):** Abyssal Bell
+(대형 발광해파리)·light waves(발광 리본)·deep drift·Frozen Tide(볼드 산+달)·Quench(용암+물 반응)·
+Bioluminescent Mushroom Grove·Descending Glowvines. **교훈:** 그레인=per-pixel노이즈는 PNG압축 죽여
+썸네일 300K초과(제거함). 회색 평면 배경=실패, 어두운/그라데이션+글로우=성공.
+**★사용자 대기(옛 8개 삭제):** 에이전트는 프로덕션 D1 삭제가 안전분류기에 막힘 → 사용자가 `!` 프리픽스로
+아래 실행(좋은 7개만 남김):
+`! cd /Users/hyunseok/Desktop/Code/sandlab && npx wrangler d1 execute sandlab-gallery --remote --yes --command "DELETE FROM votes WHERE scene NOT IN ('KrL2Zri9mFk','OrvXQ1OIu9E','m71SWxdb9sc','iSYHbdYprI8','YVMAgr-Rhko','byF1YyDKtUo','laZ7c3B20l4'); DELETE FROM scenes WHERE id NOT IN ('KrL2Zri9mFk','OrvXQ1OIu9E','m71SWxdb9sc','iSYHbdYprI8','YVMAgr-Rhko','byF1YyDKtUo','laZ7c3B20l4');"`
+
 ### 규모 사용성 감사 → BLOCKER 수정 (2026-07-22)
 "수천 명이 잘 쓰게"를 향해 5렌즈(신뢰성·성능·모바일·첫사용·a11y) 감사 → 순위 → 적대적 검증.
 **#1 빌드·배포 완료(d7285c3):** GPU device-loss 복구 — sleep/wake·모바일 GPU회수·드라이버 TDR 시
