@@ -30,6 +30,18 @@ export class WebGPUUnsupported extends Error {
   }
 }
 
+/**
+ * 적응형 품질 — 저사양 기기(구형 안드로이드·통합 GPU)에서 fps가 지속적으로 낮으면 블룸(3컴퓨트패스 ×
+ * 72만 셀)을 끄는 판단. 히스테리시스(38↓ 끄기 / 52↑ 켜기)로 임계 부근 깜빡임을 막는다. 순수함수(테스트 대상).
+ * @returns lite=true 면 블룸을 스킵(발광 글로우 없음, 그러나 fps·발열·배터리 회복).
+ */
+export function pickQuality(fps: number, prevLite: boolean): boolean {
+  if (fps <= 0) return prevLite // 아직 측정 전 — 현 상태 유지(기본 full)
+  if (fps < 38) return true // 버벅임 — 블룸 끈다
+  if (fps > 52) return false // 여유 — 블룸 복원
+  return prevLite // 중간대 — 유지
+}
+
 export class SandEngine {
   private device!: GPUDevice
   private ctx!: GPUCanvasContext
@@ -72,6 +84,8 @@ export class SandEngine {
   fps = 0
   private frames = 0
   private lastFpsAt = 0
+  /** 적응형 품질: true면 저사양이라 블룸 스킵(pickQuality가 fps로 판단). */
+  private lite = false
 
   readonly W: number
   readonly H: number
@@ -330,8 +344,9 @@ export class SandEngine {
       p.dispatchWorkgroups(gx, gy)
       p.end()
     }
-    // 3. 블룸 (dst = 1-cur 를 읽는다)
-    {
+    // 3. 블룸 (dst = 1-cur 를 읽는다) — 저사양(lite)에선 스킵해 fps를 회복시킨다.
+    //    스킵 시 렌더는 영속 lightA 버퍼(마지막 값/0)를 읽어 글로우만 빠진다(붕괴 없음).
+    if (!this.lite) {
       const p = enc.beginComputePass()
       p.setBindGroup(0, this.bloomBind[1 - this.cur])
       p.setPipeline(this.seedPipe)
@@ -373,6 +388,7 @@ export class SandEngine {
       this.fps = Math.round((this.frames * 1000) / (t - this.lastFpsAt))
       this.frames = 0
       this.lastFpsAt = t
+      this.lite = pickQuality(this.fps, this.lite) // 초당 한 번 품질 티어 재판단
     }
   }
 
