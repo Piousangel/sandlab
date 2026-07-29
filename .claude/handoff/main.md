@@ -101,7 +101,7 @@ Bioluminescent Mushroom Grove·Descending Glowvines. **교훈:** 그레인=per-p
 - ✅ #1 device-loss 복구(d7285c3)
 - ✅ #3 'Load more' 페이지네이션(6bbb7a0) — listScenes(sort,offset) append+dedup, offset 계약 prod 확인
 - ✅ #2 init 로딩상태(c929111) — !ready 시 'Starting the sandbox…'
-- ⏸️ #4 적응형 품질(저fps 블룸스킵)+고정 타임스텝(120Hz폰 물리 2배) — **보류**: 프레임루프 재수정+물리
+- 🔶 #4 절반완료(8d7346b): **적응형 블룸스킵**(fps<38 블룸끄기/>52 복원, 히스테리시스, pickQuality 유닛5, verify-margolus 7/7). 고정 타임스텝(120Hz폰)은 feel검증(browse) 필요라 보류: 프레임루프 재수정+물리
   타이밍+블룸스킵 시각영향이라 browse 회복 후 시각검증과 함께가 안전(무검증 프레임루프 연속 수정 회피).
   pickQuality/accumulator는 순수함수라 유닛테스트 가능하나, 실제 feel·블룸 시각은 사람 확인 필요.
 모니터(발사규모 비차단): COUNT(*)·hot소트·Yours N-fetch.
