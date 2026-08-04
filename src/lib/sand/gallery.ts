@@ -60,8 +60,10 @@ export function cleanTitle(raw: unknown): string {
     .replace(/[\u0000-\u001f\u007f-\u009f]/g, '') // 제어문자
     .replace(/\s+/g, ' ') // 내부 공백 압축
     .trim()
-    .slice(0, MAX_TITLE)
-  return s || 'Untitled'
+  // .slice()는 UTF-16 코드유닛 단위라 서로게이트 쌍(이모지 등)을 반으로 잘라 깨진 문자를 만들 수 있다.
+  // Array.from은 코드포인트 단위로 순회해 쌍을 안 쪼갠다.
+  const truncated = Array.from(s).slice(0, MAX_TITLE).join('')
+  return truncated || 'Untitled'
 }
 
 export function isValidId(s: unknown): s is string {
@@ -127,13 +129,29 @@ function markVoted(id: string) {
   }
 }
 
+function unmarkVoted(id: string) {
+  try {
+    const v = JSON.parse(localStorage.getItem(VOTED_KEY) || '[]') as string[]
+    localStorage.setItem(VOTED_KEY, JSON.stringify(v.filter((x) => x !== id)))
+  } catch {
+    /* markVoted가 애초에 못 썼을 상황과 동일 — 무해 */
+  }
+}
+
 export async function voteScene(id: string): Promise<number> {
   if (hasVoted(id)) throw new Error('already voted')
-  const r = await req<{ votes: number }>(`/api/scenes/${encodeURIComponent(id)}/vote`, {
-    method: 'POST',
-  })
+  // 요청 전에 먼저 마킹한다(낙관적) — 그래야 더블탭/더블클릭으로 요청 두 개가 동시에 뜨면
+  // 두 번째 호출이 hasVoted()에서 걸린다. 실패하면 되돌려 재시도할 수 있게 한다.
   markVoted(id)
-  return r.votes
+  try {
+    const r = await req<{ votes: number }>(`/api/scenes/${encodeURIComponent(id)}/vote`, {
+      method: 'POST',
+    })
+    return r.votes
+  } catch (e) {
+    unmarkVoted(id)
+    throw e
+  }
 }
 
 /**

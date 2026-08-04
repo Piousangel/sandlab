@@ -63,6 +63,10 @@ export default function SandCanvas() {
   const loadedSceneId = useRef<string | null>(null)
   // 사용자가 한 번이라도 캔버스를 건드렸는가 — 앰비언트 데모를 즉시(race 없이) 멈추는 데 쓴다.
   const interacted = useRef(false)
+  // 앰비언트 데모 정리(cleanup)가 되돌릴 반지름의 최신값. effect 마운트 시점 스냅샷을 쓰면,
+  // 데모가 도는 동안 사용자가 슬라이더를 바꿔도 정리 시점에 그 변경 전 값으로 덮어써 UI(슬라이더)와
+  // 실제 브러시 반지름이 어긋난다 — ref로 항상 최신값을 들고 있어야 한다.
+  const radiusRef = useRef(radius)
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return
@@ -173,6 +177,7 @@ export default function SandCanvas() {
   }, [ready])
 
   useEffect(() => {
+    radiusRef.current = radius
     const eng = engineRef.current
     if (eng) eng.brush.r = radius
   }, [radius, ready])
@@ -188,7 +193,6 @@ export default function SandCanvas() {
     if (!eng) return
     let raf = 0
     let t = 0
-    const savedR = eng.brush.r
     eng.brush.r = 3 // 얇게 흘려 천천히 쌓이게
     // 색 대비 + 용암 발광 + 물↔용암 증기 + oil↔lava 발화(자발적 불꽃 이벤트로 첫 프레임이 더 살아있게)
     const palette = ['sand', 'water', 'lava', 'oil', 'plant', 'lava']
@@ -214,7 +218,7 @@ export default function SandCanvas() {
       const e = engineRef.current
       if (e) {
         e.brush.mat = 0xffffffff
-        e.brush.r = savedR
+        e.brush.r = radiusRef.current
       }
     }
   }, [ready, hasDrawn])
@@ -345,7 +349,14 @@ export default function SandCanvas() {
     const eng = engineRef.current
     if (!eng) return
     const cells = await eng.readback()
-    const res = await buildShareUrl(cells, W, H)
+    let res: Awaited<ReturnType<typeof buildShareUrl>>
+    try {
+      res = await buildShareUrl(cells, W, H)
+    } catch (e) {
+      // rleEncode는 물질 id가 1바이트 포맷을 넘으면 던진다(urlState.ts) — publish()와 동일하게
+      // 사용자에게 알린다. 안 잡으면 버튼이 아무 반응 없이 죽은 것처럼 보인다.
+      return flash(e instanceof Error ? e.message : 'Link failed.')
+    }
     if (!res.ok) {
       // 막다른 길로 두지 않는다 — 갤러리는 크기 제한이 없으므로 그쪽으로 보낸다.
       return flash(

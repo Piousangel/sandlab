@@ -58,4 +58,21 @@ describe('urlState encode/decode 왕복', () => {
     expect(await decodeScene('!!!!not-valid$$$')).toBeNull()
     expect(await decodeScene('')).toBeNull()
   })
+
+  it('물질 id가 256을 넘으면 조용히 잘리지 않고 던진다', async () => {
+    // RLE은 물질 하나당 1바이트. 지금 PRESETS(20종)로는 못 만드는 값이지만,
+    // 이 상한을 넘는 셀이 들어오면 다른 물질로 잘못 저장되지 않도록 크게 터뜨려야 한다.
+    const w = 4
+    const h = 1
+    const cells = grid(w, h, () => 300) // 300 & 0xff === 44 — 잘리면 다른 물질이 된다
+    await expect(encodeScene(cells, w, h)).rejects.toThrow(/exceeds/)
+  })
+
+  it('255 이하 물질 id는 정상 왕복된다(경계값)', async () => {
+    const w = 4
+    const h = 1
+    const cells = grid(w, h, () => 255)
+    const dec = await decodeScene(await encodeScene(cells, w, h))
+    expect([...dec!.cells]).toEqual([...cells])
+  })
 })

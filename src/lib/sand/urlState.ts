@@ -118,6 +118,14 @@ async function inflate(b: Uint8Array): Promise<Uint8Array> {
  * 격자 → RLE 바이트.
  * lifetime은 버린다 — 복원 시 물질 기본 수명으로 재생성되므로 저장할 이유가 없다.
  */
+// 셀 포맷은 물질 id에 16비트(shader.ts matOf)를 예약하지만, 이 RLE는 물질 하나당 1바이트만 쓴다
+// (materials.ts PRESETS가 20종이라 지금은 항상 안전). 256종을 넘는 순간 조용히 잘려 다른 물질로
+// 저장되는 걸 막기 위해 여기서 크게 터뜨린다 — 포맷을 넓히려면(2바이트 등) V를 올리고 디코더도 맞춰야 한다.
+function pushMatByte(bytes: number[], m: number) {
+  if (m > 0xff) throw new Error(`material id ${m} exceeds RLE 1-byte format (rleEncode/urlState.ts)`)
+  bytes.push(m)
+}
+
 function rleEncode(cells: Uint32Array<ArrayBuffer>, w: number, h: number): Uint8Array {
   const bytes: number[] = []
   pushVarint(bytes, V)
@@ -131,13 +139,13 @@ function rleEncode(cells: Uint32Array<ArrayBuffer>, w: number, h: number): Uint8
     if (m === runMat) {
       runLen++
     } else {
-      bytes.push(runMat & 0xff)
+      pushMatByte(bytes, runMat)
       pushVarint(bytes, runLen)
       runMat = m
       runLen = 1
     }
   }
-  bytes.push(runMat & 0xff)
+  pushMatByte(bytes, runMat)
   pushVarint(bytes, runLen)
   return new Uint8Array(bytes)
 }
