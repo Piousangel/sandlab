@@ -388,7 +388,9 @@ export class SandEngine {
       this.fps = Math.round((this.frames * 1000) / (t - this.lastFpsAt))
       this.frames = 0
       this.lastFpsAt = t
-      this.lite = pickQuality(this.fps, this.lite) // 초당 한 번 품질 티어 재판단
+      // 녹화 중엔 티어를 고정한다 — 안 그러면 10초 클립 도중 fps가 경계를 넘나들 때
+      // 글로우가 켜졌다 꺼지며 공유용 클립에 그 전환이 그대로 박제된다(캡처는 화면 그대로 담아서 되돌릴 수 없다).
+      if (!this.recording) this.lite = pickQuality(this.fps, this.lite)
     }
   }
 

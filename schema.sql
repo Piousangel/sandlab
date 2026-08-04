@@ -17,9 +17,11 @@ CREATE TABLE IF NOT EXISTS scenes (
                               -- (댓글 없이 크리에이터를 잇는 리텐션 플라이휠 — Sandspiel 리믹스 문화)
 );
 
--- hot 랭킹: 최근 1주일 이내 + 표 순 (Powder Toy FP 복제).
--- 이 창이 없으면 오래된 히트작이 상단을 영원히 점거해 신규가 절대 안 보인다.
-CREATE INDEX IF NOT EXISTS idx_scenes_hot ON scenes(created_at DESC, votes DESC);
+-- hot 랭킹: 최근 1주일 이내 + 표 순 (Powder Toy FP 복제). ORDER BY가 votes DESC, created_at DESC라
+-- 컬럼 순서를 그대로 맞춘다 — (created_at, votes) 순이면 정렬에 못 쓰여 TEMP B-TREE로 떨어지고
+-- (SELECT COUNT(*)...) remixCount 서브쿼리가 OFFSET/LIMIT 전에 창 안 전체 행에 대해 돈다(EXPLAIN QUERY
+-- PLAN으로 확인). (votes, created_at) 순이면 이 인덱스 자체가 정렬 순서를 제공해 LIMIT이 앞에서 끊는다.
+CREATE INDEX IF NOT EXISTS idx_scenes_hot ON scenes(votes DESC, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_scenes_new ON scenes(created_at DESC);
 -- 업로드 레이트리밋 조회용
 CREATE INDEX IF NOT EXISTS idx_scenes_ip ON scenes(ip, created_at);
