@@ -6,6 +6,7 @@ import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
 import { uploadScene, getScene, listScenes, rememberMine, type SceneMeta } from '@/lib/sand/gallery'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
+import { noteFirstTry } from '@/lib/sand/discovery'
 // record.ts는 mediabunny(~대용량 코덱)를 정적 import한다. 방문자 대부분이 안 누르는 녹화 기능이므로
 // 랜딩 초기 JS에서 분리한다 — record() 호출 시점에 동적 import(아래).
 
@@ -27,6 +28,7 @@ const W = 1200
 const H = 600
 
 const PAINTABLE = PRESETS.filter((m) => m.slug !== 'empty')
+const NAME_BY_SLUG: Record<string, string> = Object.fromEntries(PRESETS.map((m) => [m.slug, m.name]))
 
 export default function SandCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -67,6 +69,9 @@ export default function SandCanvas() {
   // 데모가 도는 동안 사용자가 슬라이더를 바꿔도 정리 시점에 그 변경 전 값으로 덮어써 UI(슬라이더)와
   // 실제 브러시 반지름이 어긋난다 — ref로 항상 최신값을 들고 있어야 한다.
   const radiusRef = useRef(radius)
+  // 이번 세션(리로드하면 리셋)에 실제로 칠해본 재료 — 온-페이지 체류 장치("New: Lava (3/20 tried)").
+  // GPU 리드백 없음(반응 자체가 아니라 '내가 이 재료를 써봤는가'만 클라이언트에서 추적).
+  const triedRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return
@@ -245,7 +250,12 @@ export default function SandCanvas() {
     eng.brush.x = x
     eng.brush.y = y
     // 지우개 모드(터치) 또는 우클릭(데스크톱) = 지우기. 둘 다 mat=0.
-    eng.brush.mat = erasing || e.button === 2 ? 0 : (idx.current.get(sel) ?? 0)
+    const isErase = erasing || e.button === 2
+    eng.brush.mat = isErase ? 0 : (idx.current.get(sel) ?? 0)
+    if (!isErase) {
+      const msg = noteFirstTry(triedRef.current, sel, NAME_BY_SLUG[sel] ?? sel, PAINTABLE.length)
+      if (msg) flash(msg)
+    }
     if (!hasDrawn) setHasDrawn(true) // 첫 붓질 → 온보딩 힌트 제거
   }
 
