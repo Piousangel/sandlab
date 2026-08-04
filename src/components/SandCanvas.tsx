@@ -34,6 +34,14 @@ const SUGGESTION_PAIRS = buildSuggestionPairs(PRESETS)
 const IDLE_NUDGE_MS = 8000 // 이 정도 손을 안 대면 "해봐" 넛지 후보
 const MAX_IDLE_NUDGES = 3 // 방문마다 상한 — 계속 그리는 중인데 넛지가 스팸처럼 뜨지 않게
 
+/** m:ss. 체류시간 stat 표시용 — 음수(시계 오차 등)는 0으로 클램프. */
+function formatElapsed(sec: number): string {
+  const s = Math.max(0, Math.floor(sec))
+  const m = Math.floor(s / 60)
+  const r = s % 60
+  return `${m}:${String(r).padStart(2, '0')}`
+}
+
 export default function SandCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engineRef = useRef<SandEngine | null>(null)
@@ -81,6 +89,10 @@ export default function SandCanvas() {
   const lastActivityRef = useRef(0)
   const idleNudgedRef = useRef(false) // 이번 유휴 구간엔 이미 넛지했다(같은 정지 상태에서 반복 방지)
   const nudgeCountRef = useRef(0)
+  // 체류시간 장치 #3 — 첫 붓질(또는 씬 복원) 시점을 기준으로 경과시간을 stat 줄에 보여준다.
+  // neal.fun "Progress" 선례: 실시간으로 오르는 숫자 자체가 볼거리(장르 내 실증).
+  const firstDrawnAtRef = useRef<number | null>(null)
+  const [elapsedSec, setElapsedSec] = useState(0)
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return
@@ -164,6 +176,7 @@ export default function SandCanvas() {
         }
         if (!disposed && restored && restored.w === W && restored.h === H) {
           eng.upload(restored.cells)
+          firstDrawnAtRef.current = performance.now()
           setHasDrawn(true) // 복원된 장면은 빈 게 아니므로 온보딩 힌트를 띄우지 않는다
           // 남의 씬을 링크로 열었다 → "이거 리믹스할 수 있다"를 알린다(링크 클릭자 = 최고 전환 후보).
           if (remixMeta) setRemix(remixMeta)
@@ -189,6 +202,15 @@ export default function SandCanvas() {
     const t = setInterval(() => setFps(engineRef.current?.fps ?? 0), 500)
     return () => clearInterval(t)
   }, [ready])
+
+  useEffect(() => {
+    if (!hasDrawn) return
+    const t = setInterval(() => {
+      const start = firstDrawnAtRef.current
+      if (start != null) setElapsedSec(Math.floor((performance.now() - start) / 1000))
+    }, 1000)
+    return () => clearInterval(t)
+  }, [hasDrawn])
 
   // 유휴 넛지 — 붓질이 멈춘 지 IDLE_NUDGE_MS 넘으면 시도 안 해본 반응쌍을 하나 제안한다.
   // 온보딩 힌트/앰비언트 데모와 안 겹치게 hasDrawn 이후에만, 방문당 상한(MAX_IDLE_NUDGES)을 둔다.
@@ -290,7 +312,10 @@ export default function SandCanvas() {
       const msg = noteFirstTry(triedRef.current, sel, NAME_BY_SLUG[sel] ?? sel, PAINTABLE.length)
       if (msg) flash(msg)
     }
-    if (!hasDrawn) setHasDrawn(true) // 첫 붓질 → 온보딩 힌트 제거
+    if (!hasDrawn) {
+      firstDrawnAtRef.current = performance.now()
+      setHasDrawn(true) // 첫 붓질 → 온보딩 힌트 제거
+    }
   }
 
   const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -559,6 +584,7 @@ export default function SandCanvas() {
       {ready && (
         <div style={S.stat}>
           {fps} fps · {((W * H) / 1000).toFixed(0)}k cells
+          {hasDrawn && <> · {formatElapsed(elapsedSec)}</>}
         </div>
       )}
 
