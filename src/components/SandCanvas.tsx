@@ -6,7 +6,7 @@ import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
 import { uploadScene, getScene, listScenes, rememberMine, type SceneMeta } from '@/lib/sand/gallery'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
-import { noteFirstTry } from '@/lib/sand/discovery'
+import { noteFirstTry, buildSuggestionPairs, pickSuggestion } from '@/lib/sand/discovery'
 // record.ts는 mediabunny(~대용량 코덱)를 정적 import한다. 방문자 대부분이 안 누르는 녹화 기능이므로
 // 랜딩 초기 JS에서 분리한다 — record() 호출 시점에 동적 import(아래).
 
@@ -29,6 +29,10 @@ const H = 600
 
 const PAINTABLE = PRESETS.filter((m) => m.slug !== 'empty')
 const NAME_BY_SLUG: Record<string, string> = Object.fromEntries(PRESETS.map((m) => [m.slug, m.name]))
+// materials.ts reactions에서 파생 — 여기 따로 하드코딩하지 않는다(단일 진실 공급원 유지).
+const SUGGESTION_PAIRS = buildSuggestionPairs(PRESETS)
+const IDLE_NUDGE_MS = 8000 // 이 정도 손을 안 대면 "해봐" 넛지 후보
+const MAX_IDLE_NUDGES = 3 // 방문마다 상한 — 계속 그리는 중인데 넛지가 스팸처럼 뜨지 않게
 
 export default function SandCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -72,6 +76,11 @@ export default function SandCanvas() {
   // 이번 세션(리로드하면 리셋)에 실제로 칠해본 재료 — 온-페이지 체류 장치("New: Lava (3/20 tried)").
   // GPU 리드백 없음(반응 자체가 아니라 '내가 이 재료를 써봤는가'만 클라이언트에서 추적).
   const triedRef = useRef<Set<string>>(new Set())
+  // 유휴 넛지("Try Lava on Water") — 마지막 상호작용(붓질 시작/끝) 이후 경과시간을 잰다.
+  // 반응이 실제로 일어났는지는 감지 안 하니 GPU 리드백·셰이더 변경 없음.
+  const lastActivityRef = useRef(0)
+  const idleNudgedRef = useRef(false) // 이번 유휴 구간엔 이미 넛지했다(같은 정지 상태에서 반복 방지)
+  const nudgeCountRef = useRef(0)
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return
@@ -181,6 +190,29 @@ export default function SandCanvas() {
     return () => clearInterval(t)
   }, [ready])
 
+  // 유휴 넛지 — 붓질이 멈춘 지 IDLE_NUDGE_MS 넘으면 시도 안 해본 반응쌍을 하나 제안한다.
+  // 온보딩 힌트/앰비언트 데모와 안 겹치게 hasDrawn 이후에만, 방문당 상한(MAX_IDLE_NUDGES)을 둔다.
+  useEffect(() => {
+    if (!ready || !hasDrawn) return
+    // hasDrawn이 onDown 없이(#s=id·#g= 씬 복원) true가 될 수도 있다 — 그 경로는 lastActivityRef를
+    // 안 건드리므로 0(초기값)에 멈춰있어 첫 tick에 곧바로 "유휴"로 오판한다. 이 effect가 실제로
+    // 활성화되는 시점을 기준선으로 삼는다.
+    lastActivityRef.current = performance.now()
+    const iv = setInterval(() => {
+      if (idleNudgedRef.current || nudgeCountRef.current >= MAX_IDLE_NUDGES) return
+      // 누르고 있는 동안(움직임 없는 정지 홀드 포함)은 절대 유휴가 아니다 — onMove 없이도 맞다.
+      if (engineRef.current?.brush.mat !== 0xffffffff) return
+      if (performance.now() - lastActivityRef.current < IDLE_NUDGE_MS) return
+      const msg = pickSuggestion(SUGGESTION_PAIRS, triedRef.current)
+      idleNudgedRef.current = true // 제안이 없어도(null) 이번 유휴 구간은 소진 — 매초 재시도 안 함
+      if (msg) {
+        flash(msg)
+        nudgeCountRef.current++
+      }
+    }, 1000)
+    return () => clearInterval(iv)
+  }, [ready, hasDrawn])
+
   useEffect(() => {
     radiusRef.current = radius
     const eng = engineRef.current
@@ -240,6 +272,8 @@ export default function SandCanvas() {
     e.currentTarget.setPointerCapture(e.pointerId)
     const eng = engineRef.current
     if (!eng) return
+    lastActivityRef.current = performance.now()
+    idleNudgedRef.current = false // 다시 손을 댔으니 다음 유휴 구간에 또 넛지할 수 있다
     if (remix) setRemix(null) // 첫 붓질 = 리믹스 시작 → 안내 배너 소멸
     // 첫 상호작용: 앰비언트 데모를 즉시 멈추고(ref) 캔버스를 비워 사용자에게 깨끗한 시작을 준다.
     if (!interacted.current) {
@@ -262,6 +296,9 @@ export default function SandCanvas() {
   const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const eng = engineRef.current
     if (!eng || eng.brush.mat === 0xffffffff) return
+    // 계속 누른 채 긋는 긴 스트로크도 '활동 중'이다 — onDown/onUp만 갱신하면 IDLE_NUDGE_MS보다
+    // 긴 스트로크 도중에 유휴로 오판해 넛지가 뜬다.
+    lastActivityRef.current = performance.now()
     const { x, y } = toGrid(e)
     eng.brush.x = x
     eng.brush.y = y
@@ -270,6 +307,7 @@ export default function SandCanvas() {
   const onUp = () => {
     const eng = engineRef.current
     if (eng) eng.brush.mat = 0xffffffff
+    lastActivityRef.current = performance.now() // 유휴 시계는 붓질이 '끝난' 시점부터
   }
 
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)

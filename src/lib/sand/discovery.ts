@@ -27,3 +27,52 @@ export function noteFirstTry(
   if (tried.size >= total) return `New: ${displayName} — every material tried!`
   return `New: ${displayName} (${tried.size}/${total} tried)`
 }
+
+/**
+ * 유휴 제안 — "물을 용암에 부어봐" 같은 넛지. materials.ts의 reactions(단일 진실 공급원)에서
+ * 직접 뽑아 여기 따로 하드코딩하지 않는다 — 반응 테이블이 바뀌면 자동으로 따라온다.
+ *
+ * 반응이 실제로 일어났는지는(=WGSL 안에서만 일어남) 감지하지 않는다 — "해봐"만 제안하고
+ * "일어났다"는 확인하지 않는다. 그래서 GPU 리드백도 셰이더 변경도 필요 없다.
+ */
+export interface SuggestionPair {
+  a: string
+  b: string
+  aName: string
+  bName: string
+}
+
+export function buildSuggestionPairs(
+  mats: { slug: string; name: string; reactions: { with: string }[] }[],
+): SuggestionPair[] {
+  const bySlug = new Map(mats.map((m) => [m.slug, m]))
+  const seen = new Set<string>()
+  const pairs: SuggestionPair[] = []
+  for (const m of mats) {
+    for (const r of m.reactions) {
+      if (r.with === 'empty' || r.with === m.slug) continue
+      const other = bySlug.get(r.with)
+      if (!other) continue
+      const key = [m.slug, r.with].sort().join('|')
+      if (seen.has(key)) continue
+      seen.add(key)
+      pairs.push({ a: m.slug, b: r.with, aName: m.name, bName: other.name })
+    }
+  }
+  return pairs
+}
+
+/**
+ * 아직 두 재료를 다 안 써본 반응쌍 중 하나를 골라 제안 문구를 만든다.
+ * 전부 시도했으면(둘 다 tried인 쌍만 남으면) null — 더 넛지할 게 없다.
+ */
+export function pickSuggestion(
+  pairs: SuggestionPair[],
+  tried: Set<string>,
+  rand: () => number = Math.random,
+): string | null {
+  const untried = pairs.filter((p) => !tried.has(p.a) || !tried.has(p.b))
+  if (untried.length === 0) return null
+  const p = untried[Math.floor(rand() * untried.length)]
+  return `Try ${p.aName} on ${p.bName}`
+}
