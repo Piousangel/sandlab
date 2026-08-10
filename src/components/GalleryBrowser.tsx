@@ -9,12 +9,17 @@ import {
   mineDeltas,
   voteScene,
   hasVoted,
+  getCreatorTop,
+  getCreatorProfile,
   type SceneMeta,
   type SortMode,
+  type CreatorTop,
+  type CreatorProfile,
 } from '@/lib/sand/gallery'
 
-// 서버 정렬(hot/new) + 로컬 'mine'(내가 올린 것). mine은 서버 정렬이 아니라 localStorage 기반.
-type Tab = SortMode | 'mine'
+// 서버 정렬(hot/new) + 로컬 'mine'(내가 올린 것) + 'top'(크리에이터 리더보드).
+// mine은 서버 정렬이 아니라 localStorage 기반.
+type Tab = SortMode | 'mine' | 'top'
 
 function ThumbIcon() {
   return (
@@ -56,12 +61,21 @@ export default function GalleryBrowser() {
   const [mineDelta, setMineDelta] = useState<{ votes: number; remix: number }>({ votes: 0, remix: 0 })
   const [voted, setVoted] = useState<Record<string, number>>({})
   const [loadingMore, setLoadingMore] = useState(false)
+  // 크리에이터 프로필 보기(카드의 "by 이름" 클릭) — 탭과 별개 오버레이 상태.
+  const [viewingCreator, setViewingCreator] = useState<{ id: string; name: string } | null>(null)
+  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile | null>(null)
+  const [topCreators, setTopCreators] = useState<CreatorTop[]>([])
 
-  const load = useCallback(async (mode: Tab) => {
+  const load = useCallback(async (mode: Tab, creatorId?: string) => {
     setLoading(true)
     setErr(null)
     try {
-      if (mode === 'mine') {
+      if (creatorId) {
+        const [r, profile] = await Promise.all([listScenes('new', 0, creatorId), getCreatorProfile(creatorId)])
+        setScenes(r.scenes)
+        setTotal(r.total)
+        setCreatorProfile(profile)
+      } else if (mode === 'mine') {
         // 내가 올린 id들을 각각 조회한다. 삭제된 씬은 건너뛴다. 개인 목록이라 수가 적다.
         const mine = listMine()
         const settled = await Promise.allSettled(mine.map((e) => getSceneMeta(e.id)))
@@ -73,6 +87,11 @@ export default function GalleryBrowser() {
         updateMineSeen(found.map((s) => ({ id: s.id, votes: s.votes || 0, remixCount: s.remixCount || 0 })))
         setScenes(found)
         setTotal(found.length)
+      } else if (mode === 'top') {
+        const r = await getCreatorTop()
+        setTopCreators(r.creators)
+        setScenes([])
+        setTotal(0)
       } else {
         const r = await listScenes(mode)
         setScenes(r.scenes)
@@ -86,15 +105,19 @@ export default function GalleryBrowser() {
   }, [])
 
   useEffect(() => {
-    load(sort)
-  }, [sort, load])
+    load(sort, viewingCreator?.id)
+  }, [sort, viewingCreator, load])
 
   // 다음 페이지 append. 서버는 offset을 이미 지원(PAGE_SIZE=24). 씬>24(=발사 성공)일 때
   // 나머지가 도달 불가하던 걸 막는다. mine 탭은 로컬 목록이라 페이지네이션 없음.
   const loadMore = useCallback(async () => {
     setLoadingMore(true)
     try {
-      const r = await listScenes(sort as SortMode, scenes.length)
+      // 크리에이터 프로필 보기 중엔 load()와 동일하게 'new' + creatorId로 페이지네이션한다 —
+      // 그렇지 않으면 이전 탭의 sort로 무필터 전체 목록을 이어붙이게 된다.
+      const r = viewingCreator
+        ? await listScenes('new', scenes.length, viewingCreator.id)
+        : await listScenes(sort as SortMode, scenes.length)
       setScenes((prev) => {
         const seen = new Set(prev.map((s) => s.id))
         return [...prev, ...r.scenes.filter((s) => !seen.has(s.id))]
@@ -105,7 +128,7 @@ export default function GalleryBrowser() {
     } finally {
       setLoadingMore(false)
     }
-  }, [sort, scenes.length])
+  }, [sort, scenes.length, viewingCreator])
 
   const vote = async (id: string) => {
     if (hasVoted(id)) return
@@ -120,28 +143,74 @@ export default function GalleryBrowser() {
   return (
     <main style={S.main}>
       <header style={S.head}>
-        <a href="/" style={S.back}>
-          ← Sandlab
-        </a>
-        <div style={S.tabs}>
-          {(['hot', 'new', 'mine'] as Tab[]).map((m) => (
-            <button
-              key={m}
-              onClick={() => setSort(m)}
-              aria-pressed={sort === m}
-              style={{ ...S.tab, ...(sort === m ? S.tabOn : null) }}
-            >
-              {m === 'hot' ? 'Hot this week' : m === 'new' ? 'Newest' : 'Yours'}
+        {viewingCreator ? (
+          <>
+            <button onClick={() => setViewingCreator(null)} style={S.back}>
+              ← Back to gallery
             </button>
-          ))}
-        </div>
-        <span style={S.count}>{total > 0 ? `${total} scenes` : ''}</span>
+            <span style={S.title}>{viewingCreator.name || 'Anonymous'}</span>
+            {creatorProfile && (
+              <span style={S.count}>
+                {creatorProfile.sceneCount} scene{creatorProfile.sceneCount === 1 ? '' : 's'} ·{' '}
+                {creatorProfile.totalVotes} vote{creatorProfile.totalVotes === 1 ? '' : 's'} ·{' '}
+                {creatorProfile.remixCount} remix{creatorProfile.remixCount === 1 ? '' : 'es'}
+              </span>
+            )}
+          </>
+        ) : (
+          <>
+            <a href="/" style={S.back}>
+              ← Sandlab
+            </a>
+            <div style={S.tabs}>
+              {(['hot', 'new', 'mine', 'top'] as Tab[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setSort(m)}
+                  aria-pressed={sort === m}
+                  style={{ ...S.tab, ...(sort === m ? S.tabOn : null) }}
+                >
+                  {m === 'hot' ? 'Hot this week' : m === 'new' ? 'Newest' : m === 'mine' ? 'Yours' : 'Top Creators'}
+                </button>
+              ))}
+            </div>
+            <span style={S.count}>{total > 0 ? `${total} scenes` : ''}</span>
+          </>
+        )}
       </header>
 
       {loading && <p style={S.msg}>Loading…</p>}
       {err && <p style={{ ...S.msg, color: '#ff8080' }}>{err}</p>}
 
-      {!loading && !err && scenes.length === 0 && (
+      {!loading && !err && !viewingCreator && sort === 'top' && (
+        topCreators.length === 0 ? (
+          <div style={S.empty}>
+            <p style={{ margin: '0 0 6px', fontSize: 16 }}>No named creators yet.</p>
+            <p style={{ margin: 0, opacity: 0.55, fontSize: 13.5 }}>
+              Publish a scene and give it a name to be the first on the board.
+            </p>
+          </div>
+        ) : (
+          <ol style={S.leaderboard}>
+            {topCreators.map((c, i) => (
+              <li key={c.id} style={S.leaderboardRow}>
+                <span style={S.leaderboardRank}>{i + 1}</span>
+                <button
+                  onClick={() => setViewingCreator({ id: c.id, name: c.name || 'Anonymous' })}
+                  style={S.leaderboardName}
+                >
+                  {c.name || 'Anonymous'}
+                </button>
+                <span style={S.leaderboardStats}>
+                  <ThumbIcon /> {c.votes} · {c.scenes} scene{c.scenes === 1 ? '' : 's'}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )
+      )}
+
+      {!loading && !err && (sort !== 'top' || viewingCreator) && scenes.length === 0 && (
         <div style={S.empty}>
           {sort === 'mine' ? (
             <>
@@ -212,77 +281,88 @@ export default function GalleryBrowser() {
         @media (hover: none) { .sl-remix { opacity: 1; transform: none; } }
       `}</style>
 
-      <div style={S.grid}>
-        {scenes.map((s) => {
-          const v = voted[s.id] ?? s.votes
-          const did = hasVoted(s.id)
-          return (
-            <div key={s.id} className="sl-card" style={S.card}>
-              <a href={`/#s=${s.id}`} style={S.thumbLink} title="Open & remix in Sandlab">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/scenes/${s.id}/thumb`}
-                  alt={s.title}
-                  width={640}
-                  height={320}
-                  loading="lazy"
-                  className="sl-thumb-img"
-                  style={S.thumb}
-                  onError={(e) => {
-                    // 썸네일 로드 실패(삭제·손상·네트워크) 시 깨진 아이콘 대신 그라디언트 플레이스홀더로.
-                    // "썸네일=본체" 장르에서 깨진 카드는 '고장난 사이트' 신호라 반드시 우아하게 떨어져야 한다.
-                    const img = e.currentTarget
-                    img.removeAttribute('src')
-                    img.style.background = 'linear-gradient(135deg, #1a1410, #0c0a08)'
-                  }}
-                />
-                <span className="sl-remix" style={S.remixBadge}>
-                  ↻ Remix
-                </span>
-              </a>
-              <div style={S.meta}>
-                <span style={S.title} title={s.title}>
-                  {s.title}
-                </span>
-                {sort === 'mine' ? (
-                  // 자기 씬엔 투표하지 않는다 — 표는 지켜보는 신호다("come back to see its votes climb").
-                  <span style={S.voteStatic} title="Votes on your scene">
-                    <ThumbIcon /> <strong style={{ fontWeight: 700 }}>{v}</strong>
+      {(sort !== 'top' || viewingCreator) && (
+        <div style={S.grid}>
+          {scenes.map((s) => {
+            const v = voted[s.id] ?? s.votes
+            const did = hasVoted(s.id)
+            return (
+              <div key={s.id} className="sl-card" style={S.card}>
+                <a href={`/#s=${s.id}`} style={S.thumbLink} title="Open & remix in Sandlab">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/api/scenes/${s.id}/thumb`}
+                    alt={s.title}
+                    width={640}
+                    height={320}
+                    loading="lazy"
+                    className="sl-thumb-img"
+                    style={S.thumb}
+                    onError={(e) => {
+                      // 썸네일 로드 실패(삭제·손상·네트워크) 시 깨진 아이콘 대신 그라디언트 플레이스홀더로.
+                      // "썸네일=본체" 장르에서 깨진 카드는 '고장난 사이트' 신호라 반드시 우아하게 떨어져야 한다.
+                      const img = e.currentTarget
+                      img.removeAttribute('src')
+                      img.style.background = 'linear-gradient(135deg, #1a1410, #0c0a08)'
+                    }}
+                  />
+                  <span className="sl-remix" style={S.remixBadge}>
+                    ↻ Remix
                   </span>
-                ) : (
-                  <button
-                    onClick={() => vote(s.id)}
-                    disabled={did}
-                    style={{ ...S.vote, ...(did ? S.voteOn : null) }}
-                    title={did ? 'Voted' : 'Give this an upvote'}
-                  >
-                    <ThumbIcon /> <strong style={{ fontWeight: 700 }}>{v}</strong>
-                  </button>
-                )}
-              </div>
-              <div style={S.footer}>
-                <span style={S.age}>{ago(s.createdAt)}</span>
-                {/* 리믹스 계보 — 단건 조회(Yours 탭)에서만 채워진다. "네 작품에 무슨 일이" 귀환 훅. */}
-                {s.remixCount != null && s.remixCount > 0 && (
-                  <span style={S.lineage} title={`${s.remixCount} remix${s.remixCount > 1 ? 'es' : ''} of this`}>
-                    ↻ {s.remixCount}
+                </a>
+                <div style={S.meta}>
+                  <span style={S.title} title={s.title}>
+                    {s.title}
                   </span>
-                )}
-                {s.parent && (
-                  <a
-                    href={`/#s=${s.parent}`}
-                    style={S.lineageLink}
-                    title="Open the original this was remixed from"
-                  >
-                    ↦ remix
-                  </a>
-                )}
+                  {s.creatorId && (
+                    <button
+                      onClick={() => setViewingCreator({ id: s.creatorId!, name: s.creatorName || 'Anonymous' })}
+                      style={S.byline}
+                      title={`See all scenes by ${s.creatorName || 'Anonymous'}`}
+                    >
+                      by {s.creatorName || 'Anonymous'}
+                    </button>
+                  )}
+                  {sort === 'mine' ? (
+                    // 자기 씬엔 투표하지 않는다 — 표는 지켜보는 신호다("come back to see its votes climb").
+                    <span style={S.voteStatic} title="Votes on your scene">
+                      <ThumbIcon /> <strong style={{ fontWeight: 700 }}>{v}</strong>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => vote(s.id)}
+                      disabled={did}
+                      style={{ ...S.vote, ...(did ? S.voteOn : null) }}
+                      title={did ? 'Voted' : 'Give this an upvote'}
+                    >
+                      <ThumbIcon /> <strong style={{ fontWeight: 700 }}>{v}</strong>
+                    </button>
+                  )}
+                </div>
+                <div style={S.footer}>
+                  <span style={S.age}>{ago(s.createdAt)}</span>
+                  {/* 리믹스 계보 — 단건 조회(Yours 탭)에서만 채워진다. "네 작품에 무슨 일이" 귀환 훅. */}
+                  {s.remixCount != null && s.remixCount > 0 && (
+                    <span style={S.lineage} title={`${s.remixCount} remix${s.remixCount > 1 ? 'es' : ''} of this`}>
+                      ↻ {s.remixCount}
+                    </span>
+                  )}
+                  {s.parent && (
+                    <a
+                      href={`/#s=${s.parent}`}
+                      style={S.lineageLink}
+                      title="Open the original this was remixed from"
+                    >
+                      ↦ remix
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
-          )
-        })}
-      </div>
-      {sort !== 'mine' && scenes.length < total && !loading && (
+            )
+          })}
+        </div>
+      )}
+      {(viewingCreator || (sort !== 'mine' && sort !== 'top')) && scenes.length < total && !loading && (
         <div style={S.moreWrap}>
           <button onClick={loadMore} disabled={loadingMore} style={S.moreBtn}>
             {loadingMore ? 'Loading…' : `Load more · ${total - scenes.length} more`}
@@ -393,6 +473,44 @@ const S: Record<string, React.CSSProperties> = {
     fontWeight: 600,
   },
   lineageLink: { fontSize: 11, opacity: 0.5, color: '#eef1f6', textDecoration: 'none' },
+  byline: {
+    background: 'transparent',
+    border: 'none',
+    padding: 0,
+    color: '#8ea0bf',
+    fontSize: 11,
+    opacity: 0.75,
+    cursor: 'pointer',
+    flexShrink: 0,
+  },
+  leaderboard: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 },
+  leaderboardRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    padding: '10px 12px',
+    borderRadius: 8,
+    border: '1px solid rgba(255,255,255,0.06)',
+  },
+  leaderboardRank: { width: 22, fontSize: 12, opacity: 0.4, fontVariantNumeric: 'tabular-nums' },
+  leaderboardName: {
+    background: 'transparent',
+    border: 'none',
+    color: '#eef1f6',
+    fontSize: 13.5,
+    fontWeight: 600,
+    cursor: 'pointer',
+    flex: 1,
+    textAlign: 'left',
+    padding: 0,
+  },
+  leaderboardStats: {
+    fontSize: 12,
+    opacity: 0.6,
+    fontVariantNumeric: 'tabular-nums',
+    display: 'flex',
+    alignItems: 'center',
+  },
   mineDigest: {
     margin: '0 0 16px',
     fontSize: 13,
