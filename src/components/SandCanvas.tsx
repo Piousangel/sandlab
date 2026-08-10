@@ -5,6 +5,7 @@ import { SandEngine, WebGPUUnsupported } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
 import { uploadScene, getScene, listScenes, rememberMine, type SceneMeta } from '@/lib/sand/gallery'
+import { getCreatorName, setCreatorName, getCreatorId } from '@/lib/sand/creator'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
 import { noteFirstTry, buildSuggestionPairs, pickSuggestion } from '@/lib/sand/discovery'
 import { checkPourMilestone } from '@/lib/sand/milestones'
@@ -428,6 +429,12 @@ export default function SandCanvas() {
       if (isBlank(cells, W * H)) return flash('Draw something first.')
       const title = window.prompt('Title for the gallery?', '')
       if (title === null) return
+      // 처음 Publish하는 순간에만(닉네임을 한 번도 안 정했을 때만) 한 번 물어본다.
+      // 스킵(빈 값)해도 다음부턴 다시 안 물어본다 — creator.ts가 '물어봤음'을 빈 문자열로 기억.
+      if (getCreatorName() === undefined) {
+        const entered = (window.prompt('Your name for the gallery? (optional — shown on your scenes)', '') || '').trim()
+        setCreatorName(entered)
+      }
       const [data, thumb] = await Promise.all([
         encodeScene(cells, W, H),
         makeThumb(cells, W, H, PRESETS),
@@ -439,6 +446,8 @@ export default function SandCanvas() {
         w: W,
         h: H,
         parent: loadedSceneId.current, // 공유 링크로 로드한 원본이 있으면 계보를 잇는다
+        creator: getCreatorId(),
+        creatorName: getCreatorId() ? getCreatorName() : undefined,
       })
       rememberMine(id, title || 'Untitled') // 재방문 훅: 내가 올린 씬으로 기록
       loadedSceneId.current = id // 이후 재발행은 방금 올린 내 씬의 리믹스가 된다
