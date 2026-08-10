@@ -16,6 +16,26 @@ import {
 // 서버 정렬(hot/new) + 로컬 'mine'(내가 올린 것). mine은 서버 정렬이 아니라 localStorage 기반.
 type Tab = SortMode | 'mine'
 
+function ThumbIcon() {
+  return (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ verticalAlign: -1, marginRight: 3 }}
+      aria-hidden="true"
+    >
+      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z" />
+      <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+    </svg>
+  )
+}
+
 /**
  * 갤러리 — 관객 층.
  *
@@ -227,7 +247,7 @@ export default function GalleryBrowser() {
                 {sort === 'mine' ? (
                   // 자기 씬엔 투표하지 않는다 — 표는 지켜보는 신호다("come back to see its votes climb").
                   <span style={S.voteStatic} title="Votes on your scene">
-                    ▲ <strong style={{ fontWeight: 700 }}>{v}</strong>
+                    <ThumbIcon /> <strong style={{ fontWeight: 700 }}>{v}</strong>
                   </span>
                 ) : (
                   <button
@@ -236,7 +256,7 @@ export default function GalleryBrowser() {
                     style={{ ...S.vote, ...(did ? S.voteOn : null) }}
                     title={did ? 'Voted' : 'Give this an upvote'}
                   >
-                    ▲ <strong style={{ fontWeight: 700 }}>{v}</strong>
+                    <ThumbIcon /> <strong style={{ fontWeight: 700 }}>{v}</strong>
                   </button>
                 )}
               </div>
