@@ -1,24 +1,41 @@
-# 인계: Sandlab — 배포는 끝났다. 다음은 코드가 아니라 배급이다.
-- 갱신: 2026-08-10 / 브랜치: main / 커밋 상태: committed (워킹 트리 깨끗, HEAD=36a473c; 씨앗 작업은
-  전부 공개 API 업로드일 뿐 코드 변경이 없어 HEAD는 인계서 커밋만 진행)
+# 인계: Sandlab — 익명 크리에이터 정체성 + 리더보드 배포 완료. 다음은 육안 확인.
+- 갱신: 2026-08-10 / 브랜치: `creator-identity/community` (main에서 분기, `.worktrees/creator-identity`) /
+  커밋 상태: committed, deployed (프로덕션 Version ID 9710660a-ed55-415b-8f1d-cc74e540c3e1)
 - 라이브: https://sandlab.app (workers.dev는 비활성) · 레포: github.com/Piousangel/sandlab (private)
 
 ## 멈춘 지점
 
-**클립은 올렸는데 반응이 0이었다.** 그리고 그 원인을 캐다가 클립 다운로드가 macOS에서
-안 열리던 버그를 찾아 고쳤다(아래). 정리하면:
-- 사용자가 r/webgpu 계열에 클립을 올렸고 → 반응 없음. 인계서 1번(배급 착수)은 소진됐다.
-- 다만 "반응 없음"의 원인이 클립 자체가 아닐 가능성이 크다. 배급 착지 화면 두 곳이 비어 있다:
-  **갤러리 0건**(첫 방문자가 "Nothing here yet"을 봄) + **모바일 UI 깨짐**(아래 함정).
-- 클립 다운로드-열림 버그는 **고쳐서 배포·커밋 완료**. 프로덕션 클립 바이트로 검증함.
+**사용자가 "적극적 커뮤니티 운영하고 싶다, 과감하게 가자"로 요청** → 브레인스토밍에서 범위를 좁힘:
+외부 Discord/포럼이 아니라 **사이트 내부의 비-댓글 상호작용**(댓글 금지·무계정 원칙은 유지).
+설계(`docs/superpowers/specs/2026-08-10-creator-identity-community-design.md`) → 계획
+(`docs/superpowers/plans/2026-08-10-creator-identity-community.md`, 7태스크) → subagent-driven-development로
+전부 구현·리뷰·배포 완료:
+- 로그인 없는 익명 지속 크리에이터 핸들(`src/lib/sand/creator.ts`, localStorage 토큰+닉네임).
+  닉네임은 처음 지정하는 순간에만 id가 생기고(완전 익명 스킵은 리더보드에 아예 안 걸림), 이후 개명해도
+  id는 유지된다.
+- 갤러리 카드에 "by 이름" 노출 → 클릭 시 그 사람 작품만 보는 프로필 뷰(컴포넌트 상태, URL 미반영 —
+  기존 'mine' 탭과 동일한 관례).
+- 신규 "Top Creators" 탭(`GET /api/creators/top`) — 익명/시드 업로드(creator_id NULL)는 구조적으로 제외.
+- D1 스키마에 `creator_id`/`creator_name` 컬럼 추가(프로덕션 마이그레이션은 사용자가 `!` 프리픽스로 직접
+  실행 — 이 프로젝트의 확립된 패턴. **주의: 실행 직후 읽기 확인이 두 번 연속 반영 안 된 것처럼 보였다**
+  — read-after-write 지연인지 실제 재시도가 필요했던 건지 불명확, 세 번째 시도의 raw 출력을 직접 봐야
+  확정됐다. 다음에 이런 마이그레이션을 할 땐 사용자에게 "성공했다"는 요약이 아니라 **raw 출력 원문을
+  붙여달라고 먼저 요청**하는 게 왕복을 줄인다.
+- 7태스크 모두 task reviewer 승인(Critical/Important 0건). Task 6에서 리뷰어가 구현자의 브리프-이탈
+  2건(loadMore 크리에이터 인식, `sort==='top'`에서 프로필 진입 시 그리드 숨김 버그)을 "필요한 버그
+  수정"으로 독립 검증 — 계획 문서 자체의 자기-리뷰 시나리오가 잡아낸 결함이었다.
+
+**남은 것: 사용자 육안 확인 (needsUser).** 실제로 씬을 그려 Publish하면서 닉네임 프롬프트가 뜨는지,
+갤러리 카드에 "by 이름"이 보이는지, Top Creators 탭에 본인이 뜨는지 — 이번 장치류(체류시간 장치
+#1~#4)와 동일한 "헤드리스로 여기까지 → 마지막 한 걸음만 사람이 닫는다" 사이클.
 
 ## 다음 단계 (순서대로)
 
-1. **갤러리 씨앗 30~50개** — 사용자가 직접 그려서 `Publish`.
-   빈 갤러리는 죽는다. 첫 방문자가 "Nothing here yet"을 보면 두 번 안 온다.
-   **화산·폭탄·레이저 금지** — Powder Toy 커뮤니티가 "너무 많이 만들어져서 새 거는 FP 못 간다"고
-   명시적으로 지목한 소재다. 기시감 = 죽음.
-
+1. **사용자 육안 확인** — 위 크리에이터 정체성 기능이 실제로 도는지 프로덕션에서 확인.
+2. **씨앗 라운드 계속 여부 판단** — 39건으로 30~50 목표 범위 안착(라운드 6). 인계서 라운드 5/6이
+   이미 남긴 판단 포인트: 한계효용이 떨어지기 시작했으면 씨앗보다 AE 계측 대시보드 활성화·실제
+   방문자 반응 관찰로 우선순위를 옮기는 게 맞는지 재검토. 무한정 씨앗만 늘리는 것도 "배급 회피의
+   세련된 형태"일 수 있다는 원칙을 여기에도 적용할 것.
 3. **URL 공유의 미해결 한계** (`src/lib/sand/urlState.ts:19` 주석에 계획 있음)
    현재: 픽셀 격자를 RLE+deflate → URL. 측정(`node scripts/verify-url.mjs`):
    전형적 그림 4,760자 OK / 200획 37,974자 **초과** / 600획 114,723자 **초과**.
@@ -697,10 +714,11 @@ Yours 탭, Remix, hot/new)이 전부 '갤러리에 볼 게 있다'를 전제한�
 - typecheck: **통과** (`pnpm typecheck`)
 - build: **통과** (`pnpm build` → static export)
 - Margolus 불변식: **7/7 통과** — `node scripts/verify-margolus.mjs`
-- 유닛 테스트: **24/24 통과** — `pnpm test` (vitest). urlState 왕복·materials 무결성·
-  gallery(cleanTitle/isValidId/listMine)·thumb.isBlank. **테스트 도입 중 실버그 발견·수정**:
+- 유닛 테스트: **73/73 통과** — `pnpm test` (vitest, 2026-08-10 크리에이터 정체성 태스크 기준).
+  urlState 왕복·materials 무결성·gallery(cleanTitle/isValidId/cleanCreatorName/isValidCreatorId/listMine)·
+  creator.ts(getOrCreateCreatorId 등)·thumb.isBlank. **테스트 도입 중 실버그 발견·수정(과거)**:
   urlState inflate/deflate가 writer 프라미스를 안 붙잡아 깨진 공유 링크마다 unhandled rejection.
-- 갤러리 API + 배급 라우트: **전부 통과** — `python3 scripts/verify-gallery.py`
+- 갤러리 API + 배급 라우트 + 크리에이터 정체성: **전부 통과** — `python3 scripts/verify-gallery.py`
   (사전에 `npx wrangler dev --port 8799 --local` 필요). /s/:id OG·이스케이프·?meta=1 커버 추가됨.
   주의: 로컬 D1이 누적되면 레이트리밋에 걸리니 실행 전 `wrangler d1 execute sandlab-gallery
   --local --command "DELETE FROM scenes; DELETE FROM votes;"`로 비운다.
