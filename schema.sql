@@ -28,6 +28,13 @@ CREATE INDEX IF NOT EXISTS idx_scenes_ip ON scenes(ip, created_at);
 -- 리믹스 카운트(이 씬에서 파생된 작품 수) 조회용
 CREATE INDEX IF NOT EXISTS idx_scenes_parent ON scenes(parent);
 
+-- 익명 지속 크리에이터 정체성. 계정/로그인 없음 — creator_id는 클라이언트가 생성해 보내는
+-- 표시용 라벨일 뿐(권한 없음). 닉네임을 한 번도 지정 안 한 사용자는 둘 다 NULL(=Anonymous),
+-- 리더보드 집계에서 자연 제외된다.
+ALTER TABLE scenes ADD COLUMN creator_id TEXT;
+ALTER TABLE scenes ADD COLUMN creator_name TEXT;
+CREATE INDEX IF NOT EXISTS idx_scenes_creator ON scenes(creator_id);
+
 CREATE TABLE IF NOT EXISTS votes (
   scene      TEXT NOT NULL,
   ip         TEXT NOT NULL,
