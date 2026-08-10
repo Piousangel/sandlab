@@ -7,6 +7,7 @@ import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/san
 import { uploadScene, getScene, listScenes, rememberMine, type SceneMeta } from '@/lib/sand/gallery'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
 import { noteFirstTry, buildSuggestionPairs, pickSuggestion } from '@/lib/sand/discovery'
+import { checkPourMilestone } from '@/lib/sand/milestones'
 // record.ts는 mediabunny(~대용량 코덱)를 정적 import한다. 방문자 대부분이 안 누르는 녹화 기능이므로
 // 랜딩 초기 JS에서 분리한다 — record() 호출 시점에 동적 import(아래).
 
@@ -93,6 +94,14 @@ export default function SandCanvas() {
   // neal.fun "Progress" 선례: 실시간으로 오르는 숫자 자체가 볼거리(장르 내 실증).
   const firstDrawnAtRef = useRef<number | null>(null)
   const [elapsedSec, setElapsedSec] = useState(0)
+  // 체류시간 장치 #4 — "부은 양" 마일스톤. 정밀 셀 카운트가 아니라 스윕 면적 추정
+  // (이동거리 × 브러시 지름, 겹침 중복계산 있음 — 게임화 장치라 괜찮음). GPU 리드백 없음.
+  const pouredRef = useRef(0)
+  const pourMultRef = useRef(0)
+  // pointerId로 키를 잡는다 — 아니면 멀티터치에서 손가락 A의 이동거리를 손가락 B가 남긴
+  // 좌표 기준으로 재서(공유 단일 값이면 서로 덮어씀) 말도 안 되는 거리가 나와 마일스톤이 오탐 폭주한다.
+  const pourPrevRef = useRef<Map<number, { x: number; y: number }>>(new Map())
+  const strokeIsEraseRef = useRef<Map<number, boolean>>(new Map())
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return
@@ -308,9 +317,23 @@ export default function SandCanvas() {
     // 지우개 모드(터치) 또는 우클릭(데스크톱) = 지우기. 둘 다 mat=0.
     const isErase = erasing || e.button === 2
     eng.brush.mat = isErase ? 0 : (idx.current.get(sel) ?? 0)
+    strokeIsEraseRef.current.set(e.pointerId, isErase)
     if (!isErase) {
       const msg = noteFirstTry(triedRef.current, sel, NAME_BY_SLUG[sel] ?? sel, PAINTABLE.length)
-      if (msg) flash(msg)
+      // 부은 양 누적 — 첫 다브(원 면적 근사)부터. 지우개 스트로크는 안 센다.
+      pourPrevRef.current.set(e.pointerId, { x, y })
+      pouredRef.current += Math.PI * radiusRef.current * radiusRef.current
+      if (msg) {
+        // 같은 이벤트에 두 토스트가 겹치면 발견을 먼저 보여준다(flash는 마지막 것만 남긴다) —
+        // 마일스톤 배수는 여기서 안 올리고 두면 바로 다음 onMove에서 자연히 뜬다(놓치지 않는다).
+        flash(msg)
+      } else {
+        const pm = checkPourMilestone(pouredRef.current, W * H, pourMultRef.current)
+        if (pm.message) flash(pm.message)
+        pourMultRef.current = pm.multReached
+      }
+    } else {
+      pourPrevRef.current.delete(e.pointerId)
     }
     if (!hasDrawn) {
       firstDrawnAtRef.current = performance.now()
@@ -327,12 +350,25 @@ export default function SandCanvas() {
     const { x, y } = toGrid(e)
     eng.brush.x = x
     eng.brush.y = y
+    const prev = pourPrevRef.current.get(e.pointerId)
+    if (!strokeIsEraseRef.current.get(e.pointerId) && prev) {
+      const dx = x - prev.x
+      const dy = y - prev.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      pouredRef.current += dist * (2 * radiusRef.current + 1) // 캡슐 스윕 면적 근사
+      pourPrevRef.current.set(e.pointerId, { x, y })
+      const pm = checkPourMilestone(pouredRef.current, W * H, pourMultRef.current)
+      if (pm.message) flash(pm.message)
+      pourMultRef.current = pm.multReached
+    }
   }
 
-  const onUp = () => {
+  const onUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const eng = engineRef.current
     if (eng) eng.brush.mat = 0xffffffff
     lastActivityRef.current = performance.now() // 유휴 시계는 붓질이 '끝난' 시점부터
+    pourPrevRef.current.delete(e.pointerId) // 손을 뗀 포인터의 궤적은 더 안 쓴다(Map 누수 방지)
+    strokeIsEraseRef.current.delete(e.pointerId)
   }
 
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
