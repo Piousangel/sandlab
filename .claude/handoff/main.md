@@ -716,7 +716,7 @@ Yours 탭, Remix, hot/new)이 전부 '갤러리에 볼 게 있다'를 전제한�
 - Margolus 불변식: **7/7 통과** — `node scripts/verify-margolus.mjs`
 - 유닛 테스트: **73/73 통과** — `pnpm test` (vitest, 2026-08-10 크리에이터 정체성 태스크 기준).
   urlState 왕복·materials 무결성·gallery(cleanTitle/isValidId/cleanCreatorName/isValidCreatorId/listMine)·
-  creator.ts(getOrCreateCreatorId 등)·thumb.isBlank. **테스트 도입 중 실버그 발견·수정(과거)**:
+  creator.ts(getCreatorName/setCreatorName/getCreatorId 등)·thumb.isBlank. **테스트 도입 중 실버그 발견·수정(과거)**:
   urlState inflate/deflate가 writer 프라미스를 안 붙잡아 깨진 공유 링크마다 unhandled rejection.
 - 갤러리 API + 배급 라우트 + 크리에이터 정체성: **전부 통과** — `python3 scripts/verify-gallery.py`
   (사전에 `npx wrangler dev --port 8799 --local` 필요). /s/:id OG·이스케이프·?meta=1 커버 추가됨.

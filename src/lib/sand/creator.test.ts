@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { getCreatorName, setCreatorName, getCreatorId } from './creator'
+import { isValidCreatorId } from './gallery'
 
 describe('creator identity (localStorage)', () => {
   beforeEach(() => {
@@ -32,6 +33,7 @@ describe('creator identity (localStorage)', () => {
     expect(getCreatorName()).toBe('Nova')
     expect(id1).toBeDefined()
     expect(id1!.length).toBeGreaterThanOrEqual(6)
+    expect(isValidCreatorId(id1)).toBe(true)
 
     setCreatorName('Nova Renamed')
     expect(getCreatorName()).toBe('Nova Renamed')

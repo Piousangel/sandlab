@@ -13,8 +13,13 @@ CREATE TABLE IF NOT EXISTS scenes (
   w          INTEGER NOT NULL,
   h          INTEGER NOT NULL,
   ip         TEXT NOT NULL,   -- SHA-256 앞 12바이트. 원본 IP는 저장하지 않는다.
-  parent     TEXT             -- 리믹스 계보: 이 작품이 파생된 원본 씬 id. 원작은 NULL.
+  parent     TEXT,            -- 리믹스 계보: 이 작품이 파생된 원본 씬 id. 원작은 NULL.
                               -- (댓글 없이 크리에이터를 잇는 리텐션 플라이휠 — Sandspiel 리믹스 문화)
+  -- 익명 지속 크리에이터 정체성. 계정/로그인 없음 — creator_id는 클라이언트가 생성해 보내는
+  -- 표시용 라벨일 뿐(권한 없음). 닉네임을 한 번도 지정 안 한 사용자는 둘 다 NULL(=Anonymous),
+  -- 리더보드 집계에서 자연 제외된다.
+  creator_id   TEXT,
+  creator_name TEXT
 );
 
 -- hot 랭킹: 최근 1주일 이내 + 표 순 (Powder Toy FP 복제). ORDER BY가 votes DESC, created_at DESC라
@@ -28,12 +33,9 @@ CREATE INDEX IF NOT EXISTS idx_scenes_ip ON scenes(ip, created_at);
 -- 리믹스 카운트(이 씬에서 파생된 작품 수) 조회용
 CREATE INDEX IF NOT EXISTS idx_scenes_parent ON scenes(parent);
 
--- 익명 지속 크리에이터 정체성. 계정/로그인 없음 — creator_id는 클라이언트가 생성해 보내는
--- 표시용 라벨일 뿐(권한 없음). 닉네임을 한 번도 지정 안 한 사용자는 둘 다 NULL(=Anonymous),
--- 리더보드 집계에서 자연 제외된다.
-ALTER TABLE scenes ADD COLUMN creator_id TEXT;
-ALTER TABLE scenes ADD COLUMN creator_name TEXT;
-CREATE INDEX IF NOT EXISTS idx_scenes_creator ON scenes(creator_id);
+-- 크리에이터 프로필 조회(WHERE creator_id=? ORDER BY created_at DESC)가 필터와 정렬을 모두
+-- 이 인덱스에서 받도록 복합 인덱스로 둔다 — idx_scenes_hot과 같은 이유(위 주석 참조).
+CREATE INDEX IF NOT EXISTS idx_scenes_creator ON scenes(creator_id, created_at DESC);
 
 CREATE TABLE IF NOT EXISTS votes (
   scene      TEXT NOT NULL,

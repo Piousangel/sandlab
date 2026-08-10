@@ -165,9 +165,17 @@ check(s == 200 and r.get('sceneCount', 0) >= 1, f"프로필 sceneCount>=1 → {r
 check(s == 200 and r.get('totalVotes', -1) >= 0, f"프로필 totalVotes>=0 → {r.get('totalVotes')}")
 check(s == 200 and r.get('name') == "TestCreator", f"프로필 name==TestCreator → {r.get('name')}")
 
+# 형식은 유효하지만 한 번도 업로드한 적 없는 id → 404 (업로드 없이 GET만 — 레이트리밋 소모 없음)
+never_uploaded_id = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+s, r = call(f"/api/creators/{never_uploaded_id}")
+check(s == 404, f"업로드한 적 없는(형식만 유효한) id → 404 → {s}, {r}")
+
 s, r = call("/api/creators/top")
 check(s == 200, f"리더보드 200 → {s}")
 check(any(c.get('id') == cid for c in r.get('creators', [])), "리더보드에 방금 만든 크리에이터 존재")
+# 이름 없는(익명) creator_id는 리더보드에 절대 안 뜬다는 불변식 — name이 None/빈 값인 행이 없어야 한다
+# (merge-blocker 수정 검증: creator_id는 creator_name이 있을 때만 저장된다).
+check(all(c.get('name') for c in r.get('creators', [])), "리더보드 전 행이 이름 있음(None/빈 값 없음)")
 
 # 완전 익명 업로드(creator 필드 자체를 안 보냄) — 목록에서 creatorId가 null이어야 한다.
 s, r = call("/api/scenes", {"title":"anon scene","data":DATA,"thumb":THUMB,"w":960,"h":540})

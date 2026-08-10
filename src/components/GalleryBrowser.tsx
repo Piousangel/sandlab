@@ -148,7 +148,7 @@ export default function GalleryBrowser() {
             <button onClick={() => setViewingCreator(null)} style={S.back}>
               ← Back to gallery
             </button>
-            <span style={S.title}>{viewingCreator.name || 'Anonymous'}</span>
+            <span style={S.title}>{(creatorProfile?.name ?? viewingCreator.name) || 'Anonymous'}</span>
             {creatorProfile && (
               <span style={S.count}>
                 {creatorProfile.sceneCount} scene{creatorProfile.sceneCount === 1 ? '' : 's'} ·{' '}
@@ -482,6 +482,11 @@ const S: Record<string, React.CSSProperties> = {
     opacity: 0.75,
     cursor: 'pointer',
     flexShrink: 0,
+    minWidth: 0,
+    maxWidth: '40%',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   leaderboard: { listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 },
   leaderboardRow: {

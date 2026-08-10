@@ -279,8 +279,10 @@ export default {
       // 리믹스 계보: 유효한 id면 원본으로 기록, 아니면(원작) null. 자기참조는 무의미하니 무시.
       const parent = typeof body.parent === 'string' && isValidId(body.parent) ? body.parent : null
       // 닉네임을 지정한 적 있는 크리에이터만 id를 보낸다(creator.ts) — 형식 안 맞으면 완전 익명 취급.
-      const creatorId = isValidCreatorId(body.creator) ? body.creator : null
-      const creatorName = creatorId ? cleanCreatorName(body.creatorName) || null : null
+      // name과 id를 함께 묶는다: 이름 없이 id만 저장되면 Top Creators에 빈 이름 행이 뜬다
+      // (리더보드는 named creator만 노출한다는 불변식을 여기서 보장한다).
+      const creatorName = isValidCreatorId(body.creator) ? cleanCreatorName(body.creatorName) || null : null
+      const creatorId = creatorName ? (body.creator as string) : null
 
       if (!/^[A-Za-z0-9_-]+$/.test(data) || data.length > MAX_SCENE_BYTES) return err('bad scene data')
       if (!/^[A-Za-z0-9+/=]+$/.test(thumb) || thumb.length > MAX_THUMB_BYTES) return err('bad thumb')
