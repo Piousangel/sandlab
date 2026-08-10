@@ -4,7 +4,7 @@
 사전: npx wrangler dev --port 8799 --local
 실행: python3 scripts/verify-gallery.py
 """
-import json, urllib.request, urllib.error, base64, zlib, sys
+import json, urllib.request, urllib.error, base64, zlib, sys, random, string
 B = "http://localhost:8799"
 
 def call(path, data=None, method=None):
@@ -142,6 +142,48 @@ check(call("/api/scenes/nonexistent99")[0] == 404, "없는 장면 404")
 check(call("/api/scenes/!!!")[0] in (400, 404), "잘못된 id 형식 거부")
 # 형식은 맞지만 없는 씬에 투표 → 404, orphan 투표 row를 만들지 않아야 함
 check(call("/api/scenes/zzzzzz/vote", method="POST")[0] == 404, "없는 씬 투표 거부(404, orphan 방지)")
+
+print("\n=== 크리에이터 정체성 (id/name 저장 + 필터 + 리더보드 + 프로필) ===")
+# 레이트리밋(시간당 12건, 아래 블록에서 소진) 전에 실행해야 이 블록의 업로드들이 200을 받는다.
+cid = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+s, r = call("/api/scenes", {"title":"creator scene","data":DATA,"thumb":THUMB,"w":960,"h":540,
+                             "creator":cid,"creatorName":"TestCreator"})
+check(s == 200 and 'id' in r, f"creator 지정 업로드 → {r}")
+csid = r.get('id')
+
+s, r = call("/api/scenes?sort=new")
+row = {x['id']: x for x in r.get('scenes', [])}.get(csid, {})
+check(row.get('creatorId') == cid, f"목록에 creatorId 노출 → {row.get('creatorId')}")
+check(row.get('creatorName') == "TestCreator", f"목록에 creatorName 노출 → {row.get('creatorName')}")
+
+s, r = call(f"/api/scenes?creator={cid}")
+check(s == 200 and r.get('total', 0) >= 1, f"creator 필터 total>=1 → {r.get('total')}")
+check(bool(r.get('scenes')) and all(x.get('creatorId') == cid for x in r['scenes']), "creator 필터 결과가 전부 해당 id")
+
+s, r = call(f"/api/creators/{cid}")
+check(s == 200 and r.get('sceneCount', 0) >= 1, f"프로필 sceneCount>=1 → {r}")
+check(s == 200 and r.get('totalVotes', -1) >= 0, f"프로필 totalVotes>=0 → {r.get('totalVotes')}")
+check(s == 200 and r.get('name') == "TestCreator", f"프로필 name==TestCreator → {r.get('name')}")
+
+s, r = call("/api/creators/top")
+check(s == 200, f"리더보드 200 → {s}")
+check(any(c.get('id') == cid for c in r.get('creators', [])), "리더보드에 방금 만든 크리에이터 존재")
+
+# 완전 익명 업로드(creator 필드 자체를 안 보냄) — 목록에서 creatorId가 null이어야 한다.
+s, r = call("/api/scenes", {"title":"anon scene","data":DATA,"thumb":THUMB,"w":960,"h":540})
+check(s == 200 and 'id' in r, f"익명 업로드 → {r}")
+_, r2 = call("/api/scenes?sort=new")
+anon_row = {x['id']: x for x in r2.get('scenes', [])}.get(r.get('id'), {})
+check(anon_row.get('creatorId') is None, f"익명 업로드는 creatorId가 null → {anon_row.get('creatorId')}")
+
+# 형식이 안 맞는 creator(6자 미만)는 400이 아니라 조용히 익명 취급되어야 한다.
+s, r = call("/api/scenes", {"title":"bad creator id","data":DATA,"thumb":THUMB,"w":960,"h":540,
+                             "creator":"abc12","creatorName":"ShouldBeIgnored"})
+check(s == 200 and 'id' in r, f"형식 불량 creator는 400 아닌 익명 성공 → {s}, {r}")
+if s == 200:
+    _, r3 = call("/api/scenes?sort=new")
+    bad_row = {x['id']: x for x in r3.get('scenes', [])}.get(r['id'], {})
+    check(bad_row.get('creatorId') is None, f"형식 불량 creator는 저장 안 됨(null) → {bad_row.get('creatorId')}")
 
 print("\n=== 레이트리밋 (시간당 12건) ===")
 codes = [call("/api/scenes", {"title":f"s{i}","data":DATA,"thumb":THUMB,"w":960,"h":540})[0] for i in range(14)]

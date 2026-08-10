@@ -15,6 +15,8 @@ import {
   THUMB_W,
   THUMB_H,
   cleanTitle,
+  cleanCreatorName,
+  isValidCreatorId,
   isValidId,
   type SceneMeta,
   type SortMode,
@@ -127,16 +129,29 @@ export default {
     if (p === '/api/scenes' && request.method === 'GET') {
       const sort = (url.searchParams.get('sort') as SortMode) === 'new' ? 'new' : 'hot'
       const offset = Math.max(0, Math.min(5000, Number(url.searchParams.get('offset')) || 0))
+      const creatorParam = url.searchParams.get('creator')
+      const creatorFilter = isValidCreatorId(creatorParam) ? creatorParam : null
 
-      // hot = 최근 1주일 이내 + 표 순. Powder Toy FP 복제.
-      // 이 창이 없으면 오래된 히트작이 영원히 상단을 점거해 신규가 절대 안 보인다.
-      const since = Date.now() - HOT_WINDOW_DAYS * 86400_000
       // 계보(parent + remixCount)를 리스트에도 실어 hot/new 카드의 ↻N 배지·remix 링크가
       // Yours뿐 아니라 모든 방문자에게 뜬다 — 리믹스 붙은 씬 = "이어 그릴 만한 씨앗" 발견 신호.
       // idx_scenes_parent가 서브쿼리를 커버(단건 조회가 이미 같은 패턴을 프로덕션에서 돌림).
       const cols =
-        'id,title,votes,created_at AS createdAt,w,h,parent,' +
+        'id,title,votes,created_at AS createdAt,w,h,parent,creator_id AS creatorId,creator_name AS creatorName,' +
         '(SELECT COUNT(*) FROM scenes r WHERE r.parent=scenes.id) AS remixCount'
+
+      if (creatorFilter) {
+        // 크리에이터 프로필의 씬 그리드 — hot/new 창 없이 이 사람 것만 최신순 페이지네이션.
+        const q = `SELECT ${cols} FROM scenes WHERE creator_id=? ORDER BY created_at DESC LIMIT ? OFFSET ?`
+        const { results } = await env.DB.prepare(q).bind(creatorFilter, PAGE_SIZE, offset).all<SceneMeta>()
+        const cnt = await env.DB.prepare('SELECT COUNT(*) AS n FROM scenes WHERE creator_id=?')
+          .bind(creatorFilter)
+          .first<{ n: number }>()
+        return json({ scenes: results, total: cnt?.n ?? 0 })
+      }
+
+      // hot = 최근 1주일 이내 + 표 순. Powder Toy FP 복제.
+      // 이 창이 없으면 오래된 히트작이 영원히 상단을 점거해 신규가 절대 안 보인다.
+      const since = Date.now() - HOT_WINDOW_DAYS * 86400_000
       const q =
         sort === 'hot'
           ? `SELECT ${cols} FROM scenes WHERE created_at>? ORDER BY votes DESC, created_at DESC LIMIT ? OFFSET ?`
@@ -248,6 +263,8 @@ export default {
         w?: unknown
         h?: unknown
         parent?: unknown
+        creator?: unknown
+        creatorName?: unknown
       }
       try {
         body = await request.json()
@@ -261,6 +278,9 @@ export default {
       const h = Number(body.h)
       // 리믹스 계보: 유효한 id면 원본으로 기록, 아니면(원작) null. 자기참조는 무의미하니 무시.
       const parent = typeof body.parent === 'string' && isValidId(body.parent) ? body.parent : null
+      // 닉네임을 지정한 적 있는 크리에이터만 id를 보낸다(creator.ts) — 형식 안 맞으면 완전 익명 취급.
+      const creatorId = isValidCreatorId(body.creator) ? body.creator : null
+      const creatorName = creatorId ? cleanCreatorName(body.creatorName) || null : null
 
       if (!/^[A-Za-z0-9_-]+$/.test(data) || data.length > MAX_SCENE_BYTES) return err('bad scene data')
       if (!/^[A-Za-z0-9+/=]+$/.test(thumb) || thumb.length > MAX_THUMB_BYTES) return err('bad thumb')
@@ -301,14 +321,48 @@ export default {
 
       const id = newId()
       await env.DB.prepare(
-        'INSERT INTO scenes (id,title,data,thumb,votes,created_at,w,h,ip,parent) VALUES (?,?,?,?,0,?,?,?,?,?)',
+        'INSERT INTO scenes (id,title,data,thumb,votes,created_at,w,h,ip,parent,creator_id,creator_name) VALUES (?,?,?,?,0,?,?,?,?,?,?,?)',
       )
-        .bind(id, cleanTitle(body.title), data, bytes, Date.now(), w, h, hash, parentId)
+        .bind(id, cleanTitle(body.title), data, bytes, Date.now(), w, h, hash, parentId, creatorId, creatorName)
         .run()
 
       // 활성화 이벤트: 실제 씬 게시(페이지뷰가 아니라 이게 진짜 신호).
       track(env, 'upload', request, id)
       return json({ id })
+    }
+
+    // ── Top Creators 리더보드 (동적 :id 라우트보다 먼저 와야 'top'이 id로 안 먹힌다) ──
+    if (p === '/api/creators/top' && request.method === 'GET') {
+      const { results } = await env.DB.prepare(
+        `SELECT creator_id AS id,
+                (SELECT creator_name FROM scenes s2 WHERE s2.creator_id = s.creator_id
+                   ORDER BY created_at DESC LIMIT 1) AS name,
+                SUM(votes) AS votes, COUNT(*) AS scenes
+         FROM scenes s
+         WHERE creator_id IS NOT NULL
+         GROUP BY creator_id
+         ORDER BY votes DESC
+         LIMIT 20`,
+      ).all<{ id: string; name: string | null; votes: number; scenes: number }>()
+      return json({ creators: results })
+    }
+
+    // ── 크리에이터 프로필 집계 (헤더용 — 씬 목록은 /api/scenes?creator=id로 따로 페이지네이션) ──
+    const creatorM = p.match(/^\/api\/creators\/([^/]+)$/)
+    if (creatorM && request.method === 'GET') {
+      const id = creatorM[1]
+      if (!isValidCreatorId(id)) return err('bad id')
+      const row = await env.DB.prepare(
+        `SELECT
+           (SELECT creator_name FROM scenes WHERE creator_id=? ORDER BY created_at DESC LIMIT 1) AS name,
+           (SELECT COUNT(*) FROM scenes WHERE creator_id=?) AS sceneCount,
+           (SELECT COALESCE(SUM(votes),0) FROM scenes WHERE creator_id=?) AS totalVotes,
+           (SELECT COUNT(*) FROM scenes WHERE parent IN (SELECT id FROM scenes WHERE creator_id=?)) AS remixCount`,
+      )
+        .bind(id, id, id, id)
+        .first<{ name: string | null; sceneCount: number; totalVotes: number; remixCount: number }>()
+      if (!row || row.sceneCount === 0) return err('not found', 404)
+      return json({ id, ...row })
     }
 
     // ── 씬 공유 링크 /s/:id — 크롤러용 OG 프리뷰 + 브라우저용 리다이렉트 ──
