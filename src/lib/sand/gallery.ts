@@ -29,6 +29,7 @@ export const MAX_THUMB_BYTES = 300_000
  *  씬 공유 카드가 조용히 깨진다. 한 소스(thumb.ts)에서만 온다. */
 export { THUMB_W, THUMB_H } from './thumb'
 export const MAX_TITLE = 60
+export const MAX_CREATOR_NAME = 24
 
 export interface SceneMeta {
   id: string
@@ -41,6 +42,9 @@ export interface SceneMeta {
   parent?: string | null
   /** 이 씬에서 파생된 리믹스 수. 단건 조회에서만 채워진다. */
   remixCount?: number
+  /** 크리에이터 정체성 — 닉네임을 지정한 크리에이터만 있음(완전 익명 업로드는 둘 다 미포함). */
+  creatorId?: string | null
+  creatorName?: string | null
 }
 
 export interface SceneFull extends SceneMeta {
@@ -70,6 +74,23 @@ export function isValidId(s: unknown): s is string {
   return typeof s === 'string' && /^[A-Za-z0-9_-]{6,16}$/.test(s)
 }
 
+/**
+ * 크리에이터 닉네임 정리 — cleanTitle과 같은 규칙(제어문자 제거·공백 압축·코드포인트-세이프 자르기)
+ * 이되, 빈 값을 'Untitled'로 채우지 않는다. 이름을 아예 안 정한 게 유효한 상태이기 때문
+ * (worker가 빈 문자열을 null로 저장 → 완전 익명 취급).
+ */
+export function cleanCreatorName(raw: unknown): string {
+  const s = String(raw ?? '')
+    .replace(/[\x00-\x1f\x7f-\x9f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return Array.from(s).slice(0, MAX_CREATOR_NAME).join('')
+}
+
+export function isValidCreatorId(s: unknown): s is string {
+  return typeof s === 'string' && /^[A-Za-z0-9_-]{6,24}$/.test(s)
+}
+
 // ── 클라이언트 API ───────────────────────────────────────────────
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
@@ -78,10 +99,10 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   return r.json() as Promise<T>
 }
 
-export function listScenes(sort: SortMode, offset = 0) {
-  return req<{ scenes: SceneMeta[]; total: number }>(
-    `/api/scenes?sort=${sort}&offset=${offset}`,
-  )
+export function listScenes(sort: SortMode, offset = 0, creatorId?: string) {
+  const q = new URLSearchParams({ sort, offset: String(offset) })
+  if (creatorId) q.set('creator', creatorId)
+  return req<{ scenes: SceneMeta[]; total: number }>(`/api/scenes?${q.toString()}`)
 }
 
 export function getScene(id: string) {
@@ -101,6 +122,9 @@ export function uploadScene(body: {
   h: number
   /** 리믹스일 때 원본 씬 id. 원작이면 생략. */
   parent?: string | null
+  /** 닉네임을 지정한 적 있는 크리에이터만 보낸다(creator.ts). 없으면 완전 익명 업로드. */
+  creator?: string
+  creatorName?: string
 }) {
   return req<{ id: string }>('/api/scenes', {
     method: 'POST',
@@ -220,4 +244,30 @@ export function listMine(): MineEntry[] {
   } catch {
     return []
   }
+}
+
+export interface CreatorTop {
+  id: string
+  name: string | null
+  votes: number
+  scenes: number
+}
+
+export interface CreatorProfile {
+  id: string
+  name: string | null
+  sceneCount: number
+  totalVotes: number
+  remixCount: number
+}
+
+/** Top Creators 리더보드 — 닉네임을 지정한 크리에이터만(익명 업로드는 집계에서 자연 제외). */
+export function getCreatorTop() {
+  return req<{ creators: CreatorTop[] }>('/api/creators/top')
+}
+
+/** 크리에이터 프로필 헤더용 집계 단건. 씬 목록 자체는 listScenes(sort, offset, id)로 따로 가져온다
+ *  (페이지네이션되므로 클라이언트가 24건만 보고 합산하면 총계가 틀린다 — 서버 집계를 쓰는 이유). */
+export function getCreatorProfile(id: string) {
+  return req<CreatorProfile>(`/api/creators/${encodeURIComponent(id)}`)
 }
