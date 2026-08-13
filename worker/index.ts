@@ -367,6 +367,23 @@ export default {
       return json({ id, ...row })
     }
 
+    // ── 클라이언트 이벤트 계측 — 화이트리스트만 허용해 AE 카디널리티·남용을 원천 차단.
+    // 기존 4개 지점(공유링크·업로드·투표·목록조회)과 달리 서버가 직접 관측 못 하는 클릭류
+    // (예: Ko-fi 후원 링크)만 이걸로 받는다. sendBeacon으로 보내므로 응답 본문은 불필요.
+    const TRACKABLE_EVENTS = new Set(['kofi_click'])
+    if (p === '/api/track' && request.method === 'POST') {
+      let body: { event?: unknown }
+      try {
+        body = await request.json()
+      } catch {
+        return new Response(null, { status: 204 })
+      }
+      if (typeof body.event === 'string' && TRACKABLE_EVENTS.has(body.event)) {
+        track(env, body.event, request)
+      }
+      return new Response(null, { status: 204 })
+    }
+
     // ── 씬 공유 링크 /s/:id — 크롤러용 OG 프리뷰 + 브라우저용 리다이렉트 ──
     // 제품 논지의 심장: 공유된 링크가 씬 썸네일을 물어야 한다. 해시(#s=id)는 서버로 안 와서
     // 크롤러가 못 읽는다. 그래서 경로형 링크를 만들어 여기서 OG 메타를 심어 준다.

@@ -271,3 +271,18 @@ export function getCreatorTop() {
 export function getCreatorProfile(id: string) {
   return req<CreatorProfile>(`/api/creators/${encodeURIComponent(id)}`)
 }
+
+/** 클릭류 이벤트 계측(예: Ko-fi 후원 링크) — 서버가 직접 못 보는 지점만 sendBeacon으로 보고한다.
+ *  fire-and-forget: 실패해도 사용자 흐름(링크 새 탭 열림)엔 영향 없다. */
+export function trackEvent(event: string) {
+  try {
+    const body = JSON.stringify({ event })
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))
+    } else {
+      fetch('/api/track', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true })
+    }
+  } catch {
+    /* 계측 실패는 조용히 무시 — 후원 링크 자체는 target=_blank라 이미 새 탭으로 열린다 */
+  }
+}

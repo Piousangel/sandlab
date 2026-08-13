@@ -11,6 +11,7 @@ import {
   hasVoted,
   getCreatorTop,
   getCreatorProfile,
+  trackEvent,
   type SceneMeta,
   type SortMode,
   type CreatorTop,
@@ -376,6 +377,7 @@ export default function GalleryBrowser() {
           target="_blank"
           rel="noopener noreferrer"
           style={S.supportLink}
+          onClick={() => trackEvent('kofi_click')}
         >
           ♥ support
         </a>

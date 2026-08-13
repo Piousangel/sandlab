@@ -193,6 +193,19 @@ if s == 200:
     bad_row = {x['id']: x for x in r3.get('scenes', [])}.get(r['id'], {})
     check(bad_row.get('creatorId') is None, f"형식 불량 creator는 저장 안 됨(null) → {bad_row.get('creatorId')}")
 
+print("\n=== 이벤트 계측 (/api/track) ===")
+def call_raw_status(path, data):
+    """POST하고 상태코드만 본다 — /api/track은 204(빈 본문)라 call()의 json.loads가 못 씀."""
+    req = urllib.request.Request(B+path, data=json.dumps(data).encode(),
+                                  headers={'content-type':'application/json'})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r: return r.status
+    except urllib.error.HTTPError as e: return e.code
+
+check(call_raw_status("/api/track", {"event":"kofi_click"}) == 204, "화이트리스트 이벤트 → 204")
+check(call_raw_status("/api/track", {"event":"not_a_real_event"}) == 204, "미등록 이벤트도 조용히 204(에러 아님, 그냥 무시)")
+check(call_raw_status("/api/track", {}) == 204, "event 필드 없어도 204(형식만 안 맞으면 무시)")
+
 print("\n=== 레이트리밋 (시간당 12건) ===")
 codes = [call("/api/scenes", {"title":f"s{i}","data":DATA,"thumb":THUMB,"w":960,"h":540})[0] for i in range(14)]
 check(429 in codes, f"초과 시 429 → 통과 {codes.count(200)} / 차단 {codes.count(429)}")
