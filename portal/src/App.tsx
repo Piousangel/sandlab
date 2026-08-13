@@ -16,7 +16,26 @@ export default function App() {
   const [radius, setRadius] = useState(6)
   const [erasing, setErasing] = useState(false)
   const [hasDrawn, setHasDrawn] = useState(false)
+  const [rec, setRec] = useState<number | null>(null)
   const PAINTABLE = PRESETS.filter((m) => m.slug !== 'empty')
+
+  const record = async () => {
+    const canvas = canvasRef.current
+    if (!canvas || rec !== null) return
+    setRec(0)
+    try {
+      // engine.recording을 세팅하지 않는다 — engine.ts의 워터마크 합성은 그 플래그가 true일 때만
+      // 동작하므로(engine.ts:304), 여기서 안 켜면 클립에 워터마크가 전혀 안 들어간다. sandlab.app
+      // 브랜드를 완전히 뺀다는 이번 설계 결정(스펙 참조)이 코드 변경 없이 그대로 지켜진다.
+      const { recordClip, downloadClip } = await import('../../src/lib/sand/record')
+      const clip = await recordClip({ canvas, durationMs: 10000, onProgress: setRec })
+      downloadClip(clip, `sand-${Date.now()}`)
+    } catch {
+      /* 녹화 미지원 브라우저 — 조용히 무시. 이 빌드엔 토스트 UI가 없어 콘솔 에러로 충분 */
+    } finally {
+      setRec(null)
+    }
+  }
 
   useEffect(() => {
     const eng = engineRef.current
@@ -158,6 +177,9 @@ export default function App() {
         </button>
         <button style={S.ghost} onClick={() => engineRef.current?.clear()}>
           Clear
+        </button>
+        <button style={S.ghost} onClick={record} disabled={rec !== null}>
+          {rec === null ? 'Record' : `Recording… ${Math.round(rec * 100)}%`}
         </button>
       </div>
     </div>
