@@ -4,6 +4,11 @@ import { PRESETS, buildIndex } from '../../src/lib/sand/materials'
 
 const W = 1200
 const H = 600
+// 도크(하단 툴바)의 대략적인 렌더 높이 추정치. stage 영역이 이만큼 바닥에서 비켜서
+// 캔버스 letterbox가 도크 밑에 깔리지 않게 한다. 이 빌드는 최소 구성이라 ResizeObserver
+// 없이 고정값으로 충분하다(SandCanvas.tsx의 동적 측정과 대비되는 의도적 단순화).
+const DOCK_H = 70
+const PAINTABLE = PRESETS.filter((m) => m.slug !== 'empty')
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -17,7 +22,6 @@ export default function App() {
   const [erasing, setErasing] = useState(false)
   const [hasDrawn, setHasDrawn] = useState(false)
   const [rec, setRec] = useState<number | null>(null)
-  const PAINTABLE = PRESETS.filter((m) => m.slug !== 'empty')
 
   const record = async () => {
     const canvas = canvasRef.current
@@ -30,8 +34,9 @@ export default function App() {
       const { recordClip, downloadClip } = await import('../../src/lib/sand/record')
       const clip = await recordClip({ canvas, durationMs: 10000, onProgress: setRec })
       downloadClip(clip, `sand-${Date.now()}`)
-    } catch {
-      /* 녹화 미지원 브라우저 — 조용히 무시. 이 빌드엔 토스트 UI가 없어 콘솔 에러로 충분 */
+    } catch (e) {
+      /* 녹화 미지원 브라우저 등 — 이 빌드엔 토스트 UI가 없어 콘솔 경고로 가시성만 남긴다 */
+      console.warn('record failed', e)
     } finally {
       setRec(null)
     }
@@ -132,19 +137,21 @@ export default function App() {
 
   return (
     <div style={S.root}>
-      <canvas
-        ref={canvasRef}
-        width={W}
-        height={H}
-        style={S.canvas}
-        onPointerDown={onDown}
-        onPointerMove={onMove}
-        onPointerUp={onUp}
-        onPointerCancel={onUp}
-        onContextMenu={(e) => e.preventDefault()}
-      />
-      {!ready && <div style={S.loading}>Loading…</div>}
-      {ready && !hasDrawn && <div style={S.onboard}>Click and drag to pour sand</div>}
+      <div style={S.stage}>
+        <canvas
+          ref={canvasRef}
+          width={W}
+          height={H}
+          style={S.canvas}
+          onPointerDown={onDown}
+          onPointerMove={onMove}
+          onPointerUp={onUp}
+          onPointerCancel={onUp}
+          onContextMenu={(e) => e.preventDefault()}
+        />
+        {!ready && <div style={S.loading}>Loading…</div>}
+        {ready && !hasDrawn && <div style={S.onboard}>Click and drag to pour sand</div>}
+      </div>
       <div style={S.dock}>
         <div style={S.chips}>
           {PAINTABLE.map((m) => {
@@ -166,7 +173,15 @@ export default function App() {
           })}
         </div>
         <label style={S.sizeWrap}>
-          <input type="range" min={1} max={24} value={radius} onChange={(e) => setRadius(+e.target.value)} style={S.range} />
+          <input
+            type="range"
+            min={1}
+            max={24}
+            value={radius}
+            onChange={(e) => setRadius(+e.target.value)}
+            style={S.range}
+            aria-label="Brush size"
+          />
         </label>
         <button
           style={{ ...S.ghost, ...(erasing ? S.ghostActive : null) }}
@@ -178,7 +193,7 @@ export default function App() {
         <button style={S.ghost} onClick={() => engineRef.current?.clear()}>
           Clear
         </button>
-        <button style={S.ghost} onClick={record} disabled={rec !== null}>
+        <button style={S.ghost} onClick={record} disabled={!ready || rec !== null}>
           {rec === null ? 'Record' : `Recording… ${Math.round(rec * 100)}%`}
         </button>
       </div>
@@ -188,7 +203,15 @@ export default function App() {
 
 const S: Record<string, React.CSSProperties> = {
   root: { position: 'fixed', inset: 0, background: '#07090d' },
-  canvas: { width: '100%', height: '100%', display: 'block', touchAction: 'none' },
+  // 캔버스는 도크 위 영역(stage) 안에서만 레터박스로 그린다 — 뷰포트 끝까지 늘리면
+  // 1200x600(2:1) 백킹스토어가 임의의 뷰포트 비율로 왜곡된다(원형 브러시가 타원이 되는 등).
+  stage: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: DOCK_H,
+    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8,
+  },
+  canvas: {
+    display: 'block', maxWidth: '100%', maxHeight: '100%', aspectRatio: '2 / 1', touchAction: 'none',
+  },
   loading: {
     position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
     color: '#eef1f6', opacity: 0.6, fontFamily: 'system-ui', fontSize: 14,
@@ -202,7 +225,8 @@ const S: Record<string, React.CSSProperties> = {
   },
   dock: {
     position: 'fixed', left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', gap: 10,
-    flexWrap: 'wrap', padding: '10px 14px', background: 'rgba(11,14,19,0.85)', backdropFilter: 'blur(6px)',
+    flexWrap: 'wrap', padding: '10px 14px', paddingBottom: 'max(10px, env(safe-area-inset-bottom))',
+    background: 'rgba(11,14,19,0.85)', backdropFilter: 'blur(6px)',
   },
   chips: { display: 'flex', gap: 6, flexWrap: 'wrap' },
   chip: { width: 19, height: 19, borderRadius: '50%', border: 'none', cursor: 'pointer' },
