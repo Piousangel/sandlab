@@ -1,16 +1,46 @@
-# 인계: Sandlab — 실트래픽 확인(주 395명), 수익화 팀 회의 후 Ko-fi 클릭 계측 배포.
-- 갱신: 2026-08-13 / 브랜치: main / 커밋 상태: committed, deployed
-  (프로덕션 Version ID afbacbb5-3fa4-4005-9abe-5a74075d12b1)
+# 인계: Sandlab — 수익화 팀 회의 2라운드 → CrazyGames 포털 임베드 빌드 완료.
+- 갱신: 2026-08-13 / 브랜치: main / 커밋 상태: committed
+  (프로덕션은 Ko-fi 계측까지만 배포됨, Version ID afbacbb5-3fa4-4005-9abe-5a74075d12b1 —
+  `portal/`은 Cloudflare 배포 대상이 아닌 별도 정적 산출물이라 이 배포 버전과 무관)
 - 라이브: https://sandlab.app (workers.dev는 비활성) · 레포: github.com/Piousangel/sandlab (private)
 
 ## 멈춘 지점
 
-**사용자가 Cloudflare Web Analytics 스크린샷으로 실제 트래픽을 보여줌**(7일 395명, 일 55~90명,
-7/20 발사 후 마케팅 재투입 없이 3주+ 지속) → "돈이 안 벌린다, 수익 구조를 팀 회의로 짜달라"는 요청.
-페르소나 4명 병렬 회의(배급·제품·계측·백엔드 관점, `.claude/team/references/monetization.md`에
-결과 반영됨) 진행 → 핵심 결론: **지금은 순서가 아니라 규모 문제.** neal.fun 광고단독생계 조건이
-월 400만+ 방문(지금의 1,500~2,000배), Sandboxels(수백만 플레이) Patreon 실측이 월 $8.36 — 뭘 켜도
-자릿수가 "몇 달러~몇십 달러"를 못 넘는다.
+**같은 세션, 두 단계.**
+
+**1단계 — 수익화 회의(사이트 트래픽 기준)**: 사용자가 Cloudflare Web Analytics 스크린샷으로 실제
+트래픽을 보여줌(7일 395명, 일 55~90명, 7/20 발사 후 마케팅 재투입 없이 3주+ 지속) → "돈이 안 벌린다,
+수익 구조를 팀 회의로 짜달라"는 요청. 페르소나 4명 병렬 회의(배급·제품·계측·백엔드 관점,
+`.claude/team/references/monetization.md`에 결과 반영됨) → 핵심 결론: **지금은 순서가 아니라 규모
+문제.** neal.fun 광고단독생계 조건이 월 400만+ 방문(지금의 1,500~2,000배), Sandboxels(수백만 플레이)
+Patreon 실측이 월 $8.36 — 사이트 자체 트래픽 기반 레버는 뭘 켜도 자릿수가 "몇 달러~몇십 달러"를 못
+넘는다.
+
+**2단계 — "수단과 방법 안 가리고" 재요청 → 사이트 트래픽과 무관한 트랙 발견**: 사용자가 만족 못 하고
+범위를 넓혀달라고 재요청 → 페르소나 3명 추가 병렬 조사(파격적 아이디어·콘텐츠 플랫폼·그랜트,
+`monetization.md` 2라운드 섹션) → **HTML5 게임 포털 임베드(Poki/CrazyGames/GameDistribution)**가
+유일하게 sandlab.app 트래픽과 완전히 무관하게 도는 신규 트랙으로 확인됨(포털 자체 트래픽 위에서
+광고 수익쉐어, 기존 WebGPU 엔진 재사용 가능). 브레인스토밍 → 설계 → 계획(6태스크) →
+subagent-driven-development로 **CrazyGames Basic Launch용 최소 빌드(`portal/`) 구현·리뷰·머지
+완료**:
+- 새 독립 Vite 패키지(`portal/`, npm 별도 관리) — 검증된 시뮬 코어(`engine.ts`/`materials.ts`/
+  `shader.ts`/`record.ts`)를 수정 없이 재사용, 네트워크(갤러리·투표·리믹스·크리에이터)와 브랜드
+  (sandlab.app 텍스트·Ko-fi·AdSense) 전부 제외.
+- 워터마크 제거는 `engine.ts` 무수정으로 달성 — `engine.recording` 플래그를 아예 세팅하지 않으면
+  워터마크 합성 경로가 원천적으로 안 탐(최종 리뷰에서 diff 전체를 읽어 이 불변식을 독립 검증함).
+- 최종 브랜치 리뷰에서 Critical 1건(루트 `tsconfig.json`이 `portal/`을 제외 안 해서 `pnpm typecheck`·
+  `pnpm run deploy`가 fresh checkout에서 깨질 뻔함) + Important 2건(캔버스가 2:1 비율 안 지키고
+  뷰포트로 늘어남, 도크가 캔버스 하단을 가리고 safe-area 미대응) 발견·수정·재검증 완료.
+- `portal/dist` 빌드 744KB·3파일 — CrazyGames Basic Launch 한도(50MB/1500파일)에 압도적 여유.
+  제출용 zip(`portal/sandlab-portal.zip`, gitignore됨)까지 만들어둠.
+
+**중요 — 이번 세션에 새로 생긴 검증 제약**: WebGPU라 헤드리스 불가인데, claude-in-chrome 확장이
+이 환경에 연결 안 돼 있고 **사용자가 `gstack browse` CLI로 대체하는 것도 명시적으로 거부**함
+("지스택으로 띄우지마"). 그래서 Task 2~5 전부 typecheck + 코드 리뷰(리뷰어가 diff를 문자 단위로
+직접 추적)만으로 검증됐고, **실제 브라우저 육안 확인은 사용자 몫으로 전부 남아있다** — 그리기가
+실제로 되는지, 캔버스 비율이 실제로 안 늘어나는지, 녹화한 클립에 진짜 워터마크가 없는지 전부 미확인.
+다음 세션에서 이 패턴(claude-in-chrome 미연결 + gstack 대체 금지)을 다시 만나면 사용자에게 먼저
+확인할 것 — 확장을 연결할지, 검증을 생략하고 진행할지.
 
 **사용자가 같은 타이밍에 Google AdSense 대시보드에서 sandlab.app이 "게시자 콘텐츠가 없는 화면에 광고
 + 가치가 별로 없는 콘텐츠"로 플래그된 걸 확인**(fibercalc.site도 동일 경고 — 미니멀 UI 도구 사이트의
@@ -37,17 +67,23 @@ Payment Link → Worker가 세션 조회로 검증 → D1에 짧은 TTL 토큰 �
 
 ## 다음 단계 (순서대로)
 
-1. **크리에이터 정체성 기능 육안 확인** (2026-08-10 배포, 아직 미확인) — 씬을 그려 Publish하면서
+1. **포털 빌드 육안 확인 + CrazyGames 제출** (needsUser) — `cd portal && npm run dev`로 직접 열어
+   그리기·재료 전환·Clear·녹화-다운로드가 실제로 되는지, 캔버스가 늘어나지 않고 2:1 유지되는지,
+   다운로드한 클립에 워터마크가 없는지 확인. 문제없으면 https://developer.crazygames.com 에서 계정
+   만들어 `portal/sandlab-portal.zip`(200KB, gitignore됨 — 없으면 `cd portal && npm run build &&
+   cd dist && zip -r ../sandlab-portal.zip .`로 재생성)을 Basic Launch로 제출. 2주 뒤 반응을 보고
+   2단계(광고 SDK 통합·라운드 경계 설계) 착수 여부 재판단 — `monetization.md`에 기록할 것.
+2. **크리에이터 정체성 기능 육안 확인** (2026-08-10 배포, 아직 미확인) — 씬을 그려 Publish하면서
    닉네임 프롬프트·"by 이름"·Top Creators 탭이 실제로 뜨는지.
-2. **Ko-fi 클릭 계측 데이터 확인** (며칠 뒤) — AE로 `kofi_click` 이벤트가 실제로 잡히는지, 잡힌다면
+3. **Ko-fi 클릭 계측 데이터 확인** (며칠 뒤) — AE로 `kofi_click` 이벤트가 실제로 잡히는지, 잡힌다면
    빈도가 어느 정도인지. 이게 워터마크 업셀 착수 여부를 판단할 다음 신호 중 하나.
-3. **워터마크 제거 클립 업셀 착수 여부 재판단** — 재방문 지표(닉네임 리더보드 활성 크리에이터 수 등)와
+4. **워터마크 제거 클립 업셀 착수 여부 재판단** — 재방문 지표(닉네임 리더보드 활성 크리에이터 수 등)와
    Ko-fi 클릭 빈도를 같이 보고 판단. 설계는 위에 이미 있음.
-4. **씨앗 라운드 계속 여부 판단** — 39건으로 30~50 목표 범위 안착(라운드 6). 인계서 라운드 5/6이
+5. **씨앗 라운드 계속 여부 판단** — 39건으로 30~50 목표 범위 안착(라운드 6). 인계서 라운드 5/6이
    이미 남긴 판단 포인트: 한계효용이 떨어지기 시작했으면 씨앗보다 AE 계측 대시보드 활성화·실제
    방문자 반응 관찰로 우선순위를 옮기는 게 맞는지 재검토. 무한정 씨앗만 늘리는 것도 "배급 회피의
    세련된 형태"일 수 있다는 원칙을 여기에도 적용할 것.
-5. **URL 공유의 미해결 한계** (`src/lib/sand/urlState.ts:19` 주석에 계획 있음)
+6. **URL 공유의 미해결 한계** (`src/lib/sand/urlState.ts:19` 주석에 계획 있음)
    현재: 픽셀 격자를 RLE+deflate → URL. 측정(`node scripts/verify-url.mjs`):
    전형적 그림 4,760자 OK / 200획 37,974자 **초과** / 600획 114,723자 **초과**.
    → 압축으로는 못 푼다. 72만 셀은 물리적으로 URL 크기가 아니다.
@@ -57,7 +93,7 @@ Payment Link → Worker가 세션 조회로 검증 → D1에 짧은 TTL 토큰 �
      덤: 링크를 열면 그림이 스스로 그려진다 → 정지 장면보다 훨씬 공유된다.
    **단 갤러리(`#s=<id>`)가 이미 이 문제를 우회하므로 긴급하지 않다.** 우선순위 낮음.
 
-6. **LLM 원소 생성 — 검증은 끝났지만 하지 마라 (지금은)**
+7. **LLM 원소 생성 — 검증은 끝났지만 하지 마라 (지금은)**
    `scratchpad/element_test2.py`(세션 스크래치패드에 있음, 레포엔 없음)로 검증 완료:
    qwen2.5:0.5b(397MB) 3/5 · **1.5b(986MB) 5/5, best-of-5 92%** · 3b(1.9GB) 5/5.
    `materials.ts`의 `Material` 인터페이스가 그 검증된 스키마와 1:1로 대응하게 설계돼 있다.
