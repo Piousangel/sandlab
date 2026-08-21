@@ -54,7 +54,6 @@ export default function SandCanvas() {
   const [sel, setSel] = useState('sand')
   const [radius, setRadius] = useState(6)
   const [toast, setToast] = useState<string | null>(null)
-  const [fps, setFps] = useState(0)
   const [rec, setRec] = useState<number | null>(null) // null=대기, 0..1=녹화중
   const [busy, setBusy] = useState(false)
   // 빈 캔버스 온보딩: 첫 방문자는 검은 상자만 보면 그릴 줄 모른다. 한 번이라도 그리면(또는 장면 복원 시) 끈다.
@@ -206,12 +205,6 @@ export default function SandCanvas() {
       engineRef.current = null
     }
   }, [])
-
-  useEffect(() => {
-    if (!ready) return
-    const t = setInterval(() => setFps(engineRef.current?.fps ?? 0), 500)
-    return () => clearInterval(t)
-  }, [ready])
 
   useEffect(() => {
     if (!hasDrawn) return
@@ -610,6 +603,14 @@ export default function SandCanvas() {
         {!ready && <div style={S.loading}>Starting the sandbox…</div>}
         {/* 온보딩 힌트는 캔버스 위 정중앙 — narrow(세로 폰)에선 캔버스가 상단 밴드라 stage 50%가
             듄 영역에 떨어져 어긋난다. 그래서 narrow에선 숨기고 아래 stageFillSub가 안내를 대신한다. */}
+        {/* 헤드라인 — og.png(마케팅 카드)엔 있지만 실 화면엔 없던 브랜드 임팩트. 디자이너 3인
+            리뷰(토스·배민·카카오) 전원이 1순위로 지적한 문제라 여기서 살린다. 그린 뒤엔 사라짐. */}
+        {ready && !hasDrawn && !narrow && (
+          <div style={S.heroHint}>
+            <div style={S.heroHintTitle}>Sandlab</div>
+            <div style={S.heroHintSub}>Pour sand, water, lava — watch them react.</div>
+          </div>
+        )}
         {ready && !hasDrawn && !narrow && (
           <div style={S.onboard}>{coarse ? 'Drag to pour sand' : 'Click and drag to pour sand'}</div>
         )}
@@ -620,11 +621,13 @@ export default function SandCanvas() {
             <span className="sl-ghost-dot" />
           </div>
         )}
-        {/* 좌상단에 이미 Sandlab 브랜드가 있어 중앙 금색 워드는 중복·공간낭비라 제거.
-            그리기 전 안내 힌트만(그린 뒤엔 블록 자체가 안 뜬다). */}
+        {/* 세로 폰(narrow) — 실사용자 다수가 이 경로로 착지한다(카톡 인앱 브라우저=아이폰=세로).
+            좌상단 brand만으론 브랜드 임팩트가 안 산다는 게 디자이너 3인 리뷰에서 공통 확인돼
+            stageFillWord(브랜드 워드)를 다시 켠다. 그린 뒤엔 블록 자체가 안 뜬다. */}
         {narrow && !hasDrawn && (
           <div style={S.stageFill}>
-            <span style={S.stageFillSub}>Drag on the canvas to pour sand. Share the link.</span>
+            <span style={S.stageFillWord}>Sandlab</span>
+            <span style={S.stageFillSub}>Pour sand, water, lava — watch them react. Share it as a link.</span>
           </div>
         )}
         {remix && (
@@ -647,11 +650,10 @@ export default function SandCanvas() {
         <span style={S.brandSub}>no install · no sign-up · share as a link</span>
       </div>
 
-      {ready && (
-        <div style={S.stat}>
-          {fps} fps · {((W * H) / 1000).toFixed(0)}k cells
-          {hasDrawn && <> · {formatElapsed(elapsedSec)}</>}
-        </div>
+      {/* fps·셀 수는 엔지니어에겐 자랑거리지만 일반 방문자에겐 "미완성 디버그 화면" 신호라
+          기본 노출에서 뺀다(디자이너 3인 리뷰 공통 지적). elapsedSec만 남겨 체류시간 장치로 쓴다. */}
+      {ready && hasDrawn && (
+        <div style={S.stat}>{formatElapsed(elapsedSec)} in the sandbox</div>
       )}
 
       <div ref={dockRef} style={S.dock}>
@@ -677,13 +679,24 @@ export default function SandCanvas() {
             }
             // 움직임 타입(고정·가루·액체·기체) 경계에 구분선 — 18개 칩의 그룹을 읽히게.
             const groupBreak = i > 0 && PAINTABLE[i - 1].movement !== m.movement
-            // 터치: 시각 점은 19px 유지하되 탭 영역만 40px로(오탭 방지). 마우스: 19px 버튼.
-            const chip = coarse ? (
-              <button onClick={pick} title={m.name} aria-label={m.name} aria-pressed={!erasing && sel === m.slug} style={S.chipHit}>
+            // 이름은 hover(title)뿐이었는데, 배포 채널(카톡 인앱)이 터치 기기라 hover가 아예
+            // 안 먹는다 — 디자이너 3인 리뷰 공통 지적. 점 아래 상시 라벨로 바꾼다.
+            const label = {
+              ...S.chipLabel,
+              opacity: on ? 0.95 : 0.55,
+              color: on ? '#f5d9a6' : '#eef1f6',
+            }
+            const chip = (
+              <button
+                onClick={pick}
+                title={m.name}
+                aria-label={m.name}
+                aria-pressed={!erasing && sel === m.slug}
+                style={coarse ? S.chipHitStack : S.chipStack}
+              >
                 <span style={dot} />
+                <span style={label}>{m.name}</span>
               </button>
-            ) : (
-              <button onClick={pick} title={m.name} aria-label={m.name} aria-pressed={!erasing && sel === m.slug} style={dot} />
             )
             return (
               <Fragment key={m.slug}>
@@ -895,6 +908,33 @@ const S: Record<string, React.CSSProperties> = {
     // 시뮬이 '장소'로 느껴지게 하는 테두리. 무한 블리드보다 낫다.
     boxShadow: '0 0 0 1px rgba(255,255,255,0.07), 0 20px 60px rgba(0,0,0,0.6)',
   },
+  // 데스크톱(non-narrow) 첫인상 헤드라인 — og.png의 브랜드 임팩트를 실제 화면에 되살린다.
+  // onboard(50%)·고스트 커서(64%)와 안 겹치게 캔버스 상단부에 얹는다. 그린 뒤엔 사라진다.
+  heroHint: {
+    position: 'absolute',
+    top: '14%',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    textAlign: 'center',
+    maxWidth: '86%',
+    pointerEvents: 'none',
+    userSelect: 'none',
+  },
+  heroHintTitle: {
+    fontSize: 30,
+    fontWeight: 800,
+    letterSpacing: -0.5,
+    color: '#eef1f6',
+    textShadow: '0 2px 20px rgba(0,0,0,0.7)',
+  },
+  heroHintSub: {
+    marginTop: 6,
+    fontSize: 13,
+    opacity: 0.62,
+    color: '#eef1f6',
+    lineHeight: 1.5,
+    textShadow: '0 1px 12px rgba(0,0,0,0.8)',
+  },
   brand: {
     position: 'absolute',
     // cover 확장 시 iOS 상태바(시계·배터리)와 겹치지 않게 안전영역만큼 내린다.
@@ -974,25 +1014,44 @@ const S: Record<string, React.CSSProperties> = {
     padding: 0,
     transition: 'transform 110ms cubic-bezier(.2,.9,.3,1.2), box-shadow 110ms',
   },
-  // 움직임 타입 그룹 구분선 (고정·가루·액체·기체)
+  // 움직임 타입 그룹 구분선 (고정·가루·액체·기체) — 칩이 점+라벨 세로 스택이 된 만큼 높이도 맞춘다.
   chipSep: {
     width: 1,
-    height: 16,
+    height: 30,
     background: 'rgba(255,255,255,0.13)',
     margin: '0 3px',
     alignSelf: 'center',
     flexShrink: 0,
   },
-  // 터치 히트영역 래퍼 — 40px 탭 타깃, 안엔 19px 점만 보인다. 투명.
-  chipHit: {
-    width: 40,
-    height: 40,
-    padding: 0,
-    border: 'none',
+  // 점 + 상시 라벨 세로 스택(마우스). hover(title)만으론 터치 기기에서 이름을 알 방법이
+  // 없었던 문제(디자이너 3인 리뷰 공통 지적)를 상시 표시로 해결.
+  chipStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 2,
     background: 'transparent',
+    border: 'none',
     cursor: 'pointer',
-    display: 'grid',
-    placeItems: 'center',
+    padding: 0,
+  },
+  // 터치: 위아래 여백을 더해 탭 타깃을 넉넉히(~40px) 확보.
+  chipHitStack: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 2,
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '5px 6px',
+  },
+  chipLabel: {
+    fontSize: 8,
+    fontWeight: 550,
+    letterSpacing: 0.1,
+    lineHeight: 1,
+    whiteSpace: 'nowrap',
   },
   sep: { width: 1, height: 22, background: 'rgba(255,255,255,0.10)' },
   selName: {
