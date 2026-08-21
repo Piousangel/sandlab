@@ -265,17 +265,31 @@ export default function SandCanvas() {
     eng.brush.r = 3 // 얇게 흘려 천천히 쌓이게
     // 색 대비 + 용암 발광 + 물↔용암 증기 + oil↔lava 발화(자발적 불꽃 이벤트로 첫 프레임이 더 살아있게)
     const palette = ['sand', 'water', 'lava', 'oil', 'plant', 'lava']
+    // 오프닝 확정 반응: 우연에 맡기지 않고 물웅덩이 위에 용암을 떨어뜨려 첫 1.5초 안에
+    // 증기+발광 반응이 무조건 보이게 한다(INTRO_WATER_END~INTRO_LAVA_END). 그 뒤엔 기존
+    // 자유 드리프트 팔레트로 자연스럽게 이어간다.
+    const INTRO_WATER_END = 30
+    const INTRO_LAVA_END = 90
     const tick = () => {
       if (interacted.current) {
         eng.brush.mat = 0xffffffff
         return
       }
       t++
-      if (t < 900) {
+      if (t < INTRO_WATER_END) {
+        eng.brush.x = Math.floor(W * 0.5)
+        eng.brush.y = Math.floor(H * 0.1)
+        eng.brush.mat = idx.current.get('water') ?? 0
+      } else if (t < INTRO_LAVA_END) {
+        eng.brush.x = Math.floor(W * 0.5)
+        eng.brush.y = Math.floor(H * 0.1)
+        eng.brush.mat = idx.current.get('lava') ?? 0
+      } else if (t < 900) {
         // 부드럽게 좌우로 드리프트하는 수도꼭지 — 순간이동이 아니라 연속 스트림이라 선이 안 그어진다.
-        eng.brush.x = Math.floor(W * (0.5 + 0.4 * Math.sin(t * 0.011)))
+        const dt = t - INTRO_LAVA_END
+        eng.brush.x = Math.floor(W * (0.5 + 0.4 * Math.sin(dt * 0.011)))
         eng.brush.y = Math.floor(H * 0.05)
-        eng.brush.mat = idx.current.get(palette[Math.floor(t / 80) % palette.length]) ?? 0
+        eng.brush.mat = idx.current.get(palette[Math.floor(dt / 80) % palette.length]) ?? 0
       } else {
         eng.brush.mat = 0xffffffff // 충분히 찼으면 멈추고 반응·정착만 살아있게 둔다
       }
@@ -307,10 +321,10 @@ export default function SandCanvas() {
     lastActivityRef.current = performance.now()
     idleNudgedRef.current = false // 다시 손을 댔으니 다음 유휴 구간에 또 넛지할 수 있다
     if (remix) setRemix(null) // 첫 붓질 = 리믹스 시작 → 안내 배너 소멸
-    // 첫 상호작용: 앰비언트 데모를 즉시 멈추고(ref) 캔버스를 비워 사용자에게 깨끗한 시작을 준다.
+    // 첫 상호작용: 앰비언트 데모를 멈춘다(ref). 데모가 그려둔 장면은 지우지 않는다 —
+    // 그 위에 이어 그리게 해서 "터치하자마자 화면이 지워진다"는 손실감을 없앤다.
     if (!interacted.current) {
       interacted.current = true
-      if (!hasDrawn) eng.clear()
     }
     const { x, y } = toGrid(e)
     eng.brush.x = x
@@ -599,6 +613,13 @@ export default function SandCanvas() {
         {ready && !hasDrawn && !narrow && (
           <div style={S.onboard}>{coarse ? 'Drag to pour sand' : 'Click and drag to pour sand'}</div>
         )}
+        {/* 고스트 커서 — 문구만으론 "이걸 하라는 건가" 망설이는 방문자에게 제스처 자체를 몸짓으로
+            보여준다. reduced-motion은 아래 <style>에서 애니메이션을 끈다. */}
+        {ready && !hasDrawn && !narrow && (
+          <div className="sl-ghost" aria-hidden="true">
+            <span className="sl-ghost-dot" />
+          </div>
+        )}
         {/* 좌상단에 이미 Sandlab 브랜드가 있어 중앙 금색 워드는 중복·공간낭비라 제거.
             그리기 전 안내 힌트만(그린 뒤엔 블록 자체가 안 뜬다). */}
         {narrow && !hasDrawn && (
@@ -634,7 +655,10 @@ export default function SandCanvas() {
       )}
 
       <div ref={dockRef} style={S.dock}>
-        <div style={S.chips}>
+        {/* 재료가 18개나 있다는 걸 못 보고 첫 재료(기본 sand)로만 끝내는 방문자를 위한 pulse 힌트.
+            그림을 그리면(hasDrawn) 즉시 사라진다 — 온보딩 힌트와 동일한 소멸 조건. */}
+        {!hasDrawn && <span style={S.chipsBadge}>18 materials</span>}
+        <div style={S.chips} className={!hasDrawn ? 'sl-chips-hint' : undefined}>
           {PAINTABLE.map((m, i) => {
             const on = sel === m.slug
             const dot = {
@@ -760,6 +784,47 @@ export default function SandCanvas() {
 
       {!coarse && <div style={S.hint}>Right-click to erase</div>}
       {toast && <div style={S.toast} role="status" aria-live="polite">{toast}</div>}
+
+      {/* 고스트 커서 드래그 제스처 + 재료 칩 pulse 힌트 — 인라인 스타일은 keyframe을 못 써서 여기서만 주입한다. */}
+      <style>{`
+        .sl-ghost {
+          position: absolute;
+          left: 50%;
+          top: 64%;
+          width: 56px;
+          height: 24px;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+        .sl-ghost-dot {
+          position: absolute;
+          left: 50%;
+          top: 50%;
+          width: 14px;
+          height: 14px;
+          margin: -7px 0 0 -7px;
+          border-radius: 50%;
+          background: rgba(238,241,246,0.55);
+          box-shadow: 0 0 10px rgba(238,241,246,0.35);
+          animation: slGhostDrag 2.6s ease-in-out infinite;
+        }
+        @keyframes slGhostDrag {
+          0%   { transform: translateX(-24px) scale(0.85); opacity: 0.4; }
+          12%  { transform: translateX(-24px) scale(1.05); opacity: 0.95; }
+          45%  { transform: translateX(24px) scale(1.05); opacity: 0.95; }
+          58%  { transform: translateX(24px) scale(0.85); opacity: 0.4; }
+          100% { transform: translateX(-24px) scale(0.85); opacity: 0.4; }
+        }
+        .sl-chips-hint { animation: slChipsPulse 1.8s ease-in-out infinite; border-radius: 14px; }
+        @keyframes slChipsPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(245,166,35,0); }
+          50% { box-shadow: 0 0 0 6px rgba(245,166,35,0.14); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .sl-ghost-dot { animation: none; }
+          .sl-chips-hint { animation: none; }
+        }
+      `}</style>
     </div>
   )
 }
@@ -877,6 +942,18 @@ const S: Record<string, React.CSSProperties> = {
     // viewportFit:'cover'가 레이아웃을 홈인디케이터 밑까지 확장하므로, 안전영역만큼 하단을 띄운다.
     // 이 패딩은 dockRef.offsetHeight에 포함돼 ResizeObserver→stage.bottom이 자동으로 비켜준다.
     paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+  },
+  // 재료 칩 옆 "18 materials" 배지 — 그리기 전에만, 도크 첫 줄에 자연스럽게 끼워 넣는다(절대배치 없음).
+  chipsBadge: {
+    fontSize: 10.5,
+    fontWeight: 600,
+    letterSpacing: 0.2,
+    color: '#f5c98a',
+    background: 'rgba(245,166,35,0.14)',
+    border: '1px solid rgba(245,166,35,0.4)',
+    borderRadius: 999,
+    padding: '3px 9px',
+    whiteSpace: 'nowrap',
   },
   // 칩 컨테이너도 접혀야 한다 — 원소 18개는 그 자체로 폰 폭을 넘는다.
   chips: {
