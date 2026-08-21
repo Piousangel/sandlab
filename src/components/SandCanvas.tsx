@@ -255,31 +255,37 @@ export default function SandCanvas() {
     if (!eng) return
     let raf = 0
     let t = 0
-    eng.brush.r = 3 // 얇게 흘려 천천히 쌓이게
     // 색 대비 + 용암 발광 + 물↔용암 증기 + oil↔lava 발화(자발적 불꽃 이벤트로 첫 프레임이 더 살아있게)
     const palette = ['sand', 'water', 'lava', 'oil', 'plant', 'lava']
-    // 오프닝 확정 반응: 우연에 맡기지 않고 물웅덩이 위에 용암을 떨어뜨려 첫 1.5초 안에
-    // 증기+발광 반응이 무조건 보이게 한다(INTRO_WATER_END~INTRO_LAVA_END). 그 뒤엔 기존
-    // 자유 드리프트 팔레트로 자연스럽게 이어간다.
-    const INTRO_WATER_END = 30
-    const INTRO_LAVA_END = 90
+    // 오프닝 버스트 — 얇은 점 하나(반지름 3)로는 og.png가 파는 "색 덩어리" 느낌이 안 산다는
+    // 디자인 리뷰 지적을 반영해, 굵은 브러시(반지름 22)로 화면을 좌→우로 빠르게 훑어 물웅덩이를
+    // 넓게 깔고, 같은 경로 위에 용암을 다시 훑어 화면 폭 전체에 걸친 증기+발광 반응을 확정 발생시킨다
+    // (엔진의 capsule 보간 덕에 프레임 간 이동거리가 커도 선이 끊기지 않는다). 버스트가 끝나면
+    // 반지름을 원래대로 낮춰 기존의 은은한 드리프트 팔레트로 이어간다.
+    const BURST_R = 22
+    const BURST_WATER_END = 22 // ~0.35초: 물이 좌→우로 굵게 훑고 지나가 넓은 웅덩이 형성
+    const BURST_LAVA_END = 50 // ~0.5초: 같은 경로로 용암이 훑어 그 위에 떨어짐 → 화면 폭 반응 확정
+    eng.brush.r = BURST_R
     const tick = () => {
       if (interacted.current) {
         eng.brush.mat = 0xffffffff
         return
       }
       t++
-      if (t < INTRO_WATER_END) {
-        eng.brush.x = Math.floor(W * 0.5)
-        eng.brush.y = Math.floor(H * 0.1)
+      if (t < BURST_WATER_END) {
+        const frac = t / BURST_WATER_END
+        eng.brush.x = Math.floor(W * (0.15 + 0.7 * frac))
+        eng.brush.y = Math.floor(H * 0.08)
         eng.brush.mat = idx.current.get('water') ?? 0
-      } else if (t < INTRO_LAVA_END) {
-        eng.brush.x = Math.floor(W * 0.5)
-        eng.brush.y = Math.floor(H * 0.1)
+      } else if (t < BURST_LAVA_END) {
+        const frac = (t - BURST_WATER_END) / (BURST_LAVA_END - BURST_WATER_END)
+        eng.brush.x = Math.floor(W * (0.15 + 0.7 * frac))
+        eng.brush.y = Math.floor(H * 0.08)
         eng.brush.mat = idx.current.get('lava') ?? 0
       } else if (t < 900) {
+        if (t === BURST_LAVA_END) eng.brush.r = 3 // 버스트 종료 — 이후는 기존처럼 얇게 은은히
         // 부드럽게 좌우로 드리프트하는 수도꼭지 — 순간이동이 아니라 연속 스트림이라 선이 안 그어진다.
-        const dt = t - INTRO_LAVA_END
+        const dt = t - BURST_LAVA_END
         eng.brush.x = Math.floor(W * (0.5 + 0.4 * Math.sin(dt * 0.011)))
         eng.brush.y = Math.floor(H * 0.05)
         eng.brush.mat = idx.current.get(palette[Math.floor(dt / 80) % palette.length]) ?? 0
