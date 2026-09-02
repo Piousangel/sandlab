@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   },
   icons: { icon: '/icon.png', apple: '/icon.png' },
   alternates: { canonical: SITE },
+  // AdSense 사이트 소유권 확인 — 모든 페이지에 있어야 한다 (ads.txt와 별개).
+  other: { 'google-adsense-account': 'ca-pub-9363381710674627' },
 }
 
 // 구조화 데이터 — 크롤러/AI 답변 그라운딩용. WebSite + 무설치 브라우저 게임.
