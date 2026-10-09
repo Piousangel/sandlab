@@ -7,6 +7,7 @@
 //  - 로그인 없음. 남용 방어는 IP 레이트리밋 + 투표 IP 중복 차단으로 한다.
 //    localStorage 중복 차단만으론 시크릿 창 한 번이면 뚫린다.
 
+import { parseTrack } from './track'
 import {
   HOT_WINDOW_DAYS,
   PAGE_SIZE,
@@ -50,7 +51,7 @@ interface Env {
  * per-user 식별자 없음: event_type · referrer host · country · scene_id(선택)만 집계한다.
  * 활성화 이벤트 = 페이지뷰가 아니라 '씬을 공유/업로드/투표함'(허영지표 배제).
  */
-function track(env: Env, event: string, req: Request, sceneId = '') {
+function track(env: Env, event: string, req: Request, sceneId = '', value = 0) {
   try {
     if (!env.AE) return
     let ref = ''
@@ -63,7 +64,7 @@ function track(env: Env, event: string, req: Request, sceneId = '') {
     const country = typeof cf?.country === 'string' ? cf.country : ''
     env.AE.writeDataPoint({
       blobs: [event, ref, country, sceneId],
-      doubles: [1],
+      doubles: [1, value], // value = 챌린지 클리어 잉크 등(없으면 0)
       indexes: [event], // 저카디널리티 샘플링 키
     })
   } catch {
@@ -370,17 +371,15 @@ export default {
     // ── 클라이언트 이벤트 계측 — 화이트리스트만 허용해 AE 카디널리티·남용을 원천 차단.
     // 기존 4개 지점(공유링크·업로드·투표·목록조회)과 달리 서버가 직접 관측 못 하는 클릭류
     // (예: Ko-fi 후원 링크)만 이걸로 받는다. sendBeacon으로 보내므로 응답 본문은 불필요.
-    const TRACKABLE_EVENTS = new Set(['kofi_click'])
     if (p === '/api/track' && request.method === 'POST') {
-      let body: { event?: unknown }
+      let body: unknown
       try {
         body = await request.json()
       } catch {
         return new Response(null, { status: 204 })
       }
-      if (typeof body.event === 'string' && TRACKABLE_EVENTS.has(body.event)) {
-        track(env, body.event, request)
-      }
+      const t = parseTrack(body) // 화이트리스트·형식 검증(worker/track.ts)
+      if (t) track(env, t.event, request, t.ref, t.value)
       return new Response(null, { status: 204 })
     }
 

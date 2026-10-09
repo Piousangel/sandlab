@@ -16,6 +16,7 @@ import { ClearTracker, starsFor } from '@/lib/challenge/clear'
 import { InkLedger } from '@/lib/challenge/ink'
 import { canPaintAt, areaFor } from '@/lib/challenge/area'
 import { brushAt } from '@/lib/challenge/replay'
+import { trackEvent } from '@/lib/sand/gallery'
 import { saveBest, type Best } from '@/lib/challenge/progress'
 import type { GoalStatus, Level, Zone } from '@/lib/challenge/types'
 
@@ -87,6 +88,11 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
     setResult(null)
   }, [level])
 
+  const restart = useCallback(() => {
+    if (!autoplayRef.current) trackEvent('challenge_reset', level.id)
+    loadLevel()
+  }, [level, loadLevel])
+
   // 엔진 생성·정리
   useEffect(() => {
     const canvas = canvasRef.current
@@ -102,7 +108,10 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
         engRef.current = eng
         autoplayRef.current = new URLSearchParams(location.search).get('autoplay') === '1'
         loadLevel()
-        if (!autoplayRef.current) eng.start() // autoplay는 advance()로 직접 진행
+        if (!autoplayRef.current) {
+          eng.start() // autoplay는 advance()로 직접 진행
+          trackEvent('challenge_start', level.id)
+        }
         setReady(true)
       })
       .catch((e) => {
@@ -171,6 +180,7 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
         const best = autoplayRef.current ? { stars, ink } : saveBest(level.id, { stars, ink })
         setResult({ stars, ink, best })
         if (autoplayRef.current) document.body.dataset.autoplay = `cleared:${stars}:${ink}`
+        else trackEvent('challenge_clear', level.id, ink)
       }
     } catch {
       /* 장치 손실·언마운트 중 readback 실패 — onLost가 안내한다 */
@@ -297,7 +307,7 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
                       Next level →
                     </a>
                   )}
-                  <button style={btn} onClick={loadLevel}>Play again</button>
+                  <button style={btn} onClick={restart}>Play again</button>
                   <a href="/play" style={{ ...btn, textDecoration: 'none' }}>All levels</a>
                 </div>
               </div>
@@ -435,7 +445,7 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
             </button>
           ))}
         </span>
-        <button style={btn} onClick={loadLevel}>Reset</button>
+        <button style={btn} onClick={restart}>Reset</button>
         <button style={btn} onClick={() => setHint((h) => !h)} aria-expanded={hint}>Hint</button>
         <span style={{ marginLeft: 'auto', fontSize: 12.5, opacity: 0.55 }}>
           Paint inside the faint dashed box · 3★ at {level.stars[0].toLocaleString('en-US')} ink

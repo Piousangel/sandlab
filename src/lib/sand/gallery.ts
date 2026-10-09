@@ -274,9 +274,9 @@ export function getCreatorProfile(id: string) {
 
 /** 클릭류 이벤트 계측(예: Ko-fi 후원 링크) — 서버가 직접 못 보는 지점만 sendBeacon으로 보고한다.
  *  fire-and-forget: 실패해도 사용자 흐름(링크 새 탭 열림)엔 영향 없다. */
-export function trackEvent(event: string) {
+export function trackEvent(event: string, ref?: string, value?: number) {
   try {
-    const body = JSON.stringify({ event })
+    const body = JSON.stringify({ event, ref, value })
     if (navigator.sendBeacon) {
       navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))
     } else {
