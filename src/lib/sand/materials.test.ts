@@ -22,6 +22,19 @@ describe('materials 데이터 무결성', () => {
     }
   })
 
+  it("자기 셀을 바꾸는 반응은 상대를 자기 재료로 바꾸지 않는다(자리 바꿈 버그)", () => {
+    // 셰이더에서 other:'self' = 상대가 '이 재료'가 된다. become도 바뀌면 두 셀이 자리만 바꾼 꼴 —
+    // 나무+불 → 나무는 불, 불은 나무가 돼 불이 나무를 남기고 다녔다. 얼음+물(become:self)처럼
+    // 자기는 그대로이고 상대를 자기로 만드는(번짐) 반응만 other:'self'를 쓸 수 있다.
+    for (const m of PRESETS) {
+      for (const r of m.reactions) {
+        if (r.become !== 'self' && r.become !== m.slug) {
+          expect(r.other, `${m.slug}+${r.with}`).not.toBe('self')
+        }
+      }
+    }
+  })
+
   it('slug는 유일하다', () => {
     const slugs = PRESETS.map((m) => m.slug)
     expect(new Set(slugs).size).toBe(slugs.length)

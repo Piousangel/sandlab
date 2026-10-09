@@ -24,23 +24,36 @@ export function materialBySlug(slug: string): Material | undefined {
 
 const nameOf = (slug: string) => PRESETS.find((m) => m.slug === slug)?.name ?? slug
 
-/** subject(재료 slug)가 result로 바뀌는 것을 서술. 'self'는 subject 그대로. */
-function outcome(subject: string, result: string, selfSlug: string): string {
-  if (result === 'empty') return 'dissolves away'
-  const target = result === 'self' ? selfSlug : result
-  if (target === subject) return `stays ${nameOf(subject)}`
-  return `turns into ${nameOf(target)}`
+/** 반응 결과(slug 또는 'empty')를 동사구로. */
+function phrase(result: string): string {
+  return result === 'empty' ? 'dissolves away' : `turns into ${nameOf(result)}`
 }
 
+/**
+ * 반응 하나를 두 페이지용 문장으로. 바뀌지 않는 쪽은 문장에서 뺀다("the Water stays Water" 같은
+ * 군더더기는 자동 생성 티가 나서 AdSense 저가치 판정 근거가 된다 — 2026-10-09 적대적 감사).
+ */
 function lines(self: Material, r: Reaction) {
-  const selfName = self.name
-  const withName = nameOf(r.with)
-  const selfOut = r.become === 'self' ? `stays ${selfName}` : outcome(self.slug, r.become, self.slug)
-  const otherOut = outcome(r.with, r.other, self.slug)
-  return {
-    undergoes: `Touching ${withName}: ${selfOut}; the ${withName} ${otherOut}.`,
-    causes: `Touching ${selfName}: the ${selfName} ${selfOut}; this ${withName} ${otherOut}.`,
+  const W = nameOf(r.with)
+  const S = self.name
+  const selfR = r.become === 'self' ? self.slug : r.become
+  const otherR = r.other === 'self' ? self.slug : r.other
+  const selfChanges = selfR !== self.slug
+  const otherChanges = otherR !== r.with
+  let undergoes: string
+  let causes: string
+  if (selfChanges && otherChanges) {
+    undergoes = `Touching ${W}: ${phrase(selfR)}, and the ${W} ${phrase(otherR)}.`
+    causes = `Touching ${S}: the ${S} ${phrase(selfR)}, and this ${W} ${phrase(otherR)}.`
+  } else if (selfChanges) {
+    undergoes = `Touching ${W}: ${phrase(selfR)}.`
+    causes = `Touching ${S}: the ${S} ${phrase(selfR)}.`
+  } else {
+    undergoes =
+      otherR === 'empty' ? `Touching ${W}: dissolves the ${W}.` : `Touching ${W}: turns the ${W} into ${nameOf(otherR)}.`
+    causes = `Touching ${S}: this ${W} ${phrase(otherR)}.`
   }
+  return { undergoes, causes }
 }
 
 export function reactionsOf(slug: string): { causes: ReactionLine[]; undergoes: ReactionLine[] } {

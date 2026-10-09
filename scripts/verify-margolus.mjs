@@ -43,12 +43,14 @@ function hash(v) {
 }
 const rand01 = (seed) => (hash(seed) & 0xffffff) / 0x1000000
 
-// ── shader.ts 의 shouldSink 와 1:1 대응 ──
+// ── shader.ts 의 weightOf/shouldSink 와 1:1 대응 ──
+// 빈칸은 기체(1)와 가장 가벼운 액체(2) 사이(1.5)로 취급 → 정수화해 밀도×2, 빈칸=3.
+const weight = (id) => (id === M.empty.id ? 3 : dens(id) * 2)
 function shouldSink(top, bottom) {
   if (top === WALL_SENTINEL || bottom === WALL_SENTINEL) return false
   if (!isMobile(top)) return false
   if (isStatic(bottom)) return false
-  return dens(top) > dens(bottom)
+  return weight(top) > weight(bottom)
 }
 
 function step(grid, W, H, tick) {
@@ -211,6 +213,33 @@ console.log('\n=== 5. 모래가 바닥에 실제로 쌓인다 (안 사라짐) ==
   console.log(`     모래 ${n0} → ${n1}, 최하단 줄에 ${bottomRow}/${W}`)
   ok('모래 개수 불변', n0 === n1, `${n0}→${n1}`)
   ok('바닥에 도달', bottomRow > W * 0.8, `${bottomRow}/${W}`)
+}
+
+console.log('\n=== 6. 기체는 빈칸을 뚫고 위로 뜬다 (연기 블록) ===')
+{
+  // 회귀: 빈칸 밀도 0 < 기체 밀도 1 이라 기체가 빈칸 쪽으로 '가라앉던' 버그(2026-10-09 실크롬 확인).
+  let g = new Int32Array(W * H).fill(M.empty.id)
+  for (let y = 20; y < 26; y++) for (let x = 20; x < 44; x++) g[y * W + x] = M.smoke.id
+  const meanY = () => {
+    let sum = 0, n = 0
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (g[y * W + x] === M.smoke.id) { sum += y; n++ }
+    return sum / n
+  }
+  const y0 = meanY()
+  for (let t = 0; t < 100; t++) g = step(g, W, H, t)
+  const y1 = meanY()
+  console.log(`     연기 평균 높이(클수록 아래) ${y0.toFixed(1)} → ${y1.toFixed(1)}`)
+  ok('연기가 위로 이동', y1 < y0 - 5, `${y0.toFixed(1)}→${y1.toFixed(1)}`)
+}
+
+console.log('\n=== 7. 기름(가장 가벼운 액체)은 여전히 빈칸으로 떨어진다 ===')
+{
+  let g = new Int32Array(W * H).fill(M.empty.id)
+  for (let x = 0; x < W; x++) g[5 * W + x] = M.oil.id
+  for (let t = 0; t < 500; t++) g = step(g, W, H, t)
+  let bottomRow = 0
+  for (let x = 0; x < W; x++) if (g[(H - 1) * W + x] === M.oil.id) bottomRow++
+  ok('기름이 바닥에 도달', bottomRow > W * 0.8, `${bottomRow}/${W}`)
 }
 
 console.log(`\n${'='.repeat(50)}\n  ${pass} 통과 / ${fail} 실패\n${'='.repeat(50)}\n`)

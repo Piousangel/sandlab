@@ -70,14 +70,22 @@ fn readCell(x : i32, y : i32) -> u32 {
   return src[idx(x, y)];
 }
 
-// 무거운 게 가벼운 걸 뚫고 내려간다. gas는 밀도가 낮아 자연히 위로 뜬다.
+// 낙하 판정용 무게. 빈칸은 기체(밀도 1)와 가장 가벼운 액체(밀도 2) 사이(1.5)로 친다 —
+// 밀도 0 그대로 비교하면 기체(1)가 빈칸 쪽으로 '가라앉는다'(2026-10-09 실크롬에서 증기가
+// 아래로 내려가는 것 확인한 버그). 정수로 쓰려고 밀도×2, 빈칸=3.
+fn weightOf(mat : u32) -> u32 {
+  if (mat == EMPTY) { return 3u; }
+  return densityOf(mat) * 2u;
+}
+
+// 무거운 게 가벼운 걸 뚫고 내려간다. 기체는 빈칸보다 가벼워서 빈칸과 자리를 바꾸며 위로 뜬다.
 fn shouldSink(top : u32, bottom : u32) -> bool {
   if (top == WALL_SENTINEL || bottom == WALL_SENTINEL) { return false; }
   let tm = matOf(top);
   let bm = matOf(bottom);
   if (!isMobile(tm)) { return false; }
   if (isStatic(bm))  { return false; }
-  return densityOf(tm) > densityOf(bm);
+  return weightOf(tm) > weightOf(bm);
 }
 
 fn react(a : u32, b : u32, seed : u32) -> vec2<u32> {

@@ -16,33 +16,36 @@ describe('guideMaterials', () => {
 })
 
 describe('reactionsOf', () => {
-  it('자기 반응표의 반응은 undergoes에 나온다 (물 + 용암)', () => {
+  it('자기 반응표의 반응은 undergoes에 나온다 (물 + 용암, 둘 다 바뀜)', () => {
     const { undergoes } = reactionsOf('water')
     const lava = undergoes.find((r) => r.partner === 'lava')
     expect(lava).toBeDefined()
     expect(lava!.chance).toBe(0.7)
-    expect(lava!.text).toBe('Touching Lava: turns into Steam; the Lava turns into Stone.')
+    expect(lava!.text).toBe('Touching Lava: turns into Steam, and the Lava turns into Stone.')
   })
   it('다른 재료 반응표에 적힌 반응은 상대 페이지 causes에 나온다 (용암 페이지에 물 반응)', () => {
     const { causes } = reactionsOf('lava')
     const water = causes.find((r) => r.partner === 'water')
     expect(water).toBeDefined()
-    expect(water!.text).toBe('Touching Water: the Water turns into Steam; this Lava turns into Stone.')
+    expect(water!.text).toBe('Touching Water: the Water turns into Steam, and this Lava turns into Stone.')
   })
-  it("'self'/'empty' 센티넬은 사람 문장으로 바뀐다", () => {
-    // salt: { with: 'water', become: 'empty', other: 'water' } → 소금은 사라지고 물은 그대로
-    const salt = reactionsOf('salt').undergoes.find((r) => r.partner === 'water')!
-    expect(salt.text).toBe('Touching Water: dissolves away; the Water stays Water.')
-    // acid: { with: 'metal', become: 'self', other: 'empty' }
-    const acid = reactionsOf('acid').undergoes.find((r) => r.partner === 'metal')!
-    expect(acid.text).toBe('Touching Metal: stays Acid; the Metal dissolves away.')
-    // wood: { with: 'fire', become: 'fire', other: 'self' } → 이웃 불이 나무가 됨(셰이더 의미 그대로)
-    const wood = reactionsOf('wood').undergoes.find((r) => r.partner === 'fire')!
-    expect(wood.text).toBe('Touching Fire: turns into Fire; the Fire turns into Wood.')
+  it('바뀌지 않는 쪽은 문장에서 빠진다 (군더더기 "stays X" 금지)', () => {
+    // salt: { with: 'water', become: 'empty', other: 'water' } → 소금만 사라짐
+    expect(reactionsOf('salt').undergoes.find((r) => r.partner === 'water')!.text).toBe('Touching Water: dissolves away.')
+    expect(reactionsOf('water').causes.find((r) => r.partner === 'salt')!.text).toBe('Touching Salt: the Salt dissolves away.')
+    // acid: { with: 'metal', become: 'self', other: 'empty' } → 산은 그대로, 금속만 사라짐
+    expect(reactionsOf('acid').undergoes.find((r) => r.partner === 'metal')!.text).toBe('Touching Metal: dissolves the Metal.')
+    expect(reactionsOf('metal').causes.find((r) => r.partner === 'acid')!.text).toBe('Touching Acid: this Metal dissolves away.')
+    // wood: { with: 'fire', become: 'fire', other: 'fire' } → 나무만 불이 됨
+    expect(reactionsOf('wood').undergoes.find((r) => r.partner === 'fire')!.text).toBe('Touching Fire: turns into Fire.')
+    expect(reactionsOf('fire').causes.find((r) => r.partner === 'wood')!.text).toBe('Touching Wood: the Wood turns into Fire.')
+    // ice: { with: 'water', become: 'self', other: 'self' } → 얼음이 물을 얼린다(번짐)
+    expect(reactionsOf('ice').undergoes.find((r) => r.partner === 'water')!.text).toBe('Touching Water: turns the Water into Ice.')
+    expect(reactionsOf('water').causes.find((r) => r.partner === 'ice')!.text).toBe('Touching Ice: this Water turns into Ice.')
     for (const m of guideMaterials()) {
       const { causes, undergoes } = reactionsOf(m.slug)
       for (const r of [...causes, ...undergoes]) {
-        expect(r.text).not.toMatch(/\bself\b|\bempty\b|Empty/)
+        expect(r.text).not.toMatch(/\bself\b|\bempty\b|Empty|\bstays\b/)
       }
     }
   })

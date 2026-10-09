@@ -63,12 +63,12 @@ export const PRESETS: Material[] = [
   { slug: 'metal', name: 'Metal', color: '#B9C2CE', density: 9, movement: 'static', lifetime: null, emissive: 0, reactions: [] },
   {
     slug: 'wood', name: 'Wood', color: '#6B4423', density: 7, movement: 'static', lifetime: null, emissive: 0,
-    reactions: [{ with: 'fire', chance: 0.12, become: 'fire', other: 'self' }],
+    reactions: [{ with: 'fire', chance: 0.12, become: 'fire', other: 'fire' }],
   },
   {
     slug: 'plant', name: 'Plant', color: '#43B04A', density: 6, movement: 'static', lifetime: null, emissive: 0,
     reactions: [
-      { with: 'fire',  chance: 0.35, become: 'fire',  other: 'self' },
+      { with: 'fire',  chance: 0.35, become: 'fire',  other: 'fire' },
       { with: 'water', chance: 0.02, become: 'self',  other: 'plant' }, // 물 타고 자람
     ],
   },
@@ -111,8 +111,8 @@ export const PRESETS: Material[] = [
   {
     slug: 'oil', name: 'Oil', color: '#4A3520', density: 2, movement: 'liquid', lifetime: null, emissive: 0,
     reactions: [
-      { with: 'fire', chance: 0.5, become: 'fire', other: 'self' },
-      { with: 'lava', chance: 0.8, become: 'fire', other: 'self' },
+      { with: 'fire', chance: 0.5, become: 'fire', other: 'fire' },
+      { with: 'lava', chance: 0.8, become: 'fire', other: 'lava' },
     ],
   },
   {
