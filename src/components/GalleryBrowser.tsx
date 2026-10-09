@@ -163,6 +163,9 @@ export default function GalleryBrowser() {
             <a href="/" style={S.back}>
               ← Sandlab
             </a>
+            <a href="/materials" style={{ color: '#eef1f6', textDecoration: 'none', fontSize: 14, opacity: 0.6 }}>
+              Materials guide
+            </a>
             <div style={S.tabs}>
               {(['hot', 'new', 'mine', 'top'] as Tab[]).map((m) => (
                 <button
