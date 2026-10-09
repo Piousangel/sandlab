@@ -663,7 +663,8 @@ export default function SandCanvas() {
 
       <div style={S.brand}>
         <span style={{ fontWeight: 650, letterSpacing: -0.2 }}>Sandlab</span>
-        <span style={S.brandSub}>no install · no sign-up · share as a link</span>
+        {/* 좁은 세로 화면에선 태그라인이 4줄로 접혀 캔버스를 덮었다(2026-10-09 390px 점검) — 링크만 남긴다. */}
+        {!narrow && <span style={S.brandSub}>no install · no sign-up · share as a link</span>}
         {/* 콘텐츠 페이지로 가는 정적 링크 — 없으면 /learn·/materials가 sitemap으로만 닿는 고아가 된다
             (2026-10-09 AdSense 적대 감사). 일반 <a>: 콘텐츠 페이지의 광고 로더가 캔버스로 따라오지 않게
             클라이언트 내비게이션을 쓰지 않는다. */}
@@ -820,7 +821,7 @@ export default function SandCanvas() {
         </div>
       )}
 
-      {!coarse && <div style={S.hint}>Right-click to erase</div>}
+      {!coarse && !narrow && <div style={S.hint}>Right-click to erase</div>}
       {toast && <div style={S.toast} role="status" aria-live="polite">{toast}</div>}
 
       {/* 고스트 커서 드래그 제스처 + 재료 칩 pulse 힌트 — 인라인 스타일은 keyframe을 못 써서 여기서만 주입한다. */}

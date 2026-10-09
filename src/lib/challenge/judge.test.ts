@@ -86,7 +86,7 @@ describe('survive', () => {
     expect(judge(empty(), lvl([{ type: 'survive', ticks: 10 }]), [0])[0].met).toBe(false)
   })
   it('설명 문구', () => {
-    expect(describeGoal({ type: 'survive', ticks: 1800 })).toBe('Hold out until the timer runs out')
+    expect(describeGoal({ type: 'survive', ticks: 1800 })).toBe('Hold out until the bar fills')
   })
 })
 

@@ -15,6 +15,7 @@ import { judge, initialCounts, describeGoal } from '@/lib/challenge/judge'
 import { ClearTracker, starsFor } from '@/lib/challenge/clear'
 import { InkLedger } from '@/lib/challenge/ink'
 import { canPaintAt, areaFor } from '@/lib/challenge/area'
+import { brushAt } from '@/lib/challenge/replay'
 import { saveBest, type Best } from '@/lib/challenge/progress'
 import type { GoalStatus, Level, Zone } from '@/lib/challenge/types'
 
@@ -47,6 +48,7 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
   const inkRef = useRef(ink)
   const trackerRef = useRef(tracker)
   const inkBusyRef = useRef(false)
+  const autoplayRef = useRef(false)
   const genRef = useRef(0)
   const busyRef = useRef(false)
   const downRef = useRef(false)
@@ -98,8 +100,9 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
         if (disposed) return
         eng.paintEmptyOnly = true
         engRef.current = eng
+        autoplayRef.current = new URLSearchParams(location.search).get('autoplay') === '1'
         loadLevel()
-        eng.start()
+        if (!autoplayRef.current) eng.start() // autoplay는 advance()로 직접 진행
         setReady(true)
       })
       .catch((e) => {
@@ -146,36 +149,86 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
     // mats는 레벨에서 파생(레벨당 고정)
   }, [ready, result, err])
 
-  // 판정
-  useEffect(() => {
-    if (!ready || err) return
-    const id = setInterval(async () => {
-      const eng = engRef.current
-      if (!eng || busyRef.current || trackerRef.current.cleared) return
-      busyRef.current = true
-      const gen = genRef.current
-      try {
-        const tick = eng.currentTick
-        const cells = await eng.readback()
-        if (gen !== genRef.current) return // Reset 이후 도착한 이전 판의 결과
-        const s = judge(cells, level, initRef.current, tick)
-        setStatuses(s)
-        if (trackerRef.current.push(s)) {
-          eng.brush.mat = OFF
-          downRef.current = false
-          inkRef.current.update(await eng.readInk())
-          const ink = inkRef.current.total()
-          const stars = starsFor(ink, level.stars)
-          setResult({ stars, ink, best: saveBest(level.id, { stars, ink }) })
-        }
-      } catch {
-        /* 장치 손실·언마운트 중 readback 실패 — onLost가 안내한다 */
-      } finally {
-        busyRef.current = false
+  // 판정 1회 — 인터벌(일반)과 autoplay 루프가 같은 경로를 쓴다.
+  const judgeOnce = useCallback(async () => {
+    const eng = engRef.current
+    if (!eng || busyRef.current || trackerRef.current.cleared) return
+    busyRef.current = true
+    const gen = genRef.current
+    try {
+      const tick = eng.currentTick
+      const cells = await eng.readback()
+      if (gen !== genRef.current) return // Reset 이후 도착한 이전 판의 결과
+      const s = judge(cells, level, initRef.current, tick)
+      setStatuses(s)
+      if (trackerRef.current.push(s)) {
+        eng.brush.mat = OFF
+        downRef.current = false
+        inkRef.current.update(await eng.readInk())
+        const ink = inkRef.current.total()
+        const stars = starsFor(ink, level.stars)
+        // autoplay(검증용)는 기록을 남기지 않는다
+        const best = autoplayRef.current ? { stars, ink } : saveBest(level.id, { stars, ink })
+        setResult({ stars, ink, best })
+        if (autoplayRef.current) document.body.dataset.autoplay = `cleared:${stars}:${ink}`
       }
-    }, JUDGE_MS)
+    } catch {
+      /* 장치 손실·언마운트 중 readback 실패 — onLost가 안내한다 */
+    } finally {
+      busyRef.current = false
+    }
+  }, [level])
+
+  // 판정 인터벌(일반 플레이)
+  useEffect(() => {
+    if (!ready || err || autoplayRef.current) return
+    const id = setInterval(judgeOnce, JUDGE_MS)
     return () => clearInterval(id)
-  }, [ready, level, err])
+  }, [ready, err, judgeOnce])
+
+  // ?autoplay=1 — 모범답안을 실제 UI 경로로 재생(검증 전용, 링크 없음). 탭이 가려지면 rAF·타이머가
+  // 멈추거나 늦어져서, rAF 대신 advance()로 진행하고 판정도 루프 안에서 30틱마다 직접 부른다.
+  useEffect(() => {
+    if (!ready || !autoplayRef.current) return
+    const eng = engRef.current
+    if (!eng) return
+    let stop = false
+    eng.onTick = (t) => {
+      const b = brushAt(level.solution, t, IDX)
+      const slug = b ? PRESETS[b.mat].slug : ''
+      if (b && canPaintAt(areaFor(level, slug), b.x, b.y, b.r)) {
+        eng.brush.x = b.x
+        eng.brush.y = b.y
+        eng.brush.r = b.r
+        eng.inkCap = level.palette[slug]
+        eng.brush.mat = b.mat
+      } else eng.brush.mat = OFF
+    }
+    eng.stepsPerFrame = 4
+    ;(async () => {
+      let next = 30
+      while (!stop && !trackerRef.current.cleared && eng.currentTick < 3600) {
+        eng.advance()
+        await eng.settle()
+        await new Promise<void>((r) => {
+          const ch = new MessageChannel()
+          ch.port1.onmessage = () => r()
+          ch.port2.postMessage(0)
+        })
+        if (eng.currentTick >= next) {
+          next = eng.currentTick + 30
+          document.body.dataset.autoplayTick = String(eng.currentTick)
+          inkRef.current.update(await eng.readInk())
+          await judgeOnce()
+        }
+      }
+      eng.onTick = undefined
+      if (!stop && !trackerRef.current.cleared) document.body.dataset.autoplay = 'timeout'
+    })()
+    return () => {
+      stop = true
+    }
+  }, [ready, level, judgeOnce])
 
   const toGrid = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
@@ -223,8 +276,53 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
     cursor: 'pointer',
   } as const
 
+  const resultCard = (cls: string) =>
+    result && (
+            <div className={cls}>
+              <div role="dialog" aria-label="Level cleared" style={{ textAlign: 'center', padding: 20 }}>
+                <div style={{ fontSize: 34, letterSpacing: 4, color: '#f5c98a' }}>
+                  {'★'.repeat(result.stars)}
+                  <span style={{ opacity: 0.25 }}>{'★'.repeat(3 - result.stars)}</span>
+                </div>
+                <p style={{ margin: '8px 0 2px', fontSize: 18, fontWeight: 650 }}>Cleared!</p>
+                <p style={{ margin: 0, fontSize: 13.5, opacity: 0.7 }}>
+                  {result.ink.toLocaleString('en-US')} ink · best {result.best.stars}★ {result.best.ink.toLocaleString('en-US')}
+                </p>
+                <p style={{ margin: '4px 0 14px', fontSize: 12.5, opacity: 0.55 }}>
+                  3★ at {level.stars[0].toLocaleString('en-US')} ink or less
+                </p>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {nextId && (
+                    <a href={`/play/${nextId}`} style={{ ...btn, background: '#eef1f6', color: '#07090D', fontWeight: 650, textDecoration: 'none' }}>
+                      Next level →
+                    </a>
+                  )}
+                  <button style={btn} onClick={loadLevel}>Play again</button>
+                  <a href="/play" style={{ ...btn, textDecoration: 'none' }}>All levels</a>
+                </div>
+              </div>
+            </div>
+    )
+
   return (
     <div style={{ width: '100%' }}>
+      {/* 좁은 화면(폰 세로)에선 캔버스가 ~180px라 클리어 카드가 넘친다 — 카드를 캔버스 아래 블록으로 내린다.
+          인라인 스타일로는 미디어쿼리가 안 돼서 이 컴포넌트 전용 클래스 하나만 둔다. */}
+      <style>{`
+        .cp-over { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(7,9,13,0.72); border-radius: 10px; }
+        .cp-below { display: none; }
+        .cp-rotate { display: none; }
+        @media (max-width: 600px) {
+          .cp-over { display: none; }
+          .cp-below { display: grid; place-items: center; margin-top: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; }
+        }
+        @media (max-width: 600px) and (orientation: portrait) {
+          .cp-rotate { display: block; }
+        }
+      `}</style>
+      <p className="cp-rotate" style={{ margin: '0 0 8px', fontSize: 12.5, opacity: 0.6 }}>
+        Tip: turn your phone sideways for a bigger board.
+      </p>
       <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 10px', display: 'grid', gap: 6 }}>
         {level.goals.map((g, i) => (
           <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
@@ -295,34 +393,10 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
             </p>
           </div>
         )}
-        {result && (
-          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: 'rgba(7,9,13,0.72)', borderRadius: 10 }}>
-            <div role="dialog" aria-label="Level cleared" style={{ textAlign: 'center', padding: 20 }}>
-              <div style={{ fontSize: 34, letterSpacing: 4, color: '#f5c98a' }}>
-                {'★'.repeat(result.stars)}
-                <span style={{ opacity: 0.25 }}>{'★'.repeat(3 - result.stars)}</span>
-              </div>
-              <p style={{ margin: '8px 0 2px', fontSize: 18, fontWeight: 650 }}>Cleared!</p>
-              <p style={{ margin: 0, fontSize: 13.5, opacity: 0.7 }}>
-                {result.ink.toLocaleString('en-US')} ink · best {result.best.stars}★ {result.best.ink.toLocaleString('en-US')}
-              </p>
-              <p style={{ margin: '4px 0 14px', fontSize: 12.5, opacity: 0.55 }}>
-                3★ at {level.stars[0].toLocaleString('en-US')} ink or less
-              </p>
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-                {nextId && (
-                  <a href={`/play/${nextId}`} style={{ ...btn, background: '#eef1f6', color: '#07090D', fontWeight: 650, textDecoration: 'none' }}>
-                    Next level →
-                  </a>
-                )}
-                <button style={btn} onClick={loadLevel}>Play again</button>
-                <a href="/play" style={{ ...btn, textDecoration: 'none' }}>All levels</a>
-              </div>
-            </div>
-          </div>
-        )}
+        {result && resultCard('cp-result cp-over')}
       </div>
 
+      {result && resultCard('cp-result cp-below')}
       <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginTop: 12 }}>
         {mats.map((m) => {
           const on = sel === m

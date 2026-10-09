@@ -65,7 +65,7 @@ export const GOALS: { [K in Goal['type']]: Spec<Extract<Goal, { type: K }>> } = 
   },
   survive: {
     judge: (_c, g, _init, tick) => ({ met: tick >= g.ticks, progress: Math.min(1, tick / g.ticks) }),
-    describe: () => 'Hold out until the timer runs out',
+    describe: () => 'Hold out until the bar fills',
   },
 }
 
