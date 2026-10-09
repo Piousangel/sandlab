@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { LEVELS, levelById } from './index'
+import { DAILY_POOL } from '../daily'
 import { PRESETS } from '@/lib/sand/materials'
 import { buildGrid, GRID_W, GRID_H } from '../grid'
 import { judge, initialCounts } from '../judge'
@@ -18,7 +19,8 @@ describe('레벨 정합성', () => {
     expect(levelById(ids[0])).toBe(LEVELS[0])
     expect(levelById('nope')).toBeUndefined()
   })
-  for (const l of LEVELS) {
+  // 데일리 풀(변형 30개)도 같은 정합성·지름길 검사를 통과해야 한다
+  for (const l of [...LEVELS, ...DAILY_POOL]) {
     describe(l.id, () => {
       it('포맷 v1, 문구(blurb 40단어+·hint), 재료 slug 실재', () => {
         expect(l.v).toBe(1)

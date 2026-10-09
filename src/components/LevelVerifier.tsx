@@ -8,7 +8,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { SandEngine } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
-import { LEVELS } from '@/lib/challenge/levels'
+import { LEVELS as BASE_LEVELS } from '@/lib/challenge/levels'
+import { DAILY_POOL } from '@/lib/challenge/daily'
+
+// ?set=daily — 데일리 변형 풀 검증
+const LEVELS = typeof location !== 'undefined' && new URLSearchParams(location.search).get('set') === 'daily' ? DAILY_POOL : BASE_LEVELS
 import { buildGrid, GRID_W, GRID_H } from '@/lib/challenge/grid'
 import { judge, initialCounts } from '@/lib/challenge/judge'
 import { ClearTracker, starsFor } from '@/lib/challenge/clear'
