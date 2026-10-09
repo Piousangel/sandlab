@@ -28,6 +28,7 @@ export default function ContentShell({ children, ads = true }: { children: React
         <a href="/" style={{ ...link, opacity: 1, fontWeight: 700, fontSize: 16 }}>
           Sandlab
         </a>
+        <a href="/play" style={link}>Challenges</a>
         <Link href="/learn" style={link}>Learn</Link>
         <Link href="/materials" style={link}>Materials</Link>
         <a href="/gallery" style={link}>Gallery</a>

@@ -17,7 +17,7 @@ const MARKS = ['pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', 'class=
 
 // 광고 허용 페이지 (out/ 기준 상대 경로). 정규식은 동적 세그먼트용.
 // /privacy는 광고 없음(정책 페이지에 광고 = 인벤토리 부풀리기로 보인다, 2026-10-09 감사).
-const ALLOW = [/^learn\.html$/, /^learn\/[a-z0-9-]+\.html$/, /^materials\.html$/, /^materials\/[a-z]+\.html$/, /^about\.html$/]
+const ALLOW = [/^play\.html$/, /^learn\.html$/, /^learn\/[a-z0-9-]+\.html$/, /^materials\.html$/, /^materials\/[a-z]+\.html$/, /^about\.html$/]
 // 허용 페이지의 최소 본문 글자 수(태그·스크립트·스타일 제거 후). 얇은 페이지에 광고 = 반려 재발.
 const MIN_TEXT = 600
 
