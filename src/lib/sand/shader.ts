@@ -24,6 +24,7 @@ struct Params {
   width : u32, height : u32, offset : u32, tick : u32,
   matCount : u32, brushX : i32, brushY : i32, brushR : i32,
   brushMat : u32, brushPX : i32, brushPY : i32, recording : u32,
+  paintEmptyOnly : u32, _p0 : u32, _p1 : u32, _p2 : u32,
 };
 
 const MAX_RX : u32 = 4u;
@@ -208,6 +209,8 @@ fn paint(@builtin(global_invocation_id) gid : vec3<u32>) {
   // 가장자리를 확률적으로 갉아 딱딱한 윤곽을 없앤다 (딱 떨어지는 원은 인공적)
   let edge = d2 / max(1.0, r * r);
   if (rand01(hash(u32(x) * 3571u + u32(y) * 6151u + P.tick * 97u)) < edge * 0.7) { return; }
+  // 챌린지 모드: 레벨 구조물·기존 재료를 덮어 지우지 못하게 빈 칸에만 칠한다.
+  if (P.paintEmptyOnly == 1u && matOf(dst[idx(x, y)]) != EMPTY) { return; }
   dst[idx(x, y)] = mk(P.brushMat, u32(props[P.brushMat * 2u].w) / 100u);
 }
 `

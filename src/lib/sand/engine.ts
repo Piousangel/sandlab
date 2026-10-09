@@ -15,6 +15,7 @@
 import { SIM_WGSL, BLOOM_WGSL, RENDER_WGSL } from './shader'
 import { packMaterials, type Material, EMPTY_ID } from './materials'
 import { SITE } from '../site'
+import { packParams, PARAMS_BYTES } from './params'
 
 export interface EngineOpts {
   canvas: HTMLCanvasElement
@@ -95,6 +96,12 @@ export class SandEngine {
   brush = { x: -1, y: -1, r: 6, mat: 0xffffffff }
   /** 직전 프레임의 브러시 위치. 캡슐 보간의 시작점. */
   private prev = { x: -1, y: -1 }
+  /** 챌린지 모드: 빈 칸에만 칠한다(레벨 구조물 보호). 일반 샌드박스는 false. */
+  paintEmptyOnly = false
+  /** 프레임당 시뮬 틱 수. 기본 1. /play/verify가 검증을 빨리 돌릴 때만 올린다. */
+  stepsPerFrame = 1
+  /** 각 시뮬 틱 직전 호출(인자 = 이번 틱 번호). 리플레이가 brush를 틱 단위로 세팅한다. */
+  onTick?: (tick: number) => void
 
   constructor(o: EngineOpts) {
     this.canvas = o.canvas
@@ -150,7 +157,7 @@ export class SandEngine {
     this.lightA = d.createBuffer({ size: n * 16, usage: GPUBufferUsage.STORAGE })
     this.lightB = d.createBuffer({ size: n * 16, usage: GPUBufferUsage.STORAGE })
 
-    this.params = d.createBuffer({ size: 48, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST })
+    this.params = d.createBuffer({ size: PARAMS_BYTES, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST })
 
     const { props, rx } = packMaterials(this.mats)
     this.propsBuf = d.createBuffer({ size: props.byteLength, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST })
@@ -286,23 +293,26 @@ export class SandEngine {
   }
 
   private writeParams(offset: number) {
-    const p = new ArrayBuffer(48)
-    const u = new Uint32Array(p)
-    const i = new Int32Array(p)
-    u[0] = this.W
-    u[1] = this.H
-    u[2] = offset
-    u[3] = this.tick
-    u[4] = this.mats.length
-    i[5] = this.brush.x
-    i[6] = this.brush.y
-    i[7] = this.brush.r
-    u[8] = this.brush.mat
-    // 새 획의 첫 프레임이면 시작점 = 현재점 (직전 획 끝에서 선이 그어지면 안 된다)
-    i[9] = this.prev.x < 0 ? this.brush.x : this.prev.x
-    i[10] = this.prev.y < 0 ? this.brush.y : this.prev.y
-    u[11] = this.recording ? 1 : 0 // Params.recording — 녹화 중에만 워터마크 합성
-    this.device.queue.writeBuffer(this.params, 0, p)
+    this.device.queue.writeBuffer(
+      this.params,
+      0,
+      packParams({
+        W: this.W,
+        H: this.H,
+        offset,
+        tick: this.tick,
+        matCount: this.mats.length,
+        brushX: this.brush.x,
+        brushY: this.brush.y,
+        brushR: this.brush.r,
+        brushMat: this.brush.mat,
+        // 새 획의 첫 프레임이면 시작점 = 현재점 (직전 획 끝에서 선이 그어지면 안 된다)
+        prevX: this.prev.x < 0 ? this.brush.x : this.prev.x,
+        prevY: this.prev.y < 0 ? this.brush.y : this.prev.y,
+        recording: this.recording, // 녹화 중에만 워터마크 합성
+        paintEmptyOnly: this.paintEmptyOnly,
+      }),
+    )
   }
 
   private frame = (t: number) => {
@@ -322,33 +332,49 @@ export class SandEngine {
 
   private step = (t: number) => {
     const d = this.device
-    this.writeParams(this.tick % 2)
-    const enc = d.createCommandEncoder()
-
     const gx = Math.ceil(this.W / 8)
     const gy = Math.ceil(this.H / 8)
 
-    // 1. 시뮬
-    {
-      const p = enc.beginComputePass()
-      p.setPipeline(this.simPipe)
-      p.setBindGroup(0, this.simBind[this.cur])
-      p.dispatchWorkgroups(Math.ceil((this.W / 2 + 1) / 8), Math.ceil((this.H / 2 + 1) / 8))
-      p.end()
+    // 1~2. 시뮬 + 브러시 — 기본 프레임당 1틱. stepsPerFrame>1(검증기)이면 렌더 없이 여러 틱을 돈다.
+    //      틱마다 params가 달라서(offset·tick·brush) 틱마다 writeParams → 개별 submit 한다.
+    for (let k = 0; k < this.stepsPerFrame; k++) {
+      this.onTick?.(this.tick) // 리플레이가 이 틱의 브러시를 세팅한다(결정적 재생)
+      this.writeParams(this.tick % 2)
+      const enc = d.createCommandEncoder()
+      {
+        const p = enc.beginComputePass()
+        p.setPipeline(this.simPipe)
+        p.setBindGroup(0, this.simBind[this.cur])
+        p.dispatchWorkgroups(Math.ceil((this.W / 2 + 1) / 8), Math.ceil((this.H / 2 + 1) / 8))
+        p.end()
+      }
+      if (this.brush.mat !== 0xffffffff && this.brush.x >= 0) {
+        const p = enc.beginComputePass()
+        p.setPipeline(this.paintPipe)
+        p.setBindGroup(0, this.simBind[this.cur])
+        p.dispatchWorkgroups(gx, gy)
+        p.end()
+      }
+      d.queue.submit([enc.finish()])
+      // 다음 틱 캡슐의 시작점. 브러시를 떼면 리셋해서 획이 이어지지 않게 한다.
+      if (this.brush.mat !== 0xffffffff && this.brush.x >= 0) {
+        this.prev.x = this.brush.x
+        this.prev.y = this.brush.y
+      } else {
+        this.prev.x = -1
+        this.prev.y = -1
+      }
+      this.cur = 1 - this.cur
+      this.tick++
     }
-    // 2. 브러시
-    if (this.brush.mat !== 0xffffffff && this.brush.x >= 0) {
-      const p = enc.beginComputePass()
-      p.setPipeline(this.paintPipe)
-      p.setBindGroup(0, this.simBind[this.cur])
-      p.dispatchWorkgroups(gx, gy)
-      p.end()
-    }
-    // 3. 블룸 (dst = 1-cur 를 읽는다) — 저사양(lite)에선 스킵해 fps를 회복시킨다.
+
+    // 방금 쓴 dst = cells[cur] (루프에서 이미 뒤집었다).
+    const enc = d.createCommandEncoder()
+    // 3. 블룸 — 저사양(lite)에선 스킵해 fps를 회복시킨다.
     //    스킵 시 렌더는 영속 lightA 버퍼(마지막 값/0)를 읽어 글로우만 빠진다(붕괴 없음).
     if (!this.lite) {
       const p = enc.beginComputePass()
-      p.setBindGroup(0, this.bloomBind[1 - this.cur])
+      p.setBindGroup(0, this.bloomBind[this.cur])
       p.setPipeline(this.seedPipe)
       p.dispatchWorkgroups(gx, gy)
       p.setPipeline(this.blurHPipe)
@@ -366,22 +392,11 @@ export class SandEngine {
         ],
       })
       p.setPipeline(this.renderPipe)
-      p.setBindGroup(0, this.renderBind[1 - this.cur])
+      p.setBindGroup(0, this.renderBind[this.cur])
       p.draw(3)
       p.end()
     }
-
     d.queue.submit([enc.finish()])
-    // 다음 프레임 캡슐의 시작점. 브러시를 떼면 리셋해서 획이 이어지지 않게 한다.
-    if (this.brush.mat !== 0xffffffff && this.brush.x >= 0) {
-      this.prev.x = this.brush.x
-      this.prev.y = this.brush.y
-    } else {
-      this.prev.x = -1
-      this.prev.y = -1
-    }
-    this.cur = 1 - this.cur
-    this.tick++
 
     this.frames++
     if (t - this.lastFpsAt >= 1000) {
@@ -392,6 +407,19 @@ export class SandEngine {
       // 글로우가 켜졌다 꺼지며 공유용 클립에 그 전환이 그대로 박제된다(캡처는 화면 그대로 담아서 되돌릴 수 없다).
       if (!this.recording) this.lite = pickQuality(this.fps, this.lite)
     }
+  }
+
+  /** 현재 시뮬 틱(레벨 시작 기준 리플레이·판정용). */
+  get currentTick() {
+    return this.tick
+  }
+
+  /** 틱·버퍼 인덱스·획 시작점을 초기화 — 레벨 시작/Reset 시 upload와 함께 호출해 결정적 재생을 보장한다. */
+  resetTick() {
+    this.tick = 0
+    this.cur = 0
+    this.prev.x = -1
+    this.prev.y = -1
   }
 
   start() {
