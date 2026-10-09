@@ -46,3 +46,15 @@ CREATE TABLE IF NOT EXISTS votes (
 
 -- 투표 레이트리밋(IP당 시간당 상한) COUNT가 풀스캔 안 하도록.
 CREATE INDEX IF NOT EXISTS idx_votes_ip ON votes(ip, created_at);
+
+-- 데일리 챌린지 결과 — IP당 하루 1건(첫 클리어). 순위표 없음: 워커엔 GPU가 없어 플레이를 재생 검증할 수 없어서
+-- 조작돼도 피해가 작은 집계(백분위·별 분포)만 낸다. ip는 scenes와 같은 SHA-256 앞 12바이트.
+CREATE TABLE IF NOT EXISTS daily_results (
+  day        INTEGER NOT NULL,
+  level_id   TEXT NOT NULL,
+  ink        INTEGER NOT NULL,
+  stars      INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  ip         TEXT NOT NULL,
+  PRIMARY KEY (day, ip)
+);

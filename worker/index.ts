@@ -8,6 +8,7 @@
 //    localStorage 중복 차단만으론 시크릿 창 한 번이면 뚫린다.
 
 import { parseTrack } from './track'
+import { validateDaily, summarize } from './daily'
 import {
   HOT_WINDOW_DAYS,
   PAGE_SIZE,
@@ -371,6 +372,36 @@ export default {
     // ── 클라이언트 이벤트 계측 — 화이트리스트만 허용해 AE 카디널리티·남용을 원천 차단.
     // 기존 4개 지점(공유링크·업로드·투표·목록조회)과 달리 서버가 직접 관측 못 하는 클릭류
     // (예: Ko-fi 후원 링크)만 이걸로 받는다. sendBeacon으로 보내므로 응답 본문은 불필요.
+    // ── 데일리 챌린지: 제출(IP당 하루 1건) + 그날 통계(순위표 없음 — 서버가 플레이를 재생 검증할 수 없다) ──
+    if (p === '/api/daily' && request.method === 'POST') {
+      let body: unknown
+      try {
+        body = await request.json()
+      } catch {
+        return json({ error: 'bad json' }, 400)
+      }
+      const sub = validateDaily(body, Date.now())
+      if (!sub) return json({ error: 'invalid submission' }, 400)
+      const hash = await ipHash(request)
+      const r = await env.DB.prepare(
+        'INSERT OR IGNORE INTO daily_results (day, level_id, ink, stars, created_at, ip) VALUES (?,?,?,?,?,?)',
+      )
+        .bind(sub.day, sub.levelId, sub.ink, sub.stars, Date.now(), hash)
+        .run() as { meta?: { changes?: number } }
+      if (!r.meta?.changes) return json({ error: 'already submitted today' }, 409)
+      track(env, 'daily_submit', request, sub.levelId, sub.ink)
+      return json({ ok: true }, 201)
+    }
+    const dailyM = p.match(/^\/api\/daily\/(\d{1,6})\/stats$/)
+    if (dailyM && request.method === 'GET') {
+      const { results } = await env.DB.prepare('SELECT ink, stars FROM daily_results WHERE day=?')
+        .bind(Number(dailyM[1]))
+        .all<{ ink: number; stars: number }>()
+      const res = json(summarize(results ?? []))
+      res.headers.set('cache-control', 'public, max-age=60')
+      return res
+    }
+
     if (p === '/api/track' && request.method === 'POST') {
       let body: unknown
       try {
