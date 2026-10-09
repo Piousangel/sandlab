@@ -44,6 +44,11 @@ describe('재료 설명문', () => {
       }
     }
   })
+  it('초 단위 시간을 말하지 않는다 — 틱은 화면 주사율을 따라가서 60Hz/120Hz마다 다르다', () => {
+    for (const slug of Object.keys(COPY)) {
+      expect(`${COPY[slug].summary} ${text(slug)}`, slug).not.toMatch(/\b(a|one|two|few|several|couple of|\d+(\.\d+)?)\s+seconds?\b|\bper second\b/i) // 서수 'the second'는 허용
+    }
+  })
   it('없는 기능(challenge/puzzle)을 언급하지 않는다 — level은 수위 의미로 쓰여 제외', () => {
     for (const slug of Object.keys(COPY)) {
       expect(`${COPY[slug].summary} ${text(slug)}`, slug).not.toMatch(/\b(challenges?|puzzles?)\b/i)

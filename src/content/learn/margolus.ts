@@ -62,7 +62,7 @@ fn shouldSink(top : u32, bottom : u32) -> bool {
     {
       heading: 'Same input, same result',
       paragraphs: [
-        'The coin flips come from a hash of the block’s position and the tick number, not from a random-number generator whose state drifts over time. The same starting grid with the same brush strokes at the same ticks gives exactly the same result. That property is what will let a puzzle mode replay a level’s reference solution and confirm the level can be beaten.',
+        'The coin flips come from a hash of the block’s position and the tick number, not from a random-number generator whose state drifts over time. The same starting grid with the same brush strokes at the same ticks gives exactly the same result. That property makes a run reproducible: replaying the same strokes on the same tick numbers recreates a scene exactly, which is useful for checking a reported bug against the same starting point.',
       ],
     },
     {
@@ -76,7 +76,7 @@ fn shouldSink(top : u32, bottom : u32) -> bool {
       heading: 'What this does not prove',
       paragraphs: [
         'The checks cover the JavaScript copy, not the GPU code itself. The copy has to be kept in sync by hand, which is exactly how the gas bug could sit unnoticed: the copy faithfully reproduced it. How the result looks in a real browser still has to be checked by eye. The copy also leaves out reactions and lifetimes, which change material counts on purpose; fire burning out or salt dissolving in water is not a leak.',
-        'And the block grid alternates between only two positions. Some GPU sand projects use a four-step, partly random shift to remove any slight drift in one direction. Sandlab’s spread test shows a small left–right difference, not none. Finally, Sandlab advances one tick per screen refresh, so the sand moves at the pace of your display rather than at a fixed number of ticks per second.',
+        'And the block grid alternates between only two positions. Some GPU sand projects use a four-step offset pattern instead of two positions to remove any slight drift in one direction. Sandlab’s spread test shows a small left–right difference, not none. Finally, Sandlab advances one tick per screen refresh, so the sand moves at the pace of your display rather than at a fixed number of ticks per second.',
       ],
     },
   ],

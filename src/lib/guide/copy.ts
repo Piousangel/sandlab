@@ -34,7 +34,7 @@ export const COPY: Record<string, MaterialCopy> = {
     page: false,
     summary: 'Steam is a pale, faintly glowing gas released when water meets fire or lava, when acid meets water, or when fire melts ice.',
     body: [
-      'Steam has weight 1. It rises through empty space, anything heavier passes down through it, and it reacts with nothing. Each cell expires on its own after a couple of seconds and leaves empty space.',
+      'Steam has weight 1. It rises through empty space, anything heavier passes down through it, and it reacts with nothing. Each cell expires on its own after 160 ticks and leaves empty space; the simulation advances one tick per screen refresh, so how long that feels depends on your display.',
       'Unlike real vapour, it never condenses back into droplets. Water that has turned into steam is gone from the scene for good, so a large cloud is a record of how much liquid a fight with fire or lava has cost.',
     ],
     tip: 'Watch where steam is rising to find out where your water is being spent.',
@@ -43,7 +43,7 @@ export const COPY: Record<string, MaterialCopy> = {
     page: false,
     summary: 'Smoke is a dark, inert gas that rises and clears by itself, and it exists only where you paint it.',
     body: [
-      'Smoke shares steam’s weight of 1: it drifts upward through open space and heavier materials fall through it. No reaction produces it, burning included, and nothing reacts with it, so it can neither spread nor smother a flame. Each cell lasts a couple of seconds before vanishing, so a painted plume thins out from its oldest parts first rather than drifting forever.',
+      'Smoke shares steam’s weight of 1: it drifts upward through open space and heavier materials fall through it. No reaction produces it, burning included, and nothing reacts with it, so it can neither spread nor smother a flame. Each cell lasts 120 ticks before vanishing, so a painted plume thins out from its oldest parts first rather than drifting forever.',
     ],
     tip: 'Brush a little smoke above a chimney or a burning building for atmosphere; it clears itself and leaves no clutter in the finished picture.',
   },
@@ -367,11 +367,11 @@ export const COPY: Record<string, MaterialCopy> = {
 
   lava: {
     page: true,
-    summary: 'Lava is a heavy, brightly glowing liquid that ignites fuel without cooling down, and turns to stone when water or ice reaches it.',
+    summary: 'Lava is a heavy, brightly glowing liquid that sets wood, plant and oil alight without cooling down, and turns to stone when water or ice reaches it.',
     body: [
       'At weight 6, lava is the heaviest liquid. It sinks through water, acid and oil, and it also outweighs the weight-5 powders, so sand, salt and gunpowder float on a lava surface while lava poured over a sand heap seeps down to its base. Like other liquids it spreads sideways into lighter cells and levels into a flat pool. It runs as freely as water here; real lava is vastly more viscous, and Sandlab ignores that.',
       'Its glow is the brightest of any liquid and spills onto surrounding cells, making it the main light source in a dark scene after fire.',
-      'Lava is an igniter that is never consumed. Its table sets touching wood alight at 40 percent per check, plant at 60 percent and oil at 70 percent; in each case the neighbour becomes fire and the lava remains lava. Oil also carries its own lava entry at 80 percent, which is why an oil layer catches especially quickly. Gunpowder lights on contact as well.',
+      'Against wood, plant and oil, lava is an igniter that is not used up. Its table sets touching wood alight at 40 percent per check, plant at 60 percent and oil at 70 percent; in each case the neighbour becomes fire and the lava remains lava. Oil also carries its own lava entry at 80 percent, which is why an oil layer catches especially quickly. Gunpowder is the exception: its entry turns both cells into fire at 85 percent, so a gunpowder trail eats into the edge of a lava pool as it flashes.',
       'Cooling is the only thing that ends it. Water touching lava becomes steam while the lava hardens to stone, at 70 percent; ice melts into water while the lava again becomes stone, at 90 percent. Real volcanic islands and pillow basalt form through the same basic process, but the sandbox compresses it into one step with no gradual cooling, no cracking crust and no temperature value at all.',
       'Wall, stone and metal are unaffected by it, and acid has no entry for lava either.',
     ],
@@ -396,17 +396,17 @@ export const COPY: Record<string, MaterialCopy> = {
     page: true,
     summary: 'Fire is a short-lived, brightly glowing gas that rises, spreads into fuel and then burns out on its own.',
     body: [
-      'Fire has weight 1 and moves as a gas: it climbs through empty space, and anything heavier, from sand to water, drops straight through a flame. Each fire cell has a fixed lifetime of 45 ticks, and because the simulation advances once per screen refresh, an isolated flame is gone within about a second.',
+      'Fire has weight 1 and moves as a gas: it climbs through empty space, and anything heavier, from sand to water, drops straight through a flame. Each fire cell has a fixed lifetime of 45 ticks, and because the simulation advances once per screen refresh, an isolated flame is gone almost as soon as it appears; on a faster display it burns out sooner.',
       'It survives by spreading. The fire’s table turns touching wood into fire at 15 percent per check, plant at 30 percent and oil at 50 percent, and those fuels have matching entries of their own. Each ignition leaves the original flame burning and adds a new one, so a fire on a large fuel mass looks like a travelling front: freshly lit cells along the edge and empty space behind, where older flames have expired.',
       'Gunpowder is the fastest fuel of all, catching 85 percent of the time it meets a flame, which is why a powder trail burns end to end in a flash.',
-      'Several materials put it out. Water turns both itself and the flame into steam at 90 percent. Ice melts on contact at 60 percent, turning the flame into steam and itself into water. Stone, metal, wall, sand, salt and ash have no reaction with fire and simply block it.',
+      'Several materials put it out. Water turns both itself and the flame into steam at 90 percent. Ice melts on contact at 60 percent, turning the flame into steam and itself into water. Stone, metal, wall, sand, salt and ash have no reaction with fire and are never burned by it; the solids stop a flame from rising, while those powders simply fall straight through it.',
       'Real fire is a chemical reaction that needs oxygen and gives off heat, smoke and ash. Sandlab’s fire behaves more like a contagious glowing particle: it needs no air, transfers no heat beyond its fixed contact rules and leaves nothing behind. Smoke and ash appear only where you paint them.',
     ],
     tip: 'To contain a blaze, take the fuel out of its path or put water in front of it. Flames only move upward on their own, so fuel stored below or beside a fire is in less danger than fuel above it.',
     experiments: [
       {
         title: 'Burnout',
-        steps: 'Paint a dab of fire in an empty area. It drifts upward a short distance and fades within about a second, leaving nothing at all.',
+        steps: 'Paint a dab of fire in an empty area. It drifts upward a short distance and fades after 45 ticks, leaving nothing at all.',
       },
       {
         title: 'Fuel ladder',

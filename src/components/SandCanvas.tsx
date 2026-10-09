@@ -606,7 +606,17 @@ export default function SandCanvas() {
         />
         {/* init(adapter→device→6 파이프라인 컴파일)은 저사양·초기방문에서 0.5~2초. 그동안 검은 박스에
             탭이 조용히 버려지면 "고장"으로 오해해 이탈한다. 로딩 신호로 첫 5초 마찰을 없앤다. */}
-        {!ready && <div style={S.loading}>Starting the sandbox…</div>}
+        {!ready && (
+          <div style={S.loading}>
+            Starting the sandbox…
+            {/* 정적 HTML에 남는 소개 — WebGPU 없는 크롤러가 보는 홈의 본문(2026-10-09 재감사). 로딩 중 실제로 보인다. */}
+            <p style={S.loadingIntro}>
+              Sandlab is a falling-sand sandbox: paint sand, water, lava, acid and fire onto a 720,000-cell grid
+              and watch them pile up, flow, burn and react, simulated on your graphics card. Share any scene as a
+              link, publish it to the gallery, or read how it works in Learn.
+            </p>
+          </div>
+        )}
         {/* 온보딩 힌트는 캔버스 위 정중앙 — narrow(세로 폰)에선 캔버스가 상단 밴드라 stage 50%가
             듄 영역에 떨어져 어긋난다. 그래서 narrow에선 숨기고 아래 stageFillSub가 안내를 대신한다. */}
         {/* 헤드라인 — og.png(마케팅 카드)엔 있지만 실 화면엔 없던 브랜드 임팩트. 디자이너 3인
@@ -1157,6 +1167,7 @@ const S: Record<string, React.CSSProperties> = {
     letterSpacing: 0.3,
     textShadow: '0 1px 12px rgba(0,0,0,0.9)',
   },
+  loadingIntro: { margin: '10px auto 0', maxWidth: 420, fontSize: 13, fontWeight: 400, lineHeight: 1.55, opacity: 0.8, textAlign: 'center', whiteSpace: 'normal' },
   loading: {
     position: 'absolute',
     top: '50%',

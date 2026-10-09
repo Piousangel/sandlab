@@ -62,7 +62,7 @@ fn lifespanOf(mat : u32) -> u32 { return packedOf(mat) / 100u; }`,
       paragraphs: [
         'Every material gets exactly MAX_REACTIONS = 4 slots in rx, whether it uses them or not. GPUs dislike variable-length data: with a fixed stride, the reactions for material m are always at m * 4 through m * 4 + 3, so the lookup is a multiply and a short loop with no indirection. Unused slots are left as zeros, meaning withId 0 and chance 0, and the shader skips any slot whose chance is 0.',
         'Two sentinels let a row describe outcomes relative to itself. \'self\' is packed as 0xffff, and the shader replaces it with the reacting cell\'s own material. \'empty\' is just the ID of empty, 0. Salt touching water becomes empty and leaves the water alone, so it dissolves. Acid touching metal stays acid and turns the metal into empty.',
-        'Burning works through these sentinels as well. When wood touches fire, the wood becomes fire and the flame is left unchanged; the same holds for oil, plant and the other things lava and fire set alight. Each new fire cell burns out on its own 45-tick lifetime.',
+        'Burning works through these sentinels as well. When wood touches fire, the wood becomes fire and the flame cell is rewritten as fresh fire with a full lifetime rather than turning into wood; the same holds for oil, plant and the other things lava and fire set alight. Each new fire cell burns out on its own 45-tick lifetime.',
         'The trade-offs are real. Four is a hard ceiling: acid (metal, stone, wood, water) and lava (wood, plant, oil, ice) already use all four, and packMaterials() does slice(0, MAX_REACTIONS), so a fifth entry would be silently dropped. The first slot that matches and passes its roll wins. Every material pays for four slots even if it reacts with nothing, though 19 rows come to only 76 vec4s.',
       ],
     },
@@ -76,7 +76,7 @@ fn lifespanOf(mat : u32) -> u32 { return packedOf(mat) / 100u; }`,
     {
       heading: 'Docs generated from the same table',
       paragraphs: [
-        'The guide at /materials and the 18 pages under /materials/[slug] import PRESETS directly. src/lib/guide/reactions.ts walks every reaction row and writes two sentences: one for the material that owns the row ("Touching Lava: turns into Steam; the Lava turns into Stone.") and one for the partner\'s page, so the lava page lists what water does to it even though lava\'s own row never mentions water. It turns the self and empty sentinels into plain words such as "stays Acid" and "dissolves away". Weight, movement, lifetime and glow come from the same row.',
+        'The guide at /materials and the per-material pages under /materials/[slug] import PRESETS directly. src/lib/guide/reactions.ts walks every reaction row and writes two sentences: one for the material that owns the row ("Touching Lava: turns into Steam; the Lava turns into Stone.") and one for the partner\'s page, so the lava page lists what water does to it even though lava\'s own row never mentions water. It turns the self and empty sentinels into plain words such as "stays Acid" and "dissolves away". Weight, movement, lifetime and glow come from the same row.',
         'The result is that the numbers and outcomes in the docs cannot drift from behaviour. The descriptive paragraphs on each page are still written by hand in copy.ts, but the facts beside them are never hand-copied.',
       ],
     },
