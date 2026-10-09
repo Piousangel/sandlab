@@ -14,7 +14,7 @@ import { judge, initialCounts } from '@/lib/challenge/judge'
 import { ClearTracker, starsFor } from '@/lib/challenge/clear'
 import { InkLedger } from '@/lib/challenge/ink'
 import { brushAt } from '@/lib/challenge/replay'
-import { canPaintAt } from '@/lib/challenge/area'
+import { canPaintAt, areaFor } from '@/lib/challenge/area'
 import type { Level } from '@/lib/challenge/types'
 
 const MAX_TICKS = 3600
@@ -51,10 +51,11 @@ async function run(eng: SandEngine, level: Level, withSolution: boolean, maxTick
   eng.onTick = (t) => {
     const b = withSolution ? brushAt(level.solution, t, IDX) : null
     const slug = b ? PRESETS[b.mat].slug : ''
-    if (b && canPaintAt(level.paintArea, b.x, b.y, b.r) && !ink.spent(slug)) {
+    if (b && canPaintAt(areaFor(level, slug), b.x, b.y, b.r) && !ink.spent(slug)) {
       eng.brush.x = b.x
       eng.brush.y = b.y
       eng.brush.r = b.r
+      eng.inkCap = level.palette[slug]
       eng.brush.mat = b.mat
     } else {
       eng.brush.mat = 0xffffffff

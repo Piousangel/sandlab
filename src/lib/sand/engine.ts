@@ -102,6 +102,8 @@ export class SandEngine {
   private prev = { x: -1, y: -1 }
   /** 챌린지 모드: 빈 칸에만 칠한다(레벨 구조물 보호). 일반 샌드박스는 false. */
   paintEmptyOnly = false
+  /** 현재 브러시 재료의 누적 잉크 상한(셀). 기본 무제한. 챌린지가 재료별 예산으로 세팅한다. */
+  inkCap = 0xffffffff
   /** 프레임당 시뮬 틱 수. 기본 1. /play/verify가 검증을 빨리 돌릴 때만 올린다. */
   stepsPerFrame = 1
   /** 각 시뮬 틱 직전 호출(인자 = 이번 틱 번호). 리플레이가 brush를 틱 단위로 세팅한다. */
@@ -318,6 +320,7 @@ export class SandEngine {
         prevY: this.prev.y < 0 ? this.brush.y : this.prev.y,
         recording: this.recording, // 녹화 중에만 워터마크 합성
         paintEmptyOnly: this.paintEmptyOnly,
+        inkCap: this.inkCap,
       }),
     )
   }

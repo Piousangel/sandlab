@@ -7,8 +7,10 @@ export const oilSlick: Level = {
   title: 'Fire across water',
   blurb:
     'Water is a firebreak: flames cannot spread across it. Oil changes that. Oil is lighter than water, so it floats in a thin film on top, and fire spreads through oil quickly. Lay an unbroken slick across the pond, then light the near end with a little fire so the flames race over the water and burn the woodpile hanging over the far edge.',
-  hint: 'Lay the whole slick first and light it last. If you light it while it is still being poured, the fire runs out of fuel halfway.',
+  hint: 'Lay the whole slick first and light it last, from the left bank (fire can only be painted there). If you light it while it is still being poured, the fire runs out of fuel halfway.',
   paintArea: { x: 210, y: 300, w: 770, h: 182 },
+  // 불은 왼쪽 둑에서만 — 나무 옆에 불을 직접 칠하는 지름길 차단(2026-10-09 리뷰)
+  areaFor: { fire: { x: 210, y: 400, w: 200, h: 82 } },
   shapes: [
     { kind: 'rect', mat: 'wall', x: 200, y: 430, w: 8, h: 138 },
     { kind: 'rect', mat: 'wall', x: 200, y: 560, w: 800, h: 8 },

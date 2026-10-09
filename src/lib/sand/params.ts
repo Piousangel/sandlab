@@ -3,8 +3,10 @@ export interface ParamsState {
   W: number; H: number; offset: number; tick: number; matCount: number
   brushX: number; brushY: number; brushR: number; brushMat: number; prevX: number; prevY: number
   recording: boolean; paintEmptyOnly: boolean
+  /** 현재 브러시 재료의 누적 잉크 상한(셀). 0xffffffff = 무제한(일반 샌드박스). */
+  inkCap: number
 }
-/** 13개 필드(52B)를 uniform 정렬(16B)에 맞춰 64B로 패딩. */
+/** 14개 필드(56B)를 uniform 정렬(16B)에 맞춰 64B로 패딩. */
 export const PARAMS_BYTES = 64
 export function packParams(s: ParamsState): ArrayBuffer {
   const p = new ArrayBuffer(PARAMS_BYTES)
@@ -16,5 +18,6 @@ export function packParams(s: ParamsState): ArrayBuffer {
   i[9] = s.prevX; i[10] = s.prevY
   u[11] = s.recording ? 1 : 0
   u[12] = s.paintEmptyOnly ? 1 : 0
+  u[13] = s.inkCap >>> 0
   return p
 }

@@ -14,7 +14,7 @@ import { buildGrid, GRID_W, GRID_H } from '@/lib/challenge/grid'
 import { judge, initialCounts, describeGoal } from '@/lib/challenge/judge'
 import { ClearTracker, starsFor } from '@/lib/challenge/clear'
 import { InkLedger } from '@/lib/challenge/ink'
-import { canPaintAt } from '@/lib/challenge/area'
+import { canPaintAt, areaFor } from '@/lib/challenge/area'
 import { saveBest, type Best } from '@/lib/challenge/progress'
 import type { GoalStatus, Level, Zone } from '@/lib/challenge/types'
 
@@ -36,10 +36,17 @@ const zoneStyle = (z: Exclude<Zone, 'all'>) => ({
 export default function ChallengePlayer({ level, nextId }: { level: Level; nextId?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engRef = useRef<SandEngine | null>(null)
-  const gridRef = useRef(buildGrid(level))
-  const initRef = useRef(initialCounts(gridRef.current, level))
-  const inkRef = useRef(new InkLedger(level.palette))
-  const trackerRef = useRef(new ClearTracker())
+  // useRef(expr)는 렌더마다 expr을 평가한다 — 2.9MB 격자를 초당 ~10번 새로 만들던 문제(2026-10-09 리뷰).
+  // 레벨당 한 번만 만들도록 lazy useState로 고정한다.
+  const [grid] = useState(() => buildGrid(level))
+  const [init] = useState(() => initialCounts(grid, level))
+  const [ink] = useState(() => new InkLedger(level.palette))
+  const [tracker] = useState(() => new ClearTracker())
+  const gridRef = useRef(grid)
+  const initRef = useRef(init)
+  const inkRef = useRef(ink)
+  const trackerRef = useRef(tracker)
+  const inkBusyRef = useRef(false)
   const genRef = useRef(0)
   const busyRef = useRef(false)
   const downRef = useRef(false)
@@ -108,24 +115,40 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
   // 잉크 — 자주 읽어 예산 소진 즉시 붓을 멈춘다(판정 주기만 기다리면 0.5초치 초과 사용).
   useEffect(() => {
     if (!ready) return
+    if (!ready || err) return
     const id = setInterval(async () => {
       const eng = engRef.current
-      if (!eng || result) return
+      if (!eng || result || inkBusyRef.current) return // readback 중첩 금지(스펙 §1.3)
+      inkBusyRef.current = true
       const gen = genRef.current
-      const counts = await eng.readInk()
-      if (gen !== genRef.current) return
-      inkRef.current.update(counts)
-      const next: Record<string, number> = {}
-      for (const m of mats) next[m] = inkRef.current.left(m)
-      setLeft(next)
-      if (eng.brush.mat !== OFF && inkRef.current.spent(PRESETS[eng.brush.mat]?.slug ?? '')) eng.brush.mat = OFF
+      try {
+        const counts = await eng.readInk()
+        if (gen !== genRef.current) return
+        inkRef.current.update(counts)
+        // 값이 바뀔 때만 상태를 갱신 — 쓸데없는 리렌더 방지
+        setLeft((prev) => {
+          let changed = false
+          const next: Record<string, number> = {}
+          for (const m of mats) {
+            next[m] = inkRef.current.left(m)
+            if (next[m] !== prev[m]) changed = true
+          }
+          return changed ? next : prev
+        })
+        if (eng.brush.mat !== OFF && inkRef.current.spent(PRESETS[eng.brush.mat]?.slug ?? '')) eng.brush.mat = OFF
+      } catch {
+        /* 장치 손실·언마운트 중 readback 실패 — onLost가 안내한다 */
+      } finally {
+        inkBusyRef.current = false
+      }
     }, INK_MS)
     return () => clearInterval(id)
-  }, [ready, result])
+    // mats는 레벨에서 파생(레벨당 고정)
+  }, [ready, result, err])
 
   // 판정
   useEffect(() => {
-    if (!ready) return
+    if (!ready || err) return
     const id = setInterval(async () => {
       const eng = engRef.current
       if (!eng || busyRef.current || trackerRef.current.cleared) return
@@ -145,12 +168,14 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
           const stars = starsFor(ink, level.stars)
           setResult({ stars, ink, best: saveBest(level.id, { stars, ink }) })
         }
+      } catch {
+        /* 장치 손실·언마운트 중 readback 실패 — onLost가 안내한다 */
       } finally {
         busyRef.current = false
       }
     }, JUDGE_MS)
     return () => clearInterval(id)
-  }, [ready, level])
+  }, [ready, level, err])
 
   const toGrid = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
@@ -166,13 +191,14 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
     const { x, y } = toGrid(e)
     const slug = selRef.current
     const r = radiusRef.current
-    if (!canPaintAt(level.paintArea, x, y, r) || inkRef.current.spent(slug)) {
+    if (!canPaintAt(areaFor(level, slug), x, y, r) || inkRef.current.spent(slug)) {
       eng.brush.mat = OFF // 칠 영역 밖·잉크 소진 — 획은 유지하되 칠하지 않는다
       return
     }
     eng.brush.x = x
     eng.brush.y = y
     eng.brush.r = r
+    eng.inkCap = level.palette[slug] // GPU가 예산을 넘는 칠을 즉시 거부한다
     eng.brush.mat = IDX.get(slug) ?? OFF
   }
 
@@ -242,7 +268,7 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
         />
         {/* HUD 오버레이 — 포인터는 캔버스로 통과 */}
         <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: 10, overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', ...zoneStyle(level.paintArea), border: '1px dashed rgba(238,241,246,0.18)', borderRadius: 4 }} />
+          <div style={{ position: 'absolute', ...zoneStyle(areaFor(level, sel)), border: '1px dashed rgba(238,241,246,0.18)', borderRadius: 4 }} />
           {level.goals.map((g, i) =>
             'zone' in g && g.zone !== 'all' ? (
               <div

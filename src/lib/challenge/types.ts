@@ -32,6 +32,8 @@ export interface Level {
   shapes: Shape[]
   /** 플레이어가 칠할 수 있는 영역. 없으면 reach 목표가 '목표 구역에 직접 칠하기'로 끝난다. */
   paintArea: { x: number; y: number; w: number; h: number }
+  /** 재료별 칠 영역(선택). 예: 불은 왼쪽 둑에서만 — 연료 옆에 직접 불을 칠하는 지름길 차단. */
+  areaFor?: Record<string, { x: number; y: number; w: number; h: number }>
   /** 재료 slug → 잉크 예산(실제로 칠해진 셀 수) */
   palette: Record<string, number>
   /** 전부 AND */
