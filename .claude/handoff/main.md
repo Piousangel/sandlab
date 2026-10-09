@@ -1,3 +1,35 @@
+# 인계: Sandlab — 챌린지 모드 Phase 2–4 배포 완료(레벨 20 · 데일리 · 계측) / AdSense 재심사 대기
+- 갱신: 2026-10-09 / 브랜치: main / 커밋 상태: committed, prod Version b4e273df
+- 라이브: https://sandlab.app (/play 20레벨, /daily, /learn, /materials)
+
+## 2026-10-09 (2) 챌린지 모드 — 먼저 읽을 것
+
+- 코드: `src/lib/challenge/`(순수 코어: grid·judge(목표 레지스트리 fill/clear(max)/reach/protect/survive)·
+  ink(InkLedger=GPU 실제 칠한 셀)·clear·progress·area(paintArea/areaFor)·replay·daily/), `levels/*.ts`(20개),
+  `src/components/ChallengePlayer.tsx`(SandCanvas 무수정, 엔진 직접), `DailyPlayer.tsx`, `LevelVerifier.tsx`.
+- 엔진 변경: Params 64B(params.ts) — paintEmptyOnly·inkCap(GPU 잉크 상한), binding 5 잉크 atomic 카운터,
+  resetTick/onTick/stepsPerFrame/advance/settle. **기체 상승·연소 자리바꿈 버그 수정**(Phase 1).
+- **레벨 추가 절차(반드시)**: 레벨 파일 + levels/index.ts 한 줄 → `pnpm test`(정합성·**지름길** 테스트:
+  목표 재료 직접 낙하 금지, 점화 재료로 연료 옆 칠 금지) → `npx wrangler dev --port 8799 --local` →
+  `/play/verify` **ALL PASS**(모범답안 ≤3★·예산 내 + 방치 미클리어). 데일리 풀은 `/play/verify?set=daily`.
+  디버그: `?only=<id>&mode=solution|idle&ticks=N` → `window.__verify.census`(재료 집계).
+- **실측 물리 제약(레벨 설계 시)**: 액체 수평 확산 매우 느림(수평 흐름 의존 금지), 덩어리 가연물은 수 초 내 전소,
+  2줄 이상 용암은 윗줄 돌 껍질이 봉인, 기체는 위로 뜸 → 위에서 붙인 불은 가로 나무를 못 태움(아래서 붙여야),
+  빈칸에만 칠하기라 이미 찬 칸(기름막 등)엔 못 칠함, 불 꺼진 뒤 연료 몇 칸 남음(clear max).
+- **자동화에서 탭이 hidden이면 rAF 0** → 실제 UI 확인은 `/play/<id>?autoplay=1`(advance 루프, body.dataset.autoplay
+  = `cleared:<별>:<잉크>`), 모바일 폭은 같은 출처 페이지에 390px iframe을 띄워 확인. autoplay는 기록·계측·prod 제출 안 함.
+- 데일리: LAUNCH_UTC 2026-10-09(#1). 풀 30 = 레벨 20개 반전·이동 변형(d-026·d-028은 원본 배치 고정).
+  D1 `daily_results`(PK day,ip) 원격 생성됨. API: POST /api/daily(검증 worker/daily.ts), GET /api/daily/:day/stats.
+  검증 `python3 scripts/verify-daily.py http://localhost:8799`. 순위표 없음(결정).
+- 계측: /api/track에 challenge_start/clear/reset(ref=levelId, value=잉크) + 서버 daily_submit. AE dataset sandlab_events.
+- 리뷰 Minor(미처리): 멀티터치 downRef 공유·획 중 붓 크기 변경, a11y(캔버스 라벨·목표 텍스트·잉크 텍스트·다이얼로그 포커스),
+  progress JSON 손상 시 타 기록 소실, autoplay 'Play again' 정지(테스트 전용), track ref 위조 가능(카디널리티는 안전),
+  stats 엣지 캐시 없음, /daily 정적 h1 없음, 네이티브 공유 취소 시 복사 상자 노출.
+- 다음: Phase 5 포털 레벨팩(`portal/` + onRoundEnd 훅), 레벨 추가(데일리 풀 소진 전 — 30일 주기 순환 중),
+  사용자 실기기(폰) 확인 결과 반영, AdSense 재심사(색인 확인 후 1회).
+
+---
+
 # 인계: Sandlab — AdSense 반려 대응(콘텐츠 전면 보강 + 시뮬 버그 2건) 배포 → 다음은 챌린지 모드 Phase 2
 - 갱신: 2026-10-09 / 브랜치: main (feat/challenge-mode 병합) / 커밋 상태: committed
 - 라이브: https://sandlab.app · 레포: github.com/Piousangel/sandlab (private)
