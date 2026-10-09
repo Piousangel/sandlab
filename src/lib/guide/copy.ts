@@ -125,7 +125,7 @@ export const COPY: Record<string, MaterialCopy> = {
   lava: {
     summary: 'Lava is a heavy, glowing liquid that ignites fuel and hardens into stone when cooled.',
     body: [
-      'Lava is a liquid heavier than water and oil, so it sinks beneath both. It sets wood, plant and oil on fire on contact, and it keeps doing so because the lava itself is not used up.',
+      'Lava is a liquid heavier than water and oil, so it sinks beneath both. It sets wood and plant on fire on contact without being used up, so one lava flow can light a whole row of trees. Oil and gunpowder are different: they consume the lava cell they touch as they catch.',
       'Cooling turns it to rock. Water poured on lava boils into steam and leaves stone behind, and ice does the same even faster. That is how you build a crossing over a lava river.',
     ],
     tip: 'To cross lava, harden its surface with water or ice, then build on the stone crust. To burn something far away, lead lava to it in a channel.',
