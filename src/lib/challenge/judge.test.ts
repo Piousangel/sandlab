@@ -50,6 +50,15 @@ describe('judge', () => {
     g[105 * GRID_W + 105] = FIRE
     expect(judge(g, lvl([goal]), [0])[0]).toEqual({ met: false, progress: 0 })
   })
+  it('clear: max가 있으면 그 이하 잔량까지 허용(불 꺼진 뒤 귀퉁이에 남는 몇 칸)', () => {
+    const goal: Goal = { type: 'clear', zone, mat: 'fire', max: 2 }
+    const g = empty()
+    g[105 * GRID_W + 105] = FIRE
+    g[105 * GRID_W + 106] = FIRE
+    expect(judge(g, lvl([goal]), [0])[0].met).toBe(true)
+    g[105 * GRID_W + 107] = FIRE
+    expect(judge(g, lvl([goal]), [0])[0].met).toBe(false)
+  })
   it('reach: 1셀이면 충족', () => {
     const goal: Goal = { type: 'reach', zone, mat: 'water' }
     const g = empty()

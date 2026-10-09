@@ -43,7 +43,8 @@ export const GOALS: { [K in Goal['type']]: Spec<Extract<Goal, { type: K }>> } = 
   clear: {
     judge: (c, g) => {
       const n = countZone(c, g.zone, idOf(g.mat)).n
-      return { met: n === 0, progress: n === 0 ? 1 : 0 }
+      const ok = n <= (g.max ?? 0)
+      return { met: ok, progress: ok ? 1 : 0 }
     },
     describe: (g) =>
       g.zone === 'all' ? `Put out every bit of ${nameOf(g.mat)}` : `Remove all ${nameOf(g.mat)} from the marked area`,

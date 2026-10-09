@@ -10,8 +10,19 @@ import { fuse } from './fuse'
 import { dissolve } from './dissolve'
 import { stopTheFlow } from './stop-the-flow'
 import { oilSlick } from './oil-slick'
+import { layerCake } from './layer-cake'
+import { steamVent } from './steam-vent'
+import { trapdoor } from './trapdoor'
+import { twoLeaks } from './two-leaks'
+import { acidStairs } from './acid-stairs'
+import { deepRoots } from './deep-roots'
+import { doubleFuse } from './double-fuse'
+import { floatAndBurn } from './float-and-burn'
+import { saltAndSand } from './salt-and-sand'
+import { lavaFuse } from './lava-fuse'
 
-export const LEVELS: Level[] = [fillCup, overTheWall, putOut, lavaBridge, acidDoor, growUp, fuse, dissolve, stopTheFlow, oilSlick]
+export const LEVELS: Level[] = [fillCup, overTheWall, putOut, lavaBridge, acidDoor, growUp, fuse, dissolve, stopTheFlow, oilSlick,
+  layerCake, steamVent, trapdoor, acidStairs, saltAndSand, deepRoots, twoLeaks, doubleFuse, floatAndBurn, lavaFuse]
 
 export function levelById(id: string): Level | undefined {
   return LEVELS.find((l) => l.id === id)

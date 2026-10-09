@@ -8,7 +8,8 @@ export type Shape =
 
 export type Goal =
   | { type: 'fill'; zone: Zone; mat: string; min: number }
-  | { type: 'clear'; zone: Zone; mat: string }
+  /** max: 허용 잔량(기본 0). 불이 꺼진 뒤 귀퉁이에 몇 칸 남는 연료 때문에 '전부'가 비현실적일 때. */
+  | { type: 'clear'; zone: Zone; mat: string; max?: number }
   | { type: 'reach'; zone: Zone; mat: string }
   | { type: 'protect'; zone: Zone; mat: string; min: number }
   /** N틱 버티기 — protect만 있으면 시작부터 충족이라 방치 클리어가 된다. 위협이 지나갈 때까지 버티게 한다. */

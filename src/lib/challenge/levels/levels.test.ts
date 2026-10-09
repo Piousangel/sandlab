@@ -10,8 +10,8 @@ const inGrid = (z: { x: number; y: number; w: number; h: number }) =>
   z.x >= 0 && z.y >= 0 && z.w > 0 && z.h > 0 && z.x + z.w <= GRID_W && z.y + z.h <= GRID_H
 
 describe('레벨 정합성', () => {
-  it('10개, id 유일·URL-safe, levelById', () => {
-    expect(LEVELS.length).toBe(10)
+  it('20개, id 유일·URL-safe, levelById', () => {
+    expect(LEVELS.length).toBe(20)
     const ids = LEVELS.map((l) => l.id)
     expect(new Set(ids).size).toBe(ids.length)
     for (const id of ids) expect(id).toMatch(/^[a-z0-9-]+$/)
