@@ -6,3 +6,6 @@
  * (worker의 /s/:id·공유 링크는 url.origin을 써서 자동 적응 — 코드 변경 불필요.)
  */
 export const SITE = 'https://sandlab.app'
+
+/** 문의 주소 — /about, /privacy에 노출. Cloudflare Email Routing으로 운영자 메일함에 전달된다. */
+export const CONTACT_EMAIL = 'hello@sandlab.app'

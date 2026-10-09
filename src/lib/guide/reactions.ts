@@ -63,3 +63,8 @@ export function chanceLabel(chance: number): string {
   if (chance >= 0.03) return 'slow'
   return 'very slow'
 }
+
+/** /materials/[slug] 정적 생성 목록. empty는 가이드 페이지가 없다. */
+export function materialStaticParams(): { slug: string }[] {
+  return guideMaterials().map((m) => ({ slug: m.slug }))
+}
