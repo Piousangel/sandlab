@@ -12,6 +12,11 @@ export default function Page() {
   return (
     <ContentShell>
       <h1 style={{ fontSize: 30, lineHeight: 1.2, margin: '0 0 12px' }}>Challenges</h1>
+      <p style={{ margin: '0 0 16px' }}>
+        <a href="/daily" style={{ color: '#07090D', background: '#f5a623', padding: '8px 14px', borderRadius: 8, fontWeight: 700, textDecoration: 'none' }}>
+          Play today&apos;s daily →
+        </a>
+      </p>
       <p style={{ opacity: 0.85 }}>
         Each challenge is a small scene with a goal: fill a cup, get water across a lava pit, burn a woodpile on
         the far side of a pond. You get one or two materials and a limited amount of each, and you can only paint

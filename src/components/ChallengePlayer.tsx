@@ -35,7 +35,19 @@ const zoneStyle = (z: Exclude<Zone, 'all'>) => ({
   height: pct(z.h, GRID_H),
 })
 
-export default function ChallengePlayer({ level, nextId }: { level: Level; nextId?: string }) {
+export default function ChallengePlayer({
+  level,
+  nextId,
+  onClear,
+  resultExtra,
+}: {
+  level: Level
+  nextId?: string
+  /** 클리어 직후 1회(데일리 제출용). autoplay에선 autoplay 여부를 함께 넘긴다. */
+  onClear?: (r: { stars: 1 | 2 | 3; ink: number; autoplay: boolean }) => void
+  /** 클리어 카드 버튼 위에 끼울 내용(데일리 통계·공유) */
+  resultExtra?: React.ReactNode
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const engRef = useRef<SandEngine | null>(null)
   // useRef(expr)는 렌더마다 expr을 평가한다 — 2.9MB 격자를 초당 ~10번 새로 만들던 문제(2026-10-09 리뷰).
@@ -50,6 +62,8 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
   const trackerRef = useRef(tracker)
   const inkBusyRef = useRef(false)
   const autoplayRef = useRef(false)
+  const onClearRef = useRef(onClear)
+  onClearRef.current = onClear
   const genRef = useRef(0)
   const busyRef = useRef(false)
   const downRef = useRef(false)
@@ -179,6 +193,7 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
         // autoplay(검증용)는 기록을 남기지 않는다
         const best = autoplayRef.current ? { stars, ink } : saveBest(level.id, { stars, ink })
         setResult({ stars, ink, best })
+        onClearRef.current?.({ stars, ink, autoplay: autoplayRef.current })
         if (autoplayRef.current) document.body.dataset.autoplay = `cleared:${stars}:${ink}`
         else trackEvent('challenge_clear', level.id, ink)
       }
@@ -301,6 +316,7 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
                 <p style={{ margin: '4px 0 14px', fontSize: 12.5, opacity: 0.55 }}>
                   3★ at {level.stars[0].toLocaleString('en-US')} ink or less
                 </p>
+                {resultExtra}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
                   {nextId && (
                     <a href={`/play/${nextId}`} style={{ ...btn, background: '#eef1f6', color: '#07090D', fontWeight: 650, textDecoration: 'none' }}>
@@ -308,7 +324,7 @@ export default function ChallengePlayer({ level, nextId }: { level: Level; nextI
                     </a>
                   )}
                   <button style={btn} onClick={restart}>Play again</button>
-                  <a href="/play" style={{ ...btn, textDecoration: 'none' }}>All levels</a>
+                  <a href="/play" style={{ ...btn, textDecoration: 'none' }}>{nextId === undefined && level.id.startsWith('d-') ? 'More challenges' : 'All levels'}</a>
                 </div>
               </div>
             </div>

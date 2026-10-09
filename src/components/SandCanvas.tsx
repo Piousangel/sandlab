@@ -669,6 +669,7 @@ export default function SandCanvas() {
             (2026-10-09 AdSense 적대 감사). 일반 <a>: 콘텐츠 페이지의 광고 로더가 캔버스로 따라오지 않게
             클라이언트 내비게이션을 쓰지 않는다. */}
         <nav style={S.brandNav}>
+          <a href="/daily" style={S.brandLink}>Daily</a>
           <a href="/play" style={S.brandLink}>Challenges</a>
           <a href="/learn" style={S.brandLink}>Learn</a>
           <a href="/materials" style={S.brandLink}>Materials</a>
