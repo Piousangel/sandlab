@@ -1,3 +1,40 @@
+# 인계: Sandlab — AdSense 반려 대응(콘텐츠 전면 보강 + 시뮬 버그 2건) 배포 → 다음은 챌린지 모드 Phase 2
+- 갱신: 2026-10-09 / 브랜치: main (feat/challenge-mode 병합) / 커밋 상태: committed
+- 라이브: https://sandlab.app · 레포: github.com/Piousangel/sandlab (private)
+
+## 2026-10-09 세션 요약 (먼저 읽을 것)
+
+**배경:** AdSense가 sandlab.app을 "게시자 콘텐츠 없는 화면에 광고 + 가치 없는 콘텐츠"로 반려(2026-09-21).
+사용자 요청: 게임 형식 확장(챌린지 모드) + AdSense 문제 해결 — "다시는 가치 없는 콘텐츠 소리 듣기 싫다".
+
+**결정·산출물**
+- 스펙: `docs/superpowers/specs/2026-10-09-challenge-mode-design.md` (목표+예산 퍼즐, 공용 코어 → sandlab.app
+  데일리 + 포털 레벨팩, 5단계 출시). Phase 1(AdSense)만 완료. 계획: `docs/superpowers/plans/2026-10-09-phase1-adsense-content.md`
+- 광고 로더는 루트 레이아웃에서 제거 → `ContentShell`(콘텐츠 페이지)에서만. 허용: /learn, /learn/*, /materials,
+  /materials/*, /about. `/privacy`·404·/·/gallery 광고 금지. `scripts/verify-ads.mjs`가 강제하고 `pnpm run deploy`에 연결됨.
+- 콘텐츠: /learn 기사 3편(src/content/learn/*.ts, 레지스트리 src/lib/learn/articles.ts), 재료 가이드
+  (/materials 허브 + page:true 재료 14쪽, 설명문 src/lib/guide/copy.ts — 재료 간 6단어 구절 공유 0·초 단위 시간·
+  미출시 기능 언급 금지를 copy.test.ts가 강제). 반응 문장은 materials.ts에서 자동 유도(reactions.ts).
+- 제작자 표기: **Piousangel**(사용자 결정, 실명 아님). 문의 hello@sandlab.app.
+- **시뮬 버그 2건 수정(실크롬 확인)**: ① 기체가 빈칸으로 가라앉음(shouldSink가 밀도 0/1 비교) → `weightOf`로 빈칸을
+  기체와 액체 사이로. verify-margolus에 기체 상승·기름 낙하 검사 추가(9/9). ② 연소 반응 other:'self'로 불이 나무로
+  바뀌던 자리 바꿈 → 상대 그대로. materials.test에 회귀 테스트.
+- vitest.config.ts 추가(@/ 별칭). `pnpm lint`는 원래부터 깨져 있음(eslint 미설치) — 손대지 않음.
+
+**사용자가 직접 할 일 (needsUser)**
+1. Cloudflare Email Routing: hello@sandlab.app → 운영자 메일함 전달(설정 전엔 반송).
+2. Search Console에 https://sandlab.app/sitemap.xml 제출, /learn·/materials 색인 확인.
+3. **AdSense 재심사는 색인 확인 후(2~4주) 한 번만.** 반복 반려 시 검토 버튼이 잠긴다(answer/7003627).
+4. fibercalc.site·quickminigames.site도 같은 사유로 반려 — 별도 레포, 같은 방법(로더 격리·원본 콘텐츠·검증 스크립트) 적용 가능.
+
+**다음 개발: 챌린지 모드 Phase 2** (스펙 §1·§2·§9-2) — 구현 계획부터 새로 쓴다(SandCanvas 1,300줄 구조 파악 필요).
+재감사 남은 minor: 홈 푸터 없음, history 기사의 Noita 개발자 1명 누락, 검증 불가 주장 2건(GameSetWatch 2005-12-24,
+Powder Game 9.2 HTML5 동기).
+
+---
+
+(이하 이전 인계 — 2026-08-13 기준)
+
 # 인계: Sandlab — 수익화 팀 회의 2라운드 → CrazyGames 포털 임베드 빌드 완료.
 - 갱신: 2026-08-13 / 브랜치: main / 커밋 상태: committed
   (프로덕션은 Ko-fi 계측까지만 배포됨, Version ID afbacbb5-3fa4-4005-9abe-5a74075d12b1 —
