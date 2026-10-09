@@ -7,8 +7,9 @@ import type { Level } from '../types'
 import { transformLevel, xRange } from './transform'
 import { DAILY_STARS } from './stars'
 
-/** 데일리 #1 = 2026-10-10 00:00 UTC */
-export const LAUNCH_UTC = Date.UTC(2026, 9, 10)
+/** 데일리 #1 = 2026-10-09 00:00 UTC — 코드가 배포된 날. 하루 늦게 잡았더니 출시 전 플레이가 #1을
+ *  미리 소진했다(2026-10-09 리뷰). 출시일을 바꾸면 지난 데일리 번호가 전부 밀리니 고정한다. */
+export const LAUNCH_UTC = Date.UTC(2026, 9, 9)
 const DAY_MS = 86_400_000
 
 export function dayNumber(nowMs: number): number {

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { transformLevel, xRange } from './transform'
+import { transformLevel, xRange, swapSides } from './transform'
+import { DAILY_POOL } from './index'
 import { LEVELS } from '../levels'
 import { buildGrid, GRID_W } from '../grid'
 
@@ -34,5 +35,24 @@ describe('transformLevel', () => {
     const [lo, hi] = xRange(fill)
     expect(lo).toBeLessThanOrEqual(0)
     expect(hi).toBeGreaterThanOrEqual(0)
+  })
+})
+
+describe('반전 시 설명의 좌우도 바꾼다', () => {
+  it('swapSides: left↔right, 대소문자·하이픈 유지', () => {
+    expect(swapSides('Left ledge to the right-hand ledge, from the left bank.')).toBe('Right ledge to the left-hand ledge, from the right bank.')
+  })
+  it('반전된 변형의 blurb·hint는 원본을 좌우 바꾼 문장이다', () => {
+    const slick = LEVELS.find((l) => l.id === 'oil-slick')!
+    const m = transformLevel(slick, { dx: 0, mirror: true }, 'x')
+    expect(m.hint).toContain('from the right bank')
+    expect(transformLevel(slick, { dx: 0, mirror: false }, 'x').hint).toBe(slick.hint)
+  })
+  it('풀 전체: 원본 문장의 좌우 단어가 반전 여부와 맞게 들어 있다', () => {
+    for (const d of DAILY_POOL) {
+      const base = LEVELS.find((l) => l.title === d.title)!
+      const ok = d.hint === base.hint || d.hint === swapSides(base.hint)
+      expect(ok, d.id).toBe(true)
+    }
   })
 })

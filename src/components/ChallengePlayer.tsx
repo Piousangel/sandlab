@@ -188,6 +188,7 @@ export default function ChallengePlayer({
         eng.brush.mat = OFF
         downRef.current = false
         inkRef.current.update(await eng.readInk())
+        if (gen !== genRef.current) return // 그 사이 Reset — 이전 판의 클리어를 새 판에 띄우지 않는다
         const ink = inkRef.current.total()
         const stars = starsFor(ink, level.stars)
         // autoplay(검증용)는 기록을 남기지 않는다

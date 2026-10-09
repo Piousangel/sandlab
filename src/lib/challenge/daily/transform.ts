@@ -12,6 +12,14 @@ export interface Variant {
   mirror: boolean
 }
 
+/** 설명문의 좌우를 바꾼다(반전 변형용). 대소문자·'left-hand' 같은 합성어 유지. */
+export function swapSides(text: string): string {
+  return text.replace(/\b(left|right|Left|Right|LEFT|RIGHT)\b/g, (w) => {
+    const map: Record<string, string> = { left: 'right', right: 'left', Left: 'Right', Right: 'Left', LEFT: 'RIGHT', RIGHT: 'LEFT' }
+    return map[w]
+  })
+}
+
 export function transformLevel(level: Level, v: Variant, id: string): Level {
   const px = (x: number) => (v.mirror ? GRID_W - 1 - x : x) + v.dx
   const rect = <R extends Rect>(r: R): R => ({ ...r, x: (v.mirror ? GRID_W - r.x - r.w : r.x) + v.dx })
@@ -22,6 +30,9 @@ export function transformLevel(level: Level, v: Variant, id: string): Level {
   return {
     ...level,
     id,
+    // 반전하면 '왼쪽 둑에서만 불' 같은 안내가 거짓이 된다(2026-10-09 리뷰: d-006)
+    blurb: v.mirror ? swapSides(level.blurb) : level.blurb,
+    hint: v.mirror ? swapSides(level.hint) : level.hint,
     shapes: level.shapes.map(shape),
     paintArea: rect(level.paintArea),
     areaFor: level.areaFor && Object.fromEntries(Object.entries(level.areaFor).map(([m, a]) => [m, rect(a)])),

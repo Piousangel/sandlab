@@ -5,7 +5,7 @@
 import json, sys, subprocess, urllib.request, urllib.error, datetime
 
 B = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:8799'
-LAUNCH = datetime.datetime(2026, 10, 10, tzinfo=datetime.timezone.utc)
+LAUNCH = datetime.datetime(2026, 10, 9, tzinfo=datetime.timezone.utc)
 
 def parse(raw):
     try: return json.loads(raw or b'null')
