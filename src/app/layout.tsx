@@ -67,13 +67,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
         />
-        {/* Google AdSense 로더 — 심사·게재용. 자동광고는 대시보드에서 끄고 갤러리 하단 유닛만 쓴다
-            (캔버스 미학 보호). 승인 전엔 광고가 뜨지 않는다. */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9363381710674627"
-          crossOrigin="anonymous"
-        />
         {children}
       </body>
     </html>
