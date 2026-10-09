@@ -416,6 +416,19 @@ export class SandEngine {
     }
   }
 
+  /**
+   * rAF 없이 한 프레임(시뮬 stepsPerFrame틱 + 렌더) 진행 — /play/verify 전용. 탭이 안 보이면 크롬이 rAF를
+   * 멈춰서 검증이 사실상 정지한다. start() 없이 이걸 직접 돌리고 settle()로 GPU 큐를 비우며 진행한다.
+   */
+  advance() {
+    this.step(performance.now())
+  }
+
+  /** 제출한 GPU 작업이 끝날 때까지 대기(큐 폭주 방지). */
+  settle(): Promise<void> {
+    return this.device.queue.onSubmittedWorkDone()
+  }
+
   /** 현재 시뮬 틱(레벨 시작 기준 리플레이·판정용). */
   get currentTick() {
     return this.tick

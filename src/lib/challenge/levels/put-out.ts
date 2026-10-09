@@ -1,23 +1,26 @@
 import type { Level } from '../types'
-import { hold, drag } from './helpers'
+import { drag } from './helpers'
 
 export const putOut: Level = {
   v: 1,
   id: 'put-out',
   title: 'Put out the fire',
   blurb:
-    'A wooden hut has caught fire. Fire spreads into touching wood and burns it away, so if you wait, the hut is gone. Water touching fire turns both into steam almost at once, which makes it the fastest way to stop a blaze. Put out every flame while at least 60 percent of the hut is still standing.',
-  hint: 'Start where the fire is, on the left side of the hut, then spread water across the roof so new flames have nowhere to go.',
-  paintArea: { x: 500, y: 380, w: 220, h: 120 },
+    'Lava has spilled across a stone floor between stacks of wooden crates, and every crate it touches catches fire. Lava is not cooled by burning things, so the fires will keep starting as long as any lava is left. Water fixes both problems: it puts out flames on contact and hardens lava into stone. Leave no lava and no fire anywhere in the room.',
+  hint: 'Sweep along the whole spill, not just the flames. A single cell of lava left behind is enough to start the fires again.',
+  paintArea: { x: 380, y: 430, w: 440, h: 110 },
   shapes: [
-    { kind: 'rect', mat: 'wood', x: 560, y: 510, w: 100, h: 90 },
-    { kind: 'rect', mat: 'fire', x: 548, y: 530, w: 12, h: 70 },
+    { kind: 'rect', mat: 'wall', x: 380, y: 560, w: 440, h: 40 },
+    { kind: 'rect', mat: 'lava', x: 420, y: 559, w: 360, h: 1 },
+    { kind: 'rect', mat: 'wood', x: 400, y: 530, w: 20, h: 30 },
+    { kind: 'rect', mat: 'wood', x: 590, y: 540, w: 20, h: 18 },
+    { kind: 'rect', mat: 'wood', x: 780, y: 530, w: 20, h: 30 },
   ],
-  palette: { water: 20000 },
+  palette: { water: 9000 },
   goals: [
+    { type: 'clear', zone: 'all', mat: 'lava' },
     { type: 'clear', zone: 'all', mat: 'fire' },
-    { type: 'protect', zone: { x: 560, y: 510, w: 100, h: 90 }, mat: 'wood', min: 0.6 },
   ],
-  stars: [9000, 14000],
-  solution: [hold(0, 'water', 10, 545, 480, 160), drag(160, 'water', 10, 545, 480, 650, 480, 160)],
+  stars: [7000, 8500],
+  solution: [drag(0, 'water', 8, 400, 500, 800, 500, 160)],
 }

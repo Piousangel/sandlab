@@ -17,6 +17,6 @@ export const acidDoor: Level = {
   ],
   palette: { acid: 6000 },
   goals: [{ type: 'reach', zone: { x: 528, y: 480, w: 144, h: 80 }, mat: 'acid' }],
-  stars: [1500, 3000],
+  stars: [1900, 3200],
   solution: [hold(0, 'acid', 6, 600, 250, 200)],
 }

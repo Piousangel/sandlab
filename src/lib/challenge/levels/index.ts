@@ -7,11 +7,11 @@ import { lavaBridge } from './lava-bridge'
 import { acidDoor } from './acid-door'
 import { growUp } from './grow-up'
 import { fuse } from './fuse'
-import { thaw } from './thaw'
+import { dissolve } from './dissolve'
 import { stopTheFlow } from './stop-the-flow'
 import { oilSlick } from './oil-slick'
 
-export const LEVELS: Level[] = [fillCup, overTheWall, putOut, lavaBridge, acidDoor, growUp, fuse, thaw, stopTheFlow, oilSlick]
+export const LEVELS: Level[] = [fillCup, overTheWall, putOut, lavaBridge, acidDoor, growUp, fuse, dissolve, stopTheFlow, oilSlick]
 
 export function levelById(id: string): Level | undefined {
   return LEVELS.find((l) => l.id === id)
