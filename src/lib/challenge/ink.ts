@@ -1,57 +1,49 @@
 /**
- * 잉크 계량 — 플레이어 붓질 캡슐이 덮은 '고유' 격자 픽셀 수(재료별). 칠이 실제로 됐는지
- * (paintEmptyOnly로 막혔는지)와 무관하게 센다: 구조물 위를 문질러 예산을 아끼는 우회를 막는다.
- * 셰이더의 가장자리 확률 침식은 무시 — 약간 과대계상(플레이어에게 불리한 쪽).
+ * 잉크 장부 — 잉크 = GPU paint 패스가 실제로 채운 셀 수(엔진의 재료별 atomic 카운터, engine.readInk).
+ * 처음엔 '붓질이 덮은 고유 픽셀'로 셌는데, 제자리에 붓을 대고 있으면 물이 계속 쏟아져도 같은 원이라
+ * 공짜가 됐다(2026-10-09). 실제 부은 양을 세야 예산이 의미가 있다.
  */
-import { GRID_W, GRID_H } from './grid'
-import { forEachCapsulePixel } from './geom'
+import { PRESETS, buildIndex } from '@/lib/sand/materials'
 
-export class InkMeter {
+const IDX = buildIndex(PRESETS)
+
+export class InkLedger {
   private readonly budget: Record<string, number>
-  private bits = new Map<string, Uint8Array>()
-  private count = new Map<string, number>()
+  private usedBy = new Map<string, number>()
 
   constructor(palette: Record<string, number>) {
     this.budget = { ...palette }
   }
 
-  stamp(mat: string, x0: number, y0: number, x1: number, y1: number, r: number): number {
-    if (!(mat in this.budget)) return 0
-    let b = this.bits.get(mat)
-    if (!b) {
-      b = new Uint8Array((GRID_W * GRID_H) >> 3)
-      this.bits.set(mat, b)
+  /** 엔진 카운터(재료 id 인덱스) 반영. 감소한 값은 늦게 도착한 이전 readback이라 무시한다. */
+  update(counts: Uint32Array): void {
+    for (const slug of Object.keys(this.budget)) {
+      const id = IDX.get(slug)
+      if (id === undefined) continue
+      const n = counts[id] ?? 0
+      if (n > (this.usedBy.get(slug) ?? 0)) this.usedBy.set(slug, n)
     }
-    let added = 0
-    const bits = b
-    forEachCapsulePixel(GRID_W, GRID_H, x0, y0, x1, y1, r, (i) => {
-      const byte = i >> 3
-      const mask = 1 << (i & 7)
-      if (!(bits[byte] & mask)) {
-        bits[byte] |= mask
-        added++
-      }
-    })
-    this.count.set(mat, (this.count.get(mat) ?? 0) + added)
-    return added
   }
 
   used(mat: string): number {
-    return this.count.get(mat) ?? 0
+    return this.usedBy.get(mat) ?? 0
   }
 
   left(mat: string): number {
     return Math.max(0, (this.budget[mat] ?? 0) - this.used(mat))
   }
 
+  spent(mat: string): boolean {
+    return this.left(mat) <= 0
+  }
+
   total(): number {
     let t = 0
-    for (const v of this.count.values()) t += v
+    for (const v of this.usedBy.values()) t += v
     return t
   }
 
   reset(): void {
-    this.bits.clear()
-    this.count.clear()
+    this.usedBy.clear()
   }
 }

@@ -1,48 +1,51 @@
 import { describe, it, expect } from 'vitest'
-import { InkMeter } from './ink'
+import { InkLedger } from './ink'
+import { buildIndex, PRESETS } from '@/lib/sand/materials'
 
-describe('InkMeter', () => {
-  it('같은 자리를 다시 칠하면 0을 센다', () => {
-    const m = new InkMeter({ water: 1000 })
-    const a = m.stamp('water', 100, 100, 100, 100, 3)
-    expect(a).toBeGreaterThan(0)
-    expect(m.stamp('water', 100, 100, 100, 100, 3)).toBe(0)
-    expect(m.used('water')).toBe(a)
+const idx = buildIndex(PRESETS)
+const counts = (m: Record<string, number>) => {
+  const c = new Uint32Array(64)
+  for (const [slug, n] of Object.entries(m)) c[idx.get(slug)!] = n
+  return c
+}
+
+// 잉크 = GPU paint 패스가 실제로 채운 셀 수(재료별 atomic 카운터). 제자리에 계속 붓는 것도 비용이 든다.
+describe('InkLedger', () => {
+  it('처음엔 전부 0, left = 예산', () => {
+    const l = new InkLedger({ water: 500, sand: 200 })
+    expect(l.used('water')).toBe(0)
+    expect(l.left('sand')).toBe(200)
+    expect(l.total()).toBe(0)
   })
-  it('r=0 수평 선분 길이 10 → 11픽셀', () => {
-    const m = new InkMeter({ sand: 1000 })
-    expect(m.stamp('sand', 0, 0, 10, 0, 0)).toBe(11)
+  it('GPU 카운터를 재료별로 반영', () => {
+    const l = new InkLedger({ water: 500, sand: 200 })
+    l.update(counts({ water: 120, sand: 30 }))
+    expect(l.used('water')).toBe(120)
+    expect(l.left('water')).toBe(380)
+    expect(l.total()).toBe(150)
   })
-  it('r=3 원(점) → 29픽셀 (x²+y² ≤ 9)', () => {
-    const m = new InkMeter({ sand: 1000 })
-    expect(m.stamp('sand', 50, 50, 50, 50, 3)).toBe(29)
+  it('팔레트 밖 재료(예: 레벨 반응으로 생긴 것)는 잉크로 치지 않는다', () => {
+    const l = new InkLedger({ water: 500 })
+    l.update(counts({ water: 10, lava: 999 }))
+    expect(l.total()).toBe(10)
   })
-  it('격자 밖은 세지 않는다', () => {
-    const m = new InkMeter({ sand: 1000 })
-    expect(m.stamp('sand', 0, 0, 0, 0, 3)).toBe(11) // 사분원 + 축
+  it('left는 0 아래로 안 가고, spent는 예산 소진 여부', () => {
+    const l = new InkLedger({ water: 100 })
+    l.update(counts({ water: 140 }))
+    expect(l.left('water')).toBe(0)
+    expect(l.spent('water')).toBe(true)
+    expect(l.used('water')).toBe(140) // 실제 사용량은 숨기지 않는다(소진 감지 지연만큼 초과 가능)
   })
-  it('재료마다 따로 센다(같은 자리 다른 재료는 새로 셈)', () => {
-    const m = new InkMeter({ sand: 1000, water: 1000 })
-    m.stamp('sand', 10, 10, 10, 10, 2)
-    expect(m.stamp('water', 10, 10, 10, 10, 2)).toBe(m.used('sand'))
-    expect(m.total()).toBe(m.used('sand') * 2)
+  it('카운터가 줄어든 값(늦게 도착한 이전 readback)은 무시', () => {
+    const l = new InkLedger({ water: 100 })
+    l.update(counts({ water: 50 }))
+    l.update(counts({ water: 20 }))
+    expect(l.used('water')).toBe(50)
   })
-  it('left는 예산-사용, 0 아래로 안 간다', () => {
-    const m = new InkMeter({ water: 5 })
-    m.stamp('water', 0, 0, 10, 0, 0)
-    expect(m.used('water')).toBe(11)
-    expect(m.left('water')).toBe(0)
-  })
-  it('팔레트 밖 재료는 무시', () => {
-    const m = new InkMeter({ water: 100 })
-    expect(m.stamp('lava', 10, 10, 10, 10, 3)).toBe(0)
-    expect(m.total()).toBe(0)
-  })
-  it('reset은 전부 지운다', () => {
-    const m = new InkMeter({ water: 100 })
-    m.stamp('water', 10, 10, 10, 10, 2)
-    m.reset()
-    expect(m.total()).toBe(0)
-    expect(m.left('water')).toBe(100)
+  it('reset은 0으로', () => {
+    const l = new InkLedger({ water: 100 })
+    l.update(counts({ water: 50 }))
+    l.reset()
+    expect(l.used('water')).toBe(0)
   })
 })

@@ -36,3 +36,12 @@ describe('pickQuality (적응형 블룸 스킵)', () => {
     expect(pickQuality(55, lite)).toBe(false) // 확실히 여유 → 복원
   })
 })
+
+import { INK_SLOTS } from './engine'
+import { PRESETS } from './materials'
+
+describe('잉크 카운터 슬롯', () => {
+  it('재료 수가 INK_SLOTS를 넘지 않는다(넘으면 atomic 인덱스가 버퍼 밖)', () => {
+    expect(PRESETS.length).toBeLessThanOrEqual(INK_SLOTS)
+  })
+})

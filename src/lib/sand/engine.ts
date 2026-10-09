@@ -17,6 +17,9 @@ import { packMaterials, type Material, EMPTY_ID } from './materials'
 import { SITE } from '../site'
 import { packParams, PARAMS_BYTES } from './params'
 
+/** 잉크 카운터 슬롯 수(재료 id 인덱스). 재료가 이보다 많아지면 늘린다(materials.test가 감시). */
+export const INK_SLOTS = 64
+
 export interface EngineOpts {
   canvas: HTMLCanvasElement
   width: number
@@ -54,6 +57,7 @@ export class SandEngine {
   private lightA!: GPUBuffer
   private lightB!: GPUBuffer
   private params!: GPUBuffer
+  private inkBuf!: GPUBuffer
   private propsBuf!: GPUBuffer
   private rxBuf!: GPUBuffer
 
@@ -157,6 +161,7 @@ export class SandEngine {
     this.lightA = d.createBuffer({ size: n * 16, usage: GPUBufferUsage.STORAGE })
     this.lightB = d.createBuffer({ size: n * 16, usage: GPUBufferUsage.STORAGE })
 
+    this.inkBuf = d.createBuffer({ size: INK_SLOTS * 4, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST })
     this.params = d.createBuffer({ size: PARAMS_BYTES, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST })
 
     const { props, rx } = packMaterials(this.mats)
@@ -212,6 +217,7 @@ export class SandEngine {
         { binding: 2, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
         { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'read-only-storage' } },
         { binding: 4, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'read-only-storage' } },
+        { binding: 5, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
       ],
     })
     const simPl = d.createPipelineLayout({ bindGroupLayouts: [simLayout] })
@@ -261,6 +267,7 @@ export class SandEngine {
             { binding: 2, resource: { buffer: this.params } },
             { binding: 3, resource: { buffer: this.propsBuf } },
             { binding: 4, resource: { buffer: this.rxBuf } },
+            { binding: 5, resource: { buffer: this.inkBuf } },
           ],
         }),
       )
@@ -454,6 +461,25 @@ export class SandEngine {
     return out
   }
 
+  /** 재료별 '실제로 칠한 셀 수'(paint 패스 atomic 카운터). 챌린지 잉크. */
+  async readInk(): Promise<Uint32Array<ArrayBuffer>> {
+    const d = this.device
+    const bytes = INK_SLOTS * 4
+    const staging = d.createBuffer({ size: bytes, usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ })
+    const enc = d.createCommandEncoder()
+    enc.copyBufferToBuffer(this.inkBuf, 0, staging, 0, bytes)
+    d.queue.submit([enc.finish()])
+    await staging.mapAsync(GPUMapMode.READ)
+    const out = new Uint32Array(staging.getMappedRange().slice(0))
+    staging.unmap()
+    staging.destroy()
+    return out
+  }
+
+  resetInk() {
+    this.device.queue.writeBuffer(this.inkBuf, 0, new Uint32Array(INK_SLOTS))
+  }
+
   upload(cells: Uint32Array<ArrayBuffer>) {
     this.device.queue.writeBuffer(this.cells[0], 0, cells)
     this.device.queue.writeBuffer(this.cells[1], 0, cells)
@@ -466,6 +492,7 @@ export class SandEngine {
     this.lightA?.destroy()
     this.lightB?.destroy()
     this.params?.destroy()
+    this.inkBuf?.destroy()
     this.propsBuf?.destroy()
     this.rxBuf?.destroy()
     this.watermark?.destroy()

@@ -52,6 +52,8 @@ ${COMMON}
 @group(0) @binding(2) var<uniform>             P     : Params;
 @group(0) @binding(3) var<storage, read>       props : array<vec4<f32>>;
 @group(0) @binding(4) var<storage, read>       rx    : array<vec4<u32>>;
+// 재료별로 paint가 실제 채운 셀 수 — 챌린지 잉크(엔진 readInk). 제자리 붓기도 비용이 든다.
+@group(0) @binding(5) var<storage, read_write> inkCount : array<atomic<u32>>;
 
 fn packedOf(mat : u32) -> u32 { return u32(props[mat * 2u].w); }
 fn movementOf(mat : u32) -> u32 { return packedOf(mat) % 10u; }
@@ -211,6 +213,7 @@ fn paint(@builtin(global_invocation_id) gid : vec3<u32>) {
   if (rand01(hash(u32(x) * 3571u + u32(y) * 6151u + P.tick * 97u)) < edge * 0.7) { return; }
   // 챌린지 모드: 레벨 구조물·기존 재료를 덮어 지우지 못하게 빈 칸에만 칠한다.
   if (P.paintEmptyOnly == 1u && matOf(dst[idx(x, y)]) != EMPTY) { return; }
+  atomicAdd(&inkCount[P.brushMat], 1u);
   dst[idx(x, y)] = mk(P.brushMat, u32(props[P.brushMat * 2u].w) / 100u);
 }
 `
