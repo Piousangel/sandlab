@@ -7,6 +7,7 @@
  * 수치만 자동이고, 설명문은 copy.ts에 손으로 쓴다(템플릿 문장은 저가치 판정 위험).
  */
 import { PRESETS, type Material, type Reaction } from '@/lib/sand/materials'
+import { COPY } from './copy'
 
 export interface ReactionLine {
   partner: string
@@ -77,7 +78,12 @@ export function chanceLabel(chance: number): string {
   return 'very slow'
 }
 
-/** /materials/[slug] 정적 생성 목록. empty는 가이드 페이지가 없다. */
+/**
+ * /materials/[slug] 정적 생성 목록. 설명문이 page:true인 재료만 개별 페이지를 갖는다 —
+ * 할 말이 적은 재료(벽·재·증기·연기)까지 페이지를 만들면 얇은 템플릿 페이지가 된다(2026-10-09 감사).
+ */
 export function materialStaticParams(): { slug: string }[] {
-  return guideMaterials().map((m) => ({ slug: m.slug }))
+  return guideMaterials()
+    .filter((m) => COPY[m.slug]?.page)
+    .map((m) => ({ slug: m.slug }))
 }

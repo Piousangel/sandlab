@@ -654,6 +654,14 @@ export default function SandCanvas() {
       <div style={S.brand}>
         <span style={{ fontWeight: 650, letterSpacing: -0.2 }}>Sandlab</span>
         <span style={S.brandSub}>no install · no sign-up · share as a link</span>
+        {/* 콘텐츠 페이지로 가는 정적 링크 — 없으면 /learn·/materials가 sitemap으로만 닿는 고아가 된다
+            (2026-10-09 AdSense 적대 감사). 일반 <a>: 콘텐츠 페이지의 광고 로더가 캔버스로 따라오지 않게
+            클라이언트 내비게이션을 쓰지 않는다. */}
+        <nav style={S.brandNav}>
+          <a href="/learn" style={S.brandLink}>Learn</a>
+          <a href="/materials" style={S.brandLink}>Materials</a>
+          <a href="/about" style={S.brandLink}>About</a>
+        </nav>
       </div>
 
       {/* fps·셀 수는 엔지니어에겐 자랑거리지만 일반 방문자에겐 "미완성 디버그 화면" 신호라
@@ -955,6 +963,8 @@ const S: Record<string, React.CSSProperties> = {
     pointerEvents: 'none',
   },
   brandSub: { fontSize: 11.5, opacity: 0.6, letterSpacing: 0.2 },
+  brandNav: { display: 'flex', gap: 10, marginLeft: 6, pointerEvents: 'auto' },
+  brandLink: { fontSize: 11.5, color: '#eef1f6', opacity: 0.55, textDecoration: 'none' },
   stat: {
     position: 'absolute',
     top: 'max(20px, env(safe-area-inset-top))',

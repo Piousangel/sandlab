@@ -23,11 +23,14 @@ export default function ContentShell({ children, ads = true }: { children: React
           flexWrap: 'wrap',
         }}
       >
-        <Link href="/" style={{ ...link, opacity: 1, fontWeight: 700, fontSize: 16 }}>
+        {/* 콘텐츠 밖(캔버스·갤러리)으로 나가는 링크는 일반 <a> — next/link 클라이언트 이동이면
+            여기서 로드된 광고 로더가 캔버스 화면까지 따라간다(2026-10-09 코드 리뷰). */}
+        <a href="/" style={{ ...link, opacity: 1, fontWeight: 700, fontSize: 16 }}>
           Sandlab
-        </Link>
+        </a>
+        <Link href="/learn" style={link}>Learn</Link>
         <Link href="/materials" style={link}>Materials</Link>
-        <Link href="/gallery" style={link}>Gallery</Link>
+        <a href="/gallery" style={link}>Gallery</a>
         <Link href="/about" style={link}>About</Link>
       </header>
       <main style={{ maxWidth: 760, margin: '0 auto', padding: '24px 18px 48px', lineHeight: 1.65, fontSize: 16 }}>
@@ -45,10 +48,12 @@ export default function ContentShell({ children, ads = true }: { children: React
           fontSize: 13,
         }}
       >
-        <Link href="/" style={link}>Open the sandbox</Link>
+        <a href="/" style={link}>Open the sandbox</a>
+        <Link href="/learn" style={link}>Learn</Link>
         <Link href="/materials" style={link}>Materials guide</Link>
         <Link href="/about" style={link}>About</Link>
         <Link href="/privacy" style={link}>Privacy</Link>
+        <span style={{ ...link, marginLeft: 'auto', opacity: 0.45 }}>Made by Piousangel</span>
       </footer>
     </div>
   )

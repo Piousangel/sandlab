@@ -183,6 +183,16 @@ export default function GalleryBrowser() {
         )}
       </header>
 
+      {/* 정적 HTML에 남는 소개 — 목록은 클라이언트 fetch라 크롤러엔 이 문단이 갤러리의 본문이다. */}
+      {!viewingCreator && (
+        <p style={S.intro}>
+          Scenes people painted in Sandlab and chose to publish. Every card is a live simulation: open one and
+          it keeps running, or press Remix to start your own version from it. Hot shows the most-voted scenes
+          from the last seven days, so new work gets a fair chance; Newest shows everything in order; Top
+          Creators ranks people who picked a display name. Voting needs no account.
+        </p>
+      )}
+
       {loading && <p style={S.msg}>Loading…</p>}
       {err && <p style={{ ...S.msg, color: '#ff8080' }}>{err}</p>}
 
@@ -374,7 +384,10 @@ export default function GalleryBrowser() {
         </div>
       )}
       <div style={S.support}>
-        made by one person ·{' '}
+        Made by Piousangel ·{' '}
+        <a href="/about" style={S.supportLink}>About</a> ·{' '}
+        <a href="/learn" style={S.supportLink}>Learn</a> ·{' '}
+        <a href="/privacy" style={S.supportLink}>Privacy</a> ·{' '}
         <a
           href="https://ko-fi.com/piousangel"
           target="_blank"
@@ -415,6 +428,7 @@ const S: Record<string, React.CSSProperties> = {
   tabOn: { background: 'rgba(255,255,255,0.11)', opacity: 1, fontWeight: 600 },
   count: { marginLeft: 'auto', fontSize: 12, opacity: 0.35, fontVariantNumeric: 'tabular-nums' },
   msg: { opacity: 0.5, fontSize: 14 },
+  intro: { opacity: 0.6, fontSize: 13.5, lineHeight: 1.6, maxWidth: 720, margin: '-8px 0 20px' },
   empty: {
     border: '1px dashed rgba(255,255,255,0.12)',
     borderRadius: 12,

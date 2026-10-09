@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "deploy": "next build && wrangler deploy"
+    "deploy": "next build && node scripts/verify-ads.mjs && wrangler deploy"
   },
   "dependencies": {
     "mediabunny": "^1.50.8",

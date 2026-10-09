@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { SITE } from '@/lib/site'
 import { materialStaticParams } from '@/lib/guide/reactions'
+import { ARTICLES } from '@/lib/learn/articles'
 
 // 정적 export에 필요 — 빌드 때 sitemap.xml 파일로 굽는다.
 export const dynamic = 'force-static'
@@ -11,6 +12,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: SITE, changeFrequency: 'weekly', priority: 1 },
     { url: `${SITE}/gallery`, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${SITE}/learn`, changeFrequency: 'weekly', priority: 0.8 },
+    ...ARTICLES.map((a) => ({
+      url: `${SITE}/learn/${a.slug}`,
+      lastModified: a.updated,
+      changeFrequency: 'monthly' as const,
+      priority: 0.8,
+    })),
     { url: `${SITE}/materials`, changeFrequency: 'monthly', priority: 0.7 },
     ...materialStaticParams().map(({ slug }) => ({
       url: `${SITE}/materials/${slug}`,
