@@ -12,7 +12,7 @@ const empty = () => new Uint32Array(GRID_W * GRID_H)
 const fill = (g: Uint32Array, x: number, y: number, w: number, h: number, m: number) => {
   for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) g[yy * GRID_W + xx] = m
 }
-const lvl = (goals: Goal[]): Level => ({ v: 1, id: 't', title: 't', blurb: '', hint: '', shapes: [], palette: {}, goals, stars: [1, 2], solution: [] })
+const lvl = (goals: Goal[]): Level => ({ v: 1, id: 't', title: 't', blurb: '', hint: '', paintArea: { x: 0, y: 0, w: 1, h: 1 }, shapes: [], palette: {}, goals, stars: [1, 2], solution: [] })
 const zone = { x: 100, y: 100, w: 10, h: 10 }
 
 describe('countZone', () => {
@@ -72,6 +72,21 @@ describe('judge', () => {
   it('목표 순서대로 상태를 돌려준다', () => {
     const goals: Goal[] = [{ type: 'clear', zone, mat: 'fire' }, { type: 'reach', zone, mat: 'water' }]
     expect(judge(empty(), lvl(goals), [0, 0]).map((s) => s.met)).toEqual([true, false])
+  })
+})
+
+describe('survive', () => {
+  it('지정 틱에 도달해야 충족, 진행률은 경과 비율', () => {
+    const goal: Goal = { type: 'survive', ticks: 1000 }
+    expect(judge(empty(), lvl([goal]), [0], 0)[0]).toEqual({ met: false, progress: 0 })
+    expect(judge(empty(), lvl([goal]), [0], 500)[0]).toEqual({ met: false, progress: 0.5 })
+    expect(judge(empty(), lvl([goal]), [0], 1000)[0]).toEqual({ met: true, progress: 1 })
+  })
+  it('tick 인자가 없으면 0으로 본다(시작부터 충족 금지)', () => {
+    expect(judge(empty(), lvl([{ type: 'survive', ticks: 10 }]), [0])[0].met).toBe(false)
+  })
+  it('설명 문구', () => {
+    expect(describeGoal({ type: 'survive', ticks: 1800 })).toBe('Hold out until the timer runs out')
   })
 })
 

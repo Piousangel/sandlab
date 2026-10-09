@@ -27,7 +27,7 @@ export function countZone(cells: Uint32Array, zone: Zone, matId: number): { n: n
 }
 
 type Spec<G extends Goal> = {
-  judge: (cells: Uint32Array, g: G, init: number) => GoalStatus
+  judge: (cells: Uint32Array, g: G, init: number, tick: number) => GoalStatus
   describe: (g: G) => string
 }
 
@@ -63,6 +63,10 @@ export const GOALS: { [K in Goal['type']]: Spec<Extract<Goal, { type: K }>> } = 
     },
     describe: (g) => `Keep at least ${Math.round(g.min * 100)}% of the ${nameOf(g.mat)} in the marked area`,
   },
+  survive: {
+    judge: (_c, g, _init, tick) => ({ met: tick >= g.ticks, progress: Math.min(1, tick / g.ticks) }),
+    describe: () => 'Hold out until the timer runs out',
+  },
 }
 
 function spec(g: Goal) {
@@ -74,8 +78,9 @@ export function initialCounts(cells: Uint32Array, level: Level): number[] {
   return level.goals.map((g) => (g.type === 'protect' ? countZone(cells, g.zone, idOf(g.mat)).n : 0))
 }
 
-export function judge(cells: Uint32Array, level: Level, init: number[]): GoalStatus[] {
-  return level.goals.map((g, i) => spec(g).judge(cells, g, init[i] ?? 0))
+/** tick = 레벨 시작 기준 시뮬 틱(survive용). 생략하면 0 — 시작부터 충족이 되지 않게. */
+export function judge(cells: Uint32Array, level: Level, init: number[], tick = 0): GoalStatus[] {
+  return level.goals.map((g, i) => spec(g).judge(cells, g, init[i] ?? 0, tick))
 }
 
 export function describeGoal(g: Goal): string {

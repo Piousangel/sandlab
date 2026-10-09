@@ -5,7 +5,7 @@ import type { Level } from './types'
 
 const idx = buildIndex(PRESETS)
 const lvl = (shapes: Level['shapes']): Level => ({
-  v: 1, id: 't', title: 't', blurb: '', hint: '', shapes, palette: {}, goals: [], stars: [1, 2], solution: [],
+  v: 1, id: 't', title: 't', blurb: '', hint: '', paintArea: { x: 0, y: 0, w: 1, h: 1 }, shapes, palette: {}, goals: [], stars: [1, 2], solution: [],
 })
 const at = (g: Uint32Array, x: number, y: number) => g[y * GRID_W + x] & 0xffff
 
