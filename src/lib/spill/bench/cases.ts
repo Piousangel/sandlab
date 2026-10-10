@@ -350,19 +350,47 @@ export function applyDue(c: BenchCase, sim: Sim): void {
   for (const a of c.actions) if (a.tick === sim.tick) sim.apply(a.action)
 }
 
-/** 케이스 하나를 끝까지 돌린다. now = 시간 함수(Node·브라우저 공통으로 performance.now). */
-export function runCase(c: BenchCase, sim: Sim, now: () => number): CaseRun {
+export interface CaseRunner {
+  /** 최대 n틱 진행. 끝났으면 true */
+  advance(n: number): boolean
+  finish(): CaseRun
+}
+
+/** 조금씩 나눠 돌릴 수 있는 실행기 — 브라우저 "run all"이 UI를 막지 않게 쓴다. */
+export function createRunner(c: BenchCase, sim: Sim, now: () => number): CaseRunner {
   sim.load(c.level)
   const obs = c.observe()
   let simMs = 0
-  while (sim.tick < c.maxTicks) {
-    applyDue(c, sim)
-    const t0 = now()
-    sim.step()
-    simMs += now() - t0
-    if (obs.onTick(sim)) break
+  let done = false
+  return {
+    advance(n) {
+      for (let k = 0; k < n && !done; k++) {
+        if (sim.tick >= c.maxTicks) { done = true; break }
+        applyDue(c, sim)
+        const t0 = now()
+        sim.step()
+        simMs += now() - t0
+        if (obs.onTick(sim)) done = true
+      }
+      if (sim.tick >= c.maxTicks) done = true
+      return done
+    },
+    finish() {
+      return { id: c.id, title: c.title, result: obs.result(sim), ticks: sim.tick, msPerTick: simMs / Math.max(1, sim.tick), hash: sim.hash() }
+    },
   }
-  return { id: c.id, title: c.title, result: obs.result(sim), ticks: sim.tick, msPerTick: simMs / Math.max(1, sim.tick), hash: sim.hash() }
+}
+
+/** 케이스 하나를 끝까지 돌린다. now = 시간 함수(Node·브라우저 공통으로 performance.now). */
+export function runCase(c: BenchCase, sim: Sim, now: () => number): CaseRun {
+  const r = createRunner(c, sim, now)
+  while (!r.advance(1 << 20));
+  return r.finish()
+}
+
+/** §7.3 FF 자동 상한: 평균 틱 2ms 이하 4x, 4ms 이하 2x, 그 외 1x */
+export function ffCap(msPerTick: number): 1 | 2 | 4 {
+  return msPerTick <= 2 ? 4 : msPerTick <= 4 ? 2 : 1
 }
 
 export function runStress(sim: Sim, now: () => number, ticks = 600): number {
