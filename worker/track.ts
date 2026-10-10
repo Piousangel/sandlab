@@ -24,7 +24,13 @@ export function parseTrack(body: unknown): { event: string; ref: string; value: 
     if (ref === null || !REF.test(ref)) return null
     return { event: b.event, ref, value }
   }
-  if (BY_UA.has(b.event)) return ref !== null && UA_REFS.has(ref) ? { event: b.event, ref, value } : null
+  if (BY_UA.has(b.event)) {
+    if (ref === null || !UA_REFS.has(ref)) return null
+    // value = 화면 코드. gpu_unsupported: 0=홈 샌드박스, 1=퍼즐. puzzle_land: 0만. 없는 화면을 만들지 않게 거부한다.
+    const raw = b.value === undefined ? 0 : b.value
+    const allowed = b.event === 'gpu_unsupported' ? [0, 1] : [0]
+    return allowed.includes(raw as number) ? { event: b.event, ref, value: raw as number } : null
+  }
   if (b.event === 'share_click') return ref !== null && SHARE_REFS.has(ref) ? { event: b.event, ref, value: 0 } : null
   return null
 }

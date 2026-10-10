@@ -50,3 +50,16 @@ describe('parseTrack — S1 계측(gpu_unsupported · puzzle_land · share_click
     expect(parseTrack({ event: 'share_click', ref: 'twitter' })).toBeNull()
   })
 })
+
+describe('parseTrack — S1 value는 화면 코드만(리뷰 5)', () => {
+  it('gpu_unsupported value는 0(홈)·1(퍼즐)만, 그 밖은 거부', () => {
+    expect(parseTrack({ event: 'gpu_unsupported', ref: 'kakao', value: 0 })?.value).toBe(0)
+    expect(parseTrack({ event: 'gpu_unsupported', ref: 'kakao', value: 1 })?.value).toBe(1)
+    expect(parseTrack({ event: 'gpu_unsupported', ref: 'kakao', value: 5 })).toBeNull()
+    expect(parseTrack({ event: 'gpu_unsupported', ref: 'kakao', value: 9294 })).toBeNull()
+  })
+  it('puzzle_land value는 0만, 그 밖은 거부', () => {
+    expect(parseTrack({ event: 'puzzle_land', ref: 'insta' })?.value).toBe(0)
+    expect(parseTrack({ event: 'puzzle_land', ref: 'insta', value: 1 })).toBeNull()
+  })
+})
