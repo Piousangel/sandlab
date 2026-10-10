@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback, Fragment } from 'react'
 import { SandEngine, WebGPUUnsupported } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
+import { dayNumber, dailyFor } from '@/lib/challenge/daily'
 import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
 import { uploadScene, getScene, listScenes, rememberMine, type SceneMeta } from '@/lib/sand/gallery'
 import { getCreatorName, setCreatorName, getCreatorId } from '@/lib/sand/creator'
@@ -141,6 +142,12 @@ export default function SandCanvas() {
   // h>w는 세로 폰/태블릿만 정확히 잡고 모든 landscape 데스크톱을 배제(절대값 임계의 오발동 회피).
   const stageRef = useRef<HTMLDivElement>(null)
   const [narrow, setNarrow] = useState(false)
+  // 오늘의 데일리(세로 폰 게임 입구 카드용) — 날짜(UTC)로 클라이언트에서 정한다
+  const [daily, setDaily] = useState<{ n: number; title: string } | null>(null)
+  useEffect(() => {
+    const n = dayNumber(Date.now())
+    setDaily({ n, title: dailyFor(n).title })
+  }, [])
   useEffect(() => {
     const el = stageRef.current
     if (!el) return
@@ -646,6 +653,21 @@ export default function SandCanvas() {
             <span style={S.stageFillSub}>Pour sand, water, lava — watch them react. Share it as a link.</span>
           </div>
         )}
+        {/* 세로 폰에서 그린 뒤 캔버스 아래가 통째로 비던 공간(2026-10-10 실기기 스크린샷) — 게임 입구로 쓴다.
+            경과 시간도 상단(헤더 링크와 겹쳤다) 대신 여기에 둔다. */}
+        {narrow && hasDrawn && (
+          <div style={{ ...S.stageFill, background: 'none', gap: 12 }}>
+            {daily && (
+              <a href="/daily" style={S.gameCard}>
+                <span style={S.gameCardKicker}>Daily #{daily.n} · new puzzle every day</span>
+                <span style={S.gameCardTitle}>{daily.title} →</span>
+                <span style={S.gameCardSub}>Same puzzle for everyone. Use the least material to beat them.</span>
+              </a>
+            )}
+            <a href="/play" style={S.gameLink}>Or try all 20 challenges</a>
+            {ready && <span style={S.gameStat}>{formatElapsed(elapsedSec)} in the sandbox</span>}
+          </div>
+        )}
         {remix && (
           <div style={S.remixBanner}>
             <span style={S.remixText}>
@@ -679,7 +701,7 @@ export default function SandCanvas() {
 
       {/* fps·셀 수는 엔지니어에겐 자랑거리지만 일반 방문자에겐 "미완성 디버그 화면" 신호라
           기본 노출에서 뺀다(디자이너 3인 리뷰 공통 지적). elapsedSec만 남겨 체류시간 장치로 쓴다. */}
-      {ready && hasDrawn && (
+      {ready && hasDrawn && !narrow && (
         <div style={S.stat}>{formatElapsed(elapsedSec)} in the sandbox</div>
       )}
 
@@ -823,7 +845,12 @@ export default function SandCanvas() {
       )}
 
       {!coarse && !narrow && <div style={S.hint}>Right-click to erase</div>}
-      {toast && <div style={S.toast} role="status" aria-live="polite">{toast}</div>}
+      {/* 세로 폰에선 상단 헤더 링크와 겹쳐서 도크 바로 위로 내린다 */}
+      {toast && (
+        <div style={narrow ? { ...S.toast, top: 'auto', bottom: dockH + 14 } : S.toast} role="status" aria-live="polite">
+          {toast}
+        </div>
+      )}
 
       {/* 고스트 커서 드래그 제스처 + 재료 칩 pulse 힌트 — 인라인 스타일은 keyframe을 못 써서 여기서만 주입한다. */}
       <style>{`
@@ -900,6 +927,24 @@ const S: Record<string, React.CSSProperties> = {
     paddingTop: 'max(56px, env(safe-area-inset-top))',
   },
   // 검정 데드스페이스 대신 바닥에서 올라오는 앰버 듄 글로우 + 브랜드 히어로.
+  gameCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    width: '100%',
+    maxWidth: 360,
+    padding: '14px 16px',
+    borderRadius: 12,
+    textDecoration: 'none',
+    color: '#eef1f6',
+    background: 'linear-gradient(135deg, rgba(245,166,35,0.18), rgba(245,166,35,0.05))',
+    border: '1px solid rgba(245,166,35,0.35)',
+  },
+  gameCardKicker: { fontSize: 11.5, opacity: 0.7, letterSpacing: 0.2 },
+  gameCardTitle: { fontSize: 18, fontWeight: 700 },
+  gameCardSub: { fontSize: 12.5, opacity: 0.7 },
+  gameLink: { fontSize: 13, color: '#eef1f6', opacity: 0.7 },
+  gameStat: { fontSize: 11, opacity: 0.4, fontVariantNumeric: 'tabular-nums' },
   stageFill: {
     flex: 1,
     minHeight: 0,
