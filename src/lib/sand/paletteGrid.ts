@@ -10,6 +10,16 @@ export interface PaletteGrid {
   dot: number
   /** 라벨 글자 크기(px) */
   label: number
+  /** 셀이 점+라벨을 담기에 너무 낮으면(분할 화면 등) 라벨을 숨긴다 — 넘친 라벨이 아래 행을 덮지 않게 */
+  showLabel: boolean
+}
+
+/** 라벨이 들어갈 최소 셀 높이 — 점 하한 18 + 간격 2 + 라벨 하한 9 + 여유 */
+const LABEL_MIN_CELL = 31
+
+/** 칩(점 + 간격 + 라벨) 세로 높이 — SandCanvas가 쓰는 것과 같은 식(라벨 line-height 1, 간격 = 점의 12%). */
+export function chipContentHeight(g: PaletteGrid): number {
+  return g.dot + (g.showLabel ? Math.round(g.dot * 0.12) + g.label : 0)
 }
 
 const MIN_COLS = 3
@@ -25,10 +35,10 @@ export function paletteGrid(w: number, h: number, n: number): PaletteGrid {
     if (cell > best.cell) best = { cols, rows, cell }
   }
   const cell = Math.max(0, best.cell)
-  return {
-    cols: best.cols,
-    rows: best.rows,
-    dot: Math.round(clamp(cell * 0.46, 18, 56)),
-    label: Math.round(clamp(cell * 0.15, 9, 14) * 2) / 2,
-  }
+  const showLabel = cell >= LABEL_MIN_CELL
+  const label = Math.round(clamp(cell * 0.15, 9, 14) * 2) / 2
+  // 라벨을 보일 때: 점 + 간격(12%) + 라벨이 셀 높이를 넘지 않게 점 상한을 둔다. 숨길 때: 점이 셀을 넘지 않게.
+  const dotFit = showLabel ? Math.floor((cell - label) / 1.12) : Math.floor(cell)
+  const dot = Math.max(18, Math.min(Math.round(clamp(cell * 0.46, 18, 56)), dotFit))
+  return { cols: best.cols, rows: best.rows, dot, label, showLabel }
 }
