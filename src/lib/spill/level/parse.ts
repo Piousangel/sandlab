@@ -5,6 +5,7 @@
 import type { LevelDef, TargetKind } from './define'
 import { INIT_LIFE, M, matId } from '../sim/materials'
 import { H, N, TILE, W } from '../sim/grid'
+import type { CellRect } from '../sim/sensors'
 
 export const MAP_COLS = W / 2
 export const MAP_ROWS = H / 2
@@ -16,12 +17,7 @@ export interface ParsedSpout {
   total: number
 }
 
-export interface CellRect {
-  x: number
-  y: number
-  w: number
-  h: number
-}
+export type { CellRect }
 
 export interface ParsedTarget extends CellRect {
   id: string

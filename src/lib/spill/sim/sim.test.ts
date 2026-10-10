@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { Sim } from './sim'
+import { tilePath } from './actions'
 import { M } from './materials'
 import { W, H } from './grid'
 import { defineLevel, type LevelDef } from '../level/define'
@@ -173,6 +174,21 @@ describe('Sim spout·액션', () => {
     run(sim, 100)
     expect(sim.count(M.water)).toBe(50)
     expect(sim.spoutRemaining(0)).toBe(0)
+  })
+
+  it('기체 spout는 위로 방출한다', () => {
+    const sim = new Sim()
+    sim.load(level((c) => c.rect(30, 60, 4, 1, 'S'), { spouts: { s1: { mat: 'steam', rate: 2, total: 10 } } }))
+    sim.step()
+    let above = 0
+    for (let x = 60; x < 68; x++) if (sim.grid.mat[119 * W + x] === M.steam) above++
+    expect(above).toBe(2)
+  })
+
+  it('tilePath는 8방향 직선으로 스냅한다', () => {
+    expect(tilePath(0, 0, 3, 1)).toEqual([[0, 0], [1, 0], [2, 0], [3, 0]])
+    expect(tilePath(0, 0, 2, 3)).toEqual([[0, 0], [1, 1], [2, 2], [3, 3]])
+    expect(tilePath(5, 5, 5, 2)).toEqual([[5, 5], [5, 4], [5, 3], [5, 2]])
   })
 
   it('Trigger는 해당 gate 셀을 지운다', () => {
