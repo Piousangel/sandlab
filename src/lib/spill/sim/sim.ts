@@ -38,7 +38,10 @@ export class Sim {
   tick = 0
   salt = 0
   level: ParsedLevel | null = null
-  /** 마지막 step()에서 움직인 셀 수(Margolus + 확산) — 실패 판정 (a)용 */
+  /**
+   * 마지막 step()에서 움직인 셀 수(Margolus + 확산) — 실패 판정 (a)용.
+   * 압력도 관성도 없는 액체는 옆으로 가지 않으므로 흐름이 끝나면 0으로 떨어진다(리뷰 S0 #3).
+   */
   lastMoved = 0
   lastReactions = 0
   /** 지금 타고 있는 가연 고체 셀 수 */

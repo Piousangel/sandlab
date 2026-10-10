@@ -4,11 +4,13 @@
  * 의미론은 샌드박스 SIM_WGSL simulate()를 따른다: 세로 가라앉기 → 대각선(flip 무작위 순서)
  * → 액체 좌우 50% 교환. 무게는 밀도×2, 빈칸=3이라 기체는 빈칸과 자리를 바꾸며 떠오른다.
  * 퍼즐 추가분: 위가 막힌 기체는 아래 행에서 좌우로 50% 흘러 천장 vent를 찾아간다.
+ * 퍼즐 추가분(리뷰 S0 #3): 액체 좌우 교환은 위에서 눌리거나(PUSH) 관성(life >> 2)이 남은
+ * 액체만 한다. 아니면 바닥의 물방울이 무작위 걸음으로 영원히 움직인다(spread.ts 참고).
  * 격자 밖은 벽으로 친다(OOB). 반응·수명은 여기서 하지 않는다(react.ts, sim.ts).
  */
 import type { Grid } from './grid'
 import { H, W } from './grid'
-import { MATS, M, MV_GAS, MV_LIQUID, MV_STATIC } from './materials'
+import { LIQ_MOM_SHIFT, MATS, M, MV_GAS, MV_LIQUID, MV_STATIC, PUSH } from './materials'
 import { hash32 } from './rng'
 
 const OOB = 255
@@ -35,7 +37,7 @@ export function sinks(top: number, bottom: number): boolean {
 export function margolus(g: Grid, tick: number, salt: number): number {
   const { mat, life, moved } = g
   // 다른 모듈에서 온 상수·함수는 지역 별칭으로 — 번들러가 CJS 게터로 감싸면 핫 루프에서 느려진다
-  const _W = W, _H = H, _hash32 = hash32, _M = M
+  const _W = W, _H = H, _hash32 = hash32, _M = M, _PUSH = PUSH, SHIFT = LIQ_MOM_SHIFT
   const o = tick & 1
   let movedCells = 0
   for (let by = -o; by < _H; by += 2) {
@@ -80,17 +82,20 @@ export function margolus(g: Grid, tick: number, salt: number): number {
       }
 
       // 액체 좌우 (샌드박스와 같은 조건, 50%)
-      if (a !== OOB && b !== OOB) {
-        if (LIQ[a] && !sinks(a, c) && DENS[a] > DENS[b] && MOBILE[b]) {
+      if (a !== OOB && b !== OOB && (LIQ[a] | LIQ[b]) !== 0) {
+        // 위 행 셀의 압력: 블록 바로 위 행(by-1)을 읽는다
+        const upA = by > 0 && _PUSH[mat[ia - _W]] !== 0
+        const upB = by > 0 && _PUSH[mat[ib - _W]] !== 0
+        if (LIQ[a] && !sinks(a, c) && DENS[a] > DENS[b] && MOBILE[b] && (upA || la >> SHIFT !== 0)) {
           if (h & 2) { t = a; a = b; b = t; t = la; la = lb; lb = t; mv |= 3 }
-        } else if (LIQ[b] && !sinks(b, d) && DENS[b] > DENS[a] && MOBILE[a]) {
+        } else if (LIQ[b] && !sinks(b, d) && DENS[b] > DENS[a] && MOBILE[a] && (upB || lb >> SHIFT !== 0)) {
           if (h & 4) { t = a; a = b; b = t; t = la; la = lb; lb = t; mv |= 3 }
         }
       }
       if (c !== OOB && d !== OOB) {
-        if (LIQ[c] && DENS[c] > DENS[d] && MOBILE[d]) {
+        if (LIQ[c] && DENS[c] > DENS[d] && MOBILE[d] && (_PUSH[a] !== 0 || lc >> SHIFT !== 0)) {
           if (h & 8) { t = c; c = d; d = t; t = lc; lc = ld; ld = t; mv |= 12 }
-        } else if (LIQ[d] && DENS[d] > DENS[c] && MOBILE[c]) {
+        } else if (LIQ[d] && DENS[d] > DENS[c] && MOBILE[c] && (_PUSH[b] !== 0 || ld >> SHIFT !== 0)) {
           if (h & 16) { t = c; c = d; d = t; t = lc; lc = ld; ld = t; mv |= 12 }
         } else if (GAS[c] && d === _M.empty && !sinks(a, c)) {
           // 퍼즐 추가: 위가 막힌 기체는 옆으로 샌다

@@ -83,6 +83,48 @@ describe('Sim 이동 (Margolus + 확산)', () => {
     run(sim, 60)
     expect(front() - x0).toBeGreaterThanOrEqual(40)
   })
+
+  // 리뷰 S0 #3: 넓은 바닥의 액체가 영원히 미끄러지면 §4.2 실패 판정 (a) "이동 < 64가 90틱"이
+  // 성립하지 않아 모든 실패가 하드캡(45초)까지 간다. 압력도 관성도 없는 액체는 멈춰야 한다.
+  /** n틱 돌린 뒤 이어지는 90틱 동안 lastMoved 최댓값 */
+  const settledMax = (sim: Sim, n: number) => {
+    run(sim, n)
+    let mx = 0
+    for (let i = 0; i < 90; i++) { sim.step(); if (sim.lastMoved > mx) mx = sim.lastMoved }
+    return mx
+  }
+
+  it('넓은 바닥의 물방울 하나는 10초 안에 멈춘다', () => {
+    const sim = new Sim()
+    sim.load(level((c) => c.rect(40, 100, 1, 1, 'w')))
+    expect(settledMax(sim, 600)).toBe(0)
+  })
+
+  it('넓은 바닥의 얇은 웅덩이는 10초 안에 멈춘다', () => {
+    const sim = new Sim()
+    sim.load(level((c) => c.rect(30, 110, 10, 1, 'w')))
+    expect(settledMax(sim, 600)).toBe(0)
+  })
+
+  it('물기둥이 무너진 뒤(댐 붕괴) 20초 안에 실패 판정 (a) 문턱(이동 < 64) 아래로 멈춘다', () => {
+    const sim = new Sim()
+    sim.load(level((c) => c.rect(1, 70, 14, 49, 'w')))
+    expect(settledMax(sim, 1200)).toBeLessThan(64)
+  })
+
+  it('냄비 안 물은 수면이 평평해진다(관성 감쇠가 수평 맞추기를 막지 않는다)', () => {
+    const sim = new Sim()
+    // 바닥 위 폭 40셀 냄비 왼쪽 끝에 물기둥 → 퍼져서 수면 높이 차가 2셀 이하
+    sim.load(level((c) => c.rect(20, 90, 1, 29, '#').rect(41, 90, 1, 29, '#').rect(21, 70, 4, 30, 'w')))
+    run(sim, 900)
+    const heights: number[] = []
+    for (let x = 42; x < 82; x++) {
+      let n = 0
+      for (let y = 0; y < 238; y++) if (sim.grid.mat[y * W + x] === M.water) n++
+      heights.push(n)
+    }
+    expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(2)
+  })
 })
 
 describe('Sim 반응 (§7.2 반응표)', () => {
@@ -287,7 +329,7 @@ describe('결정성 (§7.2)', () => {
     const a = new Sim()
     a.load(lv())
     run(a, 240)
-    expect(a.hash()).toMatchInlineSnapshot(`"e83f7f63"`)
+    expect(a.hash()).toMatchInlineSnapshot(`"3c922519"`)
   })
 
   it('sim 디렉터리에 Math.random/Date/performance/부동소수 함수가 없다', () => {

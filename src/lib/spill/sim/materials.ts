@@ -91,3 +91,15 @@ export const isStatic = (m: number) => MOVE[m] === MV_STATIC
 export const isLiquid = (m: number) => MOVE[m] === MV_LIQUID
 export const isGas = (m: number) => m !== M.empty && MOVE[m] === MV_GAS
 export const weightOf = (m: number) => WEIGHT[m]
+
+/**
+ * 액체 압력·관성 (리뷰 S0 #3, 스펙 보완). 액체 셀의 life 칸 = (관성 << 2) | 방향.
+ * 방향: 0 없음, 1 = +1, 2 = −1. 관성은 남은 "압력 없이 옆으로 갈 수 있는 틱 수"다.
+ * 떨어지거나 위에서 눌리면(PUSH 재료가 바로 위) LIQ_MOM_MAX로 채워지고, 압력 없이 확산 패스를
+ * 지날 때마다 1씩 준다. 0이면 옆으로 가지 않는다 → 넓은 바닥의 물방울·얇은 막이 결국 멈춘다.
+ */
+export const LIQ_DIR_MASK = 3
+export const LIQ_MOM_SHIFT = 2
+export const LIQ_MOM_MAX = 40
+/** 아래 액체를 누르는(압력을 주는) 재료: 빈칸·기체가 아닌 이동 재료(액체·가루) */
+export const PUSH = Uint8Array.from({ length: 256 }, (_, m) => (m < MATS.length && (MOVE[m] === MV_LIQUID || MOVE[m] === MV_POWDER) ? 1 : 0))
