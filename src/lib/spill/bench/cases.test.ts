@@ -34,3 +34,12 @@ describe('목표 1 측정 (리뷰 S0 #4)', () => {
     expect(bodyFront(sim, 200, 238, 1)).toBe(90)
   })
 })
+
+describe('목표 7 대조군 (리뷰 S0 #2)', () => {
+  it('vent를 벽으로 바꾸면 목표 7이 FAIL한다 — vent 없이는 통과할 수 없는 측정', async () => {
+    const { ventLevel } = await import('./cases')
+    const c = BENCH_CASES.find((x) => x.id === 'vent')!
+    const r = runCase({ ...c, level: ventLevel(false) }, new Sim(), () => 0)
+    expect(r.result.pass, r.result.summary).toBe(false)
+  }, 60_000)
+})

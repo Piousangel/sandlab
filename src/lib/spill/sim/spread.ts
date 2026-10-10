@@ -44,6 +44,16 @@ PRESS[M.water] = 8
 PRESS[M.oil] = 8
 PRESS[M.acid] = 8
 
+/**
+ * 기체 압력 전달 거리(셀). 위로 못 오르는(위가 빈칸이 아닌) 기체가 바로 아래의 같은 기체에
+ * 밀리면, 같은 행에서 그 기체를 지나 첫 빈칸으로 옮긴다 — 천장 밑에 쌓인 증기가 옆으로 흘러
+ * vent를 찾아간다(리뷰 S0 #2). 한 줄짜리 층(아래에서 미는 기체 없음)은 흐르지 않는다.
+ * 기체의 life 칸은 수명이라 방향 기억이 없고, 방향은 d를 쓴다.
+ */
+export const GAS_PRESS = new Uint8Array(MATS.length)
+GAS_PRESS[M.steam] = 8
+GAS_PRESS[M.smoke] = 8
+
 /** 확산 패스에서 한 칸 더 떨어지는 액체 */
 export const FALL = new Uint8Array(MATS.length)
 FALL[M.water] = 1
@@ -59,7 +69,7 @@ OPEN[M.smoke] = 1
 export function spreadPass(g: Grid, tick: number): number {
   const { mat, life, moved } = g
   // 다른 모듈에서 온 상수·함수는 지역 별칭으로 — 번들러가 CJS 게터로 감싸면 핫 루프에서 느려진다
-  const _W = W, _H = H, _sinks = sinks, _M = M, _PUSH = PUSH, PRESS_SCAN = PRESS
+  const _W = W, _H = H, _sinks = sinks, _M = M, _PUSH = PUSH, PRESS_SCAN = PRESS, _GAS_PRESS = GAS_PRESS
   const SHIFT = LIQ_MOM_SHIFT, DIR = LIQ_DIR_MASK, MOM_MAX = LIQ_MOM_MAX, MOM_FULL = LIQ_MOM_MAX << LIQ_MOM_SHIFT
   let movedCells = 0
   for (let y = _H - 1; y >= 0; y--) {
@@ -71,7 +81,31 @@ export function spreadPass(g: Grid, tick: number): number {
       const i = row + x
       const m = mat[i]
       const n = SPREAD[m]
-      if (n === 0 || moved[i] !== 0) continue
+      if (n === 0 || moved[i] !== 0) {
+        const gp = _GAS_PRESS[m]
+        if (gp === 0 || moved[i] !== 0) continue
+        // 기체: 위가 빈칸이면 Margolus가 올린다. 아래에서 같은 기체가 밀 때만 옆으로 흐른다.
+        if (y === 0 || mat[i - _W] === _M.empty || !hasBelow || mat[i + _W] !== m) continue
+        let px = x
+        for (let s = 0; s < gp; s++) {
+          px += d
+          if (px < 0 || px >= _W) break
+          const jj = row + px
+          const q = mat[jj]
+          if (q === m) continue
+          if (q === _M.empty && moved[jj] === 0) {
+            mat[jj] = m
+            life[jj] = life[i]
+            mat[i] = _M.empty
+            life[i] = 0
+            moved[jj] = 1
+            moved[i] = 1
+            movedCells++
+          }
+          break
+        }
+        continue
+      }
       if (hasBelow && _sinks(m, mat[i + _W])) {
         if (FALL[m] !== 0 && OPEN[mat[i + _W]] !== 0) {
           const b = i + _W

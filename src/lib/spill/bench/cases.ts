@@ -10,7 +10,7 @@ import { MapCanvas } from '../level/mapcanvas'
 import { countRect } from '../sim/sensors'
 import { M } from '../sim/materials'
 import { W } from '../sim/grid'
-import type { Action, Sim } from '../sim/sim'
+import { Sim, type Action } from '../sim/sim'
 
 export const TICKS_PER_SEC = 60
 
@@ -308,38 +308,62 @@ const fuse: BenchCase = {
 }
 
 // ── 7. 증기 vs vent ─────────────────────────────────────────────
-// 닫힌 방, 천장 가운데 1/3만 vent. 왼쪽 아래 증기 spout가 하드캡(45s) 내내 뿜는다.
-// 천장 아래 2타일 띠의 증기 점유율이 계속 낮아야 한다(고이지 않음).
-const BAND = { x: C(1), y: C(1), w: C(78), h: 8 }
+// 닫힌 방(문자 20..60 × 40..70), 천장 오른쪽 일부만 vent. 증기 spout는 vent 바로 밑이 아니라
+// 8셀 왼쪽의 막힌 천장 밑에 있어서, 증기가 천장 밑을 옆으로 흘러가야 vent에 닿는다.
+// 같은 레벨에서 vent를 벽으로 바꾼 대조군을 나란히 돌려(리뷰 S0 #2) 다음을 모두 요구한다.
+//  - 대조군에서는 vent 자리 밑에 증기가 쌓인다(peak ≥ 25%) — 증기가 실제로 그 자리에 닿는다는 증거
+//  - vent가 있으면 그 자리 밑 증기 peak ≤ 15% — 쌓이지 않음(§7.2 목표 7)
+//  - 방 천장 띠 전체의 정상 상태 평균이 대조군의 75% 이하 — vent가 방을 실제로 비운다
+const VENT_X = 44 // 문자
+const VENT_W = 8
+const ROOM_CEIL = C(40) + 2 // 천장 아래 첫 셀 행
+const VENT_BAND = { x: C(VENT_X), y: ROOM_CEIL, w: C(VENT_W), h: 8 }
+const ROOM_BAND = { x: C(21), y: ROOM_CEIL, w: C(39), h: 8 }
+export function ventLevel(withVent: boolean): LevelDef {
+  return lvl('bench-vent', 'Vent', (c) => {
+    c.box(20, 40, 41, 31, '#')
+    if (withVent) c.rect(VENT_X, 40, VENT_W, 1, 'v')
+    c.rect(36, 46, 4, 1, 'S')
+  }, { spouts: { s1: { mat: 'steam', rate: 3, total: 3 * 2700 } } })
+}
 const vent: BenchCase = {
   id: 'vent',
   title: '7. Steam vs vent',
-  goal: 'steam does not pile up under a ceiling vent over the 45 s hard cap',
-  level: lvl('bench-vent', 'Vent', (c) => {
-    c.rect(28, 1, 24, 1, 'v')
-    c.rect(14, 30, 4, 1, 'S')
-  }, { spouts: { s1: { mat: 'steam', rate: 3, total: 3 * 2700 } } }),
+  goal: 'steam does not pile up under a ceiling vent over the 45 s hard cap (vs a no-vent control)',
+  level: ventLevel(true),
   actions: [],
   maxTicks: 2700,
   observe() {
-    let peak = 0
-    let sum = 0
-    let n = 0
-    const area = BAND.w * BAND.h
+    // 대조군은 관찰자 안에서 같은 틱만큼 나란히 돈다(시간 측정·해시에는 포함되지 않는다)
+    const ctl = new Sim()
+    ctl.load(ventLevel(false))
+    const ventArea = VENT_BAND.w * VENT_BAND.h
+    const roomArea = ROOM_BAND.w * ROOM_BAND.h
+    let peak = 0, ctlPeak = 0, roomSum = 0, ctlRoomSum = 0, n = 0
     return {
       onTick(sim) {
-        const s = countRect(sim.grid, BAND, M.steam)
-        if (s > peak) peak = s
-        if (sim.tick > 600) { sum += s; n++ }
+        while (ctl.tick < sim.tick) ctl.step()
+        const a = countRect(sim.grid, VENT_BAND, M.steam)
+        const b = countRect(ctl.grid, VENT_BAND, M.steam)
+        if (a > peak) peak = a
+        if (b > ctlPeak) ctlPeak = b
+        if (sim.tick > 600) {
+          roomSum += countRect(sim.grid, ROOM_BAND, M.steam)
+          ctlRoomSum += countRect(ctl.grid, ROOM_BAND, M.steam)
+          n++
+        }
         return false
       },
       result() {
-        const peakPct = (peak * 100) / area
-        const avgPct = n ? (sum * 100) / n / area : 0
+        const pk = (peak * 100) / ventArea
+        const cpk = (ctlPeak * 100) / ventArea
+        const room = n ? (roomSum * 100) / n / roomArea : 0
+        const ctlRoom = n ? (ctlRoomSum * 100) / n / roomArea : 0
+        const ratio = ctlRoomSum ? roomSum / ctlRoomSum : 1
         return {
-          pass: peakPct <= 25,
-          summary: `ceiling band peak ${peakPct.toFixed(1)}% steam (≤25%)`,
-          detail: `steady-state avg ${avgPct.toFixed(1)}% after 10s`,
+          pass: cpk >= 25 && pk <= 15 && ratio <= 0.75,
+          summary: `under vent peak ${pk.toFixed(1)}% (≤15) vs no-vent ${cpk.toFixed(1)}% (≥25)`,
+          detail: `room ceiling band avg ${room.toFixed(1)}% vs no-vent ${ctlRoom.toFixed(1)}% (ratio ${ratio.toFixed(2)} ≤ 0.75)`,
         }
       },
     }

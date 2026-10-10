@@ -232,6 +232,26 @@ describe('Sim 반응 (§7.2 반응표)', () => {
     expect(sawBurning).toBe(true)
   })
 
+  // 리뷰 S0 #2: "위가 막힌 기체는 옆으로 샌다"가 무작위 걸음뿐이라 천장 밑 증기 층이 거의 안 퍼졌다
+  // (16셀 덩어리가 30틱에 폭 14→16). 아래에서 같은 기체가 미는 셀은 층 끝 빈칸으로 옮겨져야 한다.
+  it('천장 밑에 갇힌 두꺼운 증기 층은 30틱 안에 옆으로 퍼진다', () => {
+    const sim = new Sim()
+    sim.load(level((c) => c.rect(10, 40, 60, 1, '#').rect(36, 41, 8, 4, 't')))
+    run(sim, 30)
+    let lo = W, hi = -1
+    for (let y = 82; y < 84; y++) for (let x = 0; x < W; x++) if (sim.grid.mat[y * W + x] === M.steam) { if (x < lo) lo = x; if (x > hi) hi = x }
+    expect(hi - lo + 1).toBeGreaterThanOrEqual(40)
+  })
+
+  it('천장 바로 밑 한 줄 증기는 밀어 주는 기체가 없으면 퍼지지 않는다(압력 없이 흐르지 않음)', () => {
+    const sim = new Sim()
+    sim.load(level((c) => c.rect(10, 40, 60, 1, '#').rect(36, 41, 8, 1, 't')))
+    run(sim, 30)
+    let lo = W, hi = -1
+    for (let x = 0; x < W; x++) if (sim.grid.mat[82 * W + x] === M.steam || sim.grid.mat[83 * W + x] === M.steam) { if (x < lo) lo = x; if (x > hi) hi = x }
+    expect(hi - lo + 1).toBeLessThan(40)
+  })
+
   it('vent는 닿은 기체를 지운다', () => {
     const sim = new Sim()
     sim.load(level((c) => c.rect(1, 1, 78, 1, 'v').rect(30, 3, 10, 4, 't')))
