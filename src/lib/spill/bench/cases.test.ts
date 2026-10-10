@@ -10,7 +10,7 @@ describe('S0 물리 목표치 7개 (§7.2)', () => {
     it(`${c.title}: ${c.goal}`, () => {
       const r = runCase(c, sim, now)
       expect(r.result.pass, r.result.summary).toBe(true)
-    })
+    }, 60_000) // 목표 7은 대조군까지 2×2700틱
   }
 
   it('벤치 실행은 결정적이다(두 번 돌려도 같은 해시)', () => {

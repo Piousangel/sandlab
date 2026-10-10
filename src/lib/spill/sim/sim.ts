@@ -6,6 +6,7 @@
  * 같은 레벨 + 같은 액션 + 같은 틱 → 비트 단위로 같은 격자(Node·브라우저 공통).
  */
 import type { LevelDef } from '../level/define'
+import { levelHash } from '../level/hash'
 import { parseLevel, type ParsedLevel } from '../level/parse'
 import { applyAction, type Action } from './actions'
 import { H, N, W, createGrid, setCell, type Grid } from './grid'
@@ -17,6 +18,8 @@ import { margolus } from './step'
 export type { Action } from './actions'
 
 export interface Snapshot {
+  /** 레벨 해시 lh — 다른 레벨의 snapshot을 restore하지 못하게(리뷰 Minor #6) */
+  lh: string
   tick: number
   mat: Uint8Array
   life: Uint8Array
@@ -38,6 +41,8 @@ export class Sim {
   tick = 0
   salt = 0
   level: ParsedLevel | null = null
+  /** 불러온 레벨의 해시 lh(§7.5) */
+  lh = ''
   /**
    * 마지막 step()에서 움직인 셀 수(Margolus + 확산) — 실패 판정 (a)용.
    * 압력도 관성도 없는 액체는 옆으로 가지 않으므로 흐름이 끝나면 0으로 떨어진다(리뷰 S0 #3).
@@ -53,6 +58,7 @@ export class Sim {
   load(def: LevelDef | ParsedLevel): void {
     const p = 'def' in def && 'mat' in def ? (def as ParsedLevel) : parseLevel(def as LevelDef)
     this.level = p
+    this.lh = levelHash(p.def)
     this.grid.mat.set(p.mat)
     this.grid.life.set(p.life)
     this.grid.moved.fill(0)
@@ -161,10 +167,11 @@ export class Sim {
   }
 
   snapshot(): Snapshot {
-    return { tick: this.tick, mat: this.grid.mat.slice(), life: this.grid.life.slice(), spoutLeft: this.spoutLeft.slice() }
+    return { lh: this.lh, tick: this.tick, mat: this.grid.mat.slice(), life: this.grid.life.slice(), spoutLeft: this.spoutLeft.slice() }
   }
 
   restore(s: Snapshot): void {
+    if (s.lh !== this.lh) throw new Error(`Sim.restore: snapshot is for level ${s.lh}, loaded ${this.lh}`)
     this.grid.mat.set(s.mat)
     this.grid.life.set(s.life)
     this.spoutLeft = s.spoutLeft.slice()

@@ -13,7 +13,7 @@ export const TH = H / TILE
 
 export interface Grid {
   mat: Uint8Array
-  /** 기체: 남은 수명 / 액체: 확산 관성(1=+x, 2=-x) / 가연 고체: 0 멀쩡함 / >0 타는 중(남은 틱) / gate·spout: 그룹 번호(1부터) */
+  /** 기체: 남은 수명 / 액체: (관성 << 2) | 방향(1=+x, 2=-x), materials.ts LIQ_* / 가연 고체: 0 멀쩡함 / >0 타는 중(남은 틱) / gate·spout: 그룹 번호(1부터) */
   life: Uint8Array
   /** 틱 내 중복 이동·반응 방지 플래그. 매 틱 0으로 지운다. */
   moved: Uint8Array

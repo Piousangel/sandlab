@@ -342,6 +342,23 @@ describe('결정성 (§7.2)', () => {
     expect(a.hash()).toBe(h1)
   })
 
+  it('snapshot → restore → step은 끊지 않고 돈 것과 같은 해시', () => {
+    const a = new Sim(), b = new Sim()
+    a.load(lv()); b.load(lv())
+    run(a, 100)
+    const snap = a.snapshot()
+    run(a, 100)
+    b.restore(snap)
+    run(b, 100)
+    expect(b.hash()).toBe(a.hash())
+  })
+
+  it('다른 레벨(또는 salt)의 snapshot은 restore를 거부한다 (리뷰 Minor #6)', () => {
+    const a = new Sim(), b = new Sim()
+    a.load(lv()); b.load({ ...lv(), salt: 8 })
+    expect(() => b.restore(a.snapshot())).toThrow()
+  })
+
   it('salt가 다르면 다른 결과', () => {
     const a = new Sim(), b = new Sim()
     a.load(lv()); b.load({ ...lv(), salt: 8 })
@@ -356,12 +373,15 @@ describe('결정성 (§7.2)', () => {
     expect(a.hash()).toMatchInlineSnapshot(`"3c922519"`)
   })
 
-  it('sim 디렉터리에 Math.random/Date/performance/부동소수 함수가 없다', () => {
+  it('sim 디렉터리(+ sim이 import하는 level 파일)에 Math.random/Date/performance/Math.imul 외 Math 함수가 없다', () => {
+    // 리뷰 Minor #3: Math.trunc/abs/min/max/hypot도 막고, sim이 쓰는 level/parse·define·hash도 본다.
+    // 나눗셈 `/`는 정규식으로 주석과 가를 수 없어 검사하지 않는다(현재는 정수로 나눠떨어지는 곳만 쓴다).
     const dir = __dirname
-    const banned = /Math\.random|Date\.|new Date|performance\.|Math\.(floor|round|ceil|sqrt|pow|sin|cos|exp|log)/
-    for (const f of readdirSync(dir)) {
-      if (!f.endsWith('.ts') || f.endsWith('.test.ts')) continue
-      const src = readFileSync(join(dir, f), 'utf8')
+    const banned = /Math\.random|Date\.|new Date|performance\.|Math\.(?!imul\b)[a-zA-Z]+/
+    const files = readdirSync(dir).filter((f) => f.endsWith('.ts') && !f.endsWith('.test.ts')).map((f) => join(dir, f))
+    for (const f of ['parse.ts', 'define.ts', 'hash.ts']) files.push(join(dir, '../level', f))
+    for (const f of files) {
+      const src = readFileSync(f, 'utf8')
       expect(banned.test(src), f).toBe(false)
     }
   })
