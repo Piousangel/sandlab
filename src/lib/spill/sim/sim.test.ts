@@ -128,6 +128,26 @@ describe('Sim 반응 (§7.2 반응표)', () => {
     expect(sim.count(M.fire)).toBe(0)
   })
 
+  it('불이 plank에 붙으면 "타는 중"(life>0)이 됐다가 불이 된다', () => {
+    const sim = new Sim()
+    sim.load(level((c) => c.rect(10, 60, 10, 2, 'p').rect(14, 62, 2, 2, 'f')))
+    const p0 = sim.count(M.plank)
+    run(sim, 20)
+    let burning = 0
+    for (let i = 0; i < W * H; i++) if (sim.grid.mat[i] === M.plank && sim.grid.life[i] > 0) burning++
+    expect(burning).toBeGreaterThan(0)
+    run(sim, 400)
+    expect(sim.count(M.plank)).toBeLessThan(p0)
+  })
+
+  it('물은 타는 plank를 끄지 않는다(물 받친 나무문이 타서 뚫려야 한다)', () => {
+    const sim = new Sim()
+    sim.load(level((c) => c.rect(10, 60, 10, 2, 'p').rect(10, 50, 10, 10, 'w').rect(9, 48, 1, 14, '#').rect(20, 48, 1, 14, '#').rect(14, 62, 2, 2, 'f')))
+    const p0 = sim.count(M.plank)
+    run(sim, 400)
+    expect(sim.count(M.plank)).toBeLessThan(p0)
+  })
+
   it('fuse는 불을 빠르게 전파한다', () => {
     const sim = new Sim()
     sim.load(level((c) => c.rect(10, 100, 40, 2, 'u').rect(10, 102, 2, 2, 'f')))
@@ -221,7 +241,7 @@ describe('결정성 (§7.2)', () => {
     const a = new Sim()
     a.load(lv())
     run(a, 240)
-    expect(a.hash()).toMatchInlineSnapshot(`"9b76f6f7"`)
+    expect(a.hash()).toMatchInlineSnapshot(`"0b6d78fb"`)
   })
 
   it('sim 디렉터리에 Math.random/Date/performance/부동소수 함수가 없다', () => {

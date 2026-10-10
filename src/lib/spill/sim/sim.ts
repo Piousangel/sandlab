@@ -2,7 +2,7 @@
  * Sim — 퍼즐 시뮬 진입점 (§7.2, §7.7). load / apply / step / snapshot / hash.
  *
  * 틱 순서: (1) 액션은 apply()가 틱 경계에서 즉시 적용 (2) Margolus (3) 수평 확산
- * (4) 반응 (5) 수명 감소 (6) spout 방출·vent 소거 (7) 센서는 호출자가 Sensors.update로.
+ * (4) 반응·연소 (5) 수명 감소 (6) spout 방출·vent 소거 (7) 센서는 호출자가 Sensors.update로.
  * 같은 레벨 + 같은 액션 + 같은 틱 → 비트 단위로 같은 격자(Node·브라우저 공통).
  */
 import type { LevelDef } from '../level/define'
@@ -10,7 +10,7 @@ import { parseLevel, type ParsedLevel } from '../level/parse'
 import { applyAction, type Action } from './actions'
 import { H, N, W, createGrid, setCell, type Grid } from './grid'
 import { LIFETIME, M, MOVE, MV_GAS } from './materials'
-import { reactPass } from './react'
+import { burnPass, reactPass } from './react'
 import { spreadPass } from './spread'
 import { margolus } from './step'
 
@@ -41,6 +41,8 @@ export class Sim {
   /** 마지막 step()에서 움직인 셀 수(Margolus + 확산) — 실패 판정 (a)용 */
   lastMoved = 0
   lastReactions = 0
+  /** 지금 타고 있는 가연 고체 셀 수 */
+  lastBurning = 0
   private spouts: SpoutState[] = []
   private spoutLeft = new Int32Array(0)
   private vents = new Int32Array(0)
@@ -94,6 +96,7 @@ export class Sim {
     let moved = margolus(g, t, this.salt)
     moved += spreadPass(g, t)
     this.lastReactions = reactPass(g, t, this.salt)
+    this.lastBurning = burnPass(g, t, this.salt)
     this.age()
     this.emit(t)
     this.vent()
@@ -103,10 +106,12 @@ export class Sim {
 
   private age(): void {
     const { mat, life } = this.grid
-    for (let i = 0; i < N; i++) {
+    const lifetime = LIFETIME
+    const n = N // 지역 별칭: 모듈 간 import가 CJS 게터로 감싸지면 루프 조건이 느려진다
+    for (let i = 0; i < n; i++) {
       const m = mat[i]
-      if (m === M.empty || LIFETIME[m] === 0) continue
-      if (life[i] <= 1) { mat[i] = M.empty; life[i] = 0 } else life[i]--
+      if (m === 0 || lifetime[m] === 0) continue
+      if (life[i] <= 1) { mat[i] = 0; life[i] = 0 } else life[i]--
     }
   }
 

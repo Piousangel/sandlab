@@ -34,18 +34,20 @@ export function sinks(top: number, bottom: number): boolean {
 /** 한 틱의 Margolus 패스. 반환값 = 자리를 바꾼 셀 수(이동량, 실패 판정용). */
 export function margolus(g: Grid, tick: number, salt: number): number {
   const { mat, life, moved } = g
+  // 다른 모듈에서 온 상수·함수는 지역 별칭으로 — 번들러가 CJS 게터로 감싸면 핫 루프에서 느려진다
+  const _W = W, _H = H, _hash32 = hash32, _M = M
   const o = tick & 1
   let movedCells = 0
-  for (let by = -o; by < H; by += 2) {
+  for (let by = -o; by < _H; by += 2) {
     const topIn = by >= 0
-    const botIn = by + 1 < H
-    for (let bx = -o; bx < W; bx += 2) {
+    const botIn = by + 1 < _H
+    for (let bx = -o; bx < _W; bx += 2) {
       const leftIn = bx >= 0
-      const rightIn = bx + 1 < W
-      const ia = topIn && leftIn ? by * W + bx : -1
-      const ib = topIn && rightIn ? by * W + bx + 1 : -1
-      const ic = botIn && leftIn ? (by + 1) * W + bx : -1
-      const id = botIn && rightIn ? (by + 1) * W + bx + 1 : -1
+      const rightIn = bx + 1 < _W
+      const ia = topIn && leftIn ? by * _W + bx : -1
+      const ib = topIn && rightIn ? by * _W + bx + 1 : -1
+      const ic = botIn && leftIn ? (by + 1) * _W + bx : -1
+      const id = botIn && rightIn ? (by + 1) * _W + bx + 1 : -1
       let a = ia >= 0 ? mat[ia] : OOB
       let b = ib >= 0 ? mat[ib] : OOB
       let c = ic >= 0 ? mat[ic] : OOB
@@ -62,7 +64,7 @@ export function margolus(g: Grid, tick: number, salt: number): number {
       let ld = id >= 0 ? life[id] : 0
       let mv = 0
       let t = 0
-      const h = hash32(bx >> 1, by >> 1, tick, salt)
+      const h = _hash32(bx >> 1, by >> 1, tick, salt)
 
       // 세로
       if (sinks(a, c)) { t = a; a = c; c = t; t = la; la = lc; lc = t; mv |= 5 }
@@ -90,10 +92,10 @@ export function margolus(g: Grid, tick: number, salt: number): number {
           if (h & 8) { t = c; c = d; d = t; t = lc; lc = ld; ld = t; mv |= 12 }
         } else if (LIQ[d] && DENS[d] > DENS[c] && MOBILE[c]) {
           if (h & 16) { t = c; c = d; d = t; t = lc; lc = ld; ld = t; mv |= 12 }
-        } else if (GAS[c] && d === M.empty && !sinks(a, c)) {
+        } else if (GAS[c] && d === _M.empty && !sinks(a, c)) {
           // 퍼즐 추가: 위가 막힌 기체는 옆으로 샌다
           if (h & 32) { t = c; c = d; d = t; t = lc; lc = ld; ld = t; mv |= 12 }
-        } else if (GAS[d] && c === M.empty && !sinks(b, d)) {
+        } else if (GAS[d] && c === _M.empty && !sinks(b, d)) {
           if (h & 64) { t = c; c = d; d = t; t = lc; lc = ld; ld = t; mv |= 12 }
         }
       }

@@ -62,10 +62,10 @@ describe('parseLevel (§7.5 맵 1/2 축척)', () => {
     expect(p.spouts).toEqual([{ key: 's1', mat: M.water, rate: 2, total: 100 }])
   })
 
-  it('가연 고체는 hp로 life를 초기화한다', () => {
+  it('가연 고체는 멀쩡한 상태(life 0)로 시작한다', () => {
     const p = parseLevel(defineLevel(base()))
     expect(p.mat[140 * W + 80]).toBe(M.plank)
-    expect(p.life[140 * W + 80]).toBeGreaterThan(0)
+    expect(p.life[140 * W + 80]).toBe(0)
   })
 
   it('타깃 rect는 타일 단위 → 셀 ×4', () => {

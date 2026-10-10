@@ -55,8 +55,14 @@ export function parseLevel(def: LevelDef): ParsedLevel {
   const spouts: ParsedSpout[] = []
   type Entry = { mat: number; tag: number }
   const legend = new Map<string, Entry>()
-  for (const [ch, spec] of Object.entries(def.legend)) {
+  for (const ch of Object.keys(def.legend))
     if (ch.length !== 1) throw new Error(`${def.id}: legend key must be one character: "${ch}"`)
+  // 맵에 실제로 나온 문자만 해석한다 — 공용 범례에 안 쓰는 spout가 있어도 된다.
+  const resolve = (ch: string): Entry | undefined => {
+    const hit = legend.get(ch)
+    if (hit) return hit
+    const spec = def.legend[ch]
+    if (spec === undefined) return undefined
     const [slug, group] = spec.split(':')
     const mat = matId(slug)
     let tag = INIT_LIFE[mat]
@@ -71,15 +77,19 @@ export function parseLevel(def: LevelDef): ParsedLevel {
       if (!spouts.some((s) => s.key === group)) spouts.push({ key: group, mat: matId(sd.mat), rate: sd.rate, total: sd.total })
       tag = spouts.findIndex((s) => s.key === group) + 1
     }
-    legend.set(ch, { mat, tag })
+    const e = { mat, tag }
+    legend.set(ch, e)
+    return e
   }
+  // 범례의 재료 이름 오타는 맵에 안 나와도 잡는다
+  for (const spec of Object.values(def.legend)) matId(spec.split(':')[0])
 
   const mat = new Uint8Array(N)
   const life = new Uint8Array(N)
   rows.forEach((row, ry) => {
     if (row.length !== MAP_COLS) throw new Error(`${def.id}: map row ${ry} has ${row.length} cols, expected ${MAP_COLS}`)
     for (let rx = 0; rx < MAP_COLS; rx++) {
-      const e = legend.get(row[rx])
+      const e = resolve(row[rx])
       if (!e) throw new Error(`${def.id}: map char "${row[rx]}" at row ${ry} col ${rx} is not in legend`)
       for (let dy = 0; dy < 2; dy++)
         for (let dx = 0; dx < 2; dx++) {
