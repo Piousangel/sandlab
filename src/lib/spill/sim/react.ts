@@ -8,6 +8,8 @@
  * 연소(스펙 "wood는 life 기반으로 약 2초 버팁니다"): fire/lava가 wood·plank에 붙으면 그 셀은
  * 곧장 불이 되지 않고 "타는 중"(life = BURN 틱)이 된다. burnPass가 타는 셀의 life를 깎고,
  * 위·옆(아래는 아님 — 불은 위로 번진다)으로 번지게 하고, 다 타면 불(fire)로 바꾼다.
+ * fuse도 같은 "타는 중" 상태를 거친다(8틱). 타는 fuse는 이웃 fuse 칸에 4방향 모두 0.9로 번진다 —
+ * 불(기체)이 떠올라 전선에서 떨어져도 전파가 끊기지 않게(리뷰 #1: 예전엔 salt 43%에서 중간에 꺼짐).
  */
 import type { Grid } from './grid'
 import { H, W } from './grid'
@@ -37,7 +39,7 @@ export const RULES: Rule[] = [
   { a: M.water, b: M.fire, chance: q16(50), aTo: M.steam, bTo: M.empty },
   { a: M.fire, b: M.wood, chance: q16(8), aTo: KEEP, bTo: KEEP, bIgnite: true },
   { a: M.fire, b: M.plank, chance: q16(15), aTo: KEEP, bTo: KEEP, bIgnite: true },
-  { a: M.fire, b: M.fuse, chance: q16(90), aTo: KEEP, bTo: M.fire },
+  { a: M.fire, b: M.fuse, chance: q16(90), aTo: KEEP, bTo: KEEP, bIgnite: true },
   { a: M.fire, b: M.oil, chance: q16(50), aTo: KEEP, bTo: M.fire },
   { a: M.lava, b: M.wood, chance: q16(30), aTo: KEEP, bTo: KEEP, bIgnite: true },
   { a: M.lava, b: M.plank, chance: q16(30), aTo: KEEP, bTo: KEEP, bIgnite: true },
@@ -54,6 +56,8 @@ export const RULES: Rule[] = [
 export const BURN_SPREAD = new Int32Array(MAT_COUNT)
 BURN_SPREAD[M.wood] = q16(8)
 BURN_SPREAD[M.plank] = q16(15)
+/** fuse는 위·옆·아래 어느 방향이든 다음 fuse 칸에 같은 확률로 번진다(전선) */
+BURN_SPREAD[M.fuse] = q16(90)
 /** 타는 셀 바로 위 빈칸에 불꽃(fire)이 피어오를 확률 */
 export const FLAME_Q16 = q16(20)
 
@@ -118,7 +122,6 @@ export function reactPass(g: Grid, tick: number, salt: number): number {
   return n
 }
 
-const Q_FUSE = q16(90)
 const Q_OIL = q16(50)
 const Q_ICE = q16(10)
 const FIRE_LIFE = INIT_LIFE[M.fire]
@@ -129,13 +132,18 @@ function burnInto(g: Grid, j: number, chanceQ16: number, h: number): void {
   const burn = BURN[t]
   if (burn !== 0) {
     if (life[j] === 0 && roll(h, chanceQ16 === 0 ? BURN_SPREAD[t] : chanceQ16)) { life[j] = burn; moved[j] |= REACTED }
-  } else if (t === M.fuse) {
-    if (roll(h, Q_FUSE)) { mat[j] = M.fire; life[j] = FIRE_LIFE; moved[j] |= REACTED }
   } else if (t === M.oil) {
     if (roll(h, Q_OIL)) { mat[j] = M.fire; life[j] = FIRE_LIFE; moved[j] |= REACTED }
   } else if (t === M.ice) {
     if (roll(h, Q_ICE)) { mat[j] = M.water; life[j] = 0; moved[j] |= REACTED }
   }
+}
+
+/** 옆으로 번질 확률. 0이면 burnInto가 대상 기본값(BURN_SPREAD 또는 fuse·기름·얼음 상수)을 쓴다. */
+function sideChance(src: number, t: number): number {
+  if (BURN[t] === 0) return 0
+  if (src === M.fuse && t === M.fuse) return BURN_SPREAD[t]
+  return BURN_SPREAD[t] >> 1
 }
 
 /** 타는 가연 고체 처리. 반환값 = 타는 셀 수(활동량) */
@@ -163,11 +171,11 @@ export function burnPass(g: Grid, tick: number, salt: number): number {
           if (_roll(h >>> 16, FLAME_Q16)) { mat[j] = _M.fire; life[j] = _INIT_LIFE[_M.fire]; moved[j] |= REACTED }
         } else burnInto(g, j, 0, h)
       }
-      // 옆 (위쪽 확률의 절반)
-      if (x > 0 && _BURN[mat[i - 1]] !== 0) burnInto(g, i - 1, BURN_SPREAD[mat[i - 1]] >> 1, h2)
-      else if (x > 0) burnInto(g, i - 1, 0, h2)
-      if (x + 1 < _W && _BURN[mat[i + 1]] !== 0) burnInto(g, i + 1, BURN_SPREAD[mat[i + 1]] >> 1, h3)
-      else if (x + 1 < _W) burnInto(g, i + 1, 0, h3)
+      // 옆 (위쪽 확률의 절반, 단 fuse→fuse는 전선이라 그대로)
+      if (x > 0) burnInto(g, i - 1, sideChance(m, mat[i - 1]), h2)
+      if (x + 1 < _W) burnInto(g, i + 1, sideChance(m, mat[i + 1]), h3)
+      // 아래: 타는 fuse만, 아래 fuse 칸으로
+      if (m === _M.fuse && y + 1 < _H && mat[i + _W] === _M.fuse) burnInto(g, i + _W, 0, remix(h3))
     }
   }
   return n

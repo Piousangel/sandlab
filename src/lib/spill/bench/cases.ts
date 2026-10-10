@@ -249,6 +249,16 @@ const ignite: BenchCase = {
 }
 
 // ── 6. fuse 전파 ────────────────────────────────────────────────
+/** 사각형 안의 아직 안 붙은 fuse 셀 수 */
+function unlit(sim: Sim, r: { x: number; y: number; w: number; h: number }): number {
+  let n = 0
+  for (let y = r.y; y < r.y + r.h; y++)
+    for (let x = r.x; x < r.x + r.w; x++) {
+      const i = y * W + x
+      if (sim.grid.mat[i] === M.fuse && sim.grid.life[i] === 0) n++
+    }
+  return n
+}
 // 1타일 두께 fuse 줄 왼쪽 끝 아래에 spark → 40셀 떨어진 곳까지 불이 닿는 시간.
 const FUSE_Y = 50 * 4 // 셀
 const FUSE_X0 = 10 * 4
@@ -263,15 +273,19 @@ const fuse: BenchCase = {
   ],
   maxTicks: 300,
   observe() {
+    // 불이 닿았다 = 그 열에 아직 안 붙은(life 0) fuse가 없다. 타는 fuse(life>0)는 8틱 뒤 불이 된다.
     const colGone = (sim: Sim, x: number) => {
-      for (let y = FUSE_Y; y < FUSE_Y + 4; y++) if (sim.grid.mat[y * W + x] === M.fuse) return false
+      for (let y = FUSE_Y; y < FUSE_Y + 4; y++) {
+        const i = y * W + x
+        if (sim.grid.mat[i] === M.fuse && sim.grid.life[i] === 0) return false
+      }
       return true
     }
     let lit = -1
     let reached = -1
     return {
       onTick(sim) {
-        if (lit < 0 && countRect(sim.grid, { x: FUSE_X0, y: FUSE_Y, w: 4, h: 4 }, M.fuse) < 16) lit = sim.tick
+        if (lit < 0 && unlit(sim, { x: FUSE_X0, y: FUSE_Y, w: 4, h: 4 }) < 16) lit = sim.tick
         if (lit >= 0 && reached < 0 && colGone(sim, FUSE_X0 + 3 + 40)) reached = sim.tick
         return reached >= 0
       },

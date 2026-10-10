@@ -156,6 +156,36 @@ describe('Sim 반응 (§7.2 반응표)', () => {
     expect(sim.count(M.fuse)).toBeLessThan(40 * 2 * 4 / 2)
   })
 
+  it('fuse 줄은 불씨가 위로 떠나도 끝까지 탄다 (salt 16개)', () => {
+    // 리뷰 #1: 불(기체)이 떠오르면 전선이 끊겨 중간에 꺼졌다(salt 43%).
+    const fails: number[] = []
+    for (let salt = 0; salt < 16; salt++) {
+      const sim = new Sim()
+      sim.load({ ...level((c) => c.rect(5, 100, 70, 2, 'u').rect(5, 102, 2, 2, 'f')), salt })
+      run(sim, 300)
+      if (sim.count(M.fuse) > 0) fails.push(salt)
+    }
+    expect(fails).toEqual([])
+  })
+
+  it('세로 fuse는 아래로도 탄다', () => {
+    const sim = new Sim()
+    sim.load(level((c) => c.rect(40, 20, 2, 80, 'u').rect(40, 18, 2, 2, 'f')))
+    run(sim, 400)
+    expect(sim.count(M.fuse)).toBe(0)
+  })
+
+  it('타는 fuse는 life>0 상태로 남았다가 불이 된다', () => {
+    const sim = new Sim()
+    sim.load(level((c) => c.rect(10, 100, 40, 2, 'u').rect(10, 102, 2, 2, 'f')))
+    let sawBurning = false
+    for (let t = 0; t < 30 && !sawBurning; t++) {
+      sim.step()
+      for (let i = 0; i < W * H; i++) if (sim.grid.mat[i] === M.fuse && sim.grid.life[i] > 0) { sawBurning = true; break }
+    }
+    expect(sawBurning).toBe(true)
+  })
+
   it('vent는 닿은 기체를 지운다', () => {
     const sim = new Sim()
     sim.load(level((c) => c.rect(1, 1, 78, 1, 'v').rect(30, 3, 10, 4, 't')))

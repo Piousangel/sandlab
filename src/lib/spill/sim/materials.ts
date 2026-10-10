@@ -7,6 +7,7 @@
  *
  * glow: 샌드박스 emissive × 100 (정수). 렌더 전용 — 시뮬은 읽지 않는다.
  * burn: 가연 고체가 불붙은 뒤 타는 틱 수(스펙 "wood는 life 기반으로 약 2초 버팁니다").
+ *       fuse도 짧게(8틱) 탄다 — 불씨(기체)가 떠올라도 전선이 스스로 다음 칸을 붙인다.
  *       life 0 = 멀쩡함, life > 0 = 타는 중(남은 틱). 0에 닿으면 불(fire)이 된다.
  */
 
@@ -44,7 +45,7 @@ const ROWS: Row[] = [
   { slug: 'fire', color: '#FF7A18', density: 1, movement: 'gas', lifetime: 24, glow: 300, burn: 0 },
   { slug: 'steam', color: '#D6E2EA', density: 1, movement: 'gas', lifetime: 90, glow: 22, burn: 0 },
   { slug: 'smoke', color: '#4C5058', density: 1, movement: 'gas', lifetime: 60, glow: 0, burn: 0 },
-  { slug: 'fuse', color: '#B0413E', density: 9, movement: 'static', lifetime: 0, glow: 0, burn: 0 },
+  { slug: 'fuse', color: '#B0413E', density: 9, movement: 'static', lifetime: 0, glow: 0, burn: 8 },
   { slug: 'gate', color: '#C9A227', density: 9, movement: 'static', lifetime: 0, glow: 0, burn: 0 },
   { slug: 'spout', color: '#3B4A66', density: 9, movement: 'static', lifetime: 0, glow: 0, burn: 0 },
   { slug: 'vent', color: '#2B3340', density: 9, movement: 'static', lifetime: 0, glow: 0, burn: 0 },
