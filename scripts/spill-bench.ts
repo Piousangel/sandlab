@@ -19,7 +19,7 @@ for (const c of BENCH_CASES) {
   if (!r.result.pass) fails++
   console.log(`${r.result.pass ? 'PASS' : 'FAIL'}  ${r.title.padEnd(24)} ${r.result.summary}`)
   if (r.result.detail) console.log(`      ${''.padEnd(24)} ${r.result.detail}`)
-  console.log(`      ${''.padEnd(24)} ${r.ticks} ticks, ${r.msPerTick.toFixed(3)} ms/tick`)
+  console.log(`      ${''.padEnd(24)} ${r.ticks} ticks, ${r.msPerTick.toFixed(3)} ms/tick, hash ${r.hash}`)
 }
 // 워밍업 후 부하 측정
 runStress(sim, now, 120)

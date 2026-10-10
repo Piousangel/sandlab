@@ -341,6 +341,13 @@ export interface CaseRun {
   result: BenchResult
   ticks: number
   msPerTick: number
+  /** 끝난 시점의 격자 해시 — Node와 브라우저가 같아야 한다(결정성 교차 확인) */
+  hash: string
+}
+
+/** 정해진 틱의 액션을 넣는다(라이브 뷰·runCase 공용). */
+export function applyDue(c: BenchCase, sim: Sim): void {
+  for (const a of c.actions) if (a.tick === sim.tick) sim.apply(a.action)
 }
 
 /** 케이스 하나를 끝까지 돌린다. now = 시간 함수(Node·브라우저 공통으로 performance.now). */
@@ -348,16 +355,14 @@ export function runCase(c: BenchCase, sim: Sim, now: () => number): CaseRun {
   sim.load(c.level)
   const obs = c.observe()
   let simMs = 0
-  let ai = 0
-  const acts = [...c.actions].sort((a, b) => a.tick - b.tick)
   while (sim.tick < c.maxTicks) {
-    while (ai < acts.length && acts[ai].tick <= sim.tick) sim.apply(acts[ai++].action)
+    applyDue(c, sim)
     const t0 = now()
     sim.step()
     simMs += now() - t0
     if (obs.onTick(sim)) break
   }
-  return { id: c.id, title: c.title, result: obs.result(sim), ticks: sim.tick, msPerTick: simMs / Math.max(1, sim.tick) }
+  return { id: c.id, title: c.title, result: obs.result(sim), ticks: sim.tick, msPerTick: simMs / Math.max(1, sim.tick), hash: sim.hash() }
 }
 
 export function runStress(sim: Sim, now: () => number, ticks = 600): number {
