@@ -74,10 +74,14 @@ describe('Sim 이동 (Margolus + 확산)', () => {
     const sim = new Sim()
     // 왼쪽 벽에 기댄 물기둥, 오른쪽은 평평한 바닥
     sim.load(level((c) => c.rect(1, 60, 8, 59, 'w')))
+    // 몸통 앞머리: 2셀 이상 깊이인 가장 오른쪽 열(낱개 물방울 제외, 리뷰 S0 #4)
     const front = () => {
-      let fx = 0
-      for (let y = 220; y < 238; y++) for (let x = 0; x < W; x++) if (sim.grid.mat[y * W + x] === M.water && x > fx) fx = x
-      return fx
+      for (let x = W - 1; x >= 0; x--) {
+        let n = 0
+        for (let y = 220; y < 238; y++) if (sim.grid.mat[y * W + x] === M.water) n++
+        if (n >= 2) return x
+      }
+      return 0
     }
     const x0 = front()
     run(sim, 60)

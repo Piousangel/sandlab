@@ -20,3 +20,17 @@ describe('S0 물리 목표치 7개 (§7.2)', () => {
     expect(a.ticks).toBe(b.ticks)
   })
 })
+
+describe('목표 1 측정 (리뷰 S0 #4)', () => {
+  it('앞머리는 2셀 이상 깊이인 열만 센다 — 앞서 달리는 낱개 물방울은 무시', async () => {
+    const { bodyFront } = await import('./cases')
+    const { M } = await import('../sim/materials')
+    const { W } = await import('../sim/grid')
+    const sim = new Sim()
+    sim.grid.mat.fill(0)
+    for (let x = 10; x <= 30; x++) { sim.grid.mat[230 * W + x] = M.water; sim.grid.mat[231 * W + x] = M.water }
+    sim.grid.mat[231 * W + 90] = M.water // 낱개 물방울
+    expect(bodyFront(sim, 200, 238, 2)).toBe(30)
+    expect(bodyFront(sim, 200, 238, 1)).toBe(90)
+  })
+})

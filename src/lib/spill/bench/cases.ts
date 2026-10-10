@@ -56,11 +56,26 @@ const secs = (ticks: number) => (ticks / TICKS_PER_SEC).toFixed(2) + 's'
 const C = (n: number) => n * 2
 
 // ── 1. 수평 확산 ────────────────────────────────────────────────
-// 왼쪽 탱크(게이트로 막힘) → 틱 0에 Trigger → 평평한 바닥 위 물 앞머리가 1초에 몇 셀 가는가.
+/**
+ * 물 몸통의 앞머리 x: y0..y1 행에서 물이 minDepth셀 이상 있는 가장 오른쪽 열.
+ * minDepth 2 = 앞서 달리는 낱개 물방울은 치지 않는다(리뷰 S0 #4).
+ */
+export function bodyFront(sim: Sim, y0: number, y1: number, minDepth: number): number {
+  const g = sim.grid.mat
+  for (let x = W - 1; x >= 0; x--) {
+    let n = 0
+    for (let y = y0; y < y1 && n < minDepth; y++) if (g[y * W + x] === M.water) n++
+    if (n >= minDepth) return x
+  }
+  return 0
+}
+
+// 왼쪽 탱크(게이트로 막힘) → 틱 0에 Trigger → 평평한 바닥 위 물 "몸통"(2셀 이상 깊이) 앞머리가
+// 1초에 몇 셀 가는가. 낱개 물방울까지 친 앞머리는 참고값으로만 보여 준다.
 const spread: BenchCase = {
   id: 'spread',
   title: '1. Water spread',
-  goal: 'water travels ≥ 40 cells/s horizontally on a flat floor',
+  goal: 'the water body (≥2 cells deep) travels ≥ 40 cells/s horizontally on a flat floor',
   level: lvl('bench-spread', 'Spread', (c) => {
     c.rect(1, 70, 14, 49, 'w')
     c.rect(15, 70, 2, 49, 'G')
@@ -70,21 +85,15 @@ const spread: BenchCase = {
   observe() {
     const floorY0 = C(110)
     const floorY1 = C(119)
-    const front = (sim: Sim) => {
-      let fx = 0
-      for (let y = floorY0; y < floorY1; y++)
-        for (let x = W - 1; x > fx; x--) if (sim.grid.mat[y * W + x] === M.water) { fx = x; break }
-      return fx
-    }
-    let x0 = -1
+    const x0 = C(15) - 1
     return {
       onTick(sim) {
-        if (x0 < 0) x0 = C(15) - 1
         return sim.tick >= 60
       },
       result(sim) {
-        const d = front(sim) - x0
-        return { pass: d >= 40, summary: `${d} cells/s (≥40)`, detail: `front x ${x0} → ${front(sim)} in 60 ticks` }
+        const body = bodyFront(sim, floorY0, floorY1, 2) - x0
+        const any = bodyFront(sim, floorY0, floorY1, 1) - x0
+        return { pass: body >= 40, summary: `${body} cells/s body front (≥40)`, detail: `body x ${x0} → ${x0 + body}; leading droplet ${any} cells` }
       },
     }
   },
