@@ -5,11 +5,14 @@ import { SandEngine, WebGPUUnsupported } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import { dayNumber, dailyFor } from '@/lib/challenge/daily'
 import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
-import { uploadScene, getScene, listScenes, rememberMine, type SceneMeta } from '@/lib/sand/gallery'
+import { uploadScene, getScene, rememberMine } from '@/lib/sand/gallery'
 import { getCreatorName, setCreatorName, getCreatorId } from '@/lib/sand/creator'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
 import { noteFirstTry, buildSuggestionPairs, pickSuggestion } from '@/lib/sand/discovery'
 import { checkPourMilestone } from '@/lib/sand/milestones'
+import { trackEvent } from '@/lib/sand/gallery'
+import { currentUaClass, type UaClass } from '@/lib/sand/ua'
+import { paletteGrid } from '@/lib/sand/paletteGrid'
 // record.ts는 mediabunny(~대용량 코덱)를 정적 import한다. 방문자 대부분이 안 누르는 녹화 기능이므로
 // 랜딩 초기 JS에서 분리한다 — record() 호출 시점에 동적 import(아래).
 
@@ -63,10 +66,10 @@ export default function SandCanvas() {
   const [remix, setRemix] = useState<{ id: string; title: string } | null>(null)
   // 지우개 모드. 데스크톱은 우클릭으로도 지우지만 터치엔 우클릭이 없어 이 토글이 유일한 지우기 수단이다.
   const [erasing, setErasing] = useState(false)
-  // WebGPU 미지원 방문자(클립을 클릭하는 인앱 웹뷰 등)를 텍스트 벽에서 버리지 않는다 —
-  // 갤러리는 순수 <img> PNG라 WebGPU 없이 100% 보인다. 최근 씬 썸네일을 관람 탈출구로 보여준다.
-  const [errScenes, setErrScenes] = useState<SceneMeta[]>([])
-  const [errLoaded, setErrLoaded] = useState(false)
+  // WebGPU 미지원 착지(스펙 §9 S1 ③) — 깨진 캔버스 대신 정지 이미지 + 외부 브라우저 안내.
+  // 카톡/인스타 인앱은 안내 문구가 다르다(메뉴 위치가 다름).
+  const [errUa, setErrUa] = useState<UaClass>('other')
+  const [errCopied, setErrCopied] = useState<'idle' | 'ok' | 'fail'>('idle')
   // Publish/Copy 성공 후 지속되는 공유 패널. navigator.share·clipboard는 transient activation을
   // 요구하는데 업로드(네트워크 await) 뒤엔 그 창이 만료돼 있다. 그래서 자동 공유 대신,
   // 사용자가 '새 제스처'로 눌러 공유/복사하게 링크를 눈앞에 남긴다(실패해도 링크 회수 가능).
@@ -113,15 +116,6 @@ export default function SandCanvas() {
     return () => mq.removeEventListener('change', on)
   }, [])
 
-  // WebGPU가 없을 때만 최근 씬을 불러온다 — 관람 모드용.
-  useEffect(() => {
-    if (!err) return
-    listScenes('new')
-      .then((r) => setErrScenes((r.scenes ?? []).slice(0, 6)))
-      .catch(() => {})
-      .finally(() => setErrLoaded(true))
-  }, [err])
-
   // 도크는 좁은 화면에서 여러 줄로 접힌다(모바일). 캔버스 영역(stage)이 도크를 가리거나
   // 도크에 가리지 않도록, 도크의 실제 높이를 재서 stage.bottom을 거기에 맞춘다.
   // 인라인 스타일이라 미디어쿼리를 못 써서 측정 기반으로 간다 — 데스크톱(한 줄)도 그대로 동작.
@@ -138,26 +132,42 @@ export default function SandCanvas() {
     return () => ro.disconnect()
   }, [])
 
-  // 세로 폰(h>w)에선 2:1 캔버스가 얇은 밴드가 되고 아래가 큰 검정 → 그 공간을 브랜딩으로 채운다.
-  // h>w는 세로 폰/태블릿만 정확히 잡고 모든 landscape 데스크톱을 배제(절대값 임계의 오발동 회피).
-  const stageRef = useRef<HTMLDivElement>(null)
+  // 세로 폰(h>w) 레이아웃(스펙 §3 공통 규칙·§9 S1): 헤더 44px → 캔버스(폭 가득) → 컨트롤 → 팔레트(남는 높이 흡수)
+  // → 데일리 카드를 flex column으로 쌓는다. 같은 DOM에 스타일만 바꾼다 — 캔버스가 리마운트되면 엔진이 끊긴다.
+  // h>w는 세로 폰/태블릿만 잡고 모든 landscape 데스크톱을 배제한다(데스크톱 레이아웃은 그대로).
   const [narrow, setNarrow] = useState(false)
+  // 폭 400px 미만이면 헤더 내비를 ☰로 접는다(스펙 §3)
+  const [compactNav, setCompactNav] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  useEffect(() => {
+    const measure = () => {
+      setNarrow(window.innerHeight > window.innerWidth)
+      setCompactNav(window.innerWidth < 400)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
   // 오늘의 데일리(세로 폰 게임 입구 카드용) — 날짜(UTC)로 클라이언트에서 정한다
   const [daily, setDaily] = useState<{ n: number; title: string } | null>(null)
   useEffect(() => {
     const n = dayNumber(Date.now())
     setDaily({ n, title: dailyFor(n).title })
   }, [])
+  // 세로 폰 팔레트 영역 크기 — 여기서 칩 격자(열·행·점 크기)를 정한다(paletteGrid).
+  const paletteRef = useRef<HTMLDivElement>(null)
+  const [palBox, setPalBox] = useState({ w: 0, h: 0 })
   useEffect(() => {
-    const el = stageRef.current
+    const el = paletteRef.current
     if (!el) return
-    const measure = () => setNarrow(el.clientHeight > el.clientWidth)
+    const measure = () => setPalBox({ w: el.clientWidth, h: el.clientHeight })
     measure()
     if (typeof ResizeObserver === 'undefined') return
     const ro = new ResizeObserver(measure)
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
+  const pal = paletteGrid(palBox.w, palBox.h, PAINTABLE.length)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -203,7 +213,13 @@ export default function SandCanvas() {
         setReady(true)
       })
       .catch((e) => {
-        if (!disposed) setErr(e instanceof WebGPUUnsupported ? e.message : String(e))
+        if (disposed) return
+        if (e instanceof WebGPUUnsupported) {
+          const ua = currentUaClass()
+          setErrUa(ua)
+          trackEvent('gpu_unsupported', ua, 0) // value 0 = 홈 샌드박스(퍼즐 화면은 1)
+        }
+        setErr(e instanceof WebGPUUnsupported ? e.message : String(e))
       })
 
     return () => {
@@ -402,8 +418,9 @@ export default function SandCanvas() {
 
   // 공유 패널 버튼 핸들러 — 사용자의 새 클릭/탭(fresh activation)으로 구동되므로
   // navigator.share·clipboard가 안정적으로 동작한다. 성공/실패를 정직하게 보고한다.
-  const copyShared = async () => {
+  const copyShared = async (fromButton = true) => {
     if (!shared) return
+    if (fromButton) trackEvent('share_click', 'sandbox-copy')
     try {
       await navigator.clipboard.writeText(shared.url)
       flash('Link copied.')
@@ -414,10 +431,11 @@ export default function SandCanvas() {
   }
   const shareShared = async () => {
     if (!shared) return
+    trackEvent('share_click', 'sandbox-share')
     try {
       await navigator.share({ title: 'Sandlab', url: shared.url })
     } catch (e) {
-      if (!(e instanceof Error && e.name === 'AbortError')) copyShared()
+      if (!(e instanceof Error && e.name === 'AbortError')) copyShared(false)
     }
   }
 
@@ -486,6 +504,7 @@ export default function SandCanvas() {
   const share = useCallback(async () => {
     const eng = engineRef.current
     if (!eng) return
+    trackEvent('share_click', 'sandbox-link')
     const cells = await eng.readback()
     let res: Awaited<ReturnType<typeof buildShareUrl>>
     try {
@@ -546,48 +565,63 @@ export default function SandCanvas() {
   }
 
   if (err) {
+    // 카톡 인앱 → 외부 브라우저로 여는 공식 스킴. 다른 인앱엔 이런 스킴이 없어 메뉴 안내만 한다.
+    const here = typeof location !== 'undefined' ? location.href : 'https://sandlab.app/'
+    const copyHere = async () => {
+      try {
+        await navigator.clipboard.writeText(here)
+        setErrCopied('ok')
+      } catch {
+        setErrCopied('fail') // 거짓 성공 금지 — 아래 입력칸에서 직접 복사
+      }
+    }
     return (
       <div style={S.errWrap}>
         <div style={S.errCard}>
-          <h2 style={{ margin: '0 0 10px', fontSize: 19 }}>Your browser can&apos;t run the sandbox</h2>
+          {/* 깨진 캔버스 대신 정지 이미지 — 무엇을 하는 곳인지 먼저 보여준다 */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/og.png" alt="Sandlab — falling sand you paint in the browser" style={S.errHero} />
+          <h2 style={{ margin: '0 0 8px', fontSize: 19 }}>Open Sandlab in Chrome or Safari</h2>
           <p style={{ margin: '0 0 14px', opacity: 0.72, fontSize: 14, lineHeight: 1.55 }}>
-            The playground needs WebGPU, which this browser doesn&apos;t expose. But you can still
-            browse what people have made.
+            The sandbox runs on your graphics card through WebGPU, and this browser doesn&apos;t provide it.
+            {errUa === 'other' ? ' Open this page in a recent Chrome, Edge or Safari.' : ' In-app browsers usually block it — open this page in your phone\'s own browser.'}
           </p>
 
-          {errScenes.length > 0 && (
-            <div style={S.errThumbs}>
-              {errScenes.map((s) => (
-                <a
-                  key={s.id}
-                  href={`/gallery`}
-                  title={s.title}
-                  style={S.errThumb}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`/api/scenes/${s.id}/thumb`}
-                    alt={s.title}
-                    loading="lazy"
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  />
-                </a>
-              ))}
-            </div>
+          {errUa === 'kakao' && (
+            <>
+              <a href={`kakaotalk://web/openExternal?url=${encodeURIComponent(here)}`} style={S.errCta}>
+                Open in browser ↗
+              </a>
+              <p style={S.errSteps}>
+                If nothing happens: tap <strong>⋮</strong> at the top right (Android) or the share icon at the bottom
+                right (iPhone), then <strong>다른 브라우저로 열기</strong> / <strong>Safari로 열기</strong>.
+              </p>
+            </>
+          )}
+          {errUa === 'insta' && (
+            <p style={S.errSteps}>
+              Tap <strong>⋯</strong> at the top right, then <strong>Open in external browser</strong> (Android:{' '}
+              <strong>Open in Chrome</strong>).
+            </p>
           )}
 
-          {/* 갤러리가 아직 비어 있으면 빈손 CTA 대신 브랜드 카드로 최소한의 시각을 준다. */}
-          {errLoaded && errScenes.length === 0 && (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src="/og.png" alt="Sandlab" style={S.errHero} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '14px 0 0' }}>
+            <button
+              onClick={copyHere}
+              style={{ ...(errUa === 'kakao' ? S.errGhost : S.errCta), border: errUa === 'kakao' ? S.errGhost.border : 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              {errCopied === 'ok' ? 'Link copied ✓' : 'Copy link'}
+            </button>
+            <a href="/gallery" style={S.errGhost}>
+              Browse the gallery →
+            </a>
+          </div>
+          {errCopied === 'fail' && (
+            <input readOnly value={here} onFocus={(e) => e.currentTarget.select()} style={{ ...S.shareInput, width: '100%', maxWidth: 'none', marginTop: 10 }} />
           )}
-
-          <a href="/gallery" style={S.errCta}>
-            Browse the gallery →
-          </a>
 
           <p style={{ margin: '16px 0 0', fontSize: 12.5, opacity: 0.42, lineHeight: 1.6 }}>
-            To create your own: Chrome/Edge 113+, or Safari 26+ (macOS Tahoe, iOS 26).
+            Works in Chrome/Edge 113+, or Safari 26+ (macOS Tahoe, iOS 26).
             <br />
             In Firefox, enable <code style={S.code}>dom.webgpu.enabled</code> in{' '}
             <code style={S.code}>about:config</code>.
@@ -597,14 +631,44 @@ export default function SandCanvas() {
     )
   }
 
+  const navLinks = (
+    <>
+      <a href="/daily" style={compactNav ? S.menuLink : S.brandLink}>Daily</a>
+      <a href="/play" style={compactNav ? S.menuLink : S.brandLink}>Challenges</a>
+      <a href="/learn" style={compactNav ? S.menuLink : S.brandLink}>Learn</a>
+      <a href="/materials" style={compactNav ? S.menuLink : S.brandLink}>Materials</a>
+      <a href="/about" style={compactNav ? S.menuLink : S.brandLink}>About</a>
+    </>
+  )
+
+  // 세로 폰 메시지 슬롯 — 캔버스 안 상단 중앙 한 칸(스펙 §3). 토스트가 리믹스 배너보다 우선, 헤더에는 절대 안 뜬다.
+  const toastEl = toast && (
+    <div style={narrow ? S.toastSlot : S.toast} role="status" aria-live="polite">
+      {toast}
+    </div>
+  )
+  const remixEl = remix && (
+    <div style={narrow ? { ...S.remixBanner, top: 8 } : S.remixBanner}>
+      <span style={S.remixText}>
+        Remixing <strong style={{ fontWeight: 600 }}>“{remix.title}”</strong> — draw on it, then Publish your own.
+      </span>
+      <a href={`/s/${remix.id}`} target="_blank" rel="noopener noreferrer" style={S.remixLink}>
+        original&nbsp;↗
+      </a>
+      <button onClick={() => setRemix(null)} style={S.remixClose} aria-label="Dismiss">
+        ×
+      </button>
+    </div>
+  )
+
   return (
-    <div style={S.root}>
-      <div ref={stageRef} style={{ ...S.stage, bottom: dockH, ...(narrow ? S.stageNarrow : null) }}>
+    <div style={narrow ? S.rootN : S.root}>
+      <div style={narrow ? S.stageN : { ...S.stage, bottom: dockH }}>
         <canvas
           ref={canvasRef}
           width={W}
           height={H}
-          style={S.canvas}
+          style={narrow ? S.canvasN : S.canvas}
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}
@@ -614,205 +678,217 @@ export default function SandCanvas() {
         {/* init(adapter→device→6 파이프라인 컴파일)은 저사양·초기방문에서 0.5~2초. 그동안 검은 박스에
             탭이 조용히 버려지면 "고장"으로 오해해 이탈한다. 로딩 신호로 첫 5초 마찰을 없앤다. */}
         {!ready && (
-          <div style={S.loading}>
+          <div style={narrow ? { ...S.loading, width: 'calc(100% - 32px)', textAlign: 'center' } : S.loading}>
             Starting the sandbox…
             {/* 정적 HTML에 남는 소개 — WebGPU 없는 크롤러가 보는 홈의 본문(2026-10-09 재감사). 로딩 중 실제로 보인다. */}
-            <p style={S.loadingIntro}>
+            <p style={narrow ? { ...S.loadingIntro, fontSize: 11.5, lineHeight: 1.45, marginTop: 6 } : S.loadingIntro}>
               Sandlab is a falling-sand sandbox: paint sand, water, lava, acid and fire onto a 720,000-cell grid
               and watch them pile up, flow, burn and react, simulated on your graphics card. Share any scene as a
               link, publish it to the gallery, or read how it works in Learn.
             </p>
           </div>
         )}
-        {/* 온보딩 힌트는 캔버스 위 정중앙 — narrow(세로 폰)에선 캔버스가 상단 밴드라 stage 50%가
-            듄 영역에 떨어져 어긋난다. 그래서 narrow에선 숨기고 아래 stageFillSub가 안내를 대신한다. */}
         {/* 헤드라인 — og.png(마케팅 카드)엔 있지만 실 화면엔 없던 브랜드 임팩트. 디자이너 3인
-            리뷰(토스·배민·카카오) 전원이 1순위로 지적한 문제라 여기서 살린다. 그린 뒤엔 사라짐. */}
+            리뷰(토스·배민·카카오) 전원이 1순위로 지적한 문제라 여기서 살린다. 그린 뒤엔 사라짐.
+            세로 폰은 캔버스가 낮아(≈170px) 헤드라인 대신 헤더의 브랜드가 그 역할을 한다. */}
         {ready && !hasDrawn && !narrow && (
           <div style={S.heroHint}>
             <div style={S.heroHintTitle}>Sandlab</div>
             <div style={S.heroHintSub}>Pour sand, water, lava — watch them react.</div>
           </div>
         )}
-        {ready && !hasDrawn && !narrow && (
+        {/* 세로 폰에선 stage = 캔버스 상자라 온보딩·고스트 커서가 캔버스 위에 정확히 얹힌다. */}
+        {ready && !hasDrawn && (
           <div style={S.onboard}>{coarse ? 'Drag to pour sand' : 'Click and drag to pour sand'}</div>
         )}
         {/* 고스트 커서 — 문구만으론 "이걸 하라는 건가" 망설이는 방문자에게 제스처 자체를 몸짓으로
             보여준다. reduced-motion은 아래 <style>에서 애니메이션을 끈다. */}
-        {ready && !hasDrawn && !narrow && (
+        {ready && !hasDrawn && (
           <div className="sl-ghost" aria-hidden="true">
             <span className="sl-ghost-dot" />
           </div>
         )}
-        {/* 세로 폰(narrow) — 실사용자 다수가 이 경로로 착지한다(카톡 인앱 브라우저=아이폰=세로).
-            좌상단 brand만으론 브랜드 임팩트가 안 산다는 게 디자이너 3인 리뷰에서 공통 확인돼
-            stageFillWord(브랜드 워드)를 다시 켠다. 그린 뒤엔 블록 자체가 안 뜬다. */}
-        {narrow && !hasDrawn && (
-          <div style={S.stageFill}>
-            <span style={S.stageFillWord}>Sandlab</span>
-            <span style={S.stageFillSub}>Pour sand, water, lava — watch them react. Share it as a link.</span>
-          </div>
-        )}
-        {/* 세로 폰에서 그린 뒤 캔버스 아래가 통째로 비던 공간(2026-10-10 실기기 스크린샷) — 게임 입구로 쓴다.
-            경과 시간도 상단(헤더 링크와 겹쳤다) 대신 여기에 둔다. */}
-        {narrow && hasDrawn && (
-          <div style={{ ...S.stageFill, background: 'none', gap: 12 }}>
-            {daily && (
-              <a href="/daily" style={S.gameCard}>
-                <span style={S.gameCardKicker}>Daily #{daily.n} · new puzzle every day</span>
-                <span style={S.gameCardTitle}>{daily.title} →</span>
-                <span style={S.gameCardSub}>Same puzzle for everyone. Use the least material to beat them.</span>
-              </a>
-            )}
-            <a href="/play" style={S.gameLink}>Or try all 20 challenges</a>
-            {ready && <span style={S.gameStat}>{formatElapsed(elapsedSec)} in the sandbox</span>}
-          </div>
-        )}
-        {remix && (
-          <div style={S.remixBanner}>
-            <span style={S.remixText}>
-              Remixing <strong style={{ fontWeight: 600 }}>“{remix.title}”</strong> — draw on it, then Publish your own.
-            </span>
-            <a href={`/s/${remix.id}`} target="_blank" rel="noopener noreferrer" style={S.remixLink}>
-              original&nbsp;↗
-            </a>
-            <button onClick={() => setRemix(null)} style={S.remixClose} aria-label="Dismiss">
-              ×
-            </button>
-          </div>
-        )}
+        {narrow ? toastEl || remixEl : remixEl}
       </div>
 
-      <div style={S.brand}>
+      <div style={narrow ? S.brandN : S.brand}>
         <span style={{ fontWeight: 650, letterSpacing: -0.2 }}>Sandlab</span>
         {/* 좁은 세로 화면에선 태그라인이 4줄로 접혀 캔버스를 덮었다(2026-10-09 390px 점검) — 링크만 남긴다. */}
         {!narrow && <span style={S.brandSub}>no install · no sign-up · share as a link</span>}
         {/* 콘텐츠 페이지로 가는 정적 링크 — 없으면 /learn·/materials가 sitemap으로만 닿는 고아가 된다
             (2026-10-09 AdSense 적대 감사). 일반 <a>: 콘텐츠 페이지의 광고 로더가 캔버스로 따라오지 않게
-            클라이언트 내비게이션을 쓰지 않는다. */}
-        <nav style={S.brandNav}>
-          <a href="/daily" style={S.brandLink}>Daily</a>
-          <a href="/play" style={S.brandLink}>Challenges</a>
-          <a href="/learn" style={S.brandLink}>Learn</a>
-          <a href="/materials" style={S.brandLink}>Materials</a>
-          <a href="/about" style={S.brandLink}>About</a>
-        </nav>
+            클라이언트 내비게이션을 쓰지 않는다. 폭 400px 미만은 ☰로 접는다(링크는 정적 HTML에 그대로 남는다). */}
+        {compactNav ? (
+          <div style={S.menuWrap}>
+            <button
+              style={S.menuBtn}
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-expanded={menuOpen}
+              aria-label="Menu"
+            >
+              ☰
+            </button>
+            {menuOpen && (
+              <>
+                <div style={S.menuBackdrop} onClick={() => setMenuOpen(false)} aria-hidden="true" />
+                <nav style={S.menu}>{navLinks}</nav>
+              </>
+            )}
+          </div>
+        ) : (
+          <nav style={S.brandNav}>{navLinks}</nav>
+        )}
       </div>
 
       {/* fps·셀 수는 엔지니어에겐 자랑거리지만 일반 방문자에겐 "미완성 디버그 화면" 신호라
-          기본 노출에서 뺀다(디자이너 3인 리뷰 공통 지적). elapsedSec만 남겨 체류시간 장치로 쓴다. */}
+          기본 노출에서 뺀다(디자이너 3인 리뷰 공통 지적). elapsedSec만 남겨 체류시간 장치로 쓴다.
+          세로 폰에선 헤더와 겹쳤으므로 뺀다(스펙 §9 S1). */}
       {ready && hasDrawn && !narrow && (
         <div style={S.stat}>{formatElapsed(elapsedSec)} in the sandbox</div>
       )}
 
-      <div ref={dockRef} style={S.dock}>
-        {/* 재료가 18개나 있다는 걸 못 보고 첫 재료(기본 sand)로만 끝내는 방문자를 위한 pulse 힌트.
-            그림을 그리면(hasDrawn) 즉시 사라진다 — 온보딩 힌트와 동일한 소멸 조건. */}
-        {!hasDrawn && <span style={S.chipsBadge}>18 materials</span>}
-        <div style={S.chips} className={!hasDrawn ? 'sl-chips-hint' : undefined}>
-          {PAINTABLE.map((m, i) => {
-            const on = sel === m.slug
-            const dot = {
-              ...S.chip,
-              background: m.color,
-              transform: on ? 'scale(1.32)' : 'scale(1)',
-              boxShadow: on
-                ? `0 0 0 2px #0b0e13, 0 0 0 3.5px #fff, 0 0 16px ${m.color}, 0 0 6px 1px #f5a62366`
-                : m.emissive > 0.5
-                  ? `0 0 10px ${m.color}88`
-                  : 'inset 0 0 0 1px #ffffff22',
+      <div ref={dockRef} style={narrow ? S.dockN : S.dock}>
+        {/* 데스크톱: 두 그룹 모두 display:contents라 기존 한 줄 도크와 같다.
+            세로 폰: 컨트롤 줄이 캔버스 바로 아래, 팔레트가 남는 높이를 전부 차지한다. */}
+        <div ref={paletteRef} style={narrow ? S.paletteN : S.contents}>
+          {/* 재료가 18개나 있다는 걸 못 보고 첫 재료(기본 sand)로만 끝내는 방문자를 위한 pulse 힌트.
+              그림을 그리면(hasDrawn) 즉시 사라진다 — 온보딩 힌트와 동일한 소멸 조건. 세로 폰은 칩이 크게 다 보여 생략. */}
+          {!hasDrawn && !narrow && <span style={S.chipsBadge}>18 materials</span>}
+          <div
+            style={
+              narrow
+                ? {
+                    ...S.chipsN,
+                    gridTemplateColumns: `repeat(${pal.cols}, minmax(0, 1fr))`,
+                    gridTemplateRows: `repeat(${pal.rows}, minmax(0, 1fr))`,
+                  }
+                : S.chips
             }
-            const pick = () => {
-              setSel(m.slug)
-              setErasing(false) // 재료를 고르면 지우개 모드 해제
-            }
-            // 움직임 타입(고정·가루·액체·기체) 경계에 구분선 — 18개 칩의 그룹을 읽히게.
-            const groupBreak = i > 0 && PAINTABLE[i - 1].movement !== m.movement
-            // 이름은 hover(title)뿐이었는데, 배포 채널(카톡 인앱)이 터치 기기라 hover가 아예
-            // 안 먹는다 — 디자이너 3인 리뷰 공통 지적. 점 아래 상시 라벨로 바꾼다.
-            const label = {
-              ...S.chipLabel,
-              opacity: on ? 0.95 : 0.55,
-              color: on ? '#f5d9a6' : '#eef1f6',
-            }
-            const chip = (
-              <button
-                onClick={pick}
-                title={m.name}
-                aria-label={m.name}
-                aria-pressed={!erasing && sel === m.slug}
-                style={coarse ? S.chipHitStack : S.chipStack}
-              >
-                <span style={dot} />
-                <span style={label}>{m.name}</span>
-              </button>
-            )
-            return (
-              <Fragment key={m.slug}>
-                {groupBreak && <span style={S.chipSep} />}
-                {chip}
-              </Fragment>
-            )
-          })}
+            className={!hasDrawn ? 'sl-chips-hint' : undefined}
+          >
+            {PAINTABLE.map((m, i) => {
+              const on = sel === m.slug
+              const dot = {
+                ...S.chip,
+                ...(narrow ? { width: pal.dot, height: pal.dot } : null),
+                background: m.color,
+                transform: on ? (narrow ? 'scale(1.15)' : 'scale(1.32)') : 'scale(1)',
+                boxShadow: on
+                  ? `0 0 0 2px #0b0e13, 0 0 0 3.5px #fff, 0 0 16px ${m.color}, 0 0 6px 1px #f5a62366`
+                  : m.emissive > 0.5
+                    ? `0 0 10px ${m.color}88`
+                    : 'inset 0 0 0 1px #ffffff22',
+              }
+              const pick = () => {
+                setSel(m.slug)
+                setErasing(false) // 재료를 고르면 지우개 모드 해제
+              }
+              // 움직임 타입(고정·가루·액체·기체) 경계에 구분선 — 18개 칩의 그룹을 읽히게. 세로 폰 격자엔 안 넣는다.
+              const groupBreak = !narrow && i > 0 && PAINTABLE[i - 1].movement !== m.movement
+              // 이름은 hover(title)뿐이었는데, 배포 채널(카톡 인앱)이 터치 기기라 hover가 아예
+              // 안 먹는다 — 디자이너 3인 리뷰 공통 지적. 점 아래 상시 라벨로 바꾼다.
+              const label = {
+                ...S.chipLabel,
+                ...(narrow ? { fontSize: pal.label, marginTop: Math.round(pal.dot * 0.12) } : null),
+                opacity: on ? 0.95 : 0.55,
+                color: on ? '#f5d9a6' : '#eef1f6',
+              }
+              const chip = (
+                <button
+                  onClick={pick}
+                  title={m.name}
+                  aria-label={m.name}
+                  aria-pressed={!erasing && sel === m.slug}
+                  style={narrow ? S.chipCellN : coarse ? S.chipHitStack : S.chipStack}
+                >
+                  <span style={dot} />
+                  <span style={label}>{m.name}</span>
+                </button>
+              )
+              return (
+                <Fragment key={m.slug}>
+                  {groupBreak && <span style={S.chipSep} />}
+                  {chip}
+                </Fragment>
+              )
+            })}
+          </div>
         </div>
 
-        <div style={S.sep} />
+        <div style={narrow ? S.controlsN : S.contents} className={narrow ? 'sl-controls-n' : undefined}>
+          {!narrow && <div style={S.sep} />}
 
-        <span style={S.selName}>{erasing ? 'Erase' : PRESETS.find((m) => m.slug === sel)?.name}</span>
+          {!narrow && <span style={S.selName}>{erasing ? 'Erase' : PRESETS.find((m) => m.slug === sel)?.name}</span>}
 
-        <div style={S.sep} />
+          {!narrow && <div style={S.sep} />}
 
-        <label style={S.sizeWrap} title="Brush size">
-          <input
-            type="range"
-            min={1}
-            max={24}
-            value={radius}
-            onChange={(e) => setRadius(+e.target.value)}
-            aria-label="Brush size"
-            style={S.range}
-          />
-          <span style={S.sizeNum}>{radius}</span>
-        </label>
+          <label style={S.sizeWrap} title="Brush size">
+            <input
+              type="range"
+              min={1}
+              max={24}
+              value={radius}
+              onChange={(e) => setRadius(+e.target.value)}
+              aria-label="Brush size"
+              style={S.range}
+            />
+            <span style={S.sizeNum}>{radius}</span>
+          </label>
 
-        <div style={S.sep} />
+          {!narrow && <div style={S.sep} />}
 
-        <button
-          style={{ ...S.ghost, ...(erasing ? S.ghostActive : null) }}
-          onClick={() => setErasing((v) => !v)}
-          aria-pressed={erasing}
-          title="Eraser — draw to remove (right-click also erases on desktop)"
-        >
-          Erase
-        </button>
-        <button style={S.ghost} onClick={() => engineRef.current?.clear()}>
-          Clear
-        </button>
-        <button style={S.ghost} onClick={share}>
-          Copy link
-        </button>
-        <button style={S.publishBtn} onClick={publish} disabled={busy}>
-          {busy ? 'Publishing…' : 'Publish'}
-        </button>
-        <a style={{ ...S.ghost, textDecoration: 'none', lineHeight: '1.6' }} href="/gallery">
-          Gallery
-        </a>
-        <button
-          style={{ ...S.primary, opacity: rec !== null ? 0.75 : 1, minWidth: 104 }}
-          onClick={record}
-          disabled={rec !== null}
-          title="Record 10 seconds and download — post the clip, not the link"
-        >
-          {rec !== null ? `Recording ${(10 - rec * 10).toFixed(1)}s` : 'Record 10s clip'}
-        </button>
+          <button
+            style={{ ...S.ghost, ...(erasing ? S.ghostActive : null) }}
+            onClick={() => setErasing((v) => !v)}
+            aria-pressed={erasing}
+            title="Eraser — draw to remove (right-click also erases on desktop)"
+          >
+            Erase
+          </button>
+          <button style={S.ghost} onClick={() => engineRef.current?.clear()}>
+            Clear
+          </button>
+          <button style={S.ghost} onClick={share}>
+            Copy link
+          </button>
+          <button style={S.publishBtn} onClick={publish} disabled={busy}>
+            {busy ? 'Publishing…' : 'Publish'}
+          </button>
+          <a style={{ ...S.ghost, textDecoration: 'none', lineHeight: '1.6' }} href="/gallery">
+            Gallery
+          </a>
+          <button
+            style={{ ...S.primary, opacity: rec !== null ? 0.75 : 1, minWidth: 104 }}
+            onClick={record}
+            disabled={rec !== null}
+            title="Record 10 seconds and download — post the clip, not the link"
+          >
+            {rec !== null ? `Recording ${(10 - rec * 10).toFixed(1)}s` : 'Record 10s clip'}
+          </button>
+        </div>
       </div>
+
+      {/* 세로 폰 게임 입구 — 팔레트 아래 한 줄. 아주 낮은 화면(<500px)에선 팔레트에 양보한다(아래 <style>). */}
+      {narrow && (
+        <div className="sl-daily" style={S.dailyRow}>
+          <a href="/daily" style={S.gameCard}>
+            <span style={S.gameCardKicker}>{daily ? `Daily #${daily.n} · new puzzle every day` : 'Daily puzzle'}</span>
+            <span style={S.gameCardTitle}>{daily ? daily.title : 'Today’s challenge'} →</span>
+          </a>
+          <a href="/play" style={S.gameSide}>
+            All 20
+            <br />
+            challenges
+          </a>
+        </div>
+      )}
 
       {rec !== null && (
         <div style={{ ...S.recRing, clipPath: `inset(0 ${(1 - rec) * 100}% 0 0)` }} />
       )}
 
       {shared && (
-        <div style={{ ...S.sharePanel, bottom: dockH + 14 }}>
+        <div style={{ ...S.sharePanel, bottom: narrow ? 'max(12px, env(safe-area-inset-bottom))' : dockH + 14 }}>
           {shared.thumb && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={`data:image/png;base64,${shared.thumb}`} alt="Your scene" style={S.shareThumb} />
@@ -827,7 +903,7 @@ export default function SandCanvas() {
             style={S.shareInput}
           />
           {/* 주액션은 항상 하나만: 모바일엔 Share가 자연스러우니 Copy는 고스트로, 데스크톱엔 Copy가 주액션. */}
-          <button style={canShare ? S.ghost : S.sharePrimary} onClick={copyShared}>
+          <button style={canShare ? S.ghost : S.sharePrimary} onClick={() => copyShared()}>
             Copy
           </button>
           {canShare && (
@@ -845,12 +921,7 @@ export default function SandCanvas() {
       )}
 
       {!coarse && !narrow && <div style={S.hint}>Right-click to erase</div>}
-      {/* 세로 폰에선 상단 헤더 링크와 겹쳐서 도크 바로 위로 내린다 */}
-      {toast && (
-        <div style={narrow ? { ...S.toast, top: 'auto', bottom: dockH + 14 } : S.toast} role="status" aria-live="polite">
-          {toast}
-        </div>
-      )}
+      {!narrow && toastEl}
 
       {/* 고스트 커서 드래그 제스처 + 재료 칩 pulse 힌트 — 인라인 스타일은 keyframe을 못 써서 여기서만 주입한다. */}
       <style>{`
@@ -887,6 +958,11 @@ export default function SandCanvas() {
           0%, 100% { box-shadow: 0 0 0 0 rgba(245,166,35,0); }
           50% { box-shadow: 0 0 0 6px rgba(245,166,35,0.14); }
         }
+        /* 세로 폰 컨트롤 — 손가락 탭 타깃을 36px 이상으로(데스크톱 도크는 그대로) */
+        .sl-controls-n > button, .sl-controls-n > a { min-height: 36px; display: inline-flex; align-items: center; }
+        @media (max-height: 499px) {
+          .sl-daily { display: none !important; }
+        }
         @media (prefers-reduced-motion: reduce) {
           .sl-ghost-dot { animation: none; }
           .sl-chips-hint { animation: none; }
@@ -913,62 +989,196 @@ const S: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 56,
-    // flex column — 데스크톱은 자식(canvas)이 하나라 여전히 정중앙. 세로 폰에선 canvas를 위로
-    // 붙이고 남는 큰 검정을 브랜딩으로 채운다(stageNarrow/stageFill).
+    // flex column — 데스크톱은 자식(canvas)이 하나라 정중앙. 세로 폰은 stageN(아래)으로 바뀐다.
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     padding: '8px 8px 0',
   },
-  // 세로 폰: canvas를 상단에 붙이고 아래 데드스페이스를 채운다.
-  stageNarrow: {
-    justifyContent: 'flex-start',
-    paddingTop: 'max(56px, env(safe-area-inset-top))',
-  },
-  // 검정 데드스페이스 대신 바닥에서 올라오는 앰버 듄 글로우 + 브랜드 히어로.
-  gameCard: {
+  // ── 세로 폰(narrow) 레이아웃 — 스펙 §3 공통 규칙. 헤더 44 → 캔버스 → 컨트롤 → 팔레트(flex:1) → 데일리 줄.
+  rootN: {
+    position: 'fixed',
+    inset: 0,
+    background: '#07090D',
+    overflow: 'hidden',
     display: 'flex',
     flexDirection: 'column',
-    gap: 4,
+    paddingTop: 'env(safe-area-inset-top)',
+    paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+  },
+  brandN: {
+    order: 0,
+    position: 'relative',
+    flex: 'none',
+    height: 44,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    padding: '0 6px 0 16px',
+    fontSize: 17,
+    color: '#eef1f6',
+    zIndex: 20,
+  },
+  // stage = 캔버스 상자(+좌우 8px). 온보딩·메시지 슬롯이 캔버스 위에 정확히 얹히도록 relative.
+  stageN: {
+    order: 1,
+    position: 'relative',
+    flex: 'none',
+    padding: '0 8px',
+  },
+  canvasN: {
+    display: 'block',
     width: '100%',
-    maxWidth: 360,
-    padding: '14px 16px',
+    height: 'auto',
+    aspectRatio: '2 / 1',
+    touchAction: 'none',
+    borderRadius: 8,
+    boxShadow: '0 0 0 1px rgba(255,255,255,0.07)',
+  },
+  // 메시지 슬롯: 캔버스 안 상단 중앙 한 칸. 긴 문구는 줄바꿈(캔버스 폭 안에 머문다).
+  toastSlot: {
+    ...glass,
+    position: 'absolute',
+    top: 8,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: 'max-content',
+    maxWidth: 'calc(100% - 32px)',
+    borderRadius: 9,
+    padding: '7px 12px',
+    fontSize: 12.5,
+    lineHeight: 1.4,
+    textAlign: 'center',
+    color: '#eef1f6',
+    boxShadow: '0 8px 30px rgba(0,0,0,0.5)',
+    pointerEvents: 'none',
+    zIndex: 6,
+  },
+  // 캔버스와 컨트롤 사이 8px(스펙 완료 기준 ≤16px).
+  dockN: {
+    order: 2,
+    position: 'relative',
+    flex: '1 1 0',
+    minHeight: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 8,
+    padding: '8px 8px 0',
+  },
+  contents: { display: 'contents' },
+  controlsN: {
+    order: 0,
+    flex: 'none',
+    display: 'flex',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'center',
+    columnGap: 8,
+    rowGap: 6,
+  },
+  // 남는 높이를 전부 차지하고(flex:1), 칩 격자가 그 상자를 1fr 행·열로 꽉 채운다 — 빈 공간이 생기지 않는다.
+  paletteN: {
+    order: 1,
+    flex: '1 1 0',
+    minHeight: 0,
+    display: 'flex',
+  },
+  chipsN: {
+    flex: 1,
+    display: 'grid',
+    alignItems: 'stretch',
+    justifyItems: 'stretch',
+    gap: 0,
+    borderRadius: 14,
+    background: 'rgba(255,255,255,0.025)',
+  },
+  chipCellN: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 0,
+    minHeight: 0,
+    background: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 0,
+  },
+  dailyRow: {
+    order: 3,
+    flex: 'none',
+    display: 'flex',
+    gap: 8,
+    margin: '8px 8px 0',
+  },
+  gameCard: {
+    flex: 1,
+    minWidth: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+    padding: '9px 14px',
     borderRadius: 12,
     textDecoration: 'none',
     color: '#eef1f6',
     background: 'linear-gradient(135deg, rgba(245,166,35,0.18), rgba(245,166,35,0.05))',
     border: '1px solid rgba(245,166,35,0.35)',
   },
-  gameCardKicker: { fontSize: 11.5, opacity: 0.7, letterSpacing: 0.2 },
-  gameCardTitle: { fontSize: 18, fontWeight: 700 },
-  gameCardSub: { fontSize: 12.5, opacity: 0.7 },
-  gameLink: { fontSize: 13, color: '#eef1f6', opacity: 0.7 },
-  gameStat: { fontSize: 11, opacity: 0.4, fontVariantNumeric: 'tabular-nums' },
-  stageFill: {
-    flex: 1,
-    minHeight: 0,
-    alignSelf: 'stretch',
+  gameCardKicker: { fontSize: 11, opacity: 0.7, letterSpacing: 0.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  gameCardTitle: { fontSize: 15.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  gameSide: {
+    flex: 'none',
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
     textAlign: 'center',
-    padding: '26px 20px',
-    background:
-      'radial-gradient(130% 90% at 50% 118%, rgba(245,166,35,0.16), rgba(245,166,35,0.03) 46%, transparent 72%)',
-    pointerEvents: 'none',
-    userSelect: 'none',
+    padding: '0 12px',
+    borderRadius: 12,
+    border: '1px solid rgba(255,255,255,0.14)',
+    color: '#eef1f6',
+    opacity: 0.8,
+    fontSize: 12,
+    lineHeight: 1.3,
+    textDecoration: 'none',
   },
-  stageFillWord: {
-    fontSize: 26,
-    fontWeight: 700,
-    letterSpacing: -0.4,
-    color: '#f5d9a6',
-    textShadow: '0 2px 20px rgba(0,0,0,0.6)',
+  // ☰ 메뉴(폭 400px 미만) — 탭 타깃 44px.
+  menuWrap: { position: 'relative', pointerEvents: 'auto', marginLeft: 'auto' },
+  menuBtn: {
+    width: 44,
+    height: 44,
+    background: 'transparent',
+    border: 'none',
+    color: '#eef1f6',
+    fontSize: 20,
+    lineHeight: 1,
+    cursor: 'pointer',
+    opacity: 0.8,
   },
-  stageFillSub: { fontSize: 13, opacity: 0.62, color: '#eef1f6', maxWidth: 280, lineHeight: 1.5 },
+  menuBackdrop: { position: 'fixed', inset: 0, zIndex: 29 },
+  menu: {
+    ...glass,
+    position: 'absolute',
+    top: '100%',
+    right: 4,
+    zIndex: 30,
+    display: 'flex',
+    flexDirection: 'column',
+    minWidth: 160,
+    padding: 6,
+    borderRadius: 12,
+    boxShadow: '0 12px 40px rgba(0,0,0,0.55)',
+  },
+  menuLink: {
+    display: 'block',
+    padding: '0 12px',
+    lineHeight: '44px',
+    fontSize: 14.5,
+    color: '#eef1f6',
+    textDecoration: 'none',
+    borderRadius: 8,
+  },
   canvas: {
     display: 'block',
     maxWidth: '100%',
@@ -1356,26 +1566,25 @@ const S: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     padding: '0 4px',
   },
-  errWrap: { position: 'fixed', inset: 0, display: 'grid', placeItems: 'center', padding: 20 },
-  errCard: { ...glass, maxWidth: 480, padding: 26, borderRadius: 14 },
+  // flex + margin:auto — 카드가 화면보다 길어도 위가 잘리지 않고 스크롤된다(grid center는 위를 자른다).
+  errWrap: { position: 'fixed', inset: 0, display: 'flex', padding: 16, overflowY: 'auto' },
+  errSteps: { margin: '12px 0 0', fontSize: 13, opacity: 0.72, lineHeight: 1.6 },
+  errGhost: {
+    display: 'inline-block',
+    background: 'transparent',
+    color: '#eef1f6',
+    border: '1px solid rgba(255,255,255,0.18)',
+    textDecoration: 'none',
+    borderRadius: 9,
+    padding: '9px 14px',
+    fontSize: 13.5,
+  },
+  errCard: { ...glass, margin: 'auto', maxWidth: 480, width: '100%', padding: 22, borderRadius: 14 },
   errHero: {
     width: '100%',
     borderRadius: 8,
     margin: '0 0 16px',
     display: 'block',
-    border: '1px solid rgba(255,255,255,0.10)',
-  },
-  errThumbs: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: 8,
-    margin: '0 0 16px',
-  },
-  errThumb: {
-    display: 'block',
-    aspectRatio: '2 / 1',
-    borderRadius: 8,
-    overflow: 'hidden',
     border: '1px solid rgba(255,255,255,0.10)',
   },
   errCta: {
