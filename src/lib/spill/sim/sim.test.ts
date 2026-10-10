@@ -287,7 +287,7 @@ describe('결정성 (§7.2)', () => {
     const a = new Sim()
     a.load(lv())
     run(a, 240)
-    expect(a.hash()).toMatchInlineSnapshot(`"0b6d78fb"`)
+    expect(a.hash()).toMatchInlineSnapshot(`"e83f7f63"`)
   })
 
   it('sim 디렉터리에 Math.random/Date/performance/부동소수 함수가 없다', () => {

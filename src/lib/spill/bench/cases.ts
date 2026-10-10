@@ -340,6 +340,17 @@ const vent: BenchCase = {
 export const BENCH_CASES: BenchCase[] = [spread, pot, plank, crust, ignite, fuse, vent]
 
 /**
+ * 목표치는 salt 하나에 맞춘 튜닝이면 안 된다(§7.8 "salt 16개에서 클리어"와 같은 기준).
+ * 첫 값은 벤치 레벨 기본 salt.
+ */
+export const SWEEP_SALTS = [0x5a17, 1, 2, 3, 7, 42, 0x3a1f, 1234, 9999, 0xbeef, 0xffff, 55, 77, 101, 2026, 31337]
+
+/** 같은 케이스를 다른 salt로 */
+export function withSalt(c: BenchCase, salt: number): BenchCase {
+  return { ...c, level: { ...c.level, salt } }
+}
+
+/**
  * 성능 측정용 부하 레벨: 격자 절반이 모래·물·기름이고 계속 움직인다(최악에 가까운 1x 틱).
  */
 export const STRESS_LEVEL: LevelDef = lvl('bench-stress', 'Stress', (c) => {
