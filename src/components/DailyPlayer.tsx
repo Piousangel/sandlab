@@ -10,6 +10,7 @@ import ChallengePlayer from './ChallengePlayer'
 import { dayNumber, dailyFor } from '@/lib/challenge/daily'
 import { shareText, rankLabel, loadDaily, saveDaily } from '@/lib/challenge/daily/share'
 import type { Level } from '@/lib/challenge/types'
+import { trackEvent } from '@/lib/sand/gallery'
 
 type Stats = { clears: number; inkPercentiles: number[]; stars: [number, number, number] }
 
@@ -57,6 +58,7 @@ export default function DailyPlayer() {
 
   const text = mine ? shareText(today.n, mine.stars, mine.ink) : ''
   const doShare = async () => {
+    trackEvent('share_click', 'daily')
     try {
       if (navigator.share) {
         await navigator.share({ text })

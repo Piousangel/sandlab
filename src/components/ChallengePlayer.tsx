@@ -17,6 +17,7 @@ import { InkLedger } from '@/lib/challenge/ink'
 import { canPaintAt, areaFor } from '@/lib/challenge/area'
 import { brushAt } from '@/lib/challenge/replay'
 import { trackEvent } from '@/lib/sand/gallery'
+import { currentUaClass } from '@/lib/sand/ua'
 import { saveBest, type Best } from '@/lib/challenge/progress'
 import type { GoalStatus, Level, Zone } from '@/lib/challenge/types'
 
@@ -107,6 +108,13 @@ export default function ChallengePlayer({
     loadLevel()
   }, [level, loadLevel])
 
+  // 퍼즐 착지(/play/<id>·/daily) — 엔진 init 성패와 무관하게 페이지 진입을 센다(스펙 §10 ①의 분모).
+  // ref = UA 분류. autoplay(검증용)는 계측하지 않는다.
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('autoplay') === '1') return
+    trackEvent('puzzle_land', currentUaClass())
+  }, [])
+
   // 엔진 생성·정리
   useEffect(() => {
     const canvas = canvasRef.current
@@ -129,7 +137,10 @@ export default function ChallengePlayer({
         setReady(true)
       })
       .catch((e) => {
-        if (!disposed) setErr(e instanceof WebGPUUnsupported ? e.message : String(e))
+        if (disposed) return
+        // value 1 = 퍼즐 화면(홈 샌드박스는 0) — 카톡 인앱 WebGPU 미지원 비율을 화면별로 본다
+        if (e instanceof WebGPUUnsupported) trackEvent('gpu_unsupported', currentUaClass(), 1)
+        setErr(e instanceof WebGPUUnsupported ? e.message : String(e))
       })
     return () => {
       disposed = true
