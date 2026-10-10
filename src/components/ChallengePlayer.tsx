@@ -18,6 +18,7 @@ import { canPaintAt, areaFor } from '@/lib/challenge/area'
 import { brushAt } from '@/lib/challenge/replay'
 import { trackEvent } from '@/lib/sand/gallery'
 import { currentUaClass } from '@/lib/sand/ua'
+import { gpuAdvice, type GpuAdvice } from '@/lib/sand/gpuAdvice'
 import { saveBest, type Best } from '@/lib/challenge/progress'
 import type { GoalStatus, Level, Zone } from '@/lib/challenge/types'
 
@@ -76,6 +77,8 @@ export default function ChallengePlayer({
   const [left, setLeft] = useState<Record<string, number>>({ ...level.palette })
   const [result, setResult] = useState<{ stars: 1 | 2 | 3; ink: number; best: Best } | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  // init 실패 시 UA별 안내(이미 쓰는 브라우저로 다시 가라고 하지 않는다). GPU 손실(onLost)은 null로 두고 err만.
+  const [gpuHelp, setGpuHelp] = useState<GpuAdvice | null>(null)
   const [ready, setReady] = useState(false)
   const [hint, setHint] = useState(false)
   const selRef = useRef(sel)
@@ -138,8 +141,10 @@ export default function ChallengePlayer({
       })
       .catch((e) => {
         if (disposed) return
-        // value 1 = 퍼즐 화면(홈 샌드박스는 0) — 카톡 인앱 WebGPU 미지원 비율을 화면별로 본다
-        if (e instanceof WebGPUUnsupported) trackEvent('gpu_unsupported', currentUaClass(), 1)
+        // value 1 = 퍼즐 화면(홈 샌드박스는 0) — 카톡 인앱 WebGPU 미지원 비율을 화면별로 본다.
+        // 미지원이든 init 실패든 "여기선 못 돌린다"로 센다. autoplay(검증용)는 puzzle_land처럼 계측하지 않는다.
+        if (new URLSearchParams(location.search).get('autoplay') !== '1') trackEvent('gpu_unsupported', currentUaClass(), 1)
+        setGpuHelp(gpuAdvice(navigator.userAgent || ''))
         setErr(e instanceof WebGPUUnsupported ? e.message : String(e))
       })
     return () => {
@@ -427,7 +432,15 @@ export default function ChallengePlayer({
         {err && (
           <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', padding: 20, textAlign: 'center', fontSize: 14, background: 'rgba(7,9,13,0.85)', borderRadius: 10 }}>
             <p style={{ maxWidth: 420 }}>
-              This level needs WebGPU, which this browser does not provide. Try a recent Chrome or Edge. {err}
+              {gpuHelp ? (
+                <>
+                  <strong>{gpuHelp.heading}</strong>
+                  <br />
+                  {gpuHelp.body}
+                </>
+              ) : (
+                err
+              )}
             </p>
           </div>
         )}

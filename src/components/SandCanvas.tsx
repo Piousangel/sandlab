@@ -11,8 +11,10 @@ import { makeThumb, isBlank } from '@/lib/sand/thumb'
 import { noteFirstTry, buildSuggestionPairs, pickSuggestion } from '@/lib/sand/discovery'
 import { checkPourMilestone } from '@/lib/sand/milestones'
 import { trackEvent } from '@/lib/sand/gallery'
-import { currentUaClass, type UaClass } from '@/lib/sand/ua'
+import { uaClass } from '@/lib/sand/ua'
+import { gpuAdvice, type GpuAdvice } from '@/lib/sand/gpuAdvice'
 import { paletteGrid } from '@/lib/sand/paletteGrid'
+import { isPortraitLayout, PORTRAIT_CSS } from '@/lib/sand/portraitLayout'
 // record.ts는 mediabunny(~대용량 코덱)를 정적 import한다. 방문자 대부분이 안 누르는 녹화 기능이므로
 // 랜딩 초기 JS에서 분리한다 — record() 호출 시점에 동적 import(아래).
 
@@ -67,8 +69,8 @@ export default function SandCanvas() {
   // 지우개 모드. 데스크톱은 우클릭으로도 지우지만 터치엔 우클릭이 없어 이 토글이 유일한 지우기 수단이다.
   const [erasing, setErasing] = useState(false)
   // WebGPU 미지원 착지(스펙 §9 S1 ③) — 깨진 캔버스 대신 정지 이미지 + 외부 브라우저 안내.
-  // 카톡/인스타 인앱은 안내 문구가 다르다(메뉴 위치가 다름).
-  const [errUa, setErrUa] = useState<UaClass>('other')
+  // 안내는 UA별로 다르다(카톡/인스타 메뉴 위치, iOS 26 미만은 업데이트, 이미 Chrome/Safari면 기기 문제) — gpuAdvice.
+  const [advice, setAdvice] = useState<GpuAdvice | null>(null)
   const [errCopied, setErrCopied] = useState<'idle' | 'ok' | 'fail'>('idle')
   // Publish/Copy 성공 후 지속되는 공유 패널. navigator.share·clipboard는 transient activation을
   // 요구하는데 업로드(네트워크 await) 뒤엔 그 창이 만료돼 있다. 그래서 자동 공유 대신,
@@ -134,15 +136,32 @@ export default function SandCanvas() {
 
   // 세로 폰(h>w) 레이아웃(스펙 §3 공통 규칙·§9 S1): 헤더 44px → 캔버스(폭 가득) → 컨트롤 → 팔레트(남는 높이 흡수)
   // → 데일리 카드를 flex column으로 쌓는다. 같은 DOM에 스타일만 바꾼다 — 캔버스가 리마운트되면 엔진이 끊긴다.
-  // h>w는 세로 폰/태블릿만 잡고 모든 landscape 데스크톱을 배제한다(데스크톱 레이아웃은 그대로).
+  // 폭 900 미만이면서 h>w일 때만(isPortraitLayout) — 데스크톱 창은 정사각에 가까워도 데스크톱 레이아웃 그대로.
   const [narrow, setNarrow] = useState(false)
   // 폭 400px 미만이면 헤더 내비를 ☰로 접는다(스펙 §3)
   const [compactNav, setCompactNav] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuBtnRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLElement>(null)
+  // ☰ 메뉴: 열리면 첫 링크로 포커스, Escape로 닫고 버튼으로 포커스를 돌려준다.
+  useEffect(() => {
+    if (!menuOpen) return
+    menuRef.current?.querySelector('a')?.focus()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setMenuOpen(false)
+      menuBtnRef.current?.focus()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [menuOpen])
   useEffect(() => {
     const measure = () => {
-      setNarrow(window.innerHeight > window.innerWidth)
-      setCompactNav(window.innerWidth < 400)
+      setNarrow(isPortraitLayout(window.innerWidth, window.innerHeight))
+      const compact = window.innerWidth < 400
+      setCompactNav(compact)
+      if (!compact) setMenuOpen(false) // 회전으로 400px을 넘었다 돌아와도 메뉴가 저절로 다시 열리지 않게
+
     }
     measure()
     window.addEventListener('resize', measure)
@@ -214,11 +233,11 @@ export default function SandCanvas() {
       })
       .catch((e) => {
         if (disposed) return
-        if (e instanceof WebGPUUnsupported) {
-          const ua = currentUaClass()
-          setErrUa(ua)
-          trackEvent('gpu_unsupported', ua, 0) // value 0 = 홈 샌드박스(퍼즐 화면은 1)
-        }
+        // 미지원(WebGPUUnsupported)이든 init 실패(requestDevice 거부·파이프라인 컴파일 실패)든 방문자에겐
+        // 똑같이 "여기선 못 돌린다"다 — 둘 다 폴백 안내 + gpu_unsupported로 센다(지표 ⑦에서 안 보이면 못 고친다).
+        const ua = navigator.userAgent || ''
+        setAdvice(gpuAdvice(ua))
+        trackEvent('gpu_unsupported', uaClass(ua), 0) // value 0 = 홈 샌드박스(퍼즐 화면은 1)
         setErr(e instanceof WebGPUUnsupported ? e.message : String(e))
       })
 
@@ -541,8 +560,8 @@ export default function SandCanvas() {
 
   if (lost) {
     return (
-      <div style={S.errWrap}>
-        <div style={S.errCard}>
+      <div style={S.lostWrap}>
+        <div style={S.lostCard}>
           <h2 style={{ margin: '0 0 10px', fontSize: 19 }}>The GPU was interrupted</h2>
           <p style={{ margin: '0 0 16px', opacity: 0.72, fontSize: 14, lineHeight: 1.55 }}>
             Your device paused the graphics context (this can happen after sleep, or when another app
@@ -581,13 +600,12 @@ export default function SandCanvas() {
           {/* 깨진 캔버스 대신 정지 이미지 — 무엇을 하는 곳인지 먼저 보여준다 */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/og.png" alt="Sandlab — falling sand you paint in the browser" style={S.errHero} />
-          <h2 style={{ margin: '0 0 8px', fontSize: 19 }}>Open Sandlab in Chrome or Safari</h2>
+          <h2 style={{ margin: '0 0 8px', fontSize: 19 }}>{advice?.heading ?? 'Open Sandlab in Chrome, Edge or Safari'}</h2>
           <p style={{ margin: '0 0 14px', opacity: 0.72, fontSize: 14, lineHeight: 1.55 }}>
-            The sandbox runs on your graphics card through WebGPU, and this browser doesn&apos;t provide it.
-            {errUa === 'other' ? ' Open this page in a recent Chrome, Edge or Safari.' : ' In-app browsers usually block it — open this page in your phone\'s own browser.'}
+            {advice?.body ?? 'The sandbox runs on your graphics card through WebGPU, and this browser doesn’t provide it.'}
           </p>
 
-          {errUa === 'kakao' && (
+          {advice?.kind === 'kakao' && (
             <>
               <a href={`kakaotalk://web/openExternal?url=${encodeURIComponent(here)}`} style={S.errCta}>
                 Open in browser ↗
@@ -598,7 +616,7 @@ export default function SandCanvas() {
               </p>
             </>
           )}
-          {errUa === 'insta' && (
+          {advice?.kind === 'insta' && (
             <p style={S.errSteps}>
               Tap <strong>⋯</strong> at the top right, then <strong>Open in external browser</strong> (Android:{' '}
               <strong>Open in Chrome</strong>).
@@ -608,7 +626,7 @@ export default function SandCanvas() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '14px 0 0' }}>
             <button
               onClick={copyHere}
-              style={{ ...(errUa === 'kakao' ? S.errGhost : S.errCta), border: errUa === 'kakao' ? S.errGhost.border : 'none', cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ ...(advice?.kind === 'kakao' ? S.errGhost : S.errCta), border: advice?.kind === 'kakao' ? S.errGhost.border : 'none', cursor: 'pointer', fontFamily: 'inherit' }}
             >
               {errCopied === 'ok' ? 'Link copied ✓' : 'Copy link'}
             </button>
@@ -646,6 +664,10 @@ export default function SandCanvas() {
     <div style={narrow ? S.toastSlot : S.toast} role="status" aria-live="polite">
       {toast}
     </div>
+  )
+  // 세로 폰 온보딩 힌트도 같은 슬롯(스펙 §3: 토스트·힌트·실패 문구 모두 여기) — 우선순위는 토스트 > 리믹스 > 힌트.
+  const hintEl = ready && !hasDrawn && (
+    <div style={S.toastSlot}>{coarse ? 'Drag to pour sand' : 'Click and drag to pour sand'}</div>
   )
   const remixEl = remix && (
     <div style={narrow ? { ...S.remixBanner, top: 8 } : S.remixBanner}>
@@ -698,7 +720,7 @@ export default function SandCanvas() {
           </div>
         )}
         {/* 세로 폰에선 stage = 캔버스 상자라 온보딩·고스트 커서가 캔버스 위에 정확히 얹힌다. */}
-        {ready && !hasDrawn && (
+        {ready && !hasDrawn && !narrow && (
           <div style={S.onboard}>{coarse ? 'Drag to pour sand' : 'Click and drag to pour sand'}</div>
         )}
         {/* 고스트 커서 — 문구만으론 "이걸 하라는 건가" 망설이는 방문자에게 제스처 자체를 몸짓으로
@@ -708,7 +730,7 @@ export default function SandCanvas() {
             <span className="sl-ghost-dot" />
           </div>
         )}
-        {narrow ? toastEl || remixEl : remixEl}
+        {narrow ? toastEl || remixEl || hintEl : remixEl}
       </div>
 
       <div style={narrow ? S.brandN : S.brand}>
@@ -721,9 +743,11 @@ export default function SandCanvas() {
         {compactNav ? (
           <div style={S.menuWrap}>
             <button
+              ref={menuBtnRef}
               style={S.menuBtn}
               onClick={() => setMenuOpen((v) => !v)}
               aria-expanded={menuOpen}
+              aria-controls="sl-menu"
               aria-label="Menu"
             >
               ☰
@@ -731,7 +755,7 @@ export default function SandCanvas() {
             {menuOpen && (
               <>
                 <div style={S.menuBackdrop} onClick={() => setMenuOpen(false)} aria-hidden="true" />
-                <nav style={S.menu}>{navLinks}</nav>
+                <nav id="sl-menu" ref={menuRef} style={S.menu}>{navLinks}</nav>
               </>
             )}
           </div>
@@ -802,7 +826,7 @@ export default function SandCanvas() {
                   style={narrow ? S.chipCellN : coarse ? S.chipHitStack : S.chipStack}
                 >
                   <span style={dot} />
-                  <span style={label}>{m.name}</span>
+                  {(!narrow || pal.showLabel) && <span style={label}>{m.name}</span>}
                 </button>
               )
               return (
@@ -958,9 +982,7 @@ export default function SandCanvas() {
           0%, 100% { box-shadow: 0 0 0 0 rgba(245,166,35,0); }
           50% { box-shadow: 0 0 0 6px rgba(245,166,35,0.14); }
         }
-        /* 세로 폰 컨트롤 — 손가락 탭 타깃을 36px 이상으로(데스크톱 도크는 그대로) */
-        .sl-controls-n > button, .sl-controls-n > a { min-height: 36px; display: inline-flex; align-items: center; }
-        @media (max-height: 499px) {
+        /* 세로 폰 컨트롤 — 탭 타깃 44px(스펙 §3, portraitLayout.ts). 데스크톱 도크는 그대로 */${PORTRAIT_CSS}        @media (max-height: 499px) {
           .sl-daily { display: none !important; }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -1568,6 +1590,9 @@ const S: Record<string, React.CSSProperties> = {
   },
   // flex + margin:auto — 카드가 화면보다 길어도 위가 잘리지 않고 스크롤된다(grid center는 위를 자른다).
   errWrap: { position: 'fixed', inset: 0, display: 'flex', padding: 16, overflowY: 'auto' },
+  // GPU 손실 카드는 S1 이전 모양 그대로(데스크톱 무변경)
+  lostWrap: { position: 'fixed', inset: 0, display: 'grid', placeItems: 'center', padding: 20 },
+  lostCard: { ...glass, maxWidth: 480, padding: 26, borderRadius: 14 },
   errSteps: { margin: '12px 0 0', fontSize: 13, opacity: 0.72, lineHeight: 1.6 },
   errGhost: {
     display: 'inline-block',
