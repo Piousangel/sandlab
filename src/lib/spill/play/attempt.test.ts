@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { Attempt, devActions, simulate } from './attempt'
+import { Attempt, MAX_ACTIONS, devActions, simulate } from './attempt'
 import { parseLevel } from '../level/parse'
 import { BAD_LEVEL, GATE_LEVEL, POT_LEVEL, PROTECT_LEVEL } from './fixtures'
 import { FAIL_WINDOW } from './failure'
@@ -68,5 +68,11 @@ describe('Attempt / simulate (shared tick loop)', () => {
   it('rejects an illegal action instead of silently skipping it', () => {
     expect(() => simulate(POT_LEVEL, [{ tick: 0, verb: 'dig', tx: 18, ty: 40, tx2: 18, ty2: 41 }])).toThrow(/illegal/)
     expect(() => simulate(POT_LEVEL, [{ tick: 5, verb: 'dig', tx: 18, ty: 15, tx2: 18, ty2: 17 }, { tick: 2, verb: 'dig', tx: 10, ty: 15, tx2: 10, ty2: 17 }])).toThrow(/order/)
+  })
+
+  it('caps an attempt at 32 actions (replay limit)', () => {
+    const a = new Attempt(parseLevel(POT_LEVEL))
+    for (let x = 1; x <= MAX_ACTIONS; x++) expect(a.apply({ verb: 'dig', tx: x, ty: 16, tx2: x, ty2: 16 }).ok).toBe(true)
+    expect(a.apply({ verb: 'dig', tx: 35, ty: 16, tx2: 35, ty2: 16 })).toEqual({ ok: false, reason: 'limit' })
   })
 })

@@ -5,6 +5,8 @@ import { FailureDetector, type FailReason } from './failure'
 import { checkAction, type ActionInput, type Check } from './input'
 import { Judge, type JudgeUpdate } from './targets'
 
+export const MAX_ACTIONS = 32
+
 export interface PlayAction extends ActionInput {
   tick: number
 }
@@ -77,6 +79,7 @@ export class Attempt {
 
   apply(input: ActionInput): Check {
     if (this.status !== 'live') return { ok: false, reason: 'phase' }
+    if (this.actions.length >= MAX_ACTIONS) return { ok: false, reason: 'limit' }
     const c = this.check(input)
     if (!c.ok) return c
     const a = c.action

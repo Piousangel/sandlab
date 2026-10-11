@@ -33,7 +33,7 @@ export interface Usage {
   triggered: readonly string[]
 }
 
-export type RejectReason = 'verb' | 'phase' | 'shape' | 'bounds' | 'maxLen' | 'illegal' | 'charges' | 'gate'
+export type RejectReason = 'verb' | 'phase' | 'shape' | 'bounds' | 'maxLen' | 'illegal' | 'charges' | 'gate' | 'limit'
 
 export type Check =
   | { ok: true; action: ActionInput; dug: number }
