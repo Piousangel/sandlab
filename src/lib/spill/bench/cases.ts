@@ -384,7 +384,8 @@ export function withSalt(c: BenchCase, salt: number): BenchCase {
 }
 
 /**
- * 성능 측정용 부하 레벨: 격자 절반이 모래·물·기름이고 계속 움직인다(최악에 가까운 1x 틱).
+ * 성능 측정용 부하 레벨: 격자 절반이 모래·물·용암으로 시작해 무너진다. 처음 몇 초가 가장 비싸고
+ * 점점 가라앉으므로 runStress는 평균과 함께 최악 1초를 낸다.
  */
 export const STRESS_LEVEL: LevelDef = lvl('bench-stress', 'Stress', (c) => {
   c.rect(1, 1, 26, 50, 's')
@@ -451,9 +452,26 @@ export function ffCap(msPerTick: number): 1 | 2 | 4 {
   return msPerTick <= 2 ? 4 : msPerTick <= 4 ? 2 : 1
 }
 
-export function runStress(sim: Sim, now: () => number, ticks = 600): number {
+export interface StressRun {
+  ticks: number
+  /** 전체 평균 ms/tick */
+  avgMs: number
+  /** 가장 비싼 1초(60틱 묶음)의 평균 ms/tick — 부하 레벨은 점점 가라앉아 평균이 낙관적이다(리뷰 Minor #1) */
+  worstSecMs: number
+}
+
+export function runStress(sim: Sim, now: () => number, ticks = 600): StressRun {
   sim.load(STRESS_LEVEL)
-  const t0 = now()
-  for (let i = 0; i < ticks; i++) sim.step()
-  return (now() - t0) / ticks
+  let total = 0
+  let worst = 0
+  for (let i = 0; i < ticks; ) {
+    const n = Math.min(TICKS_PER_SEC, ticks - i)
+    const t0 = now()
+    for (let k = 0; k < n; k++) sim.step()
+    const dt = now() - t0
+    total += dt
+    if (dt / n > worst) worst = dt / n
+    i += n
+  }
+  return { ticks, avgMs: total / Math.max(1, ticks), worstSecMs: worst }
 }

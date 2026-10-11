@@ -9,6 +9,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Sim } from '@/lib/spill/sim/sim'
+import { TickRate } from '@/lib/spill/bench/rate'
 import { SpillRenderer, computeScale } from '@/lib/spill/render/canvas'
 import {
   BENCH_CASES, STRESS_LEVEL, applyDue, createRunner, ffCap, runStress,
@@ -34,6 +35,9 @@ interface Hud {
   tick: number
   msTick: number
   fps: number
+  /** 실제로 돈 틱/s(1초 창) — 프레임 예산을 넘으면 배속이 유지되지 않을 수 있다 */
+  tps: number | null
+  held: boolean | null
   result: BenchResult | null
   doneAt: number
 }
@@ -41,6 +45,7 @@ interface Hud {
 interface AllReport {
   runs: CaseRun[]
   stressMs: number
+  stressWorstMs: number
   avgMs: number
   running: boolean
   current: string
@@ -67,7 +72,11 @@ export default function SpillBench() {
   const [speed, setSpeed] = useState(1)
   const [running, setRunning] = useState(true)
   const [glow, setGlow] = useState(true)
-  const [hud, setHud] = useState<Hud>({ tick: 0, msTick: 0, fps: 0, result: null, doneAt: -1 })
+  const [hud, setHud] = useState<Hud>({ tick: 0, msTick: 0, fps: 0, tps: null, held: null, result: null, doneAt: -1 })
+  /** 2x 유지 테스트(S0 게이트 "2x 이상 유지"): 부하 레벨을 렌더 포함 2x로 5초 돌려 실제 틱/s를 잰다 */
+  const [hold, setHold] = useState<{ state: 'idle' | 'running' | 'done'; tps: number; fps: number; held: boolean }>({ state: 'idle', tps: 0, fps: 0, held: false })
+  const rateRef = useRef(new TickRate(1000))
+  const [copyFailed, setCopyFailed] = useState(false)
   const [cssSize, setCssSize] = useState({ w: 160, h: 240, dpc: 1 })
   const [all, setAll] = useState<AllReport | null>(null)
   const [ua, setUa] = useState('')
@@ -121,6 +130,7 @@ export default function SpillBench() {
       raf = requestAnimationFrame(frame)
       const dt = Math.min(100, now - last)
       last = now
+      let stepped = 0
       if (runningRef.current) {
         acc += (dt * 60 * speedRef.current) / 1000
         const f0 = performance.now()
@@ -132,6 +142,7 @@ export default function SpillBench() {
           sim.step()
           tickMs += performance.now() - t0
           tickN++
+          stepped++
           acc -= 1
           const obs = obsRef.current
           if (obs && !resultRef.current.result && (obs.onTick(sim) || sim.tick >= c.maxTicks)) {
@@ -141,12 +152,14 @@ export default function SpillBench() {
         }
       }
       rendererRef.current?.draw(sim.grid, sim.tick)
+      if (runningRef.current) rateRef.current.add(now, stepped)
       frames++
       if (now - fpsT0 >= 1000) { fps = (frames * 1000) / (now - fpsT0); frames = 0; fpsT0 = now }
       if (now - hudT > 250) {
         hudT = now
         setHud({
           tick: sim.tick, msTick: tickN ? tickMs / tickN : 0, fps,
+          tps: rateRef.current.ticksPerSec(now), held: rateRef.current.held(now, speedRef.current),
           result: resultRef.current.result, doneAt: resultRef.current.doneAt,
         })
         tickMs = 0
@@ -157,7 +170,10 @@ export default function SpillBench() {
     return () => cancelAnimationFrame(raf)
   }, [loadCase])
 
-  useEffect(() => { speedRef.current = speed }, [speed])
+  useEffect(() => {
+    speedRef.current = speed
+    rateRef.current.reset() // 배속이 바뀌면 창을 새로 잰다
+  }, [speed])
   useEffect(() => { if (rendererRef.current) rendererRef.current.glowOn = glow }, [glow])
 
   const pick = (id: string) => {
@@ -178,7 +194,7 @@ export default function SpillBench() {
     const sim = new Sim()
     const now = () => performance.now()
     const runs: CaseRun[] = []
-    setAll({ runs: [], stressMs: 0, avgMs: 0, running: true, current: BENCH_CASES[0].title })
+    setAll({ runs: [], stressMs: 0, stressWorstMs: 0, avgMs: 0, running: true, current: BENCH_CASES[0].title })
     for (const c of BENCH_CASES) {
       setAll((a) => a && { ...a, current: c.title })
       const r = createRunner(c, sim, now)
@@ -190,11 +206,30 @@ export default function SpillBench() {
     setAll((a) => a && { ...a, current: 'Stress (perf)' })
     await new Promise((res) => setTimeout(res, 0))
     runStress(sim, now, 60)
-    const stressMs = runStress(sim, now, 300)
+    const stress = runStress(sim, now, 300)
     const ticks = runs.reduce((s, r) => s + r.ticks, 0)
     const avgMs = runs.reduce((s, r) => s + r.msPerTick * r.ticks, 0) / Math.max(1, ticks)
-    setAll({ runs, stressMs, avgMs, running: false, current: '' })
+    setAll({ runs, stressMs: stress.avgMs, stressWorstMs: stress.worstSecMs, avgMs, running: false, current: '' })
   }
+
+  // 2x 유지 테스트: 부하 레벨을 라이브 루프(렌더·발광 포함)로 2x 5초 → 실제 틱/s·fps로 판정
+  const runHold = async () => {
+    setHold({ state: 'running', tps: 0, fps: 0, held: false })
+    pick(STRESS_CASE.id)
+    setSpeed(2)
+    speedRef.current = 2
+    rateRef.current.reset()
+    runningRef.current = true
+    setRunning(true)
+    await new Promise((res) => setTimeout(res, 5000))
+    const t = performance.now()
+    const tps = rateRef.current.ticksPerSec(t) ?? 0
+    const held = rateRef.current.held(t, 2) ?? false
+    setHold({ state: 'done', tps, fps: hudFpsRef.current, held })
+  }
+
+  const hudFpsRef = useRef(0)
+  hudFpsRef.current = hud.fps
 
   const report = () => {
     if (!all) return ''
@@ -203,7 +238,9 @@ export default function SpillBench() {
       `UA: ${ua}`,
       `DPR ${typeof window !== 'undefined' ? window.devicePixelRatio : '?'} · cell ${cssSize.dpc} device px`,
       ...all.runs.map((r) => `${r.result.pass ? 'PASS' : 'FAIL'} ${r.title} — ${r.result.summary} · ${r.msPerTick.toFixed(3)} ms/tick · hash ${r.hash}`),
-      `avg ${all.avgMs.toFixed(3)} ms/tick · stress ${all.stressMs.toFixed(3)} ms/tick · FF cap ${ffCap(all.stressMs)}x`,
+      `avg ${all.avgMs.toFixed(3)} ms/tick · stress avg ${all.stressMs.toFixed(3)} / worst-second ${all.stressWorstMs.toFixed(3)} ms/tick · FF cap ${ffCap(all.stressWorstMs)}x`,
+      `S0 gate 1x ≤ 4 ms (worst second): ${all.stressWorstMs <= 4 ? 'OK' : 'OVER'}`,
+      hold.state === 'done' ? `2x hold (stress, render on, 5s): ${hold.tps.toFixed(0)} ticks/s (target 120) · ${hold.fps.toFixed(0)} fps · ${hold.held ? 'HELD' : 'NOT HELD'}` : '2x hold: not run',
       `${all.runs.filter((r) => r.result.pass).length}/${all.runs.length} PASS`,
     ]
     return lines.join('\n')
@@ -213,9 +250,12 @@ export default function SpillBench() {
     try {
       await navigator.clipboard.writeText(report())
       setCopied(true)
+      setCopyFailed(false)
       setTimeout(() => setCopied(false), 1500)
     } catch {
+      // 카톡 인앱 등 clipboard 미지원 — 거짓 'Copied' 대신 직접 복사할 텍스트를 보여 준다
       setCopied(false)
+      setCopyFailed(true)
     }
   }
 
@@ -251,6 +291,11 @@ export default function SpillBench() {
         <span style={{ color: hud.msTick > 4 ? '#ff6b6b' : hud.msTick > 2 ? '#f5a623' : '#7ddc7d' }}>{hud.msTick.toFixed(2)} ms/tick</span>
         <span>{hud.fps.toFixed(0)} fps</span>
         <span>{speed}x</span>
+        {hud.tps !== null && (
+          <span style={{ color: hud.held === false ? '#ff6b6b' : '#7ddc7d' }}>
+            {hud.tps.toFixed(0)} ticks/s {hud.held === false ? '(slowed)' : '(held)'}
+          </span>
+        )}
       </div>
 
       <div ref={wrapRef} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -278,6 +323,9 @@ export default function SpillBench() {
           <button type="button" style={btn(true)} onClick={runAll} disabled={all?.running}>
             {all?.running ? `Running… ${all.current}` : 'Run all 7 targets'}
           </button>
+          <button type="button" style={btn()} onClick={runHold} disabled={hold.state === 'running'}>
+            {hold.state === 'running' ? '2x hold test… 5s' : '2x hold test'}
+          </button>
           {all && !all.running && (
             <button type="button" style={btn()} onClick={copy}>{copied ? 'Copied' : 'Copy report'}</button>
           )}
@@ -297,9 +345,13 @@ export default function SpillBench() {
             {!all.running && (
               <p style={{ margin: '12px 0 0' }}>
                 <b>{passCount}/{all.runs.length} PASS</b> · avg {all.avgMs.toFixed(3)} ms/tick · stress {all.stressMs.toFixed(3)} ms/tick ·
-                FF cap {ffCap(all.stressMs)}x · S0 gate (1x ≤ 4 ms):{' '}
-                <b style={{ color: all.stressMs <= 4 ? '#7ddc7d' : '#ff6b6b' }}>{all.stressMs <= 4 ? 'OK' : 'OVER'}</b>
+                worst second {all.stressWorstMs.toFixed(3)} ms/tick · FF cap {ffCap(all.stressWorstMs)}x · S0 gate (1x ≤ 4 ms):{' '}
+                <b style={{ color: all.stressWorstMs <= 4 ? '#7ddc7d' : '#ff6b6b' }}>{all.stressWorstMs <= 4 ? 'OK' : 'OVER'}</b>
               </p>
+            )}
+            {copyFailed && (
+              <textarea readOnly value={report()} onFocus={(e) => e.currentTarget.select()} rows={10}
+                style={{ width: '100%', marginTop: 8, background: '#111', color: '#eef1f6', border: '1px solid #333', borderRadius: 6, fontSize: 12 }} />
             )}
             <p style={{ margin: '8px 0 0', opacity: 0.5, wordBreak: 'break-all' }}>{ua}</p>
           </div>

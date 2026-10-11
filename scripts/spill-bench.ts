@@ -25,6 +25,6 @@ for (const c of BENCH_CASES) {
 runStress(sim, now, 120)
 const stress = runStress(sim, now, 600)
 console.log(`\nAverage over bench levels: ${(totalMs / totalTicks).toFixed(3)} ms/tick (${totalTicks} ticks)`)
-console.log(`Stress level (half-full grid, all moving): ${stress.toFixed(3)} ms/tick`)
+console.log(`Stress level (half-full grid collapsing, 10s): avg ${stress.avgMs.toFixed(3)} ms/tick, worst second ${stress.worstSecMs.toFixed(3)} ms/tick`)
 console.log(`\n${BENCH_CASES.length - fails}/${BENCH_CASES.length} physics targets PASS`)
 process.exit(fails ? 1 : 0)
