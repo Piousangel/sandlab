@@ -247,6 +247,17 @@ describe('Retry keeps placements', () => {
     expect(c.sim.hash()).toBe(freshHash(POT_LEVEL))
   })
 
+  it('retry drops pending scheduled actions', () => {
+    const c = ctl(GATE_LEVEL)
+    c.schedule([{ tick: 5, ...TRIG }])
+    c.run()
+    c.advance(2)
+    c.retry()
+    c.run()
+    c.advance(10)
+    expect(c.getState().run).toEqual([])
+  })
+
   it('a retried attempt replays identically', () => {
     const c = ctl()
     c.act(DIG)

@@ -194,6 +194,7 @@ export class SpillController {
     if (this._phase === 'setup') return
     const actions = this.attempt.actions
     this.ghosts = actions.slice(this.setupCount)
+    this.scheduled = []
     this.attemptNo++
     this.rebuild(actions.slice(0, this.setupCount))
     this.setPhase('setup')
