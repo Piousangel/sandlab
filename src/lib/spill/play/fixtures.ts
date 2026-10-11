@@ -28,7 +28,7 @@ export const POT_LEVEL: LevelDef = defineLevel({
   gems: [{ rect: [17, 30, 2, 2], mat: 'water' }],
   verbs: { dig: { maxLen: 6 }, trigger: null },
   legalTiles: 'auto',
-  par: { moves: 1, secs: 4 },
+  par: { moves: 1, secs: 6 },
   dev: [[0, 'dig', 18, 15, 18, 17]],
   hint: 'Dig straight down.',
 })
