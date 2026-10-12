@@ -9,6 +9,9 @@
 
 import { parseTrack } from './track'
 import { validateDaily, summarize } from './daily'
+import { handleSpill, levelHashes } from './spill'
+import { spillRedirect } from './spill-redirects'
+import { LEVELS as SPILL_LEVELS } from '../src/lib/spill/levels'
 import {
   HOT_WINDOW_DAYS,
   PAGE_SIZE,
@@ -119,6 +122,8 @@ async function tooManyVotes(env: Env, hash: string): Promise<boolean> {
     .first<{ n: number }>()
   return (row?.n ?? 0) >= VOTES_PER_HOUR
 }
+
+let spillKnown: Map<string, string> | null = null
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -402,6 +407,12 @@ export default {
       return res
     }
 
+    if (p.startsWith('/api/spill/')) {
+      spillKnown ??= levelHashes(SPILL_LEVELS)
+      const res = await handleSpill(request, env.DB, spillKnown)
+      if (res) return res
+    }
+
     if (p === '/api/track' && request.method === 'POST') {
       let body: unknown
       try {
@@ -464,6 +475,9 @@ export default {
       // 잘못된/삭제된 id → 앱 홈으로 보낸다(막다른 404 대신).
       return Response.redirect(`${url.origin}/`, 302)
     }
+
+      const moved = spillRedirect(p)
+      if (moved) return Response.redirect(`${url.origin}${moved}`, 301)
 
       return env.ASSETS.fetch(request)
     } catch (e) {
