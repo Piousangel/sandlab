@@ -69,7 +69,6 @@ const CSS = `
 @keyframes spill-msg{from{opacity:0}to{opacity:1}}
 @keyframes spill-hand-drag{0%{transform:translate(var(--fx),var(--fy));opacity:0}12%{transform:translate(var(--fx),var(--fy));opacity:1}70%{transform:translate(var(--tx),var(--ty));opacity:1}86%,100%{transform:translate(var(--tx),var(--ty));opacity:0}}
 @keyframes spill-hand-tap{0%,100%{transform:translate(var(--fx),var(--fy)) scale(1)}50%{transform:translate(var(--fx),calc(var(--fy) + 7px)) scale(.92)}}
-@media (prefers-reduced-motion:reduce){.spill-root *{animation-duration:1ms!important;animation-iteration-count:1!important}}
 `
 
 function useHud(ctl: SpillController): PlayState {

@@ -37,6 +37,18 @@ export default function LevelList({ items }: { items: LevelItem[] }) {
 
   return (
     <div style={{ position: 'relative' }}>
+      {Object.keys(stars).length === 0 && (
+        <a
+          href={`/play/${groups[0].levels[0].id}`}
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '8px 0 4px', padding: '16px 18px',
+            borderRadius: 16, background: C.accent, color: C.bg, textDecoration: 'none', fontWeight: 800, fontSize: 18, minHeight: 44,
+          }}
+        >
+          <span>Start with {groups[0].levels[0].id} {groups[0].levels[0].name}</span>
+          <span aria-hidden>▶</span>
+        </a>
+      )}
       <div role="status" aria-live="polite" style={{ minHeight: 28, textAlign: 'center', fontSize: 14, color: C.accent }}>{msg}</div>
       {groups.map((g) => {
         const open = worldUnlocked(g.world, items, of)
