@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import type { Verb } from '@/lib/spill/level/define'
 import type { TrayVerb, RunAction } from '@/lib/spill/client/view'
 import { C, pill } from './ui'
@@ -13,16 +14,21 @@ interface Props {
   runHighlight: boolean
   onVerb(v: Verb): void
   onRun(a: RunAction): void
+  dock?: ReactNode
 }
 
-export default function Tray({ height, safeBottom, verbs, selected, run, runHighlight, onVerb, onRun }: Props) {
+export const TRAY_ROW = 62
+export const RUN_CENTER_Y = 7 + 24
+
+export default function Tray({ height, safeBottom, verbs, selected, run, runHighlight, onVerb, onRun, dock }: Props) {
   return (
     <div
       style={{
-        height, boxSizing: 'border-box', display: 'flex', alignItems: 'flex-start', gap: 8,
-        padding: `7px 10px ${safeBottom}px`, borderTop: `1px solid ${C.line}`, background: C.bg,
+        height, boxSizing: 'border-box', display: 'flex', flexDirection: 'column',
+        padding: `0 0 ${safeBottom}px`, borderTop: `1px solid ${C.line}`, background: C.bg,
       }}
     >
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '7px 10px 0', flexShrink: 0 }}>
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', flex: 1, minWidth: 0, scrollbarWidth: 'none' }}>
         {verbs.map((v) => {
           const mode = v.verb !== 'trigger'
@@ -54,6 +60,8 @@ export default function Tray({ height, safeBottom, verbs, selected, run, runHigh
       >
         {run.label}
       </button>
+    </div>
+    {dock}
     </div>
   )
 }

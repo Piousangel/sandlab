@@ -27,7 +27,9 @@ import { describeLevel } from '@/lib/spill/client/describe'
 import { trackEvent } from '@/lib/sand/gallery'
 import { currentUaClass } from '@/lib/sand/ua'
 import Hud from './Hud'
-import Tray from './Tray'
+import Tray, { RUN_CENTER_Y, TRAY_ROW } from './Tray'
+import GoalDock from './GoalDock'
+import { dockMode, dockRows } from '@/lib/spill/client/dock'
 import FloatButtons from './FloatButtons'
 import ResultCard from './ResultCard'
 import Onboarding from './Onboarding'
@@ -616,6 +618,15 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
           runHighlight={showHand && s.moves > 0}
           onVerb={onVerb}
           onRun={onRun}
+          dock={!(card && s.phase === 'cleared') && dockMode(l.trayH - l.safeBottom - TRAY_ROW, level.targets.length) ? (
+            <GoalDock
+              compact={dockMode(l.trayH - l.safeBottom - TRAY_ROW, level.targets.length) === 'compact'}
+              rows={dockRows(s, level)}
+              gems={{ got: gemGot, total: gemTotal }}
+              par={s.par ? `Par ${s.par.moves} ${s.par.moves === 1 ? 'move' : 'moves'} in ${s.par.secs.toFixed(1)}s` : null}
+              over={parts.movesOver || parts.timeOver}
+            />
+          ) : null}
         />
         {card && s.phase === 'cleared' && (
           <ResultCard
@@ -639,7 +650,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
             step={s.moves === 0 ? 'drag' : 'run'}
             from={{ x: l.canvasLeft + (firstDig[2] + 0.5) * tilePx, y: l.headerH + (firstDig[3] + 0.5) * tilePx }}
             to={{ x: l.canvasLeft + (firstDig[4] + 0.5) * tilePx, y: l.headerH + (firstDig[5] + 0.5) * tilePx }}
-            run={{ x: l.stageW - 64, y: l.headerH + l.cssH + l.trayH / 2 - l.safeBottom / 2 }}
+            run={{ x: l.stageW - 64, y: l.headerH + l.cssH + RUN_CENTER_Y }}
           />
         )}
       </div>
