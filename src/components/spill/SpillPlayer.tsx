@@ -4,6 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, use
 import type { LevelDef, Verb } from '@/lib/spill/level/define'
 import { SpillController, type PlayState } from '@/lib/spill/play/controller'
 import { startAutoplay, startWatch } from '@/lib/spill/play/autoplay'
+import { gateWindowState } from '@/lib/spill/play/gatewin'
 import { checkAction, dropAnchor, hitGate, pointerToTile, snapLine, stampSize, type ActionInput, type CssRect } from '@/lib/spill/play/input'
 import { starCount, starMask, stars as starsOf, type Stars } from '@/lib/spill/play/score'
 import { loadRecord, recordResult } from '@/lib/spill/play/progress'
@@ -331,7 +332,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
           phase: s.phase,
           targets: s.targets.map((t, k) => ({ ...t, mat: ctl.level.targets[k].mat })),
           gems: ctl.level.gems.map((g, k) => ({ rect: g, mat: g.mat, got: s.gems[k] })),
-          gates: ctl.gates.map((b) => ({ box: b, open: used.triggered.includes(b.name), tappable: trig.includes(b.name) })),
+          gates: ctl.gates.map((b) => ({ box: b, open: used.triggered.includes(b.name), tappable: trig.includes(b.name), win: gateWindowState(level, b.name, s.tick, s.run) })),
           ghost: ghostRef.current,
           oldGhosts: s.phase === 'setup' ? s.ghosts : [],
           legal: legalFor(s),

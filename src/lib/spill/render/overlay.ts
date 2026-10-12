@@ -6,6 +6,7 @@ import { TILE, TW } from '../sim/grid'
 import { MATS } from '../sim/materials'
 import type { CellRect } from '../sim/sensors'
 import type { Fx } from './fx'
+import type { GateWindowState } from '../play/gatewin'
 
 export const SPRITE_MIN = 24
 export const BADGE_GAP = 2
@@ -73,6 +74,18 @@ export function pulse(ms: number): number {
   return 0.5 + 0.5 * Math.sin((ms / 900) * Math.PI * 2)
 }
 
+export interface GateLook {
+  fill: number
+  dim: boolean
+}
+
+export function gateLook(win: GateWindowState, running: boolean, ms: number): GateLook {
+  if (!running) return { fill: 0.25 + 0.45 * 0.3, dim: false }
+  if (win === 'before') return { fill: 0.1, dim: true }
+  if (win === 'after') return { fill: 0.25 + 0.45 * 0.3, dim: false }
+  return { fill: 0.25 + 0.45 * pulse(ms * 2.2), dim: false }
+}
+
 export interface OverlayTarget {
   id: string
   kind: TargetKind
@@ -93,6 +106,7 @@ export interface OverlayGate {
   box: GateBox
   open: boolean
   tappable: boolean
+  win?: GateWindowState
 }
 
 export interface OverlayGhost {
@@ -319,15 +333,14 @@ export class OverlayRenderer {
     const cpc = v.cssPerCell
     const cx = (g.box.x + g.box.w / 2) * cpc
     const cy = (g.box.y + g.box.h / 2) * cpc
-    const running = v.phase === 'run' || v.phase === 'paused'
-    const p = running ? pulse(v.timeMs * 2.2) : 0.3
+    const look = gateLook(g.win ?? 'always', v.phase === 'run' || v.phase === 'paused', v.timeMs)
     c.save()
     c.beginPath()
     c.arc(cx, cy, 13, 0, Math.PI * 2)
-    c.fillStyle = `rgba(201,162,39,${0.25 + 0.45 * p})`
+    c.fillStyle = `rgba(201,162,39,${look.fill})`
     c.fill()
     c.lineWidth = 2
-    c.strokeStyle = '#ffd54a'
+    c.strokeStyle = look.dim ? 'rgba(255,213,74,0.4)' : '#ffd54a'
     c.stroke()
     c.fillStyle = '#07090D'
     c.beginPath()

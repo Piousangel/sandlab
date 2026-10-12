@@ -5,9 +5,10 @@ import { parSecsFromBest, parTicks } from '../play/score'
 import { allCandidates, shiftAction, type Candidate } from './candidates'
 import { evaluate, type Outcome } from './evaluate'
 import { comboCount, combos, sampleCombos } from './space'
+import { windowSpan } from '../play/gatewin'
 
 export const CHECK_IDS = [
-  'dev-clears', 'dev-12s', 'par', 'idle-fails', 'salts-16', 'trigger-jitter', 'neighbor-60', 'timing-window', 'human-pace', 'solver', 'par1-slow', 'gem-bypass',
+  'dev-clears', 'dev-12s', 'par', 'idle-fails', 'salts-16', 'trigger-jitter', 'neighbor-60', 'timing-window', 'human-pace', 'gate-window', 'solver', 'par1-slow', 'gem-bypass',
 ] as const
 export type CheckId = (typeof CHECK_IDS)[number]
 
@@ -20,6 +21,16 @@ export const SOLVER_LIMIT = 5000
 export const REACT_TICKS = 30
 export const GAP_TICKS = 20
 export const SLOW_TICKS = 45
+export const OPEN_WINDOW_PROBE = 120
+export const WINDOW_SAMPLES = 40
+
+export function inWindows(def: Pick<LevelDef, 'gateWindows'>, actions: readonly PlayAction[]): boolean {
+  return actions.every((a) => {
+    if (a.verb !== 'trigger' || !a.arg) return true
+    const span = windowSpan(def, a.arg, actions.filter((b) => b !== a))
+    return span === null || (span !== 'pending' && a.tick >= span.lo && a.tick <= span.hi)
+  })
+}
 
 export function paced(actions: readonly PlayAction[]): boolean {
   const ts = actions.filter((a) => a.verb === 'trigger').map((a) => a.tick).sort((a, b) => a - b)
@@ -139,7 +150,7 @@ export async function verifyLevel(def: LevelDef, run: BatchRunner, opts: VerifyO
   const placed = dev.map((a, i) => ({ a, i })).filter((x) => x.a.verb !== 'trigger')
 
   if (!devOk) {
-    for (const id of ['salts-16', 'trigger-jitter', 'neighbor-60', 'timing-window', 'human-pace', 'par1-slow', 'gem-bypass', 'par'] as const)
+    for (const id of ['salts-16', 'trigger-jitter', 'neighbor-60', 'timing-window', 'human-pace', 'gate-window', 'par1-slow', 'gem-bypass', 'par'] as const)
       set(id, false, 'skipped: dev solution does not clear')
   } else {
     const salts = saltsFor(level.def.salt)
@@ -216,6 +227,36 @@ export async function verifyLevel(def: LevelDef, run: BatchRunner, opts: VerifyO
       }
       set('trigger-jitter', jitOk, `±${JITTER_TICKS} ticks: ${jit.join(', ')}`)
       set('timing-window', winOk, `need ≥${secs(WINDOW_MIN_TICKS)}: ${win.join(', ')}`)
+    }
+  }
+
+  if (devOk) {
+    const wins = Object.keys(def.gateWindows ?? {})
+    if (wins.length === 0) set('gate-window', true, 'no declared gate windows')
+    else {
+      const jobs: { gate: string; tick: number; actions: PlayAction[] }[] = []
+      const bad: string[] = []
+      for (const g of wins) {
+        const i = dev.findIndex((a) => a.verb === 'trigger' && a.arg === g)
+        if (i < 0) { bad.push(`${g}: not tapped by the dev solution`); continue }
+        const others = dev.filter((_, k) => k !== i)
+        const span = windowSpan(def, g, others)
+        if (span === null || span === 'pending') { bad.push(`${g}: anchor gate is not tapped by the dev solution`); continue }
+        const hi = Number.isFinite(span.hi) ? span.hi : span.lo + OPEN_WINDOW_PROBE
+        const stride = Math.max(6, Math.ceil((hi - span.lo) / WINDOW_SAMPLES))
+        const ticks = new Set<number>([span.lo, hi])
+        for (let t = span.lo; t < hi; t += stride) ticks.add(t)
+        for (const t of [...ticks].sort((a, b) => a - b))
+          jobs.push({ gate: g, tick: t, actions: dev.map((b, k) => (k === i ? { ...b, tick: t } : b)).sort((x, y) => x.tick - y.tick) })
+      }
+      const o = await batch(jobs.map((j) => ({ actions: j.actions })))
+      const parts = wins.map((g) => {
+        const mine = jobs.map((j, k) => ({ j, o: o[k] })).filter((x) => x.j.gate === g)
+        const miss = mine.filter((x) => !x.o.cleared)
+        if (miss.length) bad.push(`${g} fails at ${miss.slice(0, 3).map((x) => x.j.tick).join(', ')}`)
+        return `${g} ${mine.length - miss.length}/${mine.length}`
+      })
+      set('gate-window', bad.length === 0, bad.length ? bad.join('; ') : `declared windows clear throughout: ${parts.join(', ')}`)
     }
   }
 
@@ -303,7 +344,7 @@ export async function verifyLevel(def: LevelDef, run: BatchRunner, opts: VerifyO
   let bestTicks: number | null = null
   let suggested: number | null = null
   if (devOk) {
-    const fair = known.filter((k) => k.o.moves <= parMoves && paced(k.actions))
+    const fair = known.filter((k) => k.o.moves <= parMoves && paced(k.actions) && inWindows(def, k.actions))
     const best = fair.reduce((m, k) => Math.min(m, k.o.ticks), fair.length ? Infinity : devO.ticks)
     bestTicks = best
     suggested = parSecsFromBest(best)

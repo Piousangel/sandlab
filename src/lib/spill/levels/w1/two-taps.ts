@@ -21,6 +21,7 @@ export default defineLevel({
   ],
   gems: [],
   verbs: { dig: null, trigger: ['g1', 'g2'] },
+  gateWindows: { g2: { after: 'g1', from: 20 } },
   legalTiles: 'auto',
   par: { moves: 2, secs: 7.3 },
   dev: [[30, 'trigger', 0, 0, 0, 0, 'g1'], [60, 'trigger', 0, 0, 0, 0, 'g2']],

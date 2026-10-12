@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { spriteBox, badgeBox, actionTiles, ringProgress, glyphFor, pulse, SPRITE_MIN, tileRectCss } from './overlay'
+import { spriteBox, badgeBox, actionTiles, ringProgress, glyphFor, pulse, gateLook, SPRITE_MIN, tileRectCss } from './overlay'
 
 describe('spriteBox (타깃·젬 스프라이트 ≥ 24 CSS px)', () => {
   it('작은 rect도 최소 24px, 중심 유지', () => {
@@ -70,3 +70,24 @@ describe('ringProgress·glyph·pulse', () => {
     expect(pulse(0)).not.toBe(pulse(450))
   })
 })
+
+describe('gateLook (I2: 창이 열릴 때만 깜빡임)', () => {
+  it('Run 중 창 이전은 흐리고 깜빡이지 않는다', () => {
+    const a = gateLook('before', true, 0)
+    const b = gateLook('before', true, 300)
+    expect(a).toEqual(b)
+    expect(a.dim).toBe(true)
+  })
+  it('창 안(또는 창 없음)에서만 시간에 따라 깜빡인다', () => {
+    for (const w of ['open', 'always'] as const) {
+      const xs = [0, 60, 120, 180].map((ms) => gateLook(w, true, ms).fill)
+      expect(new Set(xs).size).toBeGreaterThan(1)
+      expect(gateLook(w, true, 0).dim).toBe(false)
+    }
+  })
+  it('창 이후와 Setup에서는 고정', () => {
+    expect(gateLook('after', true, 0)).toEqual(gateLook('after', true, 200))
+    expect(gateLook('open', false, 0)).toEqual(gateLook('open', false, 200))
+  })
+})
+

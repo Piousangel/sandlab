@@ -21,8 +21,9 @@ export default defineLevel({
   ],
   gems: [],
   verbs: { dig: { maxLen: 4 }, trigger: ['g1'] },
+  gateWindows: { g1: { from: 95, to: 200 } },
   legalTiles: 'auto',
-  par: { moves: 2, secs: 5.8 },
+  par: { moves: 2, secs: 5.9 },
   dev: [[0, 'dig', 25, 36, 25, 39], [100, 'trigger', 0, 0, 0, 0, 'g1']],
   hint: 'Wait for the sand wall, then open the gate.',
 })

@@ -195,6 +195,23 @@ describe('verifyLevel', () => {
     expect(r.bestTicks!).toBeGreaterThan(unpaced.ticks)
   })
 
+  it('a declared gate window must clear across its whole span', async () => {
+    const ok = await fast({ ...PLUG_GATE_LEVEL, gateWindows: { g1: { from: 30, to: 40 } } })
+    expect(byId(ok, 'gate-window').pass).toBe(true)
+    expect(byId(ok, 'gate-window').detail).toMatch(/g1/)
+    const bad = await fast({ ...PLUG_GATE_LEVEL, gateWindows: { g1: { from: 30, to: 5000 } } })
+    expect(byId(bad, 'gate-window').pass).toBe(false)
+    expect(byId(plugReport, 'gate-window').pass).toBe(true)
+  })
+
+  it('par only counts clears whose taps fall inside the declared windows', async () => {
+    const r = await fast({ ...PLUG_GATE_LEVEL, gateWindows: { g1: { from: 40, to: 60 } }, dev: [[0, 'dig', 19, 14, 19, 15], [45, 'trigger', 0, 0, 0, 0, 'g1']] })
+    for (const w of r.warnings) for (const m of w.matchAll(/g1@(\d+)/g)) {
+      expect(Number(m[1])).toBeGreaterThanOrEqual(40)
+      expect(Number(m[1])).toBeLessThanOrEqual(60)
+    }
+  })
+
   it('levels without triggers pass the trigger checks trivially', () => {
     const r = plugReport
     expect(byId(r, 'trigger-jitter').pass).toBe(true)
