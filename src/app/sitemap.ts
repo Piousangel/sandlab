@@ -2,7 +2,8 @@ import type { MetadataRoute } from 'next'
 import { SITE } from '@/lib/site'
 import { materialStaticParams } from '@/lib/guide/reactions'
 import { ARTICLES } from '@/lib/learn/articles'
-import { LEVELS } from '@/lib/challenge/levels'
+import { LEVELS } from '@/lib/spill/levels'
+import { ordered } from '@/lib/spill/client/catalog'
 
 // 정적 export에 필요 — 빌드 때 sitemap.xml 파일로 굽는다.
 export const dynamic = 'force-static'
@@ -15,7 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE}/gallery`, changeFrequency: 'daily', priority: 0.8 },
     { url: `${SITE}/daily`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE}/play`, changeFrequency: 'weekly', priority: 0.9 },
-    ...LEVELS.map((l) => ({ url: `${SITE}/play/${l.id}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
+    ...ordered(LEVELS).map((l) => ({ url: `${SITE}/play/${l.id}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
     { url: `${SITE}/learn`, changeFrequency: 'weekly', priority: 0.8 },
     ...ARTICLES.map((a) => ({
       url: `${SITE}/learn/${a.slug}`,

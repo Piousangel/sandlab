@@ -39,6 +39,12 @@ export type Verb = 'dig' | 'drop' | 'line' | 'trigger'
  */
 export type ActionTuple = [number, Verb, number, number, number, number, string?]
 
+export interface GateWindow {
+  from: number
+  to?: number
+  after?: string
+}
+
 export interface LevelDef {
   id: string
   v: number
@@ -56,6 +62,7 @@ export interface LevelDef {
     line?: { mat: 'fuse' | 'plank'; maxLen: number; charges?: number } | null
     trigger?: string[] | null
   }
+  gateWindows?: Record<string, GateWindow>
   legalTiles?: 'auto'
   par?: { moves: number; secs: number }
   dev?: ActionTuple[]
@@ -72,5 +79,12 @@ export function defineLevel(def: LevelDef): LevelDef {
   if (!Number.isInteger(def.salt) || def.salt < 0) throw new Error(`${def.id}: salt must be a non-negative integer`)
   for (const t of def.targets) checkRect(t.rect, `${def.id} target ${t.id}`)
   for (const [i, g] of (def.gems ?? []).entries()) checkRect(g.rect, `${def.id} gem ${i}`)
+  const tap = def.verbs?.trigger ?? []
+  for (const [g, w] of Object.entries(def.gateWindows ?? {})) {
+    if (!tap.includes(g)) throw new Error(`${def.id}: gateWindows.${g} is not a tappable gate`)
+    if (w.after !== undefined && (w.after === g || !tap.includes(w.after))) throw new Error(`${def.id}: gateWindows.${g}.after must name another tappable gate`)
+    if (!Number.isInteger(w.from) || w.from < 0) throw new Error(`${def.id}: gateWindows.${g}.from must be a non-negative integer`)
+    if (w.to !== undefined && (!Number.isInteger(w.to) || w.to < w.from)) throw new Error(`${def.id}: gateWindows.${g}.to must be an integer ≥ from`)
+  }
   return def
 }
