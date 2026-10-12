@@ -410,7 +410,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
     if (blocked() || dragRef.current) return
     const r = rect()
     const phase = ctl.phase
-    if (phase === 'run' || phase === 'paused' || phase === 'setup') {
+    if (phase === 'run' || phase === 'paused') {
       const gate = hitGate(e.clientX, e.clientY, r, ctl.gates, usageOf(ctl.getState()).triggered)
       const trig = ctl.level.def.verbs?.trigger ?? []
       if (gate && trig.includes(gate)) {
@@ -536,7 +536,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
   return (
     <div className="spill-root">
       <style>{CSS}</style>
-      <div className="spill-main" onPointerDownCapture={() => audio.unlock()}>
+      <div className="spill-main" onPointerDownCapture={() => audio.unlock()} onPointerUpCapture={() => audio.unlock()}>
         <div ref={probeRef} aria-hidden style={{ position: 'absolute', visibility: 'hidden', paddingBottom: 'env(safe-area-inset-bottom)' }} />
         <Hud
           id={level.id}

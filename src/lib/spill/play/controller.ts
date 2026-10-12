@@ -328,6 +328,7 @@ export class SpillController {
     this.setupCount = setup.length
     this.result = null
     this.acc = 0
+    this.speed = 1
   }
 
   private setPhase(p: Phase): void {

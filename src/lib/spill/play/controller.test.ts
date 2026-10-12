@@ -368,3 +368,19 @@ describe('subscribe / getState', () => {
     expect(c.legalMask('dig')[15 * 40 + 18]).toBe(0)
   })
 })
+
+describe('M7: Retry starts the next attempt at 1x', () => {
+  it('speed resets on retry and clear-all', () => {
+    const c = new SpillController(GATE_LEVEL, { now: () => 0 })
+    c.run()
+    c.setSpeed(4)
+    expect(c.getState().speed).toBe(4)
+    c.retry()
+    expect(c.getState().speed).toBe(1)
+    c.run()
+    c.setSpeed(2)
+    c.clearAll()
+    expect(c.getState().speed).toBe(1)
+  })
+})
+
