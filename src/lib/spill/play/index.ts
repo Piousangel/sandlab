@@ -17,4 +17,4 @@ export {
 export type { Stars, Par, Rank } from './score'
 export { loadRecord, recordResult, isNewBest, totalStars, defaultStorage, KEY_PREFIX } from './progress'
 export type { LevelRecord, RecordOutcome, StorageLike } from './progress'
-export { startAutoplay, autoplaySync } from './autoplay'
+export { startAutoplay, startWatch, autoplaySync } from './autoplay'

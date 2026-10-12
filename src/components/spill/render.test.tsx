@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import SpillPlayer from './SpillPlayer'
 import LevelList from './LevelList'
+import ResultCard from './ResultCard'
+import { simulate, devActions } from '@/lib/spill/play/attempt'
+import { stars } from '@/lib/spill/play/score'
 import { POT_LEVEL, GATE_LEVEL } from '@/lib/spill/play/fixtures'
 
 describe('정적 렌더(SSR) — 광고 없는 캔버스 화면, 설명 텍스트는 HTML에', () => {
@@ -33,6 +36,20 @@ describe('정적 렌더(SSR) — 광고 없는 캔버스 화면, 설명 텍스�
     expect(html).toContain('href="/play/1-1"')
     expect(html).toContain('Start with 1-1 First Drop')
     expect(html).toContain('locked')
+  })
+  it('ResultCard solution 모드: 별·Next·Share 없이 SOLUTION과 직접 해 보기만', () => {
+    const r = simulate(POT_LEVEL, devActions(POT_LEVEL))
+    const props = { def: POT_LEVEL, result: r, stars: stars(r, POT_LEVEL), newBest: false, starGapMs: 0, nextId: 't-gate', hist: null, onStar: () => {}, onRetry: () => {}, onSkip: () => {} }
+    const normal = renderToStaticMarkup(<ResultCard {...props} />)
+    expect(normal).toContain('CLEARED!')
+    expect(normal).toContain('Next ▶')
+    const sol = renderToStaticMarkup(<ResultCard {...props} solution />)
+    expect(sol).toContain('SOLUTION')
+    expect(sol).toContain('Try it yourself')
+    expect(sol).not.toContain('CLEARED!')
+    expect(sol).not.toContain('★')
+    expect(sol).not.toContain('Next ▶')
+    expect(sol).not.toContain('Share')
   })
   it('LevelList: 레벨이 없으면 안내 문구', () => {
     expect(renderToStaticMarkup(<LevelList items={[]} />)).toContain('being built')

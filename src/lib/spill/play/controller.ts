@@ -46,6 +46,7 @@ export interface PlayState {
   ghosts: readonly PlayAction[]
   triggered: readonly string[]
   gatesClosed: number
+  watching: boolean
 }
 
 export type PlayEvent =
@@ -78,6 +79,7 @@ export class SpillController {
   private setupCount = 0
   private ghosts: PlayAction[] = []
   private scheduled: PlayAction[] = []
+  private saved: PlayAction[] | null = null
   private attemptNo = 1
   private fails = 0
   private speed: Speed = 1
@@ -104,6 +106,10 @@ export class SpillController {
 
   get phase(): Phase {
     return this._phase
+  }
+
+  get watching(): boolean {
+    return this.saved !== null
   }
 
   get lh(): string {
@@ -193,6 +199,17 @@ export class SpillController {
 
   retry(): void {
     if (this._phase === 'setup') return
+    if (this.saved) {
+      const keep = this.saved
+      this.saved = null
+      this.ghosts = []
+      this.scheduled = []
+      this.attemptNo++
+      this.rebuild(keep)
+      this.setPhase('setup')
+      this.changed()
+      return
+    }
     const actions = this.attempt.actions
     this.ghosts = actions.slice(this.setupCount)
     this.scheduled = []
@@ -202,7 +219,18 @@ export class SpillController {
     this.changed()
   }
 
+  beginWatch(): void {
+    if (!this.saved) this.saved = this.attempt.actions.slice(0, this.setupCount)
+    this.ghosts = []
+    this.scheduled = []
+    if (this._phase !== 'setup') this.attemptNo++
+    this.rebuild([])
+    this.setPhase('setup')
+    this.changed()
+  }
+
   clearAll(): void {
+    this.saved = null
     this.ghosts = []
     this.scheduled = []
     if (this._phase !== 'setup') this.attemptNo++
@@ -345,6 +373,7 @@ export class SpillController {
       ghosts: this.ghosts,
       triggered: a.triggered.slice(),
       gatesClosed: a.gatesClosed,
+      watching: this.saved !== null,
     }
   }
 }

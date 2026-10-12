@@ -4,6 +4,15 @@ import { HARD_CAP } from './failure'
 
 export function startAutoplay(c: SpillController): void {
   c.clearAll()
+  loadDev(c)
+}
+
+export function startWatch(c: SpillController): void {
+  c.beginWatch()
+  loadDev(c)
+}
+
+function loadDev(c: SpillController): void {
   const later = []
   for (const a of devActions(c.level)) {
     if (a.tick === 0 && a.verb !== 'trigger') {

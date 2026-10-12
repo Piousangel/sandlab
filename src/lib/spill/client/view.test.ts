@@ -54,6 +54,7 @@ describe('메시지 슬롯 문구', () => {
 
 describe('트레이 Run 버튼', () => {
   it('단계별', () => {
+    expect(runButton('cleared', true, true)).toEqual({ label: '↺ TRY IT', action: 'retry' })
     expect(runButton('setup', true)).toEqual({ label: '▶ RUN', action: 'run' })
     expect(runButton('run', true)).toEqual({ label: '⏸ PAUSE', action: 'pause' })
     expect(runButton('paused', true)).toEqual({ label: '▶ RESUME', action: 'resume' })
@@ -67,6 +68,11 @@ describe('HUD "N move(s) · par P / T.Ts" — 초과 항목만 빨강', () => {
   it('Setup', () => {
     const s = ctl().getState()
     expect(hudParts(s)).toEqual({ moves: '0 moves', par: 'par 1 / 6.0s', movesOver: false, timeOver: false })
+  })
+  it('좁은 화면은 짧은 표기(수/par수 · par초) — 레벨명이 잘리지 않게', () => {
+    const s = ctl().getState()
+    expect(hudParts(s, true)).toEqual({ moves: '0/1', par: '6.0s', movesOver: false, timeOver: false })
+    expect(hudParts(new SpillController({ ...POT_LEVEL, par: undefined }, { now: () => 0 }).getState(), true).moves).toBe('0 moves')
   })
   it('수 초과', () => {
     const c = ctl()

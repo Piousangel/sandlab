@@ -34,7 +34,8 @@ export function rejectMessage(reason: RejectReason, verb: Verb): string {
 
 export type RunAction = 'run' | 'pause' | 'resume' | 'retry' | 'next'
 
-export function runButton(phase: Phase, hasNext: boolean): { label: string; action: RunAction } {
+export function runButton(phase: Phase, hasNext: boolean, watching = false): { label: string; action: RunAction } {
+  if (watching && (phase === 'cleared' || phase === 'failed')) return { label: '↺ TRY IT', action: 'retry' }
   switch (phase) {
     case 'setup': return { label: '▶ RUN', action: 'run' }
     case 'run': return { label: '⏸ PAUSE', action: 'pause' }
@@ -51,10 +52,11 @@ export interface HudParts {
   timeOver: boolean
 }
 
-export function hudParts(s: PlayState): HudParts {
+export function hudParts(s: PlayState, compact = false): HudParts {
   const moves = formatMoves(s.moves)
   if (!s.par) return { moves, par: null, movesOver: false, timeOver: false }
   const o = overPar(s.moves, s.tick, s.par)
+  if (compact) return { moves: `${s.moves}/${s.par.moves}`, par: `${s.par.secs.toFixed(1)}s`, movesOver: o.moves, timeOver: o.time }
   return { moves, par: `par ${s.par.moves} / ${s.par.secs.toFixed(1)}s`, movesOver: o.moves, timeOver: o.time }
 }
 

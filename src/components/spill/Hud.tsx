@@ -29,7 +29,7 @@ export default function Hud({ id, name, parts, showMoves, phase, sound, navColla
   return (
     <header
       style={{
-        height: 44, display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px', borderBottom: `1px solid ${C.line}`,
+        height: 44, boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: 4, padding: '0 4px', borderBottom: `1px solid ${C.line}`,
         background: C.bg, position: 'relative', zIndex: 5, fontSize: 14,
       }}
     >

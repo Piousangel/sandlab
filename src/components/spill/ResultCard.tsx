@@ -20,17 +20,20 @@ interface Props {
   onStar(i: number): void
   onRetry(): void
   onSkip(): void
+  solution?: boolean
+  bottom?: number
 }
 
 const LABELS = ['Clear', 'Gems', 'Par'] as const
 
-export default function ResultCard({ def, result, stars, newBest, starGapMs, nextId, hist, onStar, onRetry, onSkip }: Props) {
+export default function ResultCard({ def, result, stars, newBest, starGapMs, nextId, hist, onStar, onRetry, onSkip, solution = false, bottom = 8 }: Props) {
   const got = [stars.clear, stars.gems, stars.par]
   const [shown, setShown] = useState(starGapMs > 0 ? 0 : 3)
   const [copy, setCopy] = useState<string | null>(null)
   const lines = resultLines(result, def)
 
   useEffect(() => {
+    if (solution) return
     if (starGapMs <= 0) {
       got.forEach((g, i) => g && onStar(i))
       return
@@ -65,16 +68,23 @@ export default function ResultCard({ def, result, stars, newBest, starGapMs, nex
   }
 
   const max = hist ? Math.max(1, ...hist.bars.map((b) => b.cnt)) : 1
+  if (solution)
+    return (
+      <section role="dialog" aria-label="Solution replay" style={{ ...cardBox, bottom }}>
+        <h2 style={{ margin: 0, fontSize: 22, letterSpacing: 1 }}>SOLUTION</h2>
+        <p style={{ margin: '8px 0 0', fontVariantNumeric: 'tabular-nums', fontSize: 15 }}>{lines.stat}</p>
+        <p style={{ margin: '2px 0 0', fontSize: 13, opacity: 0.7 }}>Your own plan comes back when you try it.</p>
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <button type="button" autoFocus onClick={onRetry} style={cardBtn(true)}>↺ Try it yourself</button>
+        </div>
+      </section>
+    )
   return (
     <section
       role="dialog"
       aria-label="Level cleared"
       onClick={() => { if (shown < 3) { setShown(3); onSkip() } }}
-      style={{
-        position: 'absolute', left: 8, right: 8, bottom: 8, zIndex: 4, borderRadius: 18, padding: '16px 16px 14px',
-        background: 'rgba(10,14,20,0.86)', border: `1px solid ${C.line}`, backdropFilter: 'blur(6px)',
-        boxShadow: '0 -10px 40px rgba(0,0,0,0.45)', animation: 'spill-up 260ms ease-out both', color: C.text,
-      }}
+      style={{ ...cardBox, bottom }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
         <h2 style={{ margin: 0, fontSize: 24, letterSpacing: 1 }}>CLEARED!</h2>
@@ -122,6 +132,12 @@ export default function ResultCard({ def, result, stars, newBest, starGapMs, nex
       </div>
     </section>
   )
+}
+
+const cardBox: React.CSSProperties = {
+  position: 'absolute', left: 8, right: 8, maxWidth: 480, marginInline: 'auto', zIndex: 6, borderRadius: 18, padding: '16px 16px 14px',
+  background: 'rgba(10,14,20,0.92)', border: `1px solid ${C.line}`, backdropFilter: 'blur(6px)',
+  boxShadow: '0 -10px 40px rgba(0,0,0,0.45)', animation: 'spill-up 260ms ease-out both', color: C.text, boxSizing: 'border-box',
 }
 
 function cardBtn(primary: boolean): React.CSSProperties {

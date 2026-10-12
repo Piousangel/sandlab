@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { autoplaySync, startAutoplay } from './autoplay'
+import { autoplaySync, startAutoplay, startWatch } from './autoplay'
 import { SpillController, TICK_MS } from './controller'
 import { devActions, simulate } from './attempt'
 import { GATE_LEVEL, POT_LEVEL } from './fixtures'
@@ -32,4 +32,32 @@ describe('autoplay (dev solution through the controller)', () => {
     expect(r).toEqual(simulate(lvl, devActions(lvl)))
     expect(c.getState().setup).toEqual([])
   })
+
+  it('Watch keeps the player plan aside and Retry restores it (dev actions never become the player setup)', () => {
+    const c = new SpillController(GATE_LEVEL, { now: () => 0 })
+    const mine = { verb: 'dig' as const, tx: 3, ty: 15, tx2: 3, ty2: 17 }
+    expect(c.act(mine).ok).toBe(true)
+    startWatch(c)
+    expect(c.getState().watching).toBe(true)
+    expect(c.getState().setup).toEqual([])
+    c.advance(3000)
+    expect(c.phase).toBe('cleared')
+    expect(c.getState().watching).toBe(true)
+    c.retry()
+    const s = c.getState()
+    expect(s.phase).toBe('setup')
+    expect(s.watching).toBe(false)
+    expect(s.setup).toEqual([{ tick: 0, ...mine }])
+    expect(s.ghosts).toEqual([])
+  })
+
+  it('clear-all during a watch drops the saved plan', () => {
+    const c = new SpillController(GATE_LEVEL, { now: () => 0 })
+    c.act({ verb: 'dig', tx: 3, ty: 15, tx2: 3, ty2: 17 })
+    startWatch(c)
+    c.clearAll()
+    expect(c.getState().watching).toBe(false)
+    expect(c.getState().setup).toEqual([])
+  })
 })
+

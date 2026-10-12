@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import type { LevelDef, Verb } from '@/lib/spill/level/define'
 import { SpillController, type PlayState } from '@/lib/spill/play/controller'
-import { startAutoplay } from '@/lib/spill/play/autoplay'
+import { startAutoplay, startWatch } from '@/lib/spill/play/autoplay'
 import { checkAction, dropAnchor, hitGate, pointerToTile, snapLine, stampSize, type ActionInput, type CssRect } from '@/lib/spill/play/input'
 import { starCount, starMask, stars as starsOf, type Stars } from '@/lib/spill/play/score'
 import { loadRecord, recordResult } from '@/lib/spill/play/progress'
@@ -14,7 +14,7 @@ import { OverlayRenderer, type OverlayView } from '@/lib/spill/render/overlay'
 import { Fx, type FxOpts } from '@/lib/spill/render/fx'
 import { SpillAudio, loadSoundPref, saveSoundPref } from '@/lib/spill/render/audio'
 import { haptic } from '@/lib/spill/render/haptics'
-import { computeLayout, type Layout } from '@/lib/spill/render/layout'
+import { chromeBoxes, computeLayout, type Layout } from '@/lib/spill/render/layout'
 import { TILE } from '@/lib/spill/sim/grid'
 import {
   autoplayMark, clearKind, failMessage, hudKey, hudParts, rejectMessage, runButton, showMovesFor, trayVerbs, usageOf, type RunAction,
@@ -44,6 +44,7 @@ interface Card {
   newBest: boolean
   starGapMs: number
   key: number
+  solution: boolean
 }
 
 interface Toast {
@@ -230,7 +231,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
           }
           if (cardTimer.current) clearTimeout(cardTimer.current)
           cardTimer.current = setTimeout(() => {
-            setCard({ result: r, stars: st, newBest: prevBest, starGapMs: plan.starGapMs, key: Date.now() })
+            setCard({ result: r, stars: st, newBest: prevBest, starGapMs: plan.starGapMs, key: Date.now(), solution: modeRef.current === 'watch' })
           }, plan.cardDelayMs)
           break
         }
@@ -500,14 +501,14 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
   const watch = () => {
     setMode('watch')
     modeRef.current = 'watch'
-    startAutoplay(ctl)
+    startWatch(ctl)
   }
 
   const s = state
-  const parts = hudParts(s)
+  const parts = hudParts(s, layout.compactHud)
   const used = usageOf(s)
   const verbs = trayVerbs(level, used)
-  const run = runButton(s.phase, !!nextId)
+  const run = runButton(s.phase, !!nextId, s.watching)
   const l = layout
   const now = typeof performance === 'undefined' ? 0 : performance.now()
   const toastText = toast && toast.until > now ? toast.text : null
@@ -520,6 +521,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
   const firstDig = level.dev?.find((a) => a[1] === 'dig' || a[1] === 'line')
   const tilePx = TILE * l.cssPerCell
   const showHand = onboard && mode === 'play' && s.phase === 'setup' && !!firstDig
+  const chrome = chromeBoxes(l)
 
   return (
     <div className="spill-root">
@@ -561,7 +563,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
                 role="status"
                 aria-live="polite"
                 style={{
-                  position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100% - 16px)', zIndex: 3,
+                  position: 'absolute', top: chrome.messageTop, left: '50%', transform: 'translateX(-50%)', maxWidth: 'calc(100% - 16px)', zIndex: 3, pointerEvents: 'none',
                   background: 'rgba(7,9,13,0.78)', border: `1px solid ${C.line}`, borderRadius: 999, padding: '6px 14px', fontSize: 14,
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', animation: 'spill-msg 160ms ease-out', display: 'flex', gap: 8, alignItems: 'center',
                   color: failText && message === failText ? '#ffb3ad' : C.text,
@@ -569,14 +571,14 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
               >
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{message}</span>
                 {canWatch && message === hintText && (
-                  <button type="button" onClick={watch} style={{ border: 0, background: C.accent, color: C.bg, borderRadius: 999, minHeight: 28, padding: '0 10px', fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" onClick={watch} style={{ border: 0, background: C.accent, color: C.bg, borderRadius: 999, minHeight: 44, minWidth: 64, padding: '0 14px', fontWeight: 700, cursor: 'pointer', pointerEvents: 'auto' }}>
                     Watch
                   </button>
                 )}
               </div>
             )}
             {gemTotal > 0 && (
-              <div aria-label={`Gems ${gemGot} of ${gemTotal}`} style={{ position: 'absolute', left: 8, bottom: 14, zIndex: 3, fontSize: 13, color: C.gem, background: 'rgba(7,9,13,0.6)', borderRadius: 999, padding: '4px 10px' }}>
+              <div aria-label={`Gems ${gemGot} of ${gemTotal}`} style={{ position: 'absolute', left: chrome.gems.x, top: chrome.gems.y, height: chrome.gems.h, boxSizing: 'border-box', display: 'flex', alignItems: 'center', zIndex: 3, fontSize: 13, color: C.gem, background: 'rgba(7,9,13,0.6)', borderRadius: 999, padding: '0 10px', pointerEvents: 'none' }}>
                 ◆ {gemGot}/{gemTotal}
               </div>
             )}
@@ -590,21 +592,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
                 onRetry={retry}
                 onClearAll={clearAll}
                 onSpeed={speedUp}
-              />
-            )}
-            {card && s.phase === 'cleared' && (
-              <ResultCard
-                key={card.key}
-                def={level}
-                result={card.result}
-                stars={card.stars}
-                newBest={card.newBest}
-                starGapMs={card.starGapMs}
-                nextId={nextId}
-                hist={hist}
-                onStar={(i) => audio.star(i)}
-                onRetry={retry}
-                onSkip={() => fx.current.skip()}
+                box={chrome.buttons}
               />
             )}
           </div>
@@ -619,6 +607,23 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
           onVerb={onVerb}
           onRun={onRun}
         />
+        {card && s.phase === 'cleared' && (
+          <ResultCard
+            key={card.key}
+            def={level}
+            result={card.result}
+            stars={card.stars}
+            newBest={card.newBest}
+            starGapMs={card.starGapMs}
+            nextId={nextId}
+            hist={hist}
+            onStar={(i) => audio.star(i)}
+            onRetry={retry}
+            onSkip={() => fx.current.skip()}
+            solution={card.solution}
+            bottom={l.safeBottom + 8}
+          />
+        )}
         {showHand && firstDig && (
           <Onboarding
             step={s.moves === 0 ? 'drag' : 'run'}

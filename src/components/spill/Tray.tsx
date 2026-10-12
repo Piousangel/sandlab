@@ -19,8 +19,8 @@ export default function Tray({ height, safeBottom, verbs, selected, run, runHigh
   return (
     <div
       style={{
-        height, boxSizing: 'border-box', display: 'flex', alignItems: 'center', gap: 8,
-        padding: `0 10px ${safeBottom}px`, borderTop: `1px solid ${C.line}`, background: C.bg,
+        height, boxSizing: 'border-box', display: 'flex', alignItems: 'flex-start', gap: 8,
+        padding: `7px 10px ${safeBottom}px`, borderTop: `1px solid ${C.line}`, background: C.bg,
       }}
     >
       <div style={{ display: 'flex', gap: 8, overflowX: 'auto', flex: 1, minWidth: 0, scrollbarWidth: 'none' }}>
