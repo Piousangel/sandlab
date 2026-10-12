@@ -22,7 +22,7 @@ export default defineLevel({
   gems: [],
   verbs: { dig: null, trigger: ['g1', 'g2'] },
   legalTiles: 'auto',
-  par: { moves: 2, secs: 6.5 },
-  dev: [[0, 'trigger', 0, 0, 0, 0, 'g1'], [55, 'trigger', 0, 0, 0, 0, 'g2']],
+  par: { moves: 2, secs: 7.3 },
+  dev: [[30, 'trigger', 0, 0, 0, 0, 'g1'], [60, 'trigger', 0, 0, 0, 0, 'g2']],
   hint: 'Sand first, then water.',
 })

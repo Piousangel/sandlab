@@ -7,7 +7,7 @@ import { evaluate, type Outcome } from './evaluate'
 import { comboCount, combos, sampleCombos } from './space'
 
 export const CHECK_IDS = [
-  'dev-clears', 'dev-12s', 'par', 'idle-fails', 'salts-16', 'trigger-jitter', 'neighbor-60', 'timing-window', 'solver', 'par1-slow', 'gem-bypass',
+  'dev-clears', 'dev-12s', 'par', 'idle-fails', 'salts-16', 'trigger-jitter', 'neighbor-60', 'timing-window', 'human-pace', 'solver', 'par1-slow', 'gem-bypass',
 ] as const
 export type CheckId = (typeof CHECK_IDS)[number]
 
@@ -17,6 +17,14 @@ export const JITTER_TICKS = 10
 export const NEIGHBOR_MIN = 0.6
 export const WINDOW_MIN_TICKS = 42
 export const SOLVER_LIMIT = 5000
+export const REACT_TICKS = 30
+export const GAP_TICKS = 20
+export const SLOW_TICKS = 45
+
+export function paced(actions: readonly PlayAction[]): boolean {
+  const ts = actions.filter((a) => a.verb === 'trigger').map((a) => a.tick).sort((a, b) => a - b)
+  return ts.every((t, k) => t >= (k === 0 ? REACT_TICKS : ts[k - 1] + GAP_TICKS))
+}
 
 export interface CheckResult {
   id: CheckId
@@ -131,7 +139,7 @@ export async function verifyLevel(def: LevelDef, run: BatchRunner, opts: VerifyO
   const placed = dev.map((a, i) => ({ a, i })).filter((x) => x.a.verb !== 'trigger')
 
   if (!devOk) {
-    for (const id of ['salts-16', 'trigger-jitter', 'neighbor-60', 'timing-window', 'par1-slow', 'gem-bypass', 'par'] as const)
+    for (const id of ['salts-16', 'trigger-jitter', 'neighbor-60', 'timing-window', 'human-pace', 'par1-slow', 'gem-bypass', 'par'] as const)
       set(id, false, 'skipped: dev solution does not clear')
   } else {
     const salts = saltsFor(level.def.salt)
@@ -146,14 +154,23 @@ export async function verifyLevel(def: LevelDef, run: BatchRunner, opts: VerifyO
     for (const { a, i } of triggers)
       for (let t = Math.max(0, a.tick - range); t <= a.tick + range; t++)
         if (t !== a.tick) scans.push({ i, tick: t, actions: dev.map((b, k) => (k === i ? { ...b, tick: t } : b)) })
+    const slow = dev.map((b) => (b.verb === 'trigger' ? { ...b, tick: b.tick + SLOW_TICKS } : b)).sort((x, y) => x.tick - y.tick)
     const res = await batch([
+      ...(triggers.length ? [{ actions: slow }] : []),
       ...salts.map((s) => ({ actions: dev, salt: s })),
       ...shifts.map((s) => ({ actions: s.actions })),
       ...scans.map((s) => ({ actions: s.actions })),
     ])
+    const slowO = triggers.length ? res.shift()! : null
     const saltO = res.slice(0, salts.length)
     const shiftO = res.slice(salts.length, salts.length + shifts.length)
     const scanO = res.slice(salts.length + shifts.length)
+    if (!slowO) set('human-pace', true, 'no trigger in the dev solution')
+    else {
+      const isPaced = paced(dev)
+      set('human-pace', isPaced && slowO.cleared,
+        `${isPaced ? 'dev taps are human-paced' : `dev taps need first ≥${REACT_TICKS} ticks after Run and ≥${GAP_TICKS} apart`}; every tap +${SLOW_TICKS} ticks ${slowO.cleared ? `clears in ${secs(slowO.ticks)}` : `fails (${slowO.reason})`}`)
+    }
     shifts.forEach((s, k) => remember(s.actions, shiftO[k]))
     scans.forEach((s, k) => remember(s.actions, scanO[k]))
 
@@ -286,11 +303,12 @@ export async function verifyLevel(def: LevelDef, run: BatchRunner, opts: VerifyO
   let bestTicks: number | null = null
   let suggested: number | null = null
   if (devOk) {
-    const best = known.filter((k) => k.o.moves <= parMoves).reduce((m, k) => Math.min(m, k.o.ticks), devO.ticks)
+    const fair = known.filter((k) => k.o.moves <= parMoves && paced(k.actions))
+    const best = fair.reduce((m, k) => Math.min(m, k.o.ticks), fair.length ? Infinity : devO.ticks)
     bestTicks = best
     suggested = parSecsFromBest(best)
     if (best < devO.ticks) {
-      const b = known.find((k) => k.o.ticks === best && k.o.moves <= parMoves)!
+      const b = fair.find((k) => k.o.ticks === best)!
       warnings.push(`dev is not the fastest known solution: ${fmtActions(b.actions)} clears in ${best} ticks (dev ${devO.ticks})`)
     }
     if (!par) set('par', false, `level has no par; suggested { moves: ${devO.moves}, secs: ${suggested} }`)

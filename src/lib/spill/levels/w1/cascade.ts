@@ -35,7 +35,7 @@ export default defineLevel({
   ],
   verbs: { dig: { maxLen: 4 }, trigger: ['g1', 'g2'] },
   legalTiles: 'auto',
-  par: { moves: 4, secs: 7.9 },
-  dev: [[0, 'dig', 8, 16, 8, 19], [0, 'dig', 22, 28, 22, 31], [0, 'trigger', 0, 0, 0, 0, 'g2'], [0, 'trigger', 0, 0, 0, 0, 'g1']],
+  par: { moves: 4, secs: 8.8 },
+  dev: [[0, 'dig', 8, 16, 8, 19], [0, 'dig', 22, 28, 22, 31], [30, 'trigger', 0, 0, 0, 0, 'g2'], [60, 'trigger', 0, 0, 0, 0, 'g1']],
   hint: 'Plug the pit, then let it all flow.',
 })

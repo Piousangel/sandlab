@@ -6,7 +6,7 @@ import { PLUG_GATE_LEVEL, PLUG_LEVEL } from './fixtures'
 import { evaluate } from './evaluate'
 import { digCandidates, triggerCandidates, shiftAction } from './candidates'
 import { comboCount, combos, sampleCombos } from './space'
-import { verifyLevel, localRunner, saltsFor, CHECK_IDS, type CheckId } from './verify'
+import { verifyLevel, localRunner, saltsFor, paced, CHECK_IDS, REACT_TICKS, GAP_TICKS, SLOW_TICKS, type CheckId } from './verify'
 
 const plug = parseLevel(PLUG_LEVEL)
 const plugGate = parseLevel(PLUG_GATE_LEVEL)
@@ -100,6 +100,24 @@ describe('space', () => {
   })
 })
 
+describe('paced (human reaction for Par)', () => {
+  const tr = (tick: number, arg = 'g1') => ({ tick, verb: 'trigger' as const, tx: 0, ty: 0, tx2: 0, ty2: 0, arg })
+  const dig = { tick: 0, verb: 'dig' as const, tx: 1, ty: 1, tx2: 1, ty2: 2 }
+  it('constants', () => {
+    expect(REACT_TICKS).toBe(30)
+    expect(GAP_TICKS).toBe(20)
+    expect(SLOW_TICKS).toBe(45)
+  })
+  it('first trigger at least REACT_TICKS after Run, later ones GAP_TICKS apart; setup digs do not count', () => {
+    expect(paced([dig])).toBe(true)
+    expect(paced([dig, tr(30)])).toBe(true)
+    expect(paced([dig, tr(29)])).toBe(false)
+    expect(paced([tr(30), tr(50, 'g2')])).toBe(true)
+    expect(paced([tr(30), tr(49, 'g2')])).toBe(false)
+    expect(paced([tr(60, 'g2'), tr(30)])).toBe(true)
+  })
+})
+
 describe('saltsFor', () => {
   it('gives 16 distinct salts that differ from the level salt', () => {
     const s = saltsFor(0x7e51)
@@ -166,11 +184,23 @@ describe('verifyLevel', () => {
     expect(w.pass).toBe(true)
   })
 
+  it('a dev solution that needs instant taps fails human-pace, and par ignores unpaced clears', async () => {
+    const quick = await fast({ ...PLUG_GATE_LEVEL, dev: [[0, 'dig', 19, 14, 19, 15], [0, 'trigger', 0, 0, 0, 0, 'g1']] })
+    expect(byId(quick, 'human-pace').pass).toBe(false)
+    const r = await fast(PLUG_GATE_LEVEL)
+    expect(byId(r, 'human-pace').pass).toBe(true)
+    expect(byId(r, 'human-pace').detail).toMatch(/\+45/)
+    for (const w of r.warnings) for (const m of w.matchAll(/g1@(\d+)/g)) expect(Number(m[1])).toBeGreaterThanOrEqual(REACT_TICKS)
+    const unpaced = evaluate(plugGate, [{ tick: 0, verb: 'dig', tx: 19, ty: 14, tx2: 19, ty2: 15 }, { tick: 0, verb: 'trigger', tx: 0, ty: 0, tx2: 0, ty2: 0, arg: 'g1' }])
+    expect(r.bestTicks!).toBeGreaterThan(unpaced.ticks)
+  })
+
   it('levels without triggers pass the trigger checks trivially', () => {
     const r = plugReport
     expect(byId(r, 'trigger-jitter').pass).toBe(true)
     expect(byId(r, 'trigger-jitter').detail).toMatch(/no trigger/)
     expect(byId(r, 'timing-window').pass).toBe(true)
+    expect(byId(r, 'human-pace').pass).toBe(true)
   })
 
   it('a dev solution that does not clear fails and skips dependent checks', async () => {
