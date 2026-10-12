@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { spriteBox, badgeBox, actionTiles, ringProgress, glyphFor, pulse, gateLook, SPRITE_MIN, tileRectCss } from './overlay'
+import { spriteBox, badgeBox, actionTiles, ringProgress, glyphFor, pulse, gateLook, loupeBox, loupeFocus, LOUPE_SIZE, LOUPE_ZOOM, SPRITE_MIN, tileRectCss } from './overlay'
 
 describe('spriteBox (타깃·젬 스프라이트 ≥ 24 CSS px)', () => {
   it('작은 rect도 최소 24px, 중심 유지', () => {
@@ -88,6 +88,27 @@ describe('gateLook (I2: 창이 열릴 때만 깜빡임)', () => {
   it('창 이후와 Setup에서는 고정', () => {
     expect(gateLook('after', true, 0)).toEqual(gateLook('after', true, 200))
     expect(gateLook('open', false, 0)).toEqual(gateLook('open', false, 200))
+  })
+})
+
+describe('loupe (I5: 손가락 아래 Dig를 위로 띄워 확대)', () => {
+  it('손가락 위쪽에 뜨고 손가락을 덮지 않는다', () => {
+    const b = loupeBox(160, 300, 320, 480)
+    expect(b.w).toBe(LOUPE_SIZE)
+    expect(b.y + b.h).toBeLessThan(300 - 20)
+    expect(b.x + b.w / 2).toBeCloseTo(160, 6)
+  })
+  it('위쪽 공간이 없으면 손가락 아래로, 캔버스 안으로 클램프', () => {
+    const b = loupeBox(5, 30, 320, 480)
+    expect(b.y).toBeGreaterThan(30 + 20)
+    expect(b.x).toBeGreaterThanOrEqual(0)
+    const r = loupeBox(318, 300, 320, 480)
+    expect(r.x + r.w).toBeLessThanOrEqual(320)
+  })
+  it('초점은 고스트 선의 가운데, 최대 4타일 선이 확대 후에도 렌즈 안에 들어간다', () => {
+    const f = loupeFocus({ verb: 'dig', tx: 10, ty: 20, tx2: 10, ty2: 23 }, 2)
+    expect(f).toEqual({ x: 10.5 * 8, y: 22 * 8 })
+    expect(4 * 4 * 2.13 * LOUPE_ZOOM).toBeLessThan(LOUPE_SIZE)
   })
 })
 

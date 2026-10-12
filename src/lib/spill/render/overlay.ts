@@ -74,6 +74,28 @@ export function pulse(ms: number): number {
   return 0.5 + 0.5 * Math.sin((ms / 900) * Math.PI * 2)
 }
 
+export const LOUPE_SIZE = 112
+export const LOUPE_ZOOM = 2.5
+export const LOUPE_LIFT = 56
+
+export function loupeBox(px: number, py: number, cssW: number, cssH: number): Box {
+  const n = LOUPE_SIZE
+  let y = py - LOUPE_LIFT - n
+  if (y < 0) y = py + LOUPE_LIFT
+  const x = Math.min(Math.max(0, px - n / 2), Math.max(0, cssW - n))
+  y = Math.min(Math.max(0, y), Math.max(0, cssH - n))
+  return { x, y, w: n, h: n }
+}
+
+export function loupeFocus(a: ActionInput, cssPerCell: number): { x: number; y: number } {
+  const tiles = actionTiles(a)
+  const s = TILE * cssPerCell
+  if (!tiles.length) return { x: (a.tx + 0.5) * s, y: (a.ty + 0.5) * s }
+  const xs = tiles.map((t) => t[0])
+  const ys = tiles.map((t) => t[1])
+  return { x: ((Math.min(...xs) + Math.max(...xs) + 1) / 2) * s, y: ((Math.min(...ys) + Math.max(...ys) + 1) / 2) * s }
+}
+
 export interface GateLook {
   fill: number
   dim: boolean
@@ -126,6 +148,7 @@ export interface OverlayView {
   ghost: OverlayGhost | null
   oldGhosts: readonly ActionInput[]
   legal: Uint8Array | null
+  loupe?: { x: number; y: number; src: CanvasImageSource } | null
 }
 
 const OK = 'rgba(238,241,246,0.55)'
@@ -167,7 +190,37 @@ export class OverlayRenderer {
     for (const t of v.targets) this.drawTarget(t, v)
     for (const g of v.gates) this.drawGate(g, v)
     if (v.ghost) this.drawTiles(actionTiles(v.ghost.action), v.cssPerCell, v.ghost.ok ? OK : BAD, false)
+    if (v.ghost && v.loupe) this.drawLoupe(v, v.ghost, v.loupe)
     if (fx) this.drawFx(fx, v)
+  }
+
+  private drawLoupe(v: OverlayView, g: OverlayGhost, l: { x: number; y: number; src: CanvasImageSource }): void {
+    const c = this.ctx
+    const b = loupeBox(l.x, l.y, v.cssW, v.cssH)
+    const f = loupeFocus(g.action, v.cssPerCell)
+    const r = 14
+    c.save()
+    c.beginPath()
+    if (typeof c.roundRect === 'function') c.roundRect(b.x, b.y, b.w, b.h, r)
+    else c.rect(b.x, b.y, b.w, b.h)
+    c.fillStyle = '#07090D'
+    c.fill()
+    c.clip()
+    c.translate(b.x + b.w / 2, b.y + b.h / 2)
+    c.scale(LOUPE_ZOOM, LOUPE_ZOOM)
+    c.translate(-f.x, -f.y)
+    c.imageSmoothingEnabled = false
+    c.drawImage(l.src, 0, 0, v.cssW, v.cssH)
+    this.drawTiles(actionTiles(g.action), v.cssPerCell, g.ok ? 'rgba(238,241,246,0.7)' : BAD, false)
+    c.restore()
+    c.save()
+    c.beginPath()
+    if (typeof c.roundRect === 'function') c.roundRect(b.x, b.y, b.w, b.h, r)
+    else c.rect(b.x, b.y, b.w, b.h)
+    c.lineWidth = 2
+    c.strokeStyle = g.ok ? 'rgba(238,241,246,0.85)' : '#ff4a3d'
+    c.stroke()
+    c.restore()
   }
 
   private drawLegal(v: OverlayView): void {

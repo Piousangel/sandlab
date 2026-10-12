@@ -129,6 +129,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
   const layoutRef = useRef(layout)
   const ghostRef = useRef<OverlayView['ghost']>(null)
   const dragRef = useRef<{ id: number; fx: number; fy: number } | null>(null)
+  const loupeRef = useRef<{ x: number; y: number } | null>(null)
   const lastVerbRef = useRef<Verb>('dig')
   const afterRef = useRef<{ sim: Sim; acc: number; steps: number } | null>(null)
   const reducedRef = useRef(false)
@@ -336,6 +337,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
           ghost: ghostRef.current,
           oldGhosts: s.phase === 'setup' ? s.ghosts : [],
           legal: legalFor(s),
+          loupe: loupeRef.current && ghostRef.current && (ghostRef.current.action.verb === 'dig' || ghostRef.current.action.verb === 'line') ? { ...loupeRef.current, src: canvas } : null,
         },
         f,
       )
@@ -422,6 +424,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
     e.currentTarget.setPointerCapture?.(e.pointerId)
     const p = pointerToTile(e.clientX, e.clientY, r)
     dragRef.current = { id: e.pointerId, fx: p.fx, fy: p.fy }
+    loupeRef.current = e.pointerType === 'mouse' ? null : { x: e.clientX - r.left, y: e.clientY - r.top }
     const a = ghostFor(verb, e.clientX, e.clientY, dragRef.current)
     ghostRef.current = a ? { action: a, ok: okFor(a) } : null
   }
@@ -431,6 +434,10 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
     if (!d || d.id !== e.pointerId) return
     const verb = selectedRef.current
     if (!verb) return
+    if (loupeRef.current) {
+      const r = rect()
+      loupeRef.current = { x: e.clientX - r.left, y: e.clientY - r.top }
+    }
     const a = ghostFor(verb, e.clientX, e.clientY, d)
     ghostRef.current = a ? { action: a, ok: okFor(a) } : null
   }
@@ -439,6 +446,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
     const d = dragRef.current
     if (!d || d.id !== e.pointerId) return
     dragRef.current = null
+    loupeRef.current = null
     const g = ghostRef.current
     ghostRef.current = null
     if (!g || blocked()) return
@@ -448,6 +456,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
 
   const onCancel = () => {
     dragRef.current = null
+    loupeRef.current = null
     ghostRef.current = null
   }
 
