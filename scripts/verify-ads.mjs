@@ -18,6 +18,7 @@ const MARKS = ['pagead2.googlesyndication.com/pagead/js/adsbygoogle.js', 'class=
 // 광고 허용 페이지 (out/ 기준 상대 경로). 정규식은 동적 세그먼트용.
 // /privacy는 광고 없음(정책 페이지에 광고 = 인벤토리 부풀리기로 보인다, 2026-10-09 감사).
 const ALLOW = [/^play\.html$/, /^learn\.html$/, /^learn\/[a-z0-9-]+\.html$/, /^materials\.html$/, /^materials\/[a-z]+\.html$/, /^about\.html$/]
+const CANVAS = [/^play\/.+\.html$/, /^spill\//, /^d\//]
 // 허용 페이지의 최소 본문 글자 수(태그·스크립트·스타일 제거 후). 얇은 페이지에 광고 = 반려 재발.
 const MIN_TEXT = 600
 
@@ -40,11 +41,17 @@ function bodyText(html) {
 
 const failures = []
 let allowedSeen = 0
+let canvasSeen = 0
 for (const file of walk(OUT)) {
   const rel = relative(OUT, file)
   const html = readFileSync(file, 'utf8')
   const hasAd = MARKS.some((m) => html.includes(m))
-  const allowed = ALLOW.some((re) => re.test(rel))
+  const canvas = CANVAS.some((re) => re.test(rel))
+  const allowed = !canvas && ALLOW.some((re) => re.test(rel))
+  if (canvas) {
+    canvasSeen++
+    if (ALLOW.some((re) => re.test(rel))) failures.push(`${rel}: 퍼즐·캔버스 화면이 광고 허용 목록에 걸림`)
+  }
   if (allowed) {
     allowedSeen++
     if (!hasAd) failures.push(`${rel}: 허용 페이지인데 광고 로더 없음`)
@@ -60,4 +67,4 @@ if (failures.length) {
   console.error(`FAIL (${failures.length})\n` + failures.map((f) => '  - ' + f).join('\n'))
   process.exit(1)
 }
-console.log(`OK — 허용 페이지 ${allowedSeen}개, 그 외 페이지에 광고 로더 없음`)
+console.log(`OK — 허용 페이지 ${allowedSeen}개, 그 외 페이지에 광고 로더 없음(퍼즐·캔버스 화면 ${canvasSeen}개 포함)`)
