@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validateLevelClear, histPayload, handleSpill, levelHashes, type SpillDb } from './spill'
+import { validateLevelClear, histPayload, handleSpill, levelHashes, levelFloors, CLEARS_PER_HOUR, type SpillDb } from './spill'
 import { POT_LEVEL, GATE_LEVEL } from '../src/lib/spill/play/fixtures'
 import { levelHash } from '../src/lib/spill/level/hash'
 
@@ -26,6 +26,12 @@ describe('validateLevelClear (§7.6 POST /api/spill/level/:id/clear)', () => {
     for (const ticks of [0, 2701, 3.2, null]) expect(validateLevelClear('t-pot', { ...ok, ticks }, known)).toBeNull()
     expect(validateLevelClear('t-pot', { ...ok, moves: 32, ticks: 2700 }, known)).not.toBeNull()
   })
+  it('par로 정한 하한(par 틱의 40%)보다 빠른 ticks는 거부', () => {
+    const floors = levelFloors([POT_LEVEL])
+    expect(floors.get('t-pot')).toBe(144)
+    expect(validateLevelClear('t-pot', { ...ok, ticks: 143 }, known, floors)).toBeNull()
+    expect(validateLevelClear('t-pot', { ...ok, ticks: 144 }, known, floors)).not.toBeNull()
+  })
   it('형식이 틀린 본문', () => {
     expect(validateLevelClear('t-pot', null, known)).toBeNull()
     expect(validateLevelClear('t-pot', [], known)).toBeNull()
@@ -42,6 +48,7 @@ describe('histPayload', () => {
 
 class FakeDb implements SpillDb {
   seen = new Set<string>()
+  rows: { ip: unknown; at: unknown }[] = []
   hist = new Map<string, number>()
   prepare(sql: string) {
     const db = this
@@ -53,6 +60,7 @@ class FakeDb implements SpillDb {
           const k = `${args[0]}|${args[1]}`
           if (db.seen.has(k)) return { meta: { changes: 0 } }
           db.seen.add(k)
+          db.rows.push({ ip: args[2], at: args[3] })
           return { meta: { changes: 1 } }
         }
         if (sql.includes('INSERT INTO spill_hist')) {
@@ -63,6 +71,10 @@ class FakeDb implements SpillDb {
         throw new Error('unexpected sql ' + sql)
       },
       async all<T>() {
+        if (sql.includes('COUNT(*)')) {
+          const n = db.rows.filter((r) => r.ip === args[0] && (r.at as number) > (args[1] as number)).length
+          return { results: [{ n }] as T[] }
+        }
         const [id, h] = args
         const results = [...db.hist.entries()]
           .map(([k, cnt]) => { const [lid, lh2, moves, tb] = k.split('|'); return { lid, lh2, moves: Number(moves), tbucket: Number(tb), cnt } })
@@ -105,3 +117,29 @@ describe('handleSpill', () => {
     expect(await handleSpill(req('/api/spill/level/t-pot/hist', 'POST', {}), db, known)).toBeNull()
   })
 })
+
+describe('handleSpill 남용 방어', () => {
+  const pidN = (n: number) => n.toString(16).padStart(32, '0')
+  it('같은 IP 해시는 시간당 CLEARS_PER_HOUR건까지만 새로 적재, 넘으면 429', async () => {
+    const db = new FakeDb()
+    const ctx = { ip: 'aa', now: 1_000_000 }
+    for (let i = 0; i < CLEARS_PER_HOUR; i++) {
+      const r = await handleSpill(req('/api/spill/level/t-pot/clear', 'POST', { ...ok, pid: pidN(i) }), db, known, ctx)
+      expect(r!.status).toBe(201)
+    }
+    const over = await handleSpill(req('/api/spill/level/t-pot/clear', 'POST', { ...ok, pid: pidN(999) }), db, known, ctx)
+    expect(over!.status).toBe(429)
+    expect(db.hist.get(`t-pot|${lh}|1|11`)).toBe(CLEARS_PER_HOUR)
+    const other = await handleSpill(req('/api/spill/level/t-pot/clear', 'POST', { ...ok, pid: pidN(999) }), db, known, { ip: 'bb', now: 1_000_000 })
+    expect(other!.status).toBe(201)
+    const later = await handleSpill(req('/api/spill/level/t-pot/clear', 'POST', { ...ok, pid: pidN(1000) }), db, known, { ip: 'aa', now: 1_000_000 + 3600_001 })
+    expect(later!.status).toBe(201)
+  })
+  it('하한보다 빠른 기록은 400', async () => {
+    const db = new FakeDb()
+    const r = await handleSpill(req('/api/spill/level/t-pot/clear', 'POST', { ...ok, ticks: 10 }), db, known, { ip: 'aa', now: 1, floors: levelFloors([POT_LEVEL]) })
+    expect(r!.status).toBe(400)
+    expect(db.seen.size).toBe(0)
+  })
+})
+

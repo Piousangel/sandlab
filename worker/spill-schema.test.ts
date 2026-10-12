@@ -17,4 +17,10 @@ describe('Spill D1 마이그레이션', () => {
     expect(norm(mig)).toContain('PRIMARY KEY (level_id, lh, moves, tbucket)')
     expect(norm(mig)).toContain('PRIMARY KEY (level_id, pid)')
   })
+  it('spill_seen은 레이트리밋용 ip 해시·시각과 인덱스를 가진다', () => {
+    expect(norm(mig)).toContain('ip TEXT NOT NULL DEFAULT')
+    expect(norm(mig)).toContain('created_at INTEGER NOT NULL DEFAULT 0')
+    expect(norm(mig)).toContain('CREATE INDEX IF NOT EXISTS spill_seen_ip ON spill_seen (ip, created_at)')
+    expect(norm(schema)).toContain('CREATE INDEX IF NOT EXISTS spill_seen_ip ON spill_seen (ip, created_at)')
+  })
 })

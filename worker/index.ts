@@ -9,7 +9,7 @@
 
 import { parseTrack } from './track'
 import { validateDaily, summarize } from './daily'
-import { handleSpill, levelHashes } from './spill'
+import { handleSpill, levelFloors, levelHashes } from './spill'
 import { spillRedirect } from './spill-redirects'
 import { LEVELS as SPILL_LEVELS } from '../src/lib/spill/levels'
 import {
@@ -124,6 +124,7 @@ async function tooManyVotes(env: Env, hash: string): Promise<boolean> {
 }
 
 let spillKnown: Map<string, string> | null = null
+let spillFloors: Map<string, number> | null = null
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -409,7 +410,9 @@ export default {
 
     if (p.startsWith('/api/spill/')) {
       spillKnown ??= levelHashes(SPILL_LEVELS)
-      const res = await handleSpill(request, env.DB, spillKnown)
+      spillFloors ??= levelFloors(SPILL_LEVELS)
+      const isClear = request.method === 'POST'
+      const res = await handleSpill(request, env.DB, spillKnown, { ip: isClear ? await ipHash(request) : '', now: Date.now(), floors: spillFloors })
       if (res) return res
     }
 

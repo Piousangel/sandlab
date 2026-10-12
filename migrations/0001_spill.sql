@@ -8,7 +8,11 @@ CREATE TABLE IF NOT EXISTS spill_hist (
 );
 
 CREATE TABLE IF NOT EXISTS spill_seen (
-  level_id TEXT NOT NULL,
-  pid      TEXT NOT NULL,
+  level_id   TEXT NOT NULL,
+  pid        TEXT NOT NULL,
+  ip         TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (level_id, pid)
 );
+
+CREATE INDEX IF NOT EXISTS spill_seen_ip ON spill_seen (ip, created_at);
