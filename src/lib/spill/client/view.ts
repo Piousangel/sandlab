@@ -7,7 +7,8 @@ import { formatMoves, formatSecs, overPar, parTicks, starCount, starMask, stars 
 
 export type HudKey = string
 
-export function failMessage(reason: FailReason | null, left: number): string {
+export function failMessage(reason: FailReason | null, left: number, gatesClosed = 0): string {
+  if ((reason === 'stalled' || reason === 'sourcesStopped') && gatesClosed > 0) return `Everything settled · open the ${gatesClosed === 1 ? 'gate' : 'gates'} sooner`
   const t = `${left} ${left === 1 ? 'target' : 'targets'} left`
   switch (reason) {
     case 'bad': return 'It reached the skull pot'

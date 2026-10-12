@@ -27,6 +27,20 @@ describe('메시지 슬롯 문구', () => {
     expect(failMessage('bad', 1)).toBe('It reached the skull pot')
     expect(failMessage('crate', 0)).toBe('The crate broke')
   })
+  it('정체로 끝났는데 아직 닫힌 게이트가 있으면 게이트를 더 빨리 열라고 알려 준다', () => {
+    expect(failMessage('stalled', 1, 1)).toBe('Everything settled · open the gate sooner')
+    expect(failMessage('stalled', 1, 2)).toBe('Everything settled · open the gates sooner')
+    expect(failMessage('sourcesStopped', 1, 1)).toBe('Everything settled · open the gate sooner')
+    expect(failMessage('stalled', 1, 0)).toBe('1 target left')
+    expect(failMessage('bad', 1, 1)).toBe('It reached the skull pot')
+  })
+  it('PlayState는 닫힌 탭 가능 게이트 수를 담는다', () => {
+    const c = ctl(GATE_LEVEL)
+    expect(c.getState().gatesClosed).toBe(2)
+    c.run()
+    c.act({ verb: 'trigger', tx: 0, ty: 0, tx2: 0, ty2: 0, arg: 'g1' })
+    expect(c.getState().gatesClosed).toBe(1)
+  })
   it('거부 사유', () => {
     expect(rejectMessage('illegal', 'dig')).toBe('Dig through dirt')
     expect(rejectMessage('illegal', 'drop')).toBe('Needs an empty spot')

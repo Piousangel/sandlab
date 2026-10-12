@@ -45,6 +45,7 @@ export interface PlayState {
   run: readonly PlayAction[]
   ghosts: readonly PlayAction[]
   triggered: readonly string[]
+  gatesClosed: number
 }
 
 export type PlayEvent =
@@ -343,6 +344,7 @@ export class SpillController {
       run: actions.slice(this.setupCount),
       ghosts: this.ghosts,
       triggered: a.triggered.slice(),
+      gatesClosed: a.gatesClosed,
     }
   }
 }

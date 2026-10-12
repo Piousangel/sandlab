@@ -511,7 +511,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
   const l = layout
   const now = typeof performance === 'undefined' ? 0 : performance.now()
   const toastText = toast && toast.until > now ? toast.text : null
-  const failText = s.phase === 'failed' ? failMessage(s.failReason, s.targetsLeft) : null
+  const failText = s.phase === 'failed' ? failMessage(s.failReason, s.targetsLeft, s.gatesClosed) : null
   const hintText = s.phase === 'setup' && s.fails >= 1 && level.hint ? level.hint : null
   const message = toastText ?? failText ?? hintText ?? (mode === 'autoplay' || mode === 'watch' ? 'Solution replay' : null)
   const canWatch = mode === 'play' && s.phase === 'setup' && s.fails >= 3 && (level.dev?.length ?? 0) > 0
