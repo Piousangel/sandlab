@@ -2,6 +2,16 @@
 - 갱신: 2026-10-09 / 브랜치: main / 커밋 상태: committed, prod Version b4e273df
 - 라이브: https://sandlab.app (/play 20레벨, /daily, /learn, /materials)
 
+## 2026-10-12 Sandlab Spill S2 배포 — 먼저 읽을 것
+
+- 스펙 `docs/superpowers/specs/2026-10-10-sandlab-spill-design.md`(구속력), 계획 `docs/superpowers/plans/2026-10-10-spill-s2.md`.
+- prod Version 7da55358, main 02d0aac. 새 `/play`(W1 8레벨 1-1~1-8), `/play/<옛 id>` → 301 `/play`, `/api/spill/level/<id>/{clear,hist}`, D1 `spill_hist`·`spill_seen`(원격 적용 완료).
+- 검증: tests 1051/1051, `pnpm spill:verify` 8/8, autoplay 8레벨 × 4폭(1280/412/390/360) 32/32 클리어(로컬), prod 390폭 8/8(로컬과 틱 동일), verify-ads OK, margolus OK.
+- 실크롬 함정: 백그라운드 탭은 rAF가 멈춰 수동 플레이가 슬로모션처럼 보인다 — `?autoplay=1` + `body.dataset.autoplay`(cleared:별:수:틱)로 검증.
+- 세로 여백: 폰에서 트레이 아래 남는 공간을 GoalDock(타깃 게이지·젬·par, 좁으면 한 줄)으로 채움.
+- 남은 일: 사용자 폰 벤치(/spill/bench) 게이트 결과(1x 최악초 ≤4ms·2x HELD, 아니면 128×192), 폰 1-1~1-8 체크, S3(데일리 v2·공유·친구 도전, 옛 src/lib/challenge 삭제), S4, S5.
+- `/daily`는 아직 옛 엔진(S3에서 교체). worktree `sandlab-s2`·`sandlab-comp`는 정리 가능.
+
 ## 2026-10-09 (2) 챌린지 모드 — 먼저 읽을 것
 
 - 코드: `src/lib/challenge/`(순수 코어: grid·judge(목표 레지스트리 fill/clear(max)/reach/protect/survive)·
