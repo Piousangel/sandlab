@@ -3,6 +3,7 @@ import { parseLevel } from '../level/parse'
 import { levelHash } from '../level/hash'
 import { devActions, simulate } from '../play/attempt'
 import { parTicks } from '../play/score'
+import { WAIT_WINDOW } from '../play/failure'
 import { LEVELS } from '.'
 import { W1 } from './w1'
 
@@ -52,4 +53,21 @@ describe('W1 Flow levels', () => {
       })
     })
   }
+
+  describe('gate levels wait for the first tap (C1)', () => {
+    const tr = (tick: number, arg: string) => ({ tick, verb: 'trigger' as const, tx: 0, ty: 0, tx2: 0, ty2: 0, arg })
+    const byId = (id: string) => W1.find((l) => l.id === id)!
+    it('1-7 clears when the player takes 3 s to find the first gate', () => {
+      expect(simulate(byId('1-7'), [tr(180, 'g1'), tr(220, 'g2')]).outcome).toBe('cleared')
+    })
+    it('1-8 clears with slow taps after the setup digs', () => {
+      const digs = devActions(byId('1-8')).filter((a) => a.verb === 'dig')
+      expect(simulate(byId('1-8'), [...digs, tr(120, 'g2'), tr(160, 'g1')]).outcome).toBe('cleared')
+    })
+    it('doing nothing on a gate-only start still fails, after WAIT_WINDOW', () => {
+      const r = simulate(byId('1-7'), [])
+      expect(r.reason).toBe('stalled')
+      expect(r.ticks).toBe(WAIT_WINDOW)
+    })
+  })
 })

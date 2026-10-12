@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { Attempt, MAX_ACTIONS, devActions, simulate } from './attempt'
 import { parseLevel } from '../level/parse'
 import { BAD_LEVEL, GATE_LEVEL, POT_LEVEL, PROTECT_LEVEL } from './fixtures'
-import { FAIL_WINDOW } from './failure'
+import { FAIL_WINDOW, WAIT_WINDOW } from './failure'
 
 describe('Attempt / simulate (shared tick loop)', () => {
   it('dev solution clears the pot level within par time and grabs the gem', () => {
@@ -74,5 +74,15 @@ describe('Attempt / simulate (shared tick loop)', () => {
     const a = new Attempt(parseLevel(POT_LEVEL))
     for (let x = 1; x <= MAX_ACTIONS; x++) expect(a.apply({ verb: 'dig', tx: x, ty: 16, tx2: x, ty2: 16 }).ok).toBe(true)
     expect(a.apply({ verb: 'dig', tx: 35, ty: 16, tx2: 35, ty2: 16 })).toEqual({ ok: false, reason: 'limit' })
+  })
+
+  it('gatesClosed counts tappable gates not yet triggered', () => {
+    const a = new Attempt(parseLevel(GATE_LEVEL))
+    expect(a.gatesClosed).toBe(2)
+    a.apply({ verb: 'trigger', tx: 0, ty: 0, tx2: 0, ty2: 0, arg: 'g2' })
+    expect(a.gatesClosed).toBe(1)
+    a.reset()
+    expect(a.gatesClosed).toBe(2)
+    expect(new Attempt(parseLevel(POT_LEVEL)).gatesClosed).toBe(0)
   })
 })

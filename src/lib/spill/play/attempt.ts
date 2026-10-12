@@ -1,7 +1,7 @@
 import type { LevelDef } from '../level/define'
 import { parseLevel, type ParsedLevel } from '../level/parse'
 import { Sim } from '../sim/sim'
-import { FailureDetector, type FailReason } from './failure'
+import { FailureDetector, MOVE_EPS, type FailReason } from './failure'
 import { checkAction, type ActionInput, type Check } from './input'
 import { Judge, type JudgeUpdate } from './targets'
 
@@ -51,9 +51,12 @@ export class Attempt {
   lines = 0
   triggered: string[] = []
   lastUpdate: JudgeUpdate | null = null
+  everMoved = false
+  private readonly tappable: string[]
 
   constructor(readonly level: ParsedLevel, readonly salt?: number) {
     this.judge = new Judge(level)
+    this.tappable = (level.def.verbs?.trigger ?? []).filter((g) => level.gates.includes(g))
     this.reset()
   }
 
@@ -71,6 +74,11 @@ export class Attempt {
     this.lines = 0
     this.triggered = []
     this.lastUpdate = null
+    this.everMoved = false
+  }
+
+  get gatesClosed(): number {
+    return this.tappable.filter((g) => !this.triggered.includes(g)).length
   }
 
   check(input: ActionInput): Check {
@@ -102,9 +110,11 @@ export class Attempt {
       this.endTick = sim.tick
       return u
     }
+    if (sim.lastMoved >= MOVE_EPS) this.everMoved = true
     const r = this.fail.observe({
       tick: sim.tick, moved: sim.lastMoved, progressed: u.progressed || u.latched.length > 0,
       sourcesLeft: sim.spoutTotalLeft, burning: sim.lastBurning, bad: u.bad, crateBroken: u.crateBroken,
+      waiting: !this.everMoved && !u.progressed && this.gatesClosed > 0,
     })
     if (r) {
       this.status = 'failed'

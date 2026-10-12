@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { FailureDetector, FAIL_WINDOW, HARD_CAP, MOVE_EPS, type TickObs } from './failure'
+import { FailureDetector, FAIL_WINDOW, HARD_CAP, MOVE_EPS, WAIT_WINDOW, type TickObs } from './failure'
 
 const quiet = (tick: number, o: Partial<TickObs> = {}): TickObs => ({
   tick, moved: 0, progressed: false, sourcesLeft: 10, burning: 0, bad: false, crateBroken: false, ...o,
@@ -72,5 +72,19 @@ describe('FailureDetector (§4.2)', () => {
     feed(d, 89)
     d.reset()
     expect(feed(d, 89).r).toBeNull()
+  })
+
+  it('while waiting for a first gate tap with nothing moved, the stall window is WAIT_WINDOW', () => {
+    expect(WAIT_WINDOW).toBe(600)
+    const d = new FailureDetector()
+    expect(feed(d, WAIT_WINDOW - 1, { waiting: true }).r).toBeNull()
+    expect(d.observe(quiet(WAIT_WINDOW, { waiting: true }))).toBe('stalled')
+  })
+
+  it('leaving the waiting state starts a fresh 90-tick stall window', () => {
+    const d = new FailureDetector()
+    expect(feed(d, 400, { waiting: true }).r).toBeNull()
+    expect(feed(d, FAIL_WINDOW - 1, {}, 401).r).toBeNull()
+    expect(d.observe(quiet(401 + FAIL_WINDOW - 1))).toBe('stalled')
   })
 })
