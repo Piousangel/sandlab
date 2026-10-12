@@ -1,45 +1,56 @@
 import ContentShell from '@/components/ContentShell'
-import LevelStars from '@/components/LevelStars'
-import { LEVELS } from '@/lib/challenge/levels'
+import LevelList from '@/components/spill/LevelList'
+import { LEVELS } from '@/lib/spill/levels'
+import { ordered, worldName } from '@/lib/spill/client/catalog'
+import { describeLevel } from '@/lib/spill/client/describe'
 
 export const metadata = {
-  title: 'Sandlab challenges — falling-sand physics puzzles',
-  description: `${LEVELS.length} physics puzzles built on Sandlab's falling-sand simulation: fill, bridge, dissolve and burn your way to three stars with as little material as possible.`,
+  title: 'Sandlab Spill — falling-sand physics puzzles',
+  description: 'Dig a channel, open a gate, and let water and sand do the rest. Short physics puzzles on a falling-sand simulation, scored by moves and time.',
   alternates: { canonical: '/play' },
 }
 
 export default function Page() {
+  const levels = ordered(LEVELS)
+  const items = levels.map((l) => ({ id: l.id, world: l.world, name: l.name }))
   return (
     <ContentShell>
-      <h1 style={{ fontSize: 30, lineHeight: 1.2, margin: '0 0 12px' }}>Challenges</h1>
-      <p style={{ margin: '0 0 16px' }}>
-        <a href="/daily" style={{ color: '#07090D', background: '#f5a623', padding: '8px 14px', borderRadius: 8, fontWeight: 700, textDecoration: 'none' }}>
-          Play today&apos;s daily →
-        </a>
+      <h1 style={{ fontSize: 30, lineHeight: 1.2, margin: '0 0 12px' }}>Sandlab Spill</h1>
+      <p style={{ opacity: 0.85 }}>
+        Spill is a set of short physics puzzles built on a falling-sand simulation. Each level is a tall scene with
+        a tank of water or a heap of sand, a few pots to fill, and some dirt in the way. You plan first: dig a straight
+        channel through the dirt, place what the level gives you, and Undo as often as you like. Then press Run and
+        watch the materials find their own way down. A pot that fills locks in with a ding, and the level is cleared
+        the moment the last one locks. If the flow stalls, you know within a second and a half, and Retry puts you
+        straight back at the planning stage with your placements kept.
       </p>
       <p style={{ opacity: 0.85 }}>
-        Each challenge is a small scene with a goal: fill a cup, get water across a lava pit, burn a woodpile on
-        the far side of a pond. You get one or two materials and a limited amount of each, and you can only paint
-        inside the faint dashed box. Everything else is the same simulation as the sandbox, so the solutions come
-        from how the materials really behave: sand pushes water up, water turns lava into stone, oil floats and
-        carries fire. A goal counts once it has held for about two seconds. Using less material earns more stars,
-        and your best result is saved in this browser. Every level has been played through from start to finish
-        on a real graphics card, and none of them can be won by waiting.
+        Every level awards three stars: one for clearing it, one for collecting every gem, and one for matching par,
+        which means using no more moves than the par count and finishing within the par time. Because every move
+        snaps to a grid of tiles, the clock rewards the path you chose rather than quick fingers, so even a one-move
+        level has a better and a worse answer. Your stars are saved in this browser only, and the next world opens
+        once you have earned two stars per level in the one before it.
       </p>
-      <ol style={{ listStyle: 'none', padding: 0, margin: '28px 0 0', display: 'grid', gap: 18 }}>
-        {LEVELS.map((l, i) => (
-          <li key={l.id} style={{ display: 'flex', gap: 14, alignItems: 'baseline' }}>
-            <span style={{ width: 22, opacity: 0.45, fontVariantNumeric: 'tabular-nums' }}>{i + 1}</span>
-            <span style={{ flex: 1 }}>
-              <a href={`/play/${l.id}`} style={{ color: '#eef1f6', fontSize: 18, fontWeight: 650, textDecoration: 'none' }}>
-                {l.title}
-              </a>
-              <span style={{ display: 'block', marginTop: 4, fontSize: 14.5, opacity: 0.7 }}>{l.blurb.split('. ')[0]}.</span>
-            </span>
-            <LevelStars id={l.id} />
-          </li>
-        ))}
-      </ol>
+      <LevelList items={items} />
+      {levels.length > 0 && (
+        <section style={{ marginTop: 12 }}>
+          <h2 style={{ fontSize: 20 }}>All levels</h2>
+          <ol style={{ paddingLeft: 20 }}>
+            {levels.map((l) => {
+              const d = describeLevel(l)
+              return (
+                <li key={l.id} style={{ marginBottom: 8 }}>
+                  <a href={`/play/${l.id}`} style={{ color: '#eef1f6', fontWeight: 650 }}>{l.id} {l.name}</a>
+                  <span style={{ opacity: 0.7 }}> — {worldName(l.world)}. {d.goals.join('. ')}.</span>
+                </li>
+              )
+            })}
+          </ol>
+        </section>
+      )}
+      <p style={{ marginTop: 24, opacity: 0.8 }}>
+        Looking for the classic daily challenge? <a href="/daily" style={{ color: '#f5a623' }}>Play today&apos;s daily →</a>
+      </p>
     </ContentShell>
   )
 }
