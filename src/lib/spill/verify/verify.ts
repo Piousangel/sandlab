@@ -219,15 +219,16 @@ export async function verifyLevel(def: LevelDef, run: BatchRunner, opts: VerifyO
   const spaceInfo: string[] = []
   for (let k = 1; k < parMoves; k++) {
     const n = comboCount(items, k)
-    if (n <= budget) {
+    const share = Math.floor(budget / (parMoves - k))
+    if (n <= share) {
       for (const c of combos(items, k)) add(solverJobs, c.map((x) => x.action))
       budget -= n
       spaceInfo.push(`k=${k}: ${n}`)
     } else {
       exhaustive = false
-      for (const c of sampleCombos(items, k, budget, seed + k)) add(solverJobs, c.map((x) => x.action))
-      spaceInfo.push(`k=${k}: sampled ${budget} of ${n}`)
-      budget = 0
+      for (const c of sampleCombos(items, k, share, seed + k)) add(solverJobs, c.map((x) => x.action))
+      spaceInfo.push(`k=${k}: sampled ${share} of ${n}`)
+      budget -= share
     }
   }
   const solverO = await batch(solverJobs.map((actions) => ({ actions })))
