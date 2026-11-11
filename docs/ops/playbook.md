@@ -50,3 +50,4 @@
 - 2026-11-11 pnpm 12는 CI에서 빌드 스크립트를 막는다(`ERR_PNPM_IGNORED_BUILDS`). `pnpm-workspace.yaml`의 `allowBuilds`에 esbuild·sharp·workerd를 명시한다.
 - 2026-11-11 저장소에 `lint` 스크립트가 있어도 eslint가 의존성에 없으면 못 돌린다. 새 팀은 첫날 검증 명령이 전부 실제로 도는지 확인한다.
 - 2026-11-11 전체 테스트에 늘 실패하는 테스트(verify.test.ts 타임아웃)가 있으면 자동 머지 게이트가 막힌다. 제외하고 대체 검증(spill:verify)을 명시하되 백로그에 올린다.
+- 2026-11-11 무거운 검증(spill:verify)은 GitHub Actions 러너에서 로컬보다 7배 이상 느리다(3분→22분). 배포 워크플로에는 빠른 검사만 두고 무거운 검증은 머지 전에 돌린다.

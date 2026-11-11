@@ -24,9 +24,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
-      # verify.test.ts는 5초 타임아웃으로 6개가 늘 실패(기존 문제, 백로그) — 레벨 검증은 spill:verify가 대신한다
+      # verify.test.ts는 5초 타임아웃으로 6개가 늘 실패(기존 문제, 백로그)
+      # spill:verify는 CI에서 22분 걸려(로컬 ~3분) 여기서 빼고, 머지 전(06시 루틴·로컬)에 돌린다
       - run: pnpm test --exclude src/lib/spill/verify/verify.test.ts
-      - run: pnpm spill:verify
       # deploy = next build → verify-ads → wrangler deploy
       - run: pnpm run deploy
         env:
