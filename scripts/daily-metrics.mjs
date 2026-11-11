@@ -5,7 +5,7 @@
  *   - D1(원격): wrangler OAuth 로그인만 있으면 된다. 갤러리 업로드·투표, Spill 첫 클리어, 옛 데일리 제출.
  *   - Analytics Engine(선택): CF_ACCOUNT_ID + CF_API_TOKEN(Account Analytics Read) 환경변수가 있으면
  *     이벤트별 카운트와 referrer 상위를 추가로 찍는다. 없으면 건너뛴다.
- *   - 페이지뷰(Web Analytics)는 여기서 못 본다 — 대시보드에서 직접 확인.
+ *   - 존 트래픽(선택): 같은 토큰에 Zone:Read + Zone Analytics:Read가 있으면 일별 요청·페이지뷰·고유 방문자(봇 포함)를 찍는다.
  *
  * 다른 프로젝트로 옮길 때는 QUERIES 표만 바꾼다(출력·실행 로직은 공용).
  *
@@ -14,6 +14,7 @@
 import { execFileSync } from 'node:child_process'
 
 const DB = 'sandlab-gallery'
+const ZONE = 'sandlab.app'
 const DAY = 86_400_000
 
 // [라벨, (since: epoch ms) => SQL]. 결과는 첫 행의 n 컬럼.
@@ -99,4 +100,29 @@ try {
   console.log(`\nAE: 실패 (${e.message})`)
 }
 
-console.log('\n페이지뷰·방문자: Cloudflare 대시보드 > Web Analytics (스크립트 미지원)')
+// 존 트래픽: 최근 7일 일별 (봇 포함 — 추세만 본다)
+async function cfApi(path, init) {
+  const res = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
+    ...init,
+    headers: { authorization: `Bearer ${process.env.CF_API_TOKEN}`, 'content-type': 'application/json' },
+  })
+  const j = await res.json()
+  if (!res.ok || j.errors?.length) throw new Error(JSON.stringify(j.errors ?? res.status))
+  return j
+}
+try {
+  if (!process.env.CF_API_TOKEN) {
+    console.log('\n존 트래픽: CF_API_TOKEN 없음 — 건너뜀')
+  } else {
+    const zoneId = (await cfApi(`/zones?name=${ZONE}`)).result[0]?.id
+    if (!zoneId) throw new Error(`zone ${ZONE} 없음`)
+    const since = new Date(now - 7 * DAY).toISOString().slice(0, 10)
+    const q = `{ viewer { zones(filter:{zoneTag:"${zoneId}"}) { httpRequests1dGroups(limit:8, filter:{date_geq:"${since}"}, orderBy:[date_ASC]) { dimensions { date } sum { requests pageViews } uniq { uniques } } } } }`
+    const rows = (await cfApi('/graphql', { method: 'POST', body: JSON.stringify({ query: q }) })).data.viewer.zones[0]
+      .httpRequests1dGroups
+    console.log(`\n존 트래픽 ${ZONE} (봇 포함, UTC 일별)\n\n| 날짜 | 고유 방문자 | 페이지뷰 | 요청 |\n|---|---:|---:|---:|`)
+    for (const r of rows) console.log(`| ${r.dimensions.date} | ${r.uniq.uniques} | ${r.sum.pageViews} | ${r.sum.requests} |`)
+  }
+} catch (e) {
+  console.log(`\n존 트래픽: 실패 (${e.message})`)
+}
