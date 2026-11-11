@@ -114,8 +114,10 @@ export function resultLines(r: RunResult, def: LevelDef): { stat: string; tip: s
   const stat = `${formatMoves(r.moves)} · ${formatSecs(r.ticks)}`
   const p = def.par
   let tip: string | null = null
-  if (p && r.moves > p.moves) tip = `par is ${formatMoves(p.moves)} — try fewer`
-  else if (p && r.ticks > parTicks(p.secs)) tip = `par ${p.secs.toFixed(1)}s — ${formatSecs(r.ticks - parTicks(p.secs))} to find. Try another path`
+  // 젬을 다 먹은 판: 별은 판마다 누적되므로 젬 별은 이미 저장됨 — par는 "다음 판" 과제로 안내한다
+  const gemSaved = r.gemTotal > 0 && r.gems >= r.gemTotal
+  if (p && r.moves > p.moves) tip = gemSaved ? `Gem star saved — par is ${formatMoves(p.moves)}, chase it in a fresh run` : `par is ${formatMoves(p.moves)} — try fewer`
+  else if (p && r.ticks > parTicks(p.secs)) tip = gemSaved ? `Gem star saved — par is ${p.secs.toFixed(1)}s, chase it in a fresh run` : `par ${p.secs.toFixed(1)}s — ${formatSecs(r.ticks - parTicks(p.secs))} to find. Try another path`
   else if (r.gemTotal > 0 && r.gems < r.gemTotal) tip = r.gemTotal - r.gems === 1 ? 'Missed a gem' : `Missed ${r.gemTotal - r.gems} gems`
   return { stat, tip }
 }

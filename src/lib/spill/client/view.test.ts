@@ -152,12 +152,18 @@ describe('결과 카드 문구', () => {
     expect(resultLines(r, POT_LEVEL)).toEqual({ stat: '1 move · 5.0s', tip: null })
   })
   it('시간 초과면 경로 바꾸기 권유', () => {
-    const r = { outcome: 'cleared', moves: 1, ticks: 400, gems: 1, gemTotal: 1 } as RunResult
+    const r = { outcome: 'cleared', moves: 1, ticks: 400, gems: 0, gemTotal: 1 } as RunResult
     expect(resultLines(r, POT_LEVEL)).toEqual({ stat: '1 move · 6.7s', tip: 'par 6.0s — 0.7s to find. Try another path' })
   })
+  it('젬을 먹고 par를 놓치면 젬 별 저장을 먼저 알린다', () => {
+    const t = { outcome: 'cleared', moves: 1, ticks: 400, gems: 1, gemTotal: 1 } as RunResult
+    expect(resultLines(t, POT_LEVEL).tip).toBe('Gem star saved — par is 6.0s, chase it in a fresh run')
+  })
   it('수 초과', () => {
-    const r = { outcome: 'cleared', moves: 3, ticks: 300, gems: 1, gemTotal: 1 } as RunResult
+    const r = { outcome: 'cleared', moves: 3, ticks: 300, gems: 0, gemTotal: 1 } as RunResult
     expect(resultLines(r, POT_LEVEL).tip).toBe('par is 1 move — try fewer')
+    const g = { ...r, gems: 1 } as RunResult
+    expect(resultLines(g, POT_LEVEL).tip).toBe('Gem star saved — par is 1 move, chase it in a fresh run')
   })
   it('젬 놓침', () => {
     const r = { outcome: 'cleared', moves: 1, ticks: 300, gems: 0, gemTotal: 1 } as RunResult
