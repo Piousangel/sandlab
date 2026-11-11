@@ -4,6 +4,7 @@ import { LEVELS } from '@/lib/spill/levels'
 import { levelById, nextLevel, ordered, worldName } from '@/lib/spill/client/catalog'
 import { describeLevel } from '@/lib/spill/client/describe'
 import { materialStaticParams } from '@/lib/guide/reactions'
+import { guideFor } from '@/lib/spill/guide/guides'
 
 export const dynamicParams = false
 
@@ -64,6 +65,12 @@ export default async function Page({ params }: Props) {
         )}
         <p style={{ marginTop: 22, opacity: 0.75 }}>
           World {level.world}: {worldName(level.world)} · <a href="/play" style={a}>All levels</a>
+          {guideFor(level.id) && (
+            <>
+              {' · '}
+              <a href={`/play/${level.id}/guide`} style={a}>Read the {level.id} guide</a>
+            </>
+          )}
           {next && (
             <>
               {' · '}

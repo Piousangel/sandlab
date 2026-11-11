@@ -4,6 +4,7 @@ import { materialStaticParams } from '@/lib/guide/reactions'
 import { ARTICLES } from '@/lib/learn/articles'
 import { LEVELS } from '@/lib/spill/levels'
 import { ordered } from '@/lib/spill/client/catalog'
+import { guideFor } from '@/lib/spill/guide/guides'
 
 // 정적 export에 필요 — 빌드 때 sitemap.xml 파일로 굽는다.
 export const dynamic = 'force-static'
@@ -17,6 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE}/daily`, changeFrequency: 'daily', priority: 0.9 },
     { url: `${SITE}/play`, changeFrequency: 'weekly', priority: 0.9 },
     ...ordered(LEVELS).map((l) => ({ url: `${SITE}/play/${l.id}`, changeFrequency: 'monthly' as const, priority: 0.7 })),
+    ...ordered(LEVELS).flatMap((l) => guideFor(l.id) ?? []).map((g) => ({ url: `${SITE}/play/${g.id}/guide`, lastModified: g.updated, changeFrequency: 'monthly' as const, priority: 0.7 })),
     { url: `${SITE}/learn`, changeFrequency: 'weekly', priority: 0.8 },
     ...ARTICLES.map((a) => ({
       url: `${SITE}/learn/${a.slug}`,

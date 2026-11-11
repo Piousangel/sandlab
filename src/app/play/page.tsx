@@ -3,6 +3,7 @@ import LevelList from '@/components/spill/LevelList'
 import { LEVELS } from '@/lib/spill/levels'
 import { ordered, worldName } from '@/lib/spill/client/catalog'
 import { describeLevel } from '@/lib/spill/client/describe'
+import { guideFor } from '@/lib/spill/guide/guides'
 
 export const metadata = {
   title: 'Sandlab Spill — falling-sand physics puzzles',
@@ -41,7 +42,12 @@ export default function Page() {
               return (
                 <li key={l.id} style={{ marginBottom: 8 }}>
                   <a href={`/play/${l.id}`} style={{ color: '#eef1f6', fontWeight: 650 }}>{l.id} {l.name}</a>
-                  <span style={{ opacity: 0.7 }}> — {worldName(l.world)}. {d.goals.join('. ')}.</span>
+                  <span style={{ opacity: 0.7 }}> — {worldName(l.world)}. {d.goals.join('. ')}.</span>{guideFor(l.id) && (
+                    <>
+                      {' '}
+                      <a href={`/play/${l.id}/guide`} style={{ color: '#f5a623', fontSize: 14 }}>Guide</a>
+                    </>
+                  )}
                 </li>
               )
             })}
