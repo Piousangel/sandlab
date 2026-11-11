@@ -3,15 +3,22 @@
 샌드랩 팀이 쓰는 운영 방식과 배운 점. 2026-11-17 주부터 quickminigames.site(Piousangel/minigames-hub)
 전담 팀을 세울 때 이 문서를 그대로 들고 간다. **새 노하우가 생기면 "배운 점"에 날짜와 함께 한 줄씩 추가한다.**
 
-## 1. 팀 구조와 하루
+## 1. 팀 구조와 하루 (2026-11-13부터, 사이트마다 한 팀)
 
 | 시간(KST) | 누가 | 하는 일 |
 |---|---|---|
-| 06:00–07:00 | 디벨롭먼트 팀(클라우드 루틴, 사람 없음) | 개선 1개 → 커밋 → 푸시 → PR → 검증 통과 시 머지 → Actions가 배포 |
-| 07:00–09:00 | 사람 + Claude 세션(`/sandlab-daily`) | 루틴 결과 검토, 지표, 다음 백로그 정리, 사람 판단이 필요한 일 |
+| 05:30 | GitHub Actions `metrics` | 지표(D1·AE·존 트래픽·사용자 댓글)를 `docs/daily/metrics/<날짜>.md`로 커밋 |
+| 06:00 | 팀 루틴(클라우드, 사람 없음) | **회의**(데이터·CS·QA·마케터·PM) → **리뷰**(1개 선정) → **반영**(PR·머지·Actions 배포) → **메일 보고** |
+| 07:00–09:00 | 사람 + Claude 세션 | 두 팀 보고 메일·회의록 검토, 마케팅 초안 게시, 사람 결정 |
 
-- 목표 문장: **"어제보다 더 나은 사이트"**. 큰 방향은 AdSense 승인(고유 콘텐츠)과 재방문.
-- 한 세션 안의 역할은 순서대로 쓴다: PM(하나 고르기) → 디자이너(무엇을 깨닫게 하나) → 개발(구현·검증) → 검토자(폰 폭 QA·과잉 기능 점검).
+- 목표 문장: **"어제보다 더 나은 사이트"**. 큰 방향은 AdSense 승인(고유 콘텐츠)과 방문·재방문.
+- 산출물: 회의록 `docs/team/meetings/`, 마케팅 초안 `docs/marketing/`, 출시 로그 `docs/daily/log.md`, 백로그, 메일 보고.
+- 루틴 프롬프트 템플릿: [routine-prompt.md](./routine-prompt.md). 팀마다 `{{...}}`만 바꾼다.
+
+| 팀 | 저장소 | 루틴 |
+|---|---|---|
+| 샌드랩 | Piousangel/sandlab | https://claude.ai/code/routines/trig_01LRjdukRqVeAbjdJzGJpjnJ |
+| 미니게임허브 | Piousangel/minigames-hub | https://claude.ai/code/routines/trig_01Ge7LoTMndjC2PZ2QgvAyHi |
 
 ## 2. 새 팀을 세우는 순서 (minigames-hub 기준 체크리스트)
 
@@ -21,8 +28,9 @@
 4. **지표 스크립트**: `scripts/daily-metrics.mjs` 복사, `QUERIES` 표만 그 프로젝트 DB에 맞게 바꾼다.
 5. **로그·백로그**: `docs/daily/log.md`(하루 한 줄), `docs/daily/backlog.md`.
 6. **자동 배포**: `.github/workflows/deploy.yml` 복사. 저장소 시크릿 `CLOUDFLARE_API_TOKEN`·`CLOUDFLARE_ACCOUNT_ID` 등록. 시크릿 등록 후 `workflow_dispatch`로 한 번 돌려 확인.
-7. **클라우드 루틴**: `/schedule`로 06:00 KST(= `0 21 * * *` UTC) 루틴 생성. 프롬프트는 샌드랩 루틴(https://claude.ai/code/routines/trig_01LRjdukRqVeAbjdJzGJpjnJ)을 복사해 저장소·규칙만 바꾼다. 커넥터는 필요 없으면 비운다.
-8. **캘린더**: 07–09 검토 세션 반복 일정.
+7. **지표 수집**: `.github/workflows/metrics.yml` 복사(05:30 KST). 토큰에 D1 Read·Account Analytics Read·Zone Read·Zone Analytics Read 포함.
+8. **클라우드 루틴**: `/schedule`로 06:00 KST(= `0 21 * * *` UTC) 루틴 생성. 프롬프트는 [routine-prompt.md](./routine-prompt.md). 커넥터는 Gmail만(피드백 읽기·보고 발송).
+9. **캘린더**: 07–09 검토 세션 반복 일정.
 
 ## 3. 루틴 프롬프트에 꼭 넣을 것
 
@@ -53,3 +61,4 @@
 - 2026-11-11 무거운 검증(spill:verify)은 GitHub Actions 러너에서 로컬보다 7배 이상 느리다(3분→22분). 배포 워크플로에는 빠른 검사만 두고 무거운 검증은 머지 전에 돌린다.
 - 2026-11-12 Claude Code의 `!` 입력창에서 `gh secret set X`만 치면 붙여넣을 칸이 안 떠서 빈 값이 저장된다. 토큰을 복사한 뒤 `! pbpaste | gh secret set X --repo <저장소>`로 넣는다. Cloudflare 토큰 화면에서는 아래 curl 상자가 아니라 맨 위 점선 상자의 값을 복사한다.
 - 2026-11-12 Cloudflare 배포 토큰은 'Edit Cloudflare Workers' 템플릿이면 충분하다(D1 바인딩 포함 배포 성공). IP 필터는 비운다(Actions IP가 매번 바뀜).
+- 2026-11-12 pnpm 12 CI 빌드 허용 목록은 저장소마다 다르다(minigames-hub는 unrs-resolver 추가). 새 저장소는 깨끗한 클론에서 `CI=true pnpm install --frozen-lockfile`로 먼저 확인한다.
