@@ -20,7 +20,10 @@ describe('sitemap', () => {
   it('Spill 레벨을 전부 담고 301로 옮긴 옛 레벨 URL은 뺀다', () => {
     for (const l of LEVELS) expect(urls).toContain(`${SITE}/play/${l.id}`)
     for (const id of OLD_LEVEL_IDS) expect(urls).not.toContain(`${SITE}/play/${id}`)
-    expect(urls.filter((u) => u.startsWith(`${SITE}/play/`))).toHaveLength(LEVELS.length)
+    expect(urls.filter((u) => u.startsWith(`${SITE}/play/`) && !u.endsWith('/guide'))).toHaveLength(LEVELS.length)
     expect(urls).not.toContain(`${SITE}/spill/bench`)
+  })
+  it('레벨마다 공략 페이지를 담는다', () => {
+    for (const l of LEVELS) expect(urls).toContain(`${SITE}/play/${l.id}/guide`)
   })
 })

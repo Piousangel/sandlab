@@ -5,3 +5,4 @@ out/
 .wrangler/
 .gstack/
 .worktrees/
+.claude/progress.md
