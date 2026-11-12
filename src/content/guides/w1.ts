@@ -301,7 +301,7 @@ export const W1_GUIDES: LevelGuide[] = [
       {
         heading: 'Speed comes from width',
         paragraphs: [
-          'Being right about the side only earns the clear. The clock depends on how fast sand enters the cup. A one-tile slit worked, but our slowest slits took more than twenty seconds because only a thin thread of grains fell. A cut that fills most of the cup’s width finished in about six, which is just inside the time for the top star.',
+          'Being right about the side only earns the clear. The clock depends on how fast sand enters the cup. A one-tile slit worked, but our slowest slits took more than twenty seconds because only a thin thread of grains fell. A cut that fills most of the cup’s width finished in about six, which is comfortably inside the time for the top star.',
           'Do not stretch a long cut past the dividing wall, either. In our runs a cut that ran across it took about twice as long as one of the same length that stayed over the cup. Keep the whole stroke over the cup and make it as wide as the tool allows.',
           'If you are stuck, run one deliberately narrow cut and watch where the first grains land. Seeing the pile grow in the wrong place teaches more than reading about it.',
         ],

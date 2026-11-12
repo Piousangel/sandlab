@@ -17,7 +17,7 @@ export default defineLevel({
   gems: [],
   verbs: { dig: { maxLen: 4 }, trigger: null },
   legalTiles: 'auto',
-  par: { moves: 1, secs: 6.3 },
+  par: { moves: 1, secs: 7.2 },
   dev: [[0, 'dig', 13, 21, 16, 21]],
   hint: 'Sand sinks. Water rises. Mind where the sand lands.',
 })
