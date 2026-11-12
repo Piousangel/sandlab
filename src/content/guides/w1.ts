@@ -276,4 +276,37 @@ export const W1_GUIDES: LevelGuide[] = [
     ],
     hints: ['Two dirt plugs block the route, and the sand gate protects the skull.', 'Dig both plugs, then open both gates early. The sand only has to reach the skull before the water does.'],
   },
+  {
+    id: '1-9',
+    title: '1-9 Overflow guide: why the cut belongs over the cup, not the pot',
+    description: 'Sandlab Spill 1-9 Overflow explained: the same sand-and-water swap as 1-6, but a wide container and a tempting cut that never clears.',
+    published: D,
+    updated: D,
+    lesson: 'Dropped material lands where it falls, so an opening that looks harmless can fill the very place you need empty.',
+    sections: [
+      {
+        heading: 'The same trick with a bigger trap',
+        paragraphs: [
+          'Overflow reuses the idea from Displacement. A sealed cup of water sits low in the scene, a wall on its right is shorter than the one on its left, and a tray of sand rests above on a thin dirt strip. Sand sinks, water climbs, and the surplus spills toward the pot. What changed is the tray. It is now wide enough to stretch over the pot as well as over the cup, and that is the whole difficulty.',
+          'Nothing tells you which part of the strip to open. Both halves of it look identical, and the dig tool will happily cut either one.',
+        ],
+      },
+      {
+        heading: 'What happens when you open the wrong half',
+        paragraphs: [
+          'We ran a long list of single cuts across the strip. Every cut that started more than a tile or two beyond the dividing wall failed, without exception, and the level simply stalled. The grains fall somewhere other than the cup, so the water never gets pushed up and over the lip, and the pot is left waiting.',
+          'Cuts that started above the cup cleared, which tells you the real rule: you are not digging toward the goal, you are digging above the supply. Think about where the grains will land, not where the water should end up.',
+        ],
+      },
+      {
+        heading: 'Speed comes from width',
+        paragraphs: [
+          'Being right about the side only earns the clear. The clock depends on how fast sand enters the cup. A one-tile slit worked, but our slowest slits took more than twenty seconds because only a thin thread of grains fell. A cut that fills most of the cup’s width finished in about six, which is just inside the time for the top star.',
+          'Do not stretch a long cut past the dividing wall, either. In our runs a cut that ran across it took about twice as long as one of the same length that stayed over the cup. Keep the whole stroke over the cup and make it as wide as the tool allows.',
+          'If you are stuck, run one deliberately narrow cut and watch where the first grains land. Seeing the pile grow in the wrong place teaches more than reading about it.',
+        ],
+      },
+    ],
+    hints: ['Look at where the sand will land, not where the water must go.', 'Make the widest cut you can, entirely over the water cup and clear of the pot side.'],
+  },
 ]
