@@ -10,11 +10,11 @@ import { W1 } from './w1'
 const W1_MATS = new Set(['empty', 'wall', 'dirt', 'sand', 'water', 'gate', 'spout'])
 
 describe('W1 Flow levels', () => {
-  it('has the eight §5 levels in order', () => {
+  it('has the eight §5 levels in order, then the 1-9 bonus', () => {
     expect(W1.map((l) => `${l.id} ${l.name}`)).toEqual([
-      '1-1 First Drop', '1-2 Detour', '1-3 Two Pots', '1-4 Hourglass', '1-5 Gatekeeper', '1-6 Displacement', '1-7 Two Taps', '1-8 Cascade',
+      '1-1 First Drop', '1-2 Detour', '1-3 Two Pots', '1-4 Hourglass', '1-5 Gatekeeper', '1-6 Displacement', '1-7 Two Taps', '1-8 Cascade', '1-9 Overflow',
     ])
-    expect(LEVELS.slice(0, 8)).toEqual(W1)
+    expect(LEVELS.slice(0, 9)).toEqual(W1)
   })
 
   it('ids, salts and hashes are unique', () => {
