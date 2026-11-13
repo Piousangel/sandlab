@@ -8,6 +8,7 @@
 진짜 회사의 제품 팀처럼 매일 아침 **회의 → 리뷰 → 반영 → 보고**를 한 세션 안에서 끝낸다(06:00~07:00 KST 목표).
 
 ## 0. 먼저 읽기
+- **docs/team/OPERATING.md** (팀 운영 규칙: 어제 회고, 첫 화면 상시 안건, direction.md·주간 회고, 마케팅 게시 큐). 이 프롬프트보다 최신이다. 새 팀은 sandlab의 OPERATING.md·direction.md·above-the-fold.md·scripts/post-social.mjs·marketing-post.yml을 복사해 시작.
 - CLAUDE.md의 절대 규칙. {{프로젝트 금지 규칙 요약}}
 - {{인계서 경로}}, DECISIONS.md, docs/ops/playbook.md(있으면), docs/daily/backlog.md, docs/daily/log.md, 최근 회의록 docs/team/meetings/ 최근 3개.
 - 오늘 지표: docs/daily/metrics/<오늘 KST 날짜>.md (05:30 Actions가 커밋). 없으면 회의록에 "지표 없음"이라 적고 진행.
@@ -28,7 +29,7 @@
 - 브랜치 `daily/YYYY-MM-DD-<주제>`. 구현 → 검증 → 커밋(한국어 conventional, 끝에 `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`) → 푸시 → PR(목적·변경·실제 검증 결과·회의록 링크, 끝에 `🤖 Generated with [Claude Code](https://claude.com/claude-code)`).
 - 검증(모두 통과해야 머지): {{검증 명령}}
 - 전부 통과하면 PR을 main에 머지({{머지 방식}}). 하나라도 실패하면 머지하지 말고 PR에 원인을 적고 열어둔다. 직접 배포하지 않는다(main 머지 시 Actions가 배포).
-- 마케팅 산출물: `docs/marketing/YYYY-MM-DD.md`에 채널별 게시 초안(채널 규칙에 맞게, 홍보 티 줄이고 가치 중심). 외부 게시는 사람이 한다.
+- 마케팅: 게시할 글은 `docs/marketing/queue/YYYY-MM-DD.json`(머지 후 Actions가 게시), API 없는 채널용 초안은 `docs/marketing/YYYY-MM-DD.md`. 규칙은 OPERATING.md 5장.
 - 기록: docs/daily/log.md 한 줄, backlog 갱신, 갈림길이면 DECISIONS.md, 다른 팀에도 쓸모 있는 노하우는 playbook '배운 점'에 한 줄.
 - 회의록·마케팅 초안·기록도 같은 PR에 넣는다.
 
@@ -40,7 +41,7 @@
 - 사람이 결정할 것(있으면)
 
 ## 금지
-main 직접 푸시, force push, 테스트 약화·삭제, 공유 URL 형식 변경, 광고를 게임·캔버스 화면에 넣기, AdSense 재심사 신청, 보고 주소 외 메일 발송, 메일 답장, 외부 서비스에 글 게시. {{프로젝트 추가 금지}}
+main 직접 푸시, force push, 테스트 약화·삭제, 공유 URL 형식 변경, 광고를 게임·캔버스 화면에 넣기, AdSense 재심사 신청, 보고 주소 외 메일 발송, 메일 답장, 에이전트 세션에서 직접 외부 게시(게시는 큐 JSON → Actions로만). {{프로젝트 추가 금지}}
 
 ## 마지막 출력
 반영 / PR·머지 여부 / 검증 결과 / 메일 발송 여부 / 내일 볼 것 한 줄.
