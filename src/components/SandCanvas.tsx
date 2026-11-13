@@ -15,6 +15,7 @@ import { uaClass } from '@/lib/sand/ua'
 import { gpuAdvice, type GpuAdvice } from '@/lib/sand/gpuAdvice'
 import { paletteGrid } from '@/lib/sand/paletteGrid'
 import { isPortraitLayout, PORTRAIT_CSS } from '@/lib/sand/portraitLayout'
+import { LEVELS } from '@/lib/spill/levels'
 // record.ts는 mediabunny(~대용량 코덱)를 정적 import한다. 방문자 대부분이 안 누르는 녹화 기능이므로
 // 랜딩 초기 JS에서 분리한다 — record() 호출 시점에 동적 import(아래).
 
@@ -123,6 +124,7 @@ export default function SandCanvas() {
   // 인라인 스타일이라 미디어쿼리를 못 써서 측정 기반으로 간다 — 데스크톱(한 줄)도 그대로 동작.
   const dockRef = useRef<HTMLDivElement>(null)
   const [dockH, setDockH] = useState(56)
+  const newest = LEVELS[LEVELS.length - 1]
   useEffect(() => {
     const el = dockRef.current
     if (!el) return
@@ -945,6 +947,13 @@ export default function SandCanvas() {
       )}
 
       {!coarse && !narrow && <div style={S.hint}>Right-click to erase</div>}
+      {/* 첫 화면 실험 1(11-14): 데스크톱에서 최신 Spill 레벨로 가는 길. 캔버스 안이 아니라 가장자리 카드. */}
+      {!narrow && newest && (
+        <a href={`/play/${newest.id}`} style={S.newestCard} data-testid="newest-level">
+          <span style={S.gameCardKicker}>Puzzle · {LEVELS.length} levels</span>
+          <span style={S.gameCardTitle}>Play {newest.id} {newest.name} →</span>
+        </a>
+      )}
       {!narrow && toastEl}
 
       {/* 고스트 커서 드래그 제스처 + 재료 칩 pulse 힌트 — 인라인 스타일은 keyframe을 못 써서 여기서만 주입한다. */}
@@ -1147,6 +1156,22 @@ const S: Record<string, React.CSSProperties> = {
     color: '#eef1f6',
     background: 'linear-gradient(135deg, rgba(245,166,35,0.18), rgba(245,166,35,0.05))',
     border: '1px solid rgba(245,166,35,0.35)',
+  },
+  newestCard: {
+    position: 'absolute',
+    top: 44,
+    left: 22,
+    width: 190,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+    padding: '8px 12px',
+    borderRadius: 12,
+    textDecoration: 'none',
+    color: '#eef1f6',
+    background: 'linear-gradient(135deg, rgba(245,166,35,0.18), rgba(245,166,35,0.05))',
+    border: '1px solid rgba(245,166,35,0.35)',
+    backdropFilter: 'blur(6px)',
   },
   gameCardKicker: { fontSize: 11, opacity: 0.7, letterSpacing: 0.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   gameCardTitle: { fontSize: 15.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
