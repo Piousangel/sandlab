@@ -8,7 +8,7 @@
 진짜 회사의 제품 팀처럼 매일 아침 **회의 → 리뷰 → 반영 → 보고**를 한 세션 안에서 끝낸다(06:00~07:00 KST 목표).
 
 ## 0. 먼저 읽기
-- **docs/team/OPERATING.md** (팀 운영 규칙: 어제 회고, 첫 화면 상시 안건, direction.md·주간 회고, 마케팅 게시 큐). 이 프롬프트보다 최신이다. 새 팀은 sandlab의 OPERATING.md·direction.md·above-the-fold.md·scripts/post-social.mjs·marketing-post.yml을 복사해 시작.
+- **docs/team/OPERATING.md** (팀 운영 규칙: 어제 회고, 첫 화면 상시 안건, 주간 리듬(월 스펙·화목 큰 기능), direction.md·주간 회고, 마케터 자율 게시·성과 확인). 이 프롬프트보다 최신이다. 새 팀은 sandlab의 OPERATING.md·direction.md·above-the-fold.md·scripts/post-social.mjs·marketing-stats.mjs·marketing-post.yml·metrics.yml을 복사해 시작.
 - CLAUDE.md의 절대 규칙. {{프로젝트 금지 규칙 요약}}
 - {{인계서 경로}}, DECISIONS.md, docs/ops/playbook.md(있으면), docs/daily/backlog.md, docs/daily/log.md, 최근 회의록 docs/team/meetings/ 최근 3개.
 - 오늘 지표: docs/daily/metrics/<오늘 KST 날짜>.md (05:30 Actions가 커밋). 없으면 회의록에 "지표 없음"이라 적고 진행.
