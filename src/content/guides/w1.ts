@@ -309,4 +309,37 @@ export const W1_GUIDES: LevelGuide[] = [
     ],
     hints: ['Look at where the sand will land, not where the water must go.', 'Make the widest cut you can, entirely over the water cup and clear of the pot side.'],
   },
+  {
+    id: '1-10',
+    title: '1-10 Twin Cups guide: one tray, two cups, and a cut for each',
+    description: 'Sandlab Spill 1-10 Twin Cups explained: why one cut only fills half the level, where the second one goes, and how wide cuts change the clock.',
+    published: '2026-11-15',
+    updated: '2026-11-15',
+    lesson: 'A single supply of sand can only push water out of the cup beneath it, so every cup that matters needs its own opening.',
+    sections: [
+      {
+        heading: 'Two small cups under one long tray',
+        paragraphs: [
+          'Twin Cups takes the displacement trick from the earlier levels and mirrors it. A long tray of sand rests on one thin dirt strip. Under the far left end is a sealed cup of water that spills toward a pot on its right. Under the far right end sits the same arrangement reversed, with its pot on the left side of it. Both pots must fill, and the middle of the tray sits over a block of solid wall that does nothing at all.',
+          'The dig tool is short, so one stroke cannot reach both ends. The level asks for two cuts, and each one has to land over a cup.',
+        ],
+      },
+      {
+        heading: 'What the failures look like',
+        paragraphs: [
+          'We tried the obvious wrong answers. A single cut over either cup fills that cup’s pot and then the level sits there, stalled, with the other pot dry. Our one-cut runs ran for more than twenty seconds without ever finishing. Two cuts over the wall block in the middle never fill anything, because the grains land on a surface that has no water under it.',
+          'Pairing one good cut with one stray cut does not help either. The stray stroke is simply wasted, and the second pot stays empty.',
+        ],
+      },
+      {
+        heading: 'How much width matters here',
+        paragraphs: [
+          'Unlike the one-cup levels, you do not have to be precise. In our runs, cuts shifted a couple of tiles toward the middle still cleared, and so did one-tile slits. What changes is time. Two full-width cuts finished in under five seconds. Two shifted cuts took around seven, and two thin slits took a little under seven.',
+          'So the clear is forgiving but the top star is not. Open each cup to the full width of your stroke, keep both strokes inside the ends of the tray, and the finish comes before the par clock runs out.',
+          'When only one pot fills, do not sit and wait. Retry and put the missing cut over the other cup straight away.',
+        ],
+      },
+    ],
+    hints: ['One supply of sand serves one cup. Count how many cups need to rise.', 'Cut once above each water cup with the longest stroke you can, and leave the middle of the tray alone.'],
+  },
 ]
