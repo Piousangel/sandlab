@@ -8,5 +8,6 @@ import displacement from './displacement'
 import twoTaps from './two-taps'
 import cascade from './cascade'
 import overflow from './overflow'
+import twinCups from './twin-cups'
 
-export const W1: LevelDef[] = [firstDrop, detour, twoPots, hourglass, gatekeeper, displacement, twoTaps, cascade, overflow]
+export const W1: LevelDef[] = [firstDrop, detour, twoPots, hourglass, gatekeeper, displacement, twoTaps, cascade, overflow, twinCups]

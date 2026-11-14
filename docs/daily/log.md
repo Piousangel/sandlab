@@ -6,3 +6,4 @@
 | 2026-11-12 | 결과 카드 팁 수정 (젬 별 저장 안내) | /play/1-3, 1-4, 1-8 결과 카드 | typecheck·test 1034 통과(verify.test 제외)·view.test 신규 케이스 | 젬을 다 먹고 par만 놓치면 "Gem star saved — par is N, chase it in a fresh run" |
 | 2026-11-13 | Spill 1-9 Overflow + 공략 | /play/1-9, /play/1-9/guide | typecheck·test(verify.test 제외)·build·verify-ads 통과, spill:verify 9/9 PASS | 넓은 트레이의 오답 절반(파티 쪽 컷은 전부 stalled). 지표 D1 쿼리 전부 실패 → 사람 확인 필요 |
 | 2026-11-14 | 첫 화면 실험 1: 데스크톱 홈 최신 Spill 레벨 카드 | / (데스크톱) → /play/1-9 | typecheck·test 1042(verify.test 제외)·build·verify-ads (결과는 PR) | 7일 뒤(11-21) challenge_start 변화로 판단. 카드 클릭 계측 없음 |
+| 2026-11-15 | Spill 1-10 Twin Cups + 공략 | /play/1-10, /play/1-10/guide | typecheck·test·spill:verify 10/10·build·verify-ads (결과는 PR) | 데스크톱 홈 카드가 자동으로 1-10을 가리킴(실험 1 변수 동일). 카드 클릭 계측은 여전히 없음 |
