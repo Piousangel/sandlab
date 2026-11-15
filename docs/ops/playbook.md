@@ -19,7 +19,7 @@
 |---|---|---|
 | 샌드랩 | Piousangel/sandlab | https://claude.ai/code/routines/trig_01LRjdukRqVeAbjdJzGJpjnJ |
 | 미니게임허브 | Piousangel/minigames-hub | https://claude.ai/code/routines/trig_01Ge7LoTMndjC2PZ2QgvAyHi |
-| 더런 (11-16~) | Piousangel/TheRun | https://claude.ai/code/routines/trig_01AM64NdJWU1G3e9cFNT5cpg |
+| 더런 (11-16~) | Piousangel/TheRun | 06시 https://claude.ai/code/routines/trig_01AM64NdJWU1G3e9cFNT5cpg · 13시 trig_017Yi7C9QG5uzVtkPxu3WmFT · 20시 trig_01HqYvi4yivCUH3tmUsJz42n (11월 스프린트) |
 
 ## 2. 새 팀을 세우는 순서 (minigames-hub 기준 체크리스트)
 
@@ -73,3 +73,5 @@
 - 2026-11-15 마케터에게 "새 게 있을 때만"을 허용하면 0건이 된다. 매일 최소 1건(기존 콘텐츠 재소개 허용, 같은 채널·URL 14일 중복 금지)으로 강제한다.
 - 2026-11-15 이벤트 API(`/api/track`)의 referer 헤더는 항상 우리 페이지다. 외부 유입은 진입 시 `document.referrer`와 `?ref=` 태그를 따로 보내야 보인다. 게시 링크에는 `?ref=<채널>`을 붙인다.
 - 2026-11-15 공개 사이트가 아닌 내부 앱(더런)은 마케터·SEO 대신 '클럽 운영자' 역할과 런칭 체크리스트(docs/team/launch.md)를 둔다. 이미 CI(e2e 포함)가 있는 저장소는 'PR CI 전부 초록 → 머지'를 관문으로 쓴다.
+- 2026-11-15 마감이 촉박하면 루틴을 하루 3회로 늘린다. 06시만 회의하고 '오늘의 계획' 3개를 적는다. 13·20시는 회의 없이 다음 항목을 반영한다. 메일은 06시 보고와 20시 요약 2통으로 줄인다.
+- 2026-11-15 공식 글쓰기 API가 없는 채널(네이버 블로그 2020년 종료, velog 비공식)은 자동화하지 않는다. 완성 원고와 캡처까지 만들어 사람이 붙여넣게 한다. 비공식 자동화는 계정 정지 위험이 있다.
