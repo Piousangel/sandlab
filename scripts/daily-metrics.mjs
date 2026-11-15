@@ -11,7 +11,6 @@
  *
  * 실행: node scripts/daily-metrics.mjs
  */
-import { execFileSync } from 'node:child_process'
 
 const DB = 'sandlab-gallery'
 const ZONE = 'sandlab.app'
@@ -32,18 +31,29 @@ const BREAKDOWN = {
     `SELECT level_id k, COUNT(*) n FROM spill_seen WHERE created_at > ${s} GROUP BY level_id ORDER BY level_id`,
 }
 
-// 원격 D1 호출은 가끔 네트워크로 실패한다 — 2번까지 재시도.
-function d1(sql, tries = 3) {
+// D1 REST API 직접 조회(wrangler CLI는 실패 원인을 'Command failed'로만 남겨 진단이 안 됐다).
+// 필요 권한: 토큰 Account 정책의 D1 Edit(쿼리 엔드포인트). 네트워크 실패는 2번까지 재시도.
+const D1_ID = '75e9cf5f-82b9-4784-9a5b-cec215df3909' // wrangler.jsonc의 database_id
+async function d1(sql, tries = 3) {
+  const { CF_ACCOUNT_ID: acct, CF_API_TOKEN: token } = process.env
+  if (!acct || !token) throw new Error('CF_ACCOUNT_ID·CF_API_TOKEN 없음')
   for (let i = 1; ; i++) {
     try {
-      const out = execFileSync(
-        'npx',
-        ['wrangler', 'd1', 'execute', DB, '--remote', '--json', '--command', sql],
-        { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
-      )
-      return JSON.parse(out)[0].results
+      const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acct}/d1/database/${D1_ID}/query`, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+        body: JSON.stringify({ sql }),
+      })
+      const j = await res.json().catch(() => ({}))
+      if (!res.ok || !j.success) {
+        const msg = (j.errors ?? []).map((e) => `${e.code} ${e.message}`).join('; ') || `HTTP ${res.status}`
+        const err = new Error(`D1 ${res.status}: ${msg}`)
+        err.permanent = res.status === 400 || res.status === 401 || res.status === 403
+        throw err
+      }
+      return j.result[0].results
     } catch (e) {
-      if (i >= tries) throw e
+      if (e.permanent || i >= tries) throw e
     }
   }
 }
@@ -68,14 +78,14 @@ console.log(`# 샌드랩 지표 — ${new Date(now).toISOString().slice(0, 16).r
 console.log('| 지표 | 24h | 7일 |\n|---|---:|---:|')
 for (const [label, q] of QUERIES) {
   try {
-    console.log(`| ${label} | ${d1(q(d1Since))[0].n} | ${d1(q(d7Since))[0].n} |`)
+    console.log(`| ${label} | ${(await d1(q(d1Since)))[0].n} | ${(await d1(q(d7Since)))[0].n} |`)
   } catch (e) {
     console.log(`| ${label} | 실패 | ${String(e.message).split('\n')[0]} |`)
   }
 }
 
 try {
-  const rows = d1(BREAKDOWN.sql(d7Since))
+  const rows = await d1(BREAKDOWN.sql(d7Since))
   console.log(`\n${BREAKDOWN.label}: ${rows.length ? rows.map((r) => `${r.k}=${r.n}`).join(' · ') : '없음'}`)
 } catch (e) {
   console.log(`\n${BREAKDOWN.label}: 실패 (${e.message.split('\n')[0]})`)
