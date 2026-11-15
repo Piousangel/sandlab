@@ -19,6 +19,7 @@
 |---|---|---|
 | 샌드랩 | Piousangel/sandlab | https://claude.ai/code/routines/trig_01LRjdukRqVeAbjdJzGJpjnJ |
 | 미니게임허브 | Piousangel/minigames-hub | https://claude.ai/code/routines/trig_01Ge7LoTMndjC2PZ2QgvAyHi |
+| 더런 (11-16~) | Piousangel/TheRun | https://claude.ai/code/routines/trig_01AM64NdJWU1G3e9cFNT5cpg |
 
 ## 2. 새 팀을 세우는 순서 (minigames-hub 기준 체크리스트)
 
@@ -71,3 +72,4 @@
 - 2026-11-15 매일 할 일을 '1시간 안 가능?'으로 거르면 팀이 작은 수정만 고른다. 큰 기능 요일(화·목)과 월요일 스펙을 따로 둔다.
 - 2026-11-15 마케터에게 "새 게 있을 때만"을 허용하면 0건이 된다. 매일 최소 1건(기존 콘텐츠 재소개 허용, 같은 채널·URL 14일 중복 금지)으로 강제한다.
 - 2026-11-15 이벤트 API(`/api/track`)의 referer 헤더는 항상 우리 페이지다. 외부 유입은 진입 시 `document.referrer`와 `?ref=` 태그를 따로 보내야 보인다. 게시 링크에는 `?ref=<채널>`을 붙인다.
+- 2026-11-15 공개 사이트가 아닌 내부 앱(더런)은 마케터·SEO 대신 '클럽 운영자' 역할과 런칭 체크리스트(docs/team/launch.md)를 둔다. 이미 CI(e2e 포함)가 있는 저장소는 'PR CI 전부 초록 → 머지'를 관문으로 쓴다.
