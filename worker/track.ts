@@ -4,12 +4,14 @@
  * S1 계측: gpu_unsupported·puzzle_land는 UA 분류(kakao|insta|other)만, share_click은 공유 지점만 ref로 받는다.
  */
 import { UA_CLASSES, SHARE_SURFACES } from '../src/lib/sand/ua'
+import { LANDING_REFS } from '../src/lib/sand/landing'
 
 const CHALLENGE = new Set(['challenge_start', 'challenge_clear', 'challenge_reset'])
 const PLAIN = new Set(['kofi_click'])
 const BY_UA = new Set(['gpu_unsupported', 'puzzle_land'])
 const UA_REFS = new Set<string>(UA_CLASSES)
 const SHARE_REFS = new Set<string>(SHARE_SURFACES)
+const LANDING = new Set<string>(LANDING_REFS)
 const REF = /^[a-z0-9-]{1,40}$/
 
 export function parseTrack(body: unknown): { event: string; ref: string; value: number } | null {
@@ -31,6 +33,7 @@ export function parseTrack(body: unknown): { event: string; ref: string; value: 
     const allowed = b.event === 'gpu_unsupported' ? [0, 1] : [0]
     return allowed.includes(raw as number) ? { event: b.event, ref, value: raw as number } : null
   }
+  if (b.event === 'landing') return ref !== null && LANDING.has(ref) ? { event: b.event, ref, value: 0 } : null
   if (b.event === 'share_click') return ref !== null && SHARE_REFS.has(ref) ? { event: b.event, ref, value: 0 } : null
   return null
 }

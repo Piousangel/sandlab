@@ -105,6 +105,12 @@ try {
        WHERE timestamp > NOW() - INTERVAL '7' DAY AND blob2 != '' GROUP BY ref ORDER BY n DESC LIMIT 5`,
     )
     console.log(`referrer 상위: ${refs.map((r) => `${r.ref}=${r.n}`).join(' · ') || '없음'}`)
+    // 유입(landing 이벤트, 11-16~): blob4 = tag-<?ref= 채널> | ref-<referrer 분류> | direct
+    const landings = await ae(
+      `SELECT blob4 AS src, SUM(_sample_interval) AS n FROM sandlab_events
+       WHERE timestamp > NOW() - INTERVAL '7' DAY AND blob1 = 'landing' GROUP BY src ORDER BY n DESC LIMIT 12`,
+    )
+    console.log(`유입 태그(?ref=)·referrer 분류 (7일, landing): ${landings.map((r) => `${r.src}=${r.n}`).join(' · ') || '없음(계측 배포 전이거나 방문 없음)'}`)
   }
 } catch (e) {
   console.log(`\nAE: 실패 (${e.message})`)

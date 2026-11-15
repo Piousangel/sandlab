@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { SITE } from '@/lib/site'
+import LandingBeacon from '@/components/LandingBeacon'
 
 // 쐐기(wedge)는 '테크 스펙'이 아니라 '무설치·무가입·링크로 공유'다.
 // 핸드오프 근거: fps·셀 수는 자랑이지 제품이 아니다. 방문자에게 제일 약한 쐐기를 먼저 보이지 않는다.
@@ -68,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
         />
         {children}
+        <LandingBeacon />
       </body>
     </html>
   )

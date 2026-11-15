@@ -1,12 +1,9 @@
 # 데일리 백로그 (위가 우선)
 
-## 최우선 (마케터 성과 측정의 전제)
-0. **외부 유입 계측**: 지금 AE referrer가 전부 sandlab.app인 건 실제 유입이 없어서가 아니라 측정 방식 탓이다. `track()`이 `/api/track` 요청의 referer 헤더(= 항상 우리 페이지)를 쓴다. 페이지 진입 시 1회 `landing` 이벤트로 `document.referrer` 호스트와 `?ref=` 태그를 보내고, daily-metrics에 '유입 태그(?ref=)' 줄을 추가한다. 마케팅 게시 링크에는 `?ref=<채널>`이 붙는다. 소형으로 처리 가능하다.
-
 ## 소형 (11-15 발견)
 - 2개 이상 목표가 같은 문구인 레벨(1-10 Twin Cups)에서 Goal·About이 "Fill the pot with 100 cells of water"를 두 번 반복한다. "Fill both pots (100 cells of water each)"처럼 합쳐 표시한다(`describeLevel`).
 
-## 큰 기능 (화·목 슬롯, 월요일에 2개 골라 스펙)
+## 큰 기능 (화·목 슬롯) — 11-16 스펙 완료: docs/team/specs/ (화 /daily Spill 교체, 목 레벨 갤러리 v1)
 1. 레벨 갤러리 v1: /spill/editor 공개 + 솔버 검증 통과분만 발행 + 플레이·투표
 2. /daily를 Spill 엔진으로 교체(S3): 엔진 이중화 해소
 3. 첫 방문 프리셋 장면 자동 재생: 빈 캔버스 첫인상 개선, 계측 포함
@@ -32,6 +29,7 @@
 - 공략 쓰는 법: `CAP=400 npx tsx scripts/spill-explore.mts <id>`로 해 공간을 먼저 보고, 주장마다 대안 수순을 evaluate로 확인
 
 ## 완료
+- 11-16 유입 계측 landing 이벤트 + 주간 회고·스펙 2개
 - 11-15 Spill 1-10 Twin Cups + 공략
 - 11-14 첫 화면 실험 1: 데스크톱 홈 최신 레벨 카드
 - 11-13 Spill 1-9 Overflow + 공략
