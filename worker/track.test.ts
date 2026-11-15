@@ -51,6 +51,19 @@ describe('parseTrack — S1 계측(gpu_unsupported · puzzle_land · share_click
   })
 })
 
+describe('parseTrack — landing(유입 분류)', () => {
+  it('고정 분류만 허용', () => {
+    for (const r of ['tag-bluesky', 'tag-other', 'ref-google', 'ref-other', 'direct']) {
+      expect(parseTrack({ event: 'landing', ref: r })).toEqual({ event: 'landing', ref: r, value: 0 })
+    }
+  })
+  it('임의 호스트·태그·ref 없음은 거부(카디널리티 보호)', () => {
+    expect(parseTrack({ event: 'landing', ref: 'evil.example.com' })).toBeNull()
+    expect(parseTrack({ event: 'landing', ref: 'tag-whatever' })).toBeNull()
+    expect(parseTrack({ event: 'landing' })).toBeNull()
+  })
+})
+
 describe('parseTrack — S1 value는 화면 코드만(리뷰 5)', () => {
   it('gpu_unsupported value는 0(홈)·1(퍼즐)만, 그 밖은 거부', () => {
     expect(parseTrack({ event: 'gpu_unsupported', ref: 'kakao', value: 0 })?.value).toBe(0)

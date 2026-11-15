@@ -7,3 +7,4 @@
 | 2026-11-13 | Spill 1-9 Overflow + 공략 | /play/1-9, /play/1-9/guide | typecheck·test(verify.test 제외)·build·verify-ads 통과, spill:verify 9/9 PASS | 넓은 트레이의 오답 절반(파티 쪽 컷은 전부 stalled). 지표 D1 쿼리 전부 실패 → 사람 확인 필요 |
 | 2026-11-14 | 첫 화면 실험 1: 데스크톱 홈 최신 Spill 레벨 카드 | / (데스크톱) → /play/1-9 | typecheck·test 1042(verify.test 제외)·build·verify-ads (결과는 PR) | 7일 뒤(11-21) challenge_start 변화로 판단. 카드 클릭 계측 없음 |
 | 2026-11-15 | Spill 1-10 Twin Cups + 공략 | /play/1-10, /play/1-10/guide | typecheck·test·spill:verify 10/10·build·verify-ads (결과는 PR) | 데스크톱 홈 카드가 자동으로 1-10을 가리킴(실험 1 변수 동일). 카드 클릭 계측은 여전히 없음 |
+| 2026-11-16 | 유입 계측 `landing` 이벤트(?ref= 태그·referrer 분류) + 주간 회고·큰 기능 스펙 2 | 전 페이지(비가시) | typecheck·test 1057·spill:verify·build·verify-ads (결과는 PR) | 11-23 지표 파일에서 채널별 유입 확인 |
