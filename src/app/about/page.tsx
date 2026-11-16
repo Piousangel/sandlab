@@ -73,9 +73,10 @@ export default function Page() {
 
       <h2 style={h2}>Requirements</h2>
       <p>
-        Sandlab needs a browser with WebGPU, such as a recent version of Chrome or Edge. If your browser does
-        not support it, Sandlab shows a gallery of scenes instead of the live canvas, and every article and
-        guide page works without WebGPU.
+        The sandbox on the home page needs a browser with WebGPU, such as a recent version of Chrome or Edge. If
+        your browser does not support it, Sandlab shows a gallery of scenes instead of the live canvas. The Spill
+        puzzles and the daily puzzle run without WebGPU, on phones too, and every article and guide page works
+        without it.
       </p>
 
       <h2 style={h2} id="contact">Contact</h2>
