@@ -54,6 +54,8 @@ export default function ContentShell({ children, ads = true }: { children: React
         <Link href="/materials" style={link}>Materials guide</Link>
         <Link href="/about" style={link}>About</Link>
         <Link href="/privacy" style={link}>Privacy</Link>
+        <Link href="/terms" style={link}>Terms</Link>
+        <Link href="/contact" style={link}>Contact</Link>
         <span style={{ ...link, marginLeft: 'auto', opacity: 0.45 }}>Made by Piousangel</span>
       </footer>
     </div>

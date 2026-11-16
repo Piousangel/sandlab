@@ -7,7 +7,7 @@ import { OLD_LEVEL_IDS } from '../../worker/spill-redirects'
 describe('sitemap', () => {
   const urls = sitemap().map((e) => e.url)
   it('콘텐츠 페이지를 모두 담는다', () => {
-    for (const p of ['', '/gallery', '/learn', '/learn/margolus-falling-sand', '/learn/materials-as-data', '/learn/history-of-falling-sand-games', '/materials', '/materials/lava', '/materials/water', '/about', '/privacy', '/play', '/daily']) {
+    for (const p of ['', '/gallery', '/learn', '/learn/margolus-falling-sand', '/learn/materials-as-data', '/learn/history-of-falling-sand-games', '/materials', '/materials/lava', '/materials/water', '/about', '/privacy', '/terms', '/contact', '/play', '/daily']) {
       expect(urls).toContain(`${SITE}${p}`)
     }
   })

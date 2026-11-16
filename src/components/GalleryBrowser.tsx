@@ -388,6 +388,8 @@ export default function GalleryBrowser() {
         <a href="/about" style={S.supportLink}>About</a> ·{' '}
         <a href="/learn" style={S.supportLink}>Learn</a> ·{' '}
         <a href="/privacy" style={S.supportLink}>Privacy</a> ·{' '}
+        <a href="/terms" style={S.supportLink}>Terms</a> ·{' '}
+        <a href="/contact" style={S.supportLink}>Contact</a> ·{' '}
         <a
           href="https://ko-fi.com/piousangel"
           target="_blank"
