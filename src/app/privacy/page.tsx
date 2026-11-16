@@ -13,7 +13,7 @@ export default function Page() {
   return (
     <ContentShell ads={false}>
       <h1 style={{ fontSize: 30, lineHeight: 1.2, margin: '0 0 12px' }}>Privacy</h1>
-      <p style={{ opacity: 0.7, fontSize: 14 }}>Last updated: 9 October 2026</p>
+      <p style={{ opacity: 0.7, fontSize: 14 }}>Last updated: 16 November 2026</p>
       <p>
         Sandlab has no accounts and no sign-up. This page lists everything the site stores and why. If
         something here is unclear, email <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#eef1f6' }}>{CONTACT_EMAIL}</a>.
@@ -50,8 +50,8 @@ export default function Page() {
       </p>
       <h2 style={h2}>Advertising</h2>
       <p>
-        Some text pages on this site, such as the articles under Learn and the materials guide, may show
-        ads served by Google AdSense.
+        Some text pages on this site, such as the articles under Learn, the materials guide, the level
+        guides and the challenge list, may show ads served by Google AdSense.
         Google and its partners use cookies to serve ads based on your visits to this and other websites.
         You can turn off personalised advertising in{' '}
         <a href="https://adssettings.google.com" style={{ color: '#eef1f6' }}>Google Ads Settings</a>, and
@@ -59,7 +59,7 @@ export default function Page() {
         <a href="https://policies.google.com/technologies/partner-sites" style={{ color: '#eef1f6' }}>
           policies.google.com/technologies/partner-sites
         </a>
-        . The sandbox canvas, the gallery and this page never show ads.
+        . The sandbox canvas, the puzzle screens, the gallery and this page never show ads.
       </p>
       <h2 style={h2}>Hosting</h2>
       <p>
