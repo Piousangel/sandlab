@@ -9,3 +9,7 @@ export const SITE = 'https://sandlab.app'
 
 /** 문의 주소 — /about, /privacy에 노출. Cloudflare Email Routing으로 운영자 메일함에 전달된다. */
 export const CONTACT_EMAIL = 'hello@sandlab.app'
+
+// 쐐기(wedge)는 '테크 스펙'이 아니라 '무설치·무가입·링크로 공유'다.
+// 핸드오프 근거: fps·셀 수는 자랑이지 제품이 아니다. 방문자에게 제일 약한 쐐기를 먼저 보이지 않는다.
+export const TAGLINE = 'Falling-sand you paint in the browser. No install, no sign-up — share any scene as a link, or post a 10-second clip.'

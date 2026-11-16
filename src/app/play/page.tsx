@@ -1,21 +1,30 @@
 import ContentShell from '@/components/ContentShell'
+import JsonLd from '@/components/JsonLd'
+import { gameJsonLd } from '@/lib/gameJsonLd'
 import LevelList from '@/components/spill/LevelList'
 import { LEVELS } from '@/lib/spill/levels'
 import { ordered, worldName } from '@/lib/spill/client/catalog'
 import { describeLevel } from '@/lib/spill/client/describe'
 import { guideFor } from '@/lib/spill/guide/guides'
 
+const DESCRIPTION =
+  'Dig a channel, open a gate, and let water and sand do the rest. Short physics puzzles on a falling-sand simulation, scored by moves and time.'
+
 export const metadata = {
   title: 'Sandlab Spill — falling-sand physics puzzles',
-  description: 'Dig a channel, open a gate, and let water and sand do the rest. Short physics puzzles on a falling-sand simulation, scored by moves and time.',
+  description: DESCRIPTION,
   alternates: { canonical: '/play' },
 }
+
+// Spill 엔진(CPU) — WebGPU 불필요.
+const JSON_LD = gameJsonLd('puzzle', { name: 'Sandlab Spill', path: '/play', description: DESCRIPTION })
 
 export default function Page() {
   const levels = ordered(LEVELS)
   const items = levels.map((l) => ({ id: l.id, world: l.world, name: l.name }))
   return (
     <ContentShell>
+      <JsonLd data={JSON_LD} />
       <h1 style={{ fontSize: 30, lineHeight: 1.2, margin: '0 0 12px' }}>Sandlab Spill</h1>
       <p style={{ opacity: 0.85 }}>
         Spill is a set of short physics puzzles built on a falling-sand simulation. Each level is a tall scene with

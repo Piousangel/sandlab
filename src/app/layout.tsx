@@ -1,10 +1,6 @@
 import type { Metadata, Viewport } from 'next'
-import { SITE } from '@/lib/site'
+import { SITE, TAGLINE } from '@/lib/site'
 import LandingBeacon from '@/components/LandingBeacon'
-
-// 쐐기(wedge)는 '테크 스펙'이 아니라 '무설치·무가입·링크로 공유'다.
-// 핸드오프 근거: fps·셀 수는 자랑이지 제품이 아니다. 방문자에게 제일 약한 쐐기를 먼저 보이지 않는다.
-const TAGLINE = 'Falling-sand you paint in the browser. No install, no sign-up — share any scene as a link, or post a 10-second clip.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
@@ -30,20 +26,7 @@ export const metadata: Metadata = {
   other: { 'google-adsense-account': 'ca-pub-9363381710674627' },
 }
 
-// 구조화 데이터 — 크롤러/AI 답변 그라운딩용. WebSite + 무설치 브라우저 게임.
-const JSON_LD = {
-  '@context': 'https://schema.org',
-  '@type': 'VideoGame',
-  name: 'Sandlab',
-  url: SITE,
-  applicationCategory: 'Game',
-  operatingSystem: 'Web browser (WebGPU)',
-  browserRequirements: 'Requires WebGPU (Chrome/Edge 113+, Safari 26+)',
-  genre: 'Falling-sand simulation',
-  description: TAGLINE,
-  image: `${SITE}/og.png`,
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-}
+// VideoGame 구조화 데이터는 페이지별(src/lib/gameJsonLd.ts) — 홈만 WebGPU, Spill 퍼즐은 CPU.
 
 export const viewport: Viewport = {
   themeColor: '#07090D',
@@ -64,10 +47,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           overscrollBehavior: 'none',
         }}
       >
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
-        />
         {children}
         <LandingBeacon />
       </body>
