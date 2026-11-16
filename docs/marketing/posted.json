@@ -18,10 +18,28 @@
   },
   {
     "id": "2026-11-16#0",
-    "date": "2026-11-16",
+    "date": "2026-11-17",
     "channel": "bluesky",
-    "at": "2026-11-15T21:32:04.189Z",
+    "at": "2026-11-16T21:29:21.836Z",
     "url": "https://sandlab.app/play/1-9/guide",
     "status": "skipped-daily-limit"
+  },
+  {
+    "id": "2026-11-17#0",
+    "date": "2026-11-17",
+    "channel": "bluesky",
+    "at": "2026-11-16T21:29:18.353Z",
+    "url": "https://sandlab.app/daily",
+    "link": "https://bsky.app/profile/piousangel.bsky.social/post/3n2hhwd7txk2z",
+    "ref": "at://did:plc:5jko3o5kkgiskomb3ntwp4kt/app.bsky.feed.post/3n2hhwd7txk2z",
+    "status": "posted"
+  },
+  {
+    "id": "2026-11-17#1",
+    "date": "2026-11-17",
+    "channel": "threads",
+    "at": "2026-11-16T21:29:21.836Z",
+    "url": "https://sandlab.app/daily",
+    "status": "skipped-no-credentials"
   }
 ]
