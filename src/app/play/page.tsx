@@ -55,7 +55,7 @@ export default function Page() {
         </section>
       )}
       <p style={{ marginTop: 24, opacity: 0.8 }}>
-        Looking for the classic daily challenge? <a href="/daily" style={{ color: '#f5a623' }}>Play today&apos;s daily →</a>
+        One new puzzle every day, the same for everyone. <a href="/daily" style={{ color: '#f5a623' }}>Play today&apos;s daily →</a>
       </p>
     </ContentShell>
   )

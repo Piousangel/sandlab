@@ -38,6 +38,8 @@ import { C, starRow } from './ui'
 interface Props {
   level: LevelDef
   nextId: string | null
+  /** 직접 플레이로 클리어했을 때(자동재생·해답 보기 제외) 한 번 호출 — 데일리가 기록·공유에 쓴다. */
+  onCleared?: (info: { stars: number; moves: number }) => void
   children?: ReactNode
 }
 
@@ -106,7 +108,7 @@ function measure(probe: HTMLElement | null): Layout {
 
 const cellCenter = (r: { x: number; y: number; w: number; h: number }) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
 
-export default function SpillPlayer({ level, nextId, children }: Props) {
+export default function SpillPlayer({ level, nextId, onCleared, children }: Props) {
   const [ctl] = useState(() => new SpillController(level))
   const [audio] = useState(() => new SpillAudio())
   const fx = useRef(new Fx(level.salt || 1))
@@ -219,6 +221,7 @@ export default function SpillPlayer({ level, nextId, children }: Props) {
             prevBest = o.newBest && !o.firstClear
             void postClear(level.id, { pid: getPid(), moves: r.moves, ticks: r.ticks, lh: ctl.lh })
             trackEvent('challenge_clear', level.id, r.ticks)
+            if (modeRef.current === 'play') onCleared?.({ stars: starCount(starMask(st)), moves: r.moves })
             void fetchHist(level.id).then((h) => setHist(h ? histBars(h, r.moves, r.ticks) : null))
           }
           if (modeRef.current === 'autoplay') document.body.dataset.autoplay = autoplayMark(r, level)

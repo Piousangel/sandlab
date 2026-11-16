@@ -6,7 +6,7 @@
 import { UA_CLASSES, SHARE_SURFACES } from '../src/lib/sand/ua'
 import { LANDING_REFS } from '../src/lib/sand/landing'
 
-const CHALLENGE = new Set(['challenge_start', 'challenge_clear', 'challenge_reset'])
+const CHALLENGE = new Set(['challenge_start', 'challenge_clear', 'challenge_reset', 'daily_start', 'daily_clear'])
 const PLAIN = new Set(['kofi_click'])
 const BY_UA = new Set(['gpu_unsupported', 'puzzle_land'])
 const UA_REFS = new Set<string>(UA_CLASSES)

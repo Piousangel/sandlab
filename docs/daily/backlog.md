@@ -5,7 +5,7 @@
 
 ## 큰 기능 (화·목 슬롯) — 11-16 스펙 완료: docs/team/specs/ (화 /daily Spill 교체, 목 레벨 갤러리 v1)
 1. 레벨 갤러리 v1: /spill/editor 공개 + 솔버 검증 통과분만 발행 + 플레이·투표
-2. /daily를 Spill 엔진으로 교체(S3): 엔진 이중화 해소
+2. ~~/daily Spill 교체~~ — 11-17 완료. 후속: 옛 src/lib/challenge·/api/daily·DailyPlayer 정리(롤백 불필요 판단 뒤)
 3. 첫 방문 프리셋 장면 자동 재생: 빈 캔버스 첫인상 개선, 계측 포함
 4. 모바일 첫 화면 재배치: 재료 그리드 접기 + 데일리·최신 레벨 카드를 캔버스 아래로(실험 1 판정 뒤)
 
@@ -29,6 +29,7 @@
 - 공략 쓰는 법: `CAP=400 npx tsx scripts/spill-explore.mts <id>`로 해 공간을 먼저 보고, 주장마다 대안 수순을 evaluate로 확인
 
 ## 완료
+- 11-17 /daily Spill 엔진 교체(daily_start/daily_clear)
 - 11-16 유입 계측 landing 이벤트 + 주간 회고·스펙 2개
 - 11-15 Spill 1-10 Twin Cups + 공략
 - 11-14 첫 화면 실험 1: 데스크톱 홈 최신 레벨 카드
