@@ -1,0 +1,4 @@
+{ "posts": [
+  { "channel": "bluesky", "lang": "en", "text": "New: a daily falling-sand physics puzzle. Everyone gets the same level each day (UTC), you get a few moves to redirect water and sand, and a share line with your stars. Runs on phones, no install. #puzzle #webgames", "url": "https://sandlab.app/daily" },
+  { "channel": "threads", "text": "모래와 물이 흐르는 물리 퍼즐을 매일 하나씩 풀어보세요. 전 세계가 같은 레벨을 받고, 몇 번 안 되는 수로 길을 틔우는 방식이에요. 폰에서도 설치 없이 되고 결과는 별 개수로 공유할 수 있어요. #퍼즐", "url": "https://sandlab.app/daily" }
+] }

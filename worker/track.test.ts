@@ -9,6 +9,8 @@ describe('parseTrack — /api/track 화이트리스트', () => {
     expect(parseTrack({ event: 'challenge_clear', ref: 'fill-cup', value: 9294 })).toEqual({ event: 'challenge_clear', ref: 'fill-cup', value: 9294 })
     expect(parseTrack({ event: 'challenge_start', ref: 'lava-bridge' })).toEqual({ event: 'challenge_start', ref: 'lava-bridge', value: 0 })
     expect(parseTrack({ event: 'challenge_reset', ref: 'd-001' })?.ref).toBe('d-001')
+    expect(parseTrack({ event: 'daily_start', ref: '1-4' })?.event).toBe('daily_start')
+    expect(parseTrack({ event: 'daily_clear', ref: 'Bad Ref' })).toBeNull()
   })
   it('챌린지 이벤트에 ref가 없거나 형식이 틀리면 거부(AE 카디널리티 보호)', () => {
     expect(parseTrack({ event: 'challenge_start' })).toBeNull()
