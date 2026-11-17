@@ -9,3 +9,4 @@
 | 2026-11-15 | Spill 1-10 Twin Cups + 공략 | /play/1-10, /play/1-10/guide | typecheck·test·spill:verify 10/10·build·verify-ads (결과는 PR) | 데스크톱 홈 카드가 자동으로 1-10을 가리킴(실험 1 변수 동일). 카드 클릭 계측은 여전히 없음 |
 | 2026-11-16 | 유입 계측 `landing` 이벤트(?ref= 태그·referrer 분류) + 주간 회고·큰 기능 스펙 2 | 전 페이지(비가시) | typecheck·test 1057·spill:verify·build·verify-ads (결과는 PR) | 11-23 지표 파일에서 채널별 유입 확인 |
 | 2026-11-17 | /daily를 Spill 엔진으로 교체(폰·CPU, 날짜별 레벨, 공유 문구) + daily_start/daily_clear 계측 | /daily | typecheck·test 1062·spill:verify 10/10·build·verify-ads·로컬 빌드 /daily 렌더 확인 | 옛 challenge 코드·/api/daily는 롤백용으로 유지(후속 정리). 기대: 7일 daily_start ≥ 20 |
+| 2026-11-17 (20시) | 출시 확인: #28 머지·deploy success, 마케팅 보강·portfolio.md 신설 | docs | 문서만(출시 아님) | 라이브 /daily는 프록시로 미확인 |
