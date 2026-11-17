@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useCallback, Fragment } from 'react'
 import { SandEngine, WebGPUUnsupported } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
-import { dayNumber, dailyFor } from '@/lib/challenge/daily'
+import { dayNumber, dailyIdFor } from '@/lib/spill/client/daily'
+import { levelById } from '@/lib/spill/client/catalog'
 import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
 import { uploadScene, getScene, rememberMine } from '@/lib/sand/gallery'
 import { getCreatorName, setCreatorName, getCreatorId } from '@/lib/sand/creator'
@@ -173,7 +174,8 @@ export default function SandCanvas() {
   const [daily, setDaily] = useState<{ n: number; title: string } | null>(null)
   useEffect(() => {
     const n = dayNumber(Date.now())
-    setDaily({ n, title: dailyFor(n).title })
+    // /daily(DailySpill)와 같은 계산 — 카드 제목과 실제 오늘 퍼즐이 어긋나지 않게 한다
+    setDaily({ n, title: levelById(LEVELS, dailyIdFor(n))?.name ?? 'Today’s challenge' })
   }, [])
   // 세로 폰 팔레트 영역 크기 — 여기서 칩 격자(열·행·점 크기)를 정한다(paletteGrid).
   const paletteRef = useRef<HTMLDivElement>(null)
@@ -902,9 +904,9 @@ export default function SandCanvas() {
             <span style={S.gameCardTitle}>{daily ? daily.title : 'Today’s challenge'} →</span>
           </a>
           <a href="/play" style={S.gameSide}>
-            All 20
+            All {LEVELS.length}
             <br />
-            challenges
+            levels
           </a>
         </div>
       )}
