@@ -1,3 +1,10 @@
+# 인계 (2026-11-18 13시) — 2-1 Wooden Door 출시
+- PR #51 머지(3611420), deploy run 53 success. 라이브 URL은 프록시 정책으로 미확인(/play/2-1, /play/2-1/guide) — 20시 세션이 확인.
+- 판정기: 타는 셀(burning>0)이면 정체 카운터 리셋. 불 전용 실패 문구(spark 레벨). 월드 첫 레벨은 잠겨도 열림(levelOpen).
+- 남은 일: 순진/아는 봇 2종 스크립트, 첫 실패 전 힌트 노출, 11-19 데일리 램프+공유 문구, 11-20 2-2 Fuse(수중 도화선 실측 먼저).
+- 함정: #50 deploy(문서 커밋)가 CI test 단계에서 실패했었다 — 원인 미조사(로컬 전부 통과). 재발하면 조사.
+- spill:verify는 약 6분 걸린다: 백그라운드로 돌리고 tool 타임아웃(10분) 안에 끝나는지 확인.
+
 # 인계: Sandlab — 챌린지 모드 Phase 2–4 배포 완료(레벨 20 · 데일리 · 계측) / AdSense 재심사 대기
 - 갱신: 2026-10-09 / 브랜치: main / 커밋 상태: committed, prod Version b4e273df
 - 라이브: https://sandlab.app (/play 20레벨, /daily, /learn, /materials)
