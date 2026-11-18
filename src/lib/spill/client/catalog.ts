@@ -47,6 +47,11 @@ export function worldUnlocked(world: number, levels: readonly LevelRef[], starsO
   return got >= prev.length * 2 && worldUnlocked(world - 1, levels, starsOf)
 }
 
+/** 잠긴 월드도 첫 레벨은 맛보기로 항상 열려 있다(2-1이 20★ 뒤에 숨어 아무도 못 보는 것을 막는다). */
+export function levelOpen(worldOpen: boolean, indexInWorld: number): boolean {
+  return worldOpen || indexInWorld === 0
+}
+
 export function lockMessage(world: number, levels: readonly LevelRef[]): string {
   const prev = levels.filter((l) => l.world === world - 1).length
   return `Need ${prev * 2}★ from W${world - 1}`

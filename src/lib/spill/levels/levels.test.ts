@@ -15,6 +15,7 @@ describe('W1 Flow levels', () => {
       '1-1 First Drop', '1-2 Detour', '1-3 Two Pots', '1-4 Hourglass', '1-5 Gatekeeper', '1-6 Displacement', '1-7 Two Taps', '1-8 Cascade', '1-9 Overflow', '1-10 Twin Cups',
     ])
     expect(LEVELS.slice(0, 10)).toEqual(W1)
+    expect(LEVELS.slice(10).map((l) => `${l.id} ${l.name}`)).toEqual(['2-1 Wooden Door'])
   })
 
   it('ids, salts and hashes are unique', () => {
@@ -68,6 +69,21 @@ describe('W1 Flow levels', () => {
       const r = simulate(byId('1-7'), [])
       expect(r.reason).toBe('stalled')
       expect(r.ticks).toBe(WAIT_WINDOW)
+    })
+  })
+
+  describe('2-1 Wooden Door (spark reach)', () => {
+    const w2 = LEVELS.find((l) => l.id === '2-1')!
+    const spark = (tx: number, ty: number) => [{ tick: 0, verb: 'drop' as const, tx, ty, tx2: tx, ty2: ty, arg: 'spark' }]
+    it('dev solution clears within par; doing nothing stalls, and the fire counts as progress', () => {
+      const r = simulate(w2, devActions(w2))
+      expect(r.outcome).toBe('cleared')
+      expect(r.ticks).toBeLessThanOrEqual(parTicks(w2.par!.secs))
+      expect(simulate(w2, []).reason).toBe('stalled')
+    })
+    it('a spark just under the plug clears; one seven tiles below fizzles', () => {
+      expect(simulate(w2, spark(9, 15)).outcome).toBe('cleared')
+      expect(simulate(w2, spark(9, 21)).outcome).toBe('failed')
     })
   })
 })

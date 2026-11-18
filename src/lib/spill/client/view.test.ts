@@ -32,6 +32,8 @@ describe('메시지 슬롯 문구', () => {
     expect(failMessage('stalled', 1, 2)).toBe('Everything settled · open the gates sooner')
     expect(failMessage('sourcesStopped', 1, 1)).toBe('Everything settled · open the gate sooner')
     expect(failMessage('stalled', 1, 0)).toBe('1 target left')
+    expect(failMessage('stalled', 1, 0, true)).toBe('The flame faded before it lit the wood')
+    expect(failMessage('bad', 1, 0, true)).toBe('It reached the skull pot')
     expect(failMessage('bad', 1, 1)).toBe('It reached the skull pot')
   })
   it('PlayState는 닫힌 탭 가능 게이트 수를 담는다', () => {

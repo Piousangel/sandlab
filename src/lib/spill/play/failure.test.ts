@@ -87,4 +87,16 @@ describe('FailureDetector (§4.2)', () => {
     expect(feed(d, FAIL_WINDOW - 1, {}, 401).r).toBeNull()
     expect(d.observe(quiet(401 + FAIL_WINDOW - 1))).toBe('stalled')
   })
+
+  it('burning cells are progress: a burn longer than the window does not stall', () => {
+    const d = new FailureDetector()
+    expect(feed(d, FAIL_WINDOW * 3, { burning: 5 }).r).toBeNull()
+  })
+
+  it('once the burning stops, a quiet board still stalls after 90 ticks', () => {
+    const d = new FailureDetector()
+    feed(d, 200, { burning: 5 })
+    expect(feed(d, 89, {}, 201).r).toBeNull()
+    expect(d.observe(quiet(290))).toBe('stalled')
+  })
 })
