@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { groupByWorld, nextLevel, worldUnlocked, lockMessage, worldName, levelById } from './catalog'
+import { groupByWorld, levelOpen, nextLevel, worldUnlocked, lockMessage, worldName, levelById } from './catalog'
 import type { LevelDef } from '../level/define'
 
 const lv = (id: string, world: number): LevelDef => ({ id, world, v: 1, name: id, salt: 1, legend: {}, map: '', targets: [] })
@@ -34,6 +34,11 @@ describe('catalog', () => {
     expect(worldUnlocked(2, L, of)).toBe(false)
     stars['1-3'] = 1
     expect(worldUnlocked(2, L, of)).toBe(true)
+  })
+  it('잠긴 월드도 첫 레벨은 맛보기로 열린다', () => {
+    expect(levelOpen(false, 0)).toBe(true)
+    expect(levelOpen(false, 1)).toBe(false)
+    expect(levelOpen(true, 3)).toBe(true)
   })
   it('잠금 문구 "Need 16★ from W1"', () => {
     const eight = Array.from({ length: 8 }, (_, i) => lv(`1-${i + 1}`, 1))

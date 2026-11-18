@@ -5,6 +5,8 @@ export const W1_LEGEND: Record<string, string> = {
   G: 'gate:g1', H: 'gate:g2', S: 'spout:s1', T: 'spout:s2',
 }
 
+export const W2_LEGEND: Record<string, string> = { ...W1_LEGEND, p: 'plank' }
+
 export class TileCanvas {
   constructor(readonly c: MapCanvas = new MapCanvas()) {}
 

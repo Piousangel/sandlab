@@ -10,3 +10,4 @@
 | 2026-11-16 | 유입 계측 `landing` 이벤트(?ref= 태그·referrer 분류) + 주간 회고·큰 기능 스펙 2 | 전 페이지(비가시) | typecheck·test 1057·spill:verify·build·verify-ads (결과는 PR) | 11-23 지표 파일에서 채널별 유입 확인 |
 | 2026-11-17 | /daily를 Spill 엔진으로 교체(폰·CPU, 날짜별 레벨, 공유 문구) + daily_start/daily_clear 계측 | /daily | typecheck·test 1062·spill:verify 10/10·build·verify-ads·로컬 빌드 /daily 렌더 확인 | 옛 challenge 코드·/api/daily는 롤백용으로 유지(후속 정리). 기대: 7일 daily_start ≥ 20 |
 | 2026-11-17 (20시) | 출시 확인: #28 머지·deploy success, 마케팅 보강·portfolio.md 신설 | docs | 문서만(출시 아님) | 라이브 /daily는 프록시로 미확인 |
+| 2026-11-18 | Spill 2-1 Wooden Door + 공략 + 판정기(연소 중 정체 안 걸림) + 불 전용 실패 문구 + 월드 첫 레벨 맛보기 개방 | /play/2-1, /play/2-1/guide | typecheck·test·spill:verify·build·verify-ads (결과는 PR) | 독립 리뷰 반영(문구 spark만, 2-1 잠금 예외). 봇 2종은 미구현 — 다음 세션 |

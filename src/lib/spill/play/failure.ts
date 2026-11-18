@@ -34,7 +34,7 @@ export class FailureDetector {
       this.stall = 0
       this.wait++
       if (this.wait >= WAIT_WINDOW) return 'stalled'
-    } else this.stall = !o.progressed && o.moved < MOVE_EPS ? this.stall + 1 : 0
+    } else this.stall = (!o.progressed && o.moved < MOVE_EPS && o.burning === 0) ? this.stall + 1 : 0
     this.idle = o.sourcesLeft === 0 && o.moved === 0 && o.burning === 0 ? this.idle + 1 : 0
     if (this.stall >= FAIL_WINDOW) return 'stalled'
     if (this.idle >= FAIL_WINDOW) return 'sourcesStopped'

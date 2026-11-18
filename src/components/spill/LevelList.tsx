@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { groupByWorld, lockMessage, worldUnlocked } from '@/lib/spill/client/catalog'
+import { groupByWorld, levelOpen, lockMessage, worldUnlocked } from '@/lib/spill/client/catalog'
 import { loadRecord } from '@/lib/spill/play/progress'
 import { starCount } from '@/lib/spill/play/score'
 import { C } from './ui'
@@ -60,16 +60,17 @@ export default function LevelList({ items }: { items: LevelItem[] }) {
               <span style={{ fontSize: 13, opacity: 0.6, fontWeight: 500 }}>{got}/{g.levels.length * 3}★</span>
             </h2>
             <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 1fr))', gap: 14 }}>
-              {g.levels.map((l) => {
+              {g.levels.map((l, idx) => {
+                const lopen = levelOpen(open, idx)
                 const n = of(l.id)
                 const node: React.CSSProperties = {
                   width: 60, height: 60, borderRadius: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto',
                   fontWeight: 800, fontSize: 16, textDecoration: 'none', border: `2px solid ${n > 0 ? C.accent : '#2a3140'}`,
-                  background: n === 3 ? 'rgba(245,166,35,0.18)' : '#121823', color: open ? C.text : 'rgba(238,241,246,0.35)', cursor: 'pointer',
+                  background: n === 3 ? 'rgba(245,166,35,0.18)' : '#121823', color: lopen ? C.text : 'rgba(238,241,246,0.35)', cursor: 'pointer',
                 }
                 return (
                   <li key={l.id} style={{ textAlign: 'center' }}>
-                    {open ? (
+                    {lopen ? (
                       <a href={`/play/${l.id}`} aria-label={`${l.id} ${l.name}, ${n} of 3 stars`} style={node}>{l.id}</a>
                     ) : (
                       <button type="button" aria-label={`${l.id} ${l.name}, locked`} style={{ ...node, padding: 0 }} onClick={() => setMsg(lockMessage(g.world, items))}>

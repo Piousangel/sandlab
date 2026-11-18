@@ -1,8 +1,9 @@
 /** 레벨 공략 레지스트리. 새 레벨 = 레벨 파일 + src/content/guides/<world>.ts에 공략 하나(테스트가 누락을 막는다). */
 import type { LevelGuide } from './types'
 import { W1_GUIDES } from '@/content/guides/w1'
+import { W2_GUIDES } from '@/content/guides/w2'
 
-export const GUIDES: LevelGuide[] = [...W1_GUIDES]
+export const GUIDES: LevelGuide[] = [...W1_GUIDES, ...W2_GUIDES]
 
 export function guideFor(id: string): LevelGuide | undefined {
   return GUIDES.find((g) => g.id === id)
