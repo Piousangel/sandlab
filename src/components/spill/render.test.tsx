@@ -30,12 +30,13 @@ describe('정적 렌더(SSR) — 광고 없는 캔버스 화면, 설명 텍스�
   })
   it('LevelList: 월드 섹션·노드 링크·첫 레벨 시작 버튼', () => {
     const html = renderToStaticMarkup(
-      <LevelList items={[{ id: '1-1', world: 1, name: 'First Drop' }, { id: '1-2', world: 1, name: 'Detour' }, { id: '2-1', world: 2, name: 'Spark' }]} />,
+      <LevelList items={[{ id: '1-1', world: 1, name: 'First Drop' }, { id: '1-2', world: 1, name: 'Detour' }, { id: '2-1', world: 2, name: 'Spark' }, { id: '2-2', world: 2, name: 'Fuse' }]} />,
     )
     expect(html).toContain('W1 · Flow')
     expect(html).toContain('href="/play/1-1"')
     expect(html).toContain('Start with 1-1 First Drop')
-    expect(html).toContain('locked')
+    expect(html).toContain('href="/play/2-1"') // 월드 첫 레벨은 맛보기로 열려 있다
+    expect(html).toContain('2-2 Fuse, locked')
   })
   it('ResultCard solution 모드: 별·Next·Share 없이 SOLUTION과 직접 해 보기만', () => {
     const r = simulate(POT_LEVEL, devActions(POT_LEVEL))
