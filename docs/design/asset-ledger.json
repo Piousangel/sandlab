@@ -1,5 +1,21 @@
 {
-  "items": {},
+  "items": {
+    "spill-ui-sketch-a-hud": {
+      "out": "public/art/spill-ui-sketch-a-hud.webp",
+      "model": "gemini-3.1-flash-image",
+      "at": "2026-11-18T17:12:58+00:00"
+    },
+    "spill-ui-sketch-b-clear": {
+      "out": "public/art/spill-ui-sketch-b-clear.webp",
+      "model": "gemini-3.1-flash-image",
+      "at": "2026-11-18T17:13:08+00:00"
+    },
+    "spill-ui-sketch-c-map": {
+      "out": "public/art/spill-ui-sketch-c-map.webp",
+      "model": "gemini-3.1-flash-image",
+      "at": "2026-11-18T17:13:17+00:00"
+    }
+  },
   "month": "2026-11",
-  "count": 0
+  "count": 3
 }
