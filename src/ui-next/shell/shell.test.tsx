@@ -9,6 +9,7 @@ import { DAILY_HREF, FOOTER_LINKS, MENU_LINKS, NAV, isActive } from './nav'
 import { SSR_PILL, msUntilUtcMidnight, pillText } from './dailyPill'
 import { ShellFooter } from './ShellFooter'
 import { ShellHeader } from './ShellHeader'
+import { ReadOnlyNote, previewReadOnly } from './ReadOnlyNote'
 
 const paths = new Set(sitemap().map((e) => e.url.replace(SITE, '') || '/'))
 const hrefs = (html: string) => [...html.matchAll(/href="([^"#]+)"/g)].map((m) => m[1])
@@ -116,5 +117,25 @@ describe('광고 안내판 AdPlate(S11)', () => {
     const html = renderToStaticMarkup(<AdPlate ads slot="1" clearance={8} format="banner" />)
     expect(html).toContain('margin-block:max(var(--sl-s-5), 8px)')
     expect(html).toContain('height:124px')
+  })
+})
+
+describe('프리뷰 읽기 전용 안내(오너 11-20)', () => {
+  it('NEXT_PUBLIC_READ_ONLY는 정확히 "1"일 때만 켜진다', () => {
+    expect(previewReadOnly('1')).toBe(true)
+    for (const v of [undefined, '', '0', 'true', 'next']) expect(previewReadOnly(v), String(v)).toBe(false)
+  })
+
+  it('on이면 role=note 한 줄, 문구는 기호 없이', () => {
+    const html = renderToStaticMarkup(<ReadOnlyNote on />)
+    expect(html).toContain('role="note"')
+    expect(html).toContain('data-sl-read-only')
+    expect(html).toContain('Preview is read-only.')
+    expect(findViolations(html, 'x.html')).toEqual([])
+  })
+
+  it('변수 없는 빌드(테스트·prod 기본)에서는 헤더·메뉴 시트에 안내가 없다', () => {
+    expect(renderToStaticMarkup(<ReadOnlyNote on={false} />)).toBe('')
+    expect(renderToStaticMarkup(<ShellHeader />)).not.toContain('data-sl-read-only')
   })
 })

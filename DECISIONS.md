@@ -93,3 +93,11 @@
 - 결정: 리디자인 순서·prod diff 0 원칙은 그대로 두고, **각 P PR에 prod에 바로 내도 안전한 조각(데이터·문구·버그·접근성, 장식 변경 없음) 1개 이상을 싣는다.** 그 조각이 그날의 '출시'다. 조각이 없는 날은 버그 장부(docs/team/bugs.md) 항목 1개를 같은 날 고쳐 출시한다.
 - P5의 prod 조각 = /daily 공유 문구를 shareTextV2로(레벨 id 제거). 근거·기획: docs/team/specs/2026-11-20-p5-result-share.md.
 - 버린 안: (a) 프리뷰 출시를 출시로 친다 — 사용자가 못 보니 원칙 위반. (b) 리디자인을 멈추고 레벨을 낸다 — 오너 최최우선 지시 위반.
+
+## 2026-11-20 프리뷰 Worker = prod와 같은 D1 + 쓰기 차단(오너)
+- 결정(오너 11-20): 프리뷰 Worker(`sandlab-preview`, 계획 S6)는 prod와 **같은 D1(sandlab-gallery)을 읽되 쓰기는 막는다.** 프리뷰 전용 D1은 두지 않는다.
+- 구현: wrangler `env.preview.vars.READ_ONLY = "1"` → 워커 진입점이 `/api/*`의 GET·HEAD 외 모든 메서드를 핸들러 전에 403 `{"error":"preview is read-only"}`로 끊는다(`worker/preview.ts readOnlyBlock`). 라우트 목록이 아니라 **메서드 기준**이라 앞으로 생길 쓰기 라우트(PUT·DELETE 포함)도 자동으로 막힌다. 지금 막히는 것: POST `/api/scenes`(업로드)·`/api/scenes/:id/vote`·`/api/daily`·`/api/spill/level/:id/clear`·`/api/track`. prod(최상위 설정)에는 변수가 없어 동작 불변.
+- 화면: `NEXT_PUBLIC_READ_ONLY=1`(build:preview에만) → 새 셸 헤더 아래·메뉴 시트에 "Preview is read-only..." 한 줄(`src/ui-next/shell/ReadOnlyNote.tsx`). **UI 플래그(NEXT_PUBLIC_UI)와 분리** — 컷오버(P12)에서 prod가 next 셸로 빌드돼도 안내가 prod에 안 뜬다. prod 배포 스크립트는 이 변수를 비우고, verify-ads(prod 모드)는 변수·`data-sl-read-only`가 있으면 실패.
+- 이유: (1) 리디자인 검수는 실제 갤러리·데일리 통계가 보여야 의미가 있다 — 빈 D1이면 갤러리·히스토그램이 비어 화면 판단이 틀어진다. (2) 프리뷰 쓰기가 prod 랭킹·데일리 통계·IP 레이트리밋 표에 섞이는 사고를 원천 차단. (3) D1 하나·마이그레이션 하나로 운영 부담 0.
+- 한계: 쓰기 버튼(갤러리 업로드·투표, 데일리 기록 자동 전송)은 아직 classic 컴포넌트에 있어 프리뷰에서도 눌린다 — 서버가 403으로 막고 기존 오류 처리대로 실패한다(prod 화면 변화 0을 지키려 classic은 안 건드림). 새 셸이 그 버튼을 그리게 되는 P(갤러리·결과 화면)가 `PREVIEW_READ_ONLY`로 disabled + 안내를 붙인다. 데일리 시작 화면의 "Your first clear is today's official record." 문구도 프리뷰에서는 사실이 아니다 — P5(src/ui-next/spill) 쪽에서 처리.
+- 버린 안: 프리뷰 전용 D1 — 빈 데이터로 검수가 무의미, 스키마·마이그레이션 이중 관리. NOINDEX=1에 쓰기 차단을 묶기 — 뜻이 다른 두 스위치를 하나로 묶으면 나중에 한쪽만 바꿀 수 없다.

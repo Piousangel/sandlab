@@ -11,7 +11,7 @@ import { parseTrack } from './track'
 import { validateDaily, summarize } from './daily'
 import { handleSpill, levelFloors, levelHashes } from './spill'
 import { spillRedirect } from './spill-redirects'
-import { withNoindex } from './preview'
+import { readOnlyBlock, withNoindex } from './preview'
 import { LEVELS as SPILL_LEVELS } from '../src/lib/spill/levels'
 import {
   HOT_WINDOW_DAYS,
@@ -51,6 +51,9 @@ interface Env {
   AE?: AnalyticsEngine
   // 프리뷰 Worker(wrangler env preview)만 '1'. prod에는 없다 → 응답 그대로.
   NOINDEX?: string
+  // 프리뷰 Worker(wrangler env preview)만 '1' — /api/* 쓰기(GET·HEAD 외)를 403으로 막는다(오너 11-20, 같은 D1 공유).
+  // prod에는 없다 → 기존 동작 그대로.
+  READ_ONLY?: string
 }
 
 /**
@@ -500,7 +503,8 @@ const app = {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const res = await app.fetch(request, env)
+    // 프리뷰(READ_ONLY=1)는 prod와 같은 D1을 쓰므로 쓰기 요청을 핸들러에 닿기 전에 끊는다(worker/preview.ts).
+    const res = (env.READ_ONLY === '1' && readOnlyBlock(request)) || (await app.fetch(request, env))
     // 프리뷰(S6)는 워커가 만든 응답(/s/:id OG 페이지·리다이렉트·API)에도 noindex를 단다. 정적 에셋은 out/_headers.
     return env.NOINDEX === '1' ? withNoindex(res) : res
   },

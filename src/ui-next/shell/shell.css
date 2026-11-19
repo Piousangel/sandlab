@@ -377,3 +377,23 @@ html.sl-lock {
   outline-offset: -1.5px;
   overflow: hidden;
 }
+
+/* 프리뷰 읽기 전용 안내(오너 11-20, ReadOnlyNote) — 바탕(bone) 위 보조 글자 한 줄, 면을 새로 깔지 않는다(회색 패널 중첩 0) */
+.sl-ro,
+.sl-ro-sheet {
+  margin: 0;
+  color: var(--sl-ink-2);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.sl-ro {
+  padding: 6px 16px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  text-align: center;
+  border-bottom: 1px solid var(--sl-bone-line);
+  background: var(--sl-bone);
+}
+.sl-ro-sheet {
+  padding: 4px 12px 12px;
+}

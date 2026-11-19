@@ -1,10 +1,12 @@
 # 리디자인 프리뷰 Worker(S6, docs/plans/2026-11-19-redesign-v2.md) 배포 — NEXT_PUBLIC_UI=next 빌드를 sandlab-preview.<계정>.workers.dev 로.
 # prod(deploy.yml·sandlab.app)는 건드리지 않는다: 이름이 다른 Worker(wrangler.jsonc env.preview), 도메인 없음, noindex.
 #
-# 지금은 **수동 실행(workflow_dispatch)만**. main push 자동 배포는 아래 두 가지를 오너가 정한 뒤 켠다(P3, 2026-11-20):
+# 지금은 **수동 실행(workflow_dispatch)만**. main push 자동 배포는 아래 두 가지가 정리된 뒤 켠다(P3, 2026-11-20 — 2는 해결):
 #  1. workers.dev 하위 도메인이 계정에서 켜져 있는지(인계서 옛 기록: 꺼져 있었을 수 있음) — 꺼져 있으면 배포는 성공해도 URL이 안 열린다.
-#  2. ⚠ 같은 D1(sandlab-gallery)을 쓴다 — 프리뷰에서 올린 갤러리 씬·투표·기록이 prod 데이터에 그대로 섞인다.
-#     프리뷰 전용 D1을 둘지, 같은 D1 + 프리뷰 쓰기 차단(NOINDEX=1일 때 POST 거부)을 할지 오너 결정 대기.
+#  2. 같은 D1(sandlab-gallery) 공유 → **읽기 전용으로 해결(오너 11-20)**: wrangler env.preview의 READ_ONLY=1로 워커가
+#     /api/*의 GET·HEAD 외 요청(업로드·투표·데일리·Spill 클리어·track)을 403 {"error":"preview is read-only"}로 막는다
+#     (worker/preview.ts readOnlyBlock). 화면은 build:preview의 NEXT_PUBLIC_READ_ONLY=1로 새 셸에 "Preview is read-only" 안내.
+#     첫 배포 뒤 확인: curl -X POST <프리뷰>/api/daily → 403, curl <프리뷰>/api/scenes → 200(prod와 같은 목록).
 # 실행하려면 Actions > deploy-preview > Run workflow 에서 confirm 칸에 `preview`를 적는다(실수 실행 방지).
 # 시크릿: deploy.yml과 같은 CLOUDFLARE_API_TOKEN(Workers Scripts:Edit면 새 Worker 생성 가능)·CLOUDFLARE_ACCOUNT_ID.
 # 첫 배포 뒤: curl -I 로 정적 파일·404·/s/x·/api/scenes 네 종류에 `x-robots-tag: noindex, nofollow`, <html>에 class가 있는지 확인.
@@ -13,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: '같은 D1(prod 데이터)을 쓰는 프리뷰를 올린다 — 알고 있으면 preview 라고 적는다'
+        description: '같은 D1(prod 데이터)을 읽기 전용으로 쓰는 프리뷰를 올린다 — 알고 있으면 preview 라고 적는다'
         required: true
         default: ''
 concurrency:
