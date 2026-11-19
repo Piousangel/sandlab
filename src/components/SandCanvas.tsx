@@ -5,8 +5,7 @@ import { SandEngine, WebGPUUnsupported } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import { dayNumber, dailyIdFor } from '@/lib/spill/client/daily'
 import { levelById } from '@/lib/spill/client/catalog'
-import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
-import { sceneIdFromHash, publishParent, publishedLinks } from '@/lib/sand/sceneLink'
+import { buildShareUrl, readShareUrl, encodeScene, decodeScene, sceneIdFromHash, publishParent, publishedLinks } from '@/lib/sand/urlState'
 import { uploadScene, getScene, rememberMine } from '@/lib/sand/gallery'
 import { getCreatorName, setCreatorName, getCreatorId } from '@/lib/sand/creator'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
@@ -209,7 +208,7 @@ export default function SandCanvas() {
         if (disposed) return
         // #s=<id> = 갤러리 장면. #g=<blob> = URL 내장 장면.
         // 갤러리 경로가 있어야 URL 예산(6000자)을 넘는 복잡한 장면도 공유된다.
-        // 링크 규칙(#s= 정규식·s 우선)은 순수 함수 sceneLink.ts — 새 홈(ui-next/home)과 같은 함수를 쓴다.
+        // 링크 규칙(#s= 정규식·s 우선)은 순수 함수 urlState.sceneIdFromHash — 새 홈(ui-next/home)과 같은 함수를 쓴다.
         const sid = sceneIdFromHash(location.hash)
         let restored = null
         let remixMeta: { id: string; title: string } | null = null

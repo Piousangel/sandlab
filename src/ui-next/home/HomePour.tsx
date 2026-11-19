@@ -8,13 +8,22 @@
  * (Erase · 붓 크기 점 3개 · Share — 첫 획 전 Share는 흐림 + aria-disabled) → 오늘 카드 → 지층 띠 → 벽 미리보기 → 셸 푸터.
  *
  * 엔진은 옛 홈과 같은 공개 API만 쓴다(init·upload·start·brush·readback·clear·destroy) — 엔진 코드 변경 0.
- * 링크 규칙(#s= 정규식·parent·발행 후 링크)은 sceneLink.ts 순수 함수(옛 홈과 공유, 골든셋 테스트).
+ * 링크 규칙(#s= 정규식·parent·발행 후 링크)은 urlState.ts의 sceneIdFromHash 등 순수 함수(옛 홈과 공유, 골든셋 테스트).
  * Undo 없음(엔진에 없음). WebGPU가 없으면(B4 ③) 오늘 퍼즐(Spill은 2D)이 주 CTA, 우물 자리는 실엔진 정지 프레임 + 이유 + Open in browser/Copy link.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { SandEngine } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
-import { buildShareUrl, decodeScene, encodeScene, readShareUrl } from '@/lib/sand/urlState'
+import {
+  buildShareUrl,
+  decodeScene,
+  encodeScene,
+  hasEmbeddedScene,
+  publishParent,
+  publishedLinks,
+  readShareUrl,
+  sceneIdFromHash,
+} from '@/lib/sand/urlState'
 import { getScene, rememberMine, trackEvent, uploadScene } from '@/lib/sand/gallery'
 import { getCreatorId, getCreatorName, setCreatorName } from '@/lib/sand/creator'
 import { isBlank, makeThumb } from '@/lib/sand/thumb'
@@ -22,7 +31,6 @@ import { noteFirstTry } from '@/lib/sand/discovery'
 import { checkPourMilestone } from '@/lib/sand/milestones'
 import { uaClass } from '@/lib/sand/ua'
 import { gpuAdvice, type GpuAdvice } from '@/lib/sand/gpuAdvice'
-import { hasEmbeddedScene, publishParent, publishedLinks, sceneIdFromHash } from '@/lib/sand/sceneLink'
 import { Icon } from '../icons/Icon'
 import { ShellHeader } from '../shell/ShellHeader'
 import { ShellFooter } from '../shell/ShellFooter'

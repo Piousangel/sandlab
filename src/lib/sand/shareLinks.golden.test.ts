@@ -3,7 +3,7 @@
  * **지금 동작 그대로**인지 잠근다. 코드를 바꾸지 않고 현재 동작을 고정하는 게 목적이라,
  * 새 셸(P6)이 이 파싱을 옮기거나 다시 짤 때 이 표가 깨지면 기존 링크가 깨진다는 뜻이다.
  *
- * - `#s=` 파싱·parent 결정은 P6에서 순수 함수(sceneLink.ts)로 뺐다 — 옛 홈(SandCanvas)과 새 홈(ui-next/home)이 같은 함수를 부른다.
+ * - `#s=` 파싱·parent 결정은 P6에서 순수 함수(urlState.ts의 sceneIdFromHash·publishParent·publishedLinks)로 뺐다 — 옛 홈(SandCanvas)과 새 홈(ui-next/home)이 같은 함수를 부른다.
  * - `#g=`는 urlState.readShareUrl/buildShareUrl을 그대로 부른다.
  * - `/s/:id`와 업로드 parent는 worker/index.ts의 fetch를 가짜 D1로 직접 부른다.
  */
@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { buildShareUrl, decodeScene, readShareUrl } from './urlState'
-import { SCENE_HASH_RE, hasEmbeddedScene, publishParent, publishedLinks, sceneIdFromHash } from './sceneLink'
+import { SCENE_HASH_RE, hasEmbeddedScene, publishParent, publishedLinks, sceneIdFromHash } from './urlState'
 import worker from '../../../worker/index'
 
 const src = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8')
@@ -30,7 +30,7 @@ function stubLocation(hash: string, origin = 'https://sandlab.app', pathname = '
 afterEach(() => vi.unstubAllGlobals())
 
 describe('골든셋: 홈 해시 링크(#s= · #g=)', () => {
-  it('#s= 정규식이 11-19 그대로다(sceneLink.SCENE_HASH_RE)', () => {
+  it('#s= 정규식이 11-19 그대로다(urlState.SCENE_HASH_RE)', () => {
     expect(`/${SCENE_HASH_RE.source}/`).toBe('/[#&]s=([A-Za-z0-9_-]{6,16})/')
     expect(SCENE_HASH_RE.flags).toBe('')
   })
@@ -89,7 +89,7 @@ describe('골든셋: 홈 해시 링크(#s= · #g=)', () => {
 })
 
 // P6: 예전 '소스 트립와이어'(SandCanvas 소스 문자열 잠금)를 순수 함수 호출 테스트로 바꿨다(P2 인계 착수 조건).
-describe('골든셋: 리믹스 parent 연결(클라이언트, sceneLink 순수 함수)', () => {
+describe('골든셋: 리믹스 parent 연결(클라이언트, urlState 순수 함수)', () => {
   it('#s=로 연 씬 id가 계보 원본이 되고, Publish 때 parent로 간다', () => {
     const loaded = sceneIdFromHash('#s=AbC123')
     expect(publishParent(loaded)).toBe('AbC123')
@@ -111,7 +111,7 @@ describe('골든셋: 리믹스 parent 연결(클라이언트, sceneLink 순수 �
   })
   it('옛 홈·새 홈 모두 같은 함수를 쓴다(인라인 재구현 금지)', () => {
     for (const [name, code] of [['SandCanvas', SAND_CANVAS], ['HomePour', HOME_POUR]] as const) {
-      expect(code, name).toContain("from '@/lib/sand/sceneLink'")
+      expect(code, name).toContain("from '@/lib/sand/urlState'")
       expect(code, name).toContain('sceneIdFromHash(location.hash)')
       expect(code, name).toContain('publishParent(loadedSceneId.current)')
       expect(code, name).toContain('publishedLinks(location.origin, id)')

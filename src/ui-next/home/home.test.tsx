@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { PRESETS } from '@/lib/sand/materials'
-import { sceneIdFromHash } from '@/lib/sand/sceneLink'
+import { sceneIdFromHash } from '@/lib/sand/urlState'
 import type { Stratum } from '@/lib/strata'
 import atlas from '../../../public/ui-next/posters/atlas.json'
 import * as Classic from '../shell/classic'
