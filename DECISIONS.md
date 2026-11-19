@@ -34,3 +34,8 @@
 - 코드 재사용 가능(MIT·Apache 등): react-spring, Motion, screen-shake, ZzFX, canvas-confetti, matter-js, planck.js, sandspiel(MIT) 등 — 라이선스 고지 유지.
 - **코드 금지·아이디어만**: Sandboxels(R74n, 광고 포함 상업 이용 금지), Sand Game JS(README에 "법적으로 오픈소스 아님"), GPL·AGPL 계열(Powder Toy, lichess, Hextris). AdSense 사이트이므로 한 줄도 가져오지 않는다.
 - 근거: docs/team/research/2026-11-19/reference-repos-uiux.md(46개 레포·별 수·라이선스 11-19 GitHub API 확인).
+
+## 2026-11-19 샌드랩 UI·UX 전면 교체(오너)
+- 오너: "챌린지 등 지금 UI·UX가 다 마음에 들지 않는다. 너무 옛날(2000년대 초반) 같다. 전면 교체했으면 좋겠다."
+- 결정: 점진 개선이 아니라 사이트 전체 UI·UX를 새로 설계한다(디자인 디렉터 콘셉트 3안 → 오너 선택 → Figma 시안 → 단계 구현). 시뮬레이션 엔진·공유 URL 형식·SEO URL은 유지.
+- 교대 팀 규칙(새 디자인 확정 전까지): 기존 화면의 **장식·레이아웃 개편 작업은 멈춘다**(곧 교체되어 버려진다). 대신 ① 버그(특히 모바일에서 지우기가 우클릭에만 있어 막힘) ② 엔진·성능·접근성 ③ 레벨·재료 로직 ④ 측정 이벤트처럼 새 UI에서도 살아남는 일을 한다.
