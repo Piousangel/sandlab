@@ -3,12 +3,12 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { computeLayout } from '@/lib/spill/render/layout'
 import { POT_LEVEL } from '@/lib/spill/play/fixtures'
 import { LEVELS } from '@/lib/spill/levels'
-import { DAILY_POOL_IDS, dailyIdFor, shareTextV2 } from '@/lib/spill/client/daily'
-import { levelShareText } from '@/lib/spill/client/shareLevel'
+import { DAILY_POOL_IDS, dailyIdFor } from '@/lib/spill/client/daily'
+import { levelShareText, shareTextV2 } from '@/lib/spill/client/share'
 import { findViolations } from '../../../scripts/lint-ui-rules.mjs'
 import { spillChrome } from '../spill/chrome'
 import {
-  MIN_STANDING_SAMPLE, PNG_BUDGET, SHARE_FORMATS, caption, officialNote, practiceLabel, resultBoardScale, shareFileName, shareLayout, shareRoute, standingLine,
+  MIN_STANDING_SAMPLE, MOBILE_STACK, PNG_BUDGET, SHARE_FORMATS, caption, officialNote, practiceLabel, resultBoardScale, shareFileName, shareLayout, shareRoute, standingLine,
   type ShareFormat,
 } from './model'
 import { SpillResult, recordStat } from './SpillResult'
@@ -77,12 +77,16 @@ describe('결과 화면 보드 크기(resultBoardScale)', () => {
       expect(Number.isInteger(s.devicePerCell)).toBe(true)
       expect(s.cssH / s.cssW).toBeCloseTo(1.5, 6)
       expect(s.cssW + 16 + 32).toBeLessThanOrEqual(vw)
-      // 액자(보드 + 매트 16 + 못·줄 ~40)가 화면 높이의 절반 남짓 — 아래 캡션·Share image가 첫 화면에 들어갈 자리
-      expect(s.cssH + 56).toBeLessThanOrEqual((vh - 48) * 0.6)
+      // 보드 + 나머지 세로 예산(헤더·못·줄·캡션·stratum·Share image)이 화면 높이 안 — Share image가 첫 화면에 든다
+      expect(s.cssH + MOBILE_STACK, `${vw}x${vh}@${dpr}`).toBeLessThanOrEqual(vh)
+      expect(s.cssW).toBeGreaterThanOrEqual(160)
     }
     expect(resultBoardScale(390, 844, 3, false).cssW).toBeGreaterThanOrEqual(200)
     const d = resultBoardScale(1440, 900, 1, true)
     expect([d.cssW, d.cssH]).toEqual([320, 480])
+    const d2 = resultBoardScale(1440, 900, 2, true)
+    expect(d2.cssH).toBeLessThanOrEqual(900 - 56 - 150)
+    expect(d2.cssW).toBeGreaterThanOrEqual(320)
   })
 })
 
@@ -110,9 +114,6 @@ describe('공유 이미지 배치(shareLayout)', () => {
       }
     }
   })
-  it('PNG 예산 250KB', () => {
-    expect(PNG_BUDGET).toBe(256_000)
-  })
 })
 
 describe('공유 경로(shareRoute)', () => {
@@ -132,7 +133,7 @@ describe('공유 텍스트', () => {
   it('데일리 텍스트(shareTextV2)에 레벨 id가 없다 — prod 결과 카드·새 결과 화면이 같은 것을 쓴다', () => {
     for (let n = 1; n <= 9; n++) expect(shareTextV2({ stars: 2, moves: 2, ticks: 366, mask: 3 }, n).includes(dailyIdFor(n))).toBe(false)
   })
-  it('레벨 모드 텍스트는 이름·레벨 링크(이모지 없음, 글자 단위 검사는 shareLevel.test.ts)', () => {
+  it('레벨 모드 텍스트는 이름·레벨 링크(이모지 없음, 글자 단위 검사는 share.test.ts)', () => {
     const t = levelShareText({ id: '1-1', name: 'First Dig' }, 3, 1, 348)
     expect(t.startsWith('Sandlab Spill · First Dig ')).toBe(true)
     expect(t.endsWith(' 1 move · 5.8s\nhttps://sandlab.app/play/1-1')).toBe(true)
@@ -182,10 +183,14 @@ describe('SpillResult 렌더(SSR)', () => {
     expect(renderToStaticMarkup(<SpillResult {...dailyProps(true)} />)).not.toContain('sl-rs-standing')
     expect(renderToStaticMarkup(<SpillResult {...dailyProps(true, { topPercent: 18, sample: 50 })} />)).toContain('Top 18% of today')
   })
-  it('연습 판: +1 stratum 없음, 연습 문구', () => {
+  it('연습 판: +1 stratum 없음, 연습 문구, 이미지 공유 없음(보드는 연습 판·기록은 공식 — 섞지 않는다), 주 행동 = 공식 기록 텍스트', () => {
     const html = renderToStaticMarkup(<SpillResult {...dailyProps(false)} />)
     expect(html).not.toContain('+1 stratum')
     expect(html).toContain('Practice run.')
+    expect(html).not.toContain('Share image')
+    expect(html).not.toContain('sl-rs-fmt')
+    expect(html).toContain('Copy today&#x27;s result')
+    expect(html.match(/class="sl-rs-share"/g)?.length).toBe(1)
   })
   it('레벨 모드: Next level 링크, 데일리 문구 없음', () => {
     const html = renderToStaticMarkup(<SpillResult {...base} />)

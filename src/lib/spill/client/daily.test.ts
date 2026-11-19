@@ -11,9 +11,8 @@ import {
   loadDaily,
   parseDailyRec,
   saveDaily,
-  beadText,
-  shareTextV2,
 } from './daily'
+import { beadText, shareTextV2 } from './share'
 import { STAR_CLEAR, STAR_GEMS, STAR_PAR } from '../play/score'
 import { LEVELS } from '../levels'
 

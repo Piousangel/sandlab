@@ -6,12 +6,13 @@
  * 공유 문구 = shareTextV2(공식 기록 기준, 레벨 id 없음 — P5). 본문 버튼과 결과 카드의 Share가 같은 문구를 쓴다.
  * 새 셸(프리뷰 빌드)에서는 플레이 전에 시작 화면(@ui-shell DailyStart)을 먼저 보여 준다 — classic(prod)은 null이라 지금 그대로. 서버 계정·순위표 없음 — 레벨별 분포는 SpillPlayer의 결과 카드가 이미 보여준다.
  */
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import SpillPlayer from './SpillPlayer'
 import { LEVELS } from '@/lib/spill/levels'
 import { levelById } from '@/lib/spill/client/catalog'
 import { describeLevel } from '@/lib/spill/client/describe'
-import { dailyIdFor, dayNumber, loadDaily, saveDaily, shareTextV2, type DailyRec } from '@/lib/spill/client/daily'
+import { dailyIdFor, dayNumber, loadDaily, saveDaily, type DailyRec } from '@/lib/spill/client/daily'
+import { shareTextV2 } from '@/lib/spill/client/share'
 import type { DailyClear } from '@/ui-next/shell/spillTypes'
 import { DailyStart } from '@ui-shell'
 import { trackEvent } from '@/lib/sand/gallery'
@@ -24,6 +25,8 @@ export default function DailySpill({ children }: { children?: ReactNode }) {
   const [mine, setMine] = useState<DailyRec | null>(null)
   const [share, setShare] = useState<'idle' | 'copied' | 'shared' | 'manual'>('idle')
   const [started, setStarted] = useState(false)
+  // 이 세션에서 이미 공식 기록을 냈는가 — 저장이 막힌 기기(사생활 모드 등)는 loadDaily가 늘 null이라 이것으로 연습을 가린다
+  const officialDone = useRef(false)
 
   useEffect(() => {
     const n = dayNumber(Date.now())
@@ -39,8 +42,9 @@ export default function DailySpill({ children }: { children?: ReactNode }) {
 
   const onCleared = ({ stars, moves, ticks, mask }: { stars: number; moves: number; ticks: number; mask: number }): DailyClear => {
     // 공식 기록 = 그날 첫 클리어(S4). ticks·mask도 이때만 저장된다 — 재도전(연습)은 기록을 덮지 않는다(saveDaily도 한 번 더 막는다)
-    const official = !loadDaily(n)
+    const official = !loadDaily(n) && !officialDone.current
     if (official) {
+      officialDone.current = true
       saveDaily(n, { stars, moves, ticks, mask })
       trackEvent('daily_clear', level.id, moves)
     }

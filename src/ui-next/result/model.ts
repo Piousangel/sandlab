@@ -58,13 +58,19 @@ export function officialNote(daily: { official: boolean } | null): string | null
   if (!daily) return null
   return daily.official
     ? 'Your first clear stays today’s official record.'
-    : 'Practice run. Your first clear stays today’s official record and is what you share.'
+    : 'Practice run. Your first clear stays today’s official record — sharing copies that result.'
 }
+
+/**
+ * 모바일 결과 화면 세로 예산(보드 말고 나머지) — 헤더 48 · 위 여백 16 · 못·줄 27 · 액자 매트 16 · 간격 16 · 캡션 ≤ 170 · 간격 16 · stratum 20 · 간격 16 · Share image 52.
+ * 보드 높이 = 화면 높이 - 이 값이면 Share image가 첫 화면 안에 든다(360x640 독립 리뷰 지적, 테스트·Playwright로 확인).
+ */
+export const MOBILE_STACK = 48 + 16 + 27 + 16 + 16 + 170 + 16 + 20 + 16 + 52
 
 /** 결과 화면 액자 속 보드 크기 — 플레이 보드와 같은 정수 장치 픽셀 배율. 모바일은 세로로 쌓고, 데스크톱(≥900)은 액자 왼쪽·캡션 오른쪽. */
 export function resultBoardScale(vw: number, vh: number, dpr: number, desk: boolean): Scale {
   if (desk) return computeScale(400, Math.max(240, vh - 56 - 150), dpr)
-  return computeScale(Math.min(vw - 80, 320), Math.max(150, (vh - 48) * 0.42), dpr)
+  return computeScale(Math.min(vw - 80, 320), Math.max(150, vh - MOBILE_STACK), dpr)
 }
 
 export type ShareFormat = 'square' | 'wide'

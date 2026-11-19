@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { levelShareText } from './shareLevel'
+import { levelShareText } from './share'
 
 describe('levelShareText(레벨 모드 공유 텍스트 v2)', () => {
   it('유리알 ●○·이름·수·시간·레벨 링크', () => {

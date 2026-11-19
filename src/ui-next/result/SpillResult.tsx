@@ -11,7 +11,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { PRESETS } from '@/lib/sand/materials'
 import { strataMaterial } from '@/lib/strata'
-import { levelShareText } from '@/lib/spill/client/shareLevel'
+import { levelShareText } from '@/lib/spill/client/share'
 import { describeLevel } from '@/lib/spill/client/describe'
 import type { DailyRec } from '@/lib/spill/client/daily'
 import { formatMoves, formatSecs } from '@/lib/spill/play/score'
@@ -51,11 +51,15 @@ export function SpillResult(p: SpillResultProps) {
   const rootRef = useRef<HTMLElement>(null)
   const primaryRef = useRef<HTMLButtonElement>(null)
   const pngs = useRef<Partial<Record<ShareFormat, Promise<Blob>>>>({})
+  const ready = useRef<Partial<Record<ShareFormat, Blob>>>({})
 
   const cap = caption({ name: level.name, world: level.world, moves: p.moves, ticks: p.ticks, stars: p.stars, daily, solution: p.solution })
   const text = daily ? daily.text : levelShareText(level, p.stars.count, p.moves, p.ticks)
   const standing = daily ? standingLine(daily.standing) : null
   const note = p.solution ? null : officialNote(daily)
+  // 데일리 연습 판: 액자 보드는 이번(연습) 판인데 공유는 공식 기록이라 이미지가 두 판을 섞게 된다(독립 리뷰 차단 1)
+  // → 이미지 공유를 빼고 주 행동을 공식 기록 텍스트 복사로(Ember 하나 유지)
+  const practice = !!daily && !daily.official
   const mat = daily ? strataMaterial(daily.n) : null
   const matColor = mat ? (PRESETS.find((m) => m.slug === mat)?.color ?? '#E8C87A') : null
   const d = describeLevel(level)
@@ -64,6 +68,10 @@ export function SpillResult(p: SpillResultProps) {
   // 실제 종료 프레임 복사 — 화면이 그려지기 전에(첫 페인트에 빈 액자가 보이지 않게). 이후 엔진 캔버스는 계속 돌아도 액자는 멈춘 그림.
   useLayoutEffect(() => {
     setScale(resultBoardScale(l.vw, l.vh, window.devicePixelRatio || 1, desk))
+  }, [l.vw, l.vh, desk])
+
+  // 엔진 캔버스(재료 + 발광은 같은 캔버스에 합성됨)만 복사한다 — 오버레이 캔버스(목표 테두리·연출 입자)는 넣지 않는다(작품만 건다)
+  useLayoutEffect(() => {
     const src = p.board()
     const dst = canvasRef.current
     const ctx = dst?.getContext('2d', { alpha: false })
@@ -72,9 +80,13 @@ export function SpillResult(p: SpillResultProps) {
       ctx.drawImage(src, 0, 0, dst!.width, dst!.height)
     }
     primaryRef.current?.focus({ preventScroll: true })
-    // 닫힐 때(Practice·Retry → 준비 단계) 포커스를 RUN으로 돌려준다 — 결과 화면과 함께 포커스가 body로 사라지지 않게
+    // 닫힐 때(Practice·Retry → 준비 단계) 포커스를 RUN으로 돌려준다 — 결과 화면과 함께 포커스가 body로 사라지지 않게.
+    // 실제로 문서에서 빠졌을 때만(StrictMode 재마운트에서 Share image 포커스를 빼앗지 않게)
+    const node = rootRef.current
     return () => {
-      requestAnimationFrame(() => document.querySelector<HTMLElement>('[data-spill-run]')?.focus({ preventScroll: true }))
+      requestAnimationFrame(() => {
+        if (node && !node.isConnected) document.querySelector<HTMLElement>('[data-spill-run]')?.focus({ preventScroll: true })
+      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -113,12 +125,15 @@ export function SpillResult(p: SpillResultProps) {
     if (!c) return null
     if (!pngs.current[f]) {
       pngs.current[f] = loadShareFonts().then(() => renderSharePng(c, card, f))
-      void pngs.current[f]!.then((b) => rootRef.current?.setAttribute(`data-png-${f}`, String(b.size))).catch(() => {})
+      void pngs.current[f]!.then((b) => {
+        ready.current[f] = b
+        rootRef.current?.setAttribute(`data-png-${f}`, String(b.size))
+      }).catch(() => {})
     }
     return pngs.current[f]!
   }
   useEffect(() => {
-    if (p.solution) return
+    if (p.solution || practice) return
     const id = window.setTimeout(() => {
       png('square')
       png('wide')
@@ -138,17 +153,22 @@ export function SpillResult(p: SpillResultProps) {
 
   const shareImage = async () => {
     if (daily) trackEvent('share_click', 'daily')
-    const pending = png(fmt)
+    const finePointer = !!window.matchMedia?.('(pointer: fine)').matches
     const route = shareRoute({
-      canShareFiles: typeof navigator.canShare === 'function' && typeof File === 'function' && navigator.canShare({ files: [new File([new Uint8Array(1)], 'probe.png', { type: 'image/png' })] }),
-      finePointer: !!window.matchMedia?.('(pointer: fine)').matches,
+      canShareFiles:
+        typeof navigator.canShare === 'function' && typeof File === 'function' && navigator.canShare({ files: [new File([new Uint8Array(1)], 'probe.png', { type: 'image/png' })], text }),
+      finePointer,
     })
+    const pending = png(fmt)
     if (route === 'copy-text' || !pending) return copyText('Image sharing is not supported on this device.')
-    let blob: Blob
-    try {
-      blob = await pending
-    } catch {
-      return copyText('The image could not be made.')
+    // 미리 만든 PNG가 있으면 기다리지 않고 바로 share(사용자 활성화가 살아 있을 때). 아직이면 기다린다 — iOS가 거절하면 아래 폴백
+    let blob: Blob | undefined = ready.current[fmt]
+    if (!blob) {
+      try {
+        blob = await pending
+      } catch {
+        return copyText('The image could not be made.')
+      }
     }
     const name = shareFileName(daily, level.name, fmt)
     if (route === 'share-file') {
@@ -158,7 +178,8 @@ export function SpillResult(p: SpillResultProps) {
         return
       } catch (e) {
         if ((e as DOMException)?.name === 'AbortError') return setStatus(null)
-        // 활성화 만료·대상 거절 → 다운로드로
+        // 활성화 만료·대상 거절 → 터치 기기는 텍스트 복사, 데스크톱은 다운로드
+        if (!finePointer) return copyText('The share sheet could not open.')
       }
     }
     const url = URL.createObjectURL(blob)
@@ -263,24 +284,35 @@ export function SpillResult(p: SpillResultProps) {
               </button>
             ) : (
               <>
-                <div className="sl-rs-primary">
-                  <button ref={primaryRef} type="button" className="sl-rs-share" onClick={() => void shareImage()}>
-                    <Icon name="frame" />
-                    <span>Share image</span>
-                  </button>
-                  <div className="sl-rs-fmt" role="group" aria-label="Image shape">
-                    {(Object.keys(SHARE_FORMATS) as ShareFormat[]).map((f) => (
-                      <button key={f} type="button" aria-pressed={fmt === f} onClick={() => setFmt(f)}>
-                        {SHARE_FORMATS[f].label}
-                      </button>
-                    ))}
+                {practice ? (
+                  <div className="sl-rs-primary">
+                    <button ref={primaryRef} type="button" className="sl-rs-share" onClick={() => void copyText()}>
+                      <Icon name="share" />
+                      <span>Copy today&apos;s result</span>
+                    </button>
                   </div>
-                </div>
+                ) : (
+                  <div className="sl-rs-primary">
+                    <button ref={primaryRef} type="button" className="sl-rs-share" onClick={() => void shareImage()}>
+                      <Icon name="frame" />
+                      <span>Share image</span>
+                    </button>
+                    <div className="sl-rs-fmt" role="group" aria-label="Image shape">
+                      {(Object.keys(SHARE_FORMATS) as ShareFormat[]).map((f) => (
+                        <button key={f} type="button" aria-pressed={fmt === f} onClick={() => setFmt(f)}>
+                          {SHARE_FORMATS[f].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="sl-rs-sec">
-                  <button type="button" className="sl-rs-btn" onClick={() => void copyText()}>
-                    <Icon name="share" />
-                    <span>Copy text</span>
-                  </button>
+                  {!practice && (
+                    <button type="button" className="sl-rs-btn" onClick={() => void copyText()}>
+                      <Icon name="share" />
+                      <span>Copy text</span>
+                    </button>
+                  )}
                   <button type="button" className="sl-rs-btn" onClick={p.onPractice}>
                     <Icon name="retry" />
                     <span>{practiceLabel(!!daily, p.stars.count)}</span>
