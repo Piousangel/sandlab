@@ -128,3 +128,15 @@
 - **레벨 모드(/play)는 원본** — 레벨은 고정 공략이라 같은 날 겨루는 사람이 없고, 공략 글(/play/:id/guide)도 공개돼 있다.
 - **한계(리뷰, 과장 금지)**: 가림은 '피드에서 남의 첫 시도를 망치지 않는 매너' 수준이다. 같은 날 /play/<같은 레벨>을 풀면 원본 이미지가 나가고, 데일리 풀이 9개라 다음 날 공개되는 원본은 9일 뒤 데일리의 정답이기도 하다. 막으려면 데일리 전용 레벨(풀 확장)이 필요 — 별도 판단.
 - 지층 병 이미지를 결과 공유에 넣는 안은 이번에 하지 않는다(범위 밖, 제안만: 1:1 이미지 오른쪽 아래 작은 병 — 연속 기록이 공유 동기가 됨).
+
+## 2026-11-20 리디자인 P6 홈 「Pour」 — 셸 치환·링크 순수 함수 위치·데모·미지원·진입 상태
+- **셸 치환**: `@ui-shell`에 `HomePour`를 더했다. classic.ts는 null → `src/app/page.tsx`가 `HomePour ? <HomePour/> : <SandCanvas/>`로 지금 SandCanvas를 그대로 그린다. 새 홈 코드는 `src/ui-next/home/`(HomePour·Rack·HomeSections·model·home.css)에만. 엔진 무변경 — 옛 홈과 같은 공개 API(init·upload·start·brush·readback·clear·destroy)만 부른다.
+- **`#s=` 파싱·parent 결정을 순수 함수로(P2 인계 착수 조건)**: `sceneIdFromHash`·`SCENE_HASH_RE`·`hasEmbeddedScene`·`publishParent`·`publishedLinks`. 옛 홈·새 홈이 같은 함수를 부른다. 골든셋의 '소스 트립와이어'는 함수 호출 테스트 + 두 홈의 계보 연결 지점 확인으로 바꿨고, 골든 해시 표(12행)는 그대로 통과.
+  - **위치를 `src/lib/sand/urlState.ts`로 한 이유(실측)**: 처음엔 새 파일 sceneLink.ts였는데, SandCanvas 쪽 webpack 연결 모듈(concatenated module) 구성이 바뀌어 모듈 id가 9880→9453으로 바뀌었고 prod index.html의 RSC 페이로드까지 달라졌다. SandCanvas가 이미 import하는 urlState.ts에 두면 모듈 수·id가 그대로 → prod HTML 차이가 **홈 페이지 청크 파일명 해시 1개**로 줄어든다.
+  - prod 동작 동일 증명: base(main) vs 브랜치 prod 빌드에서 골든 링크 10개 진입 + 붓기 + Publish(가짜 업로드, prod 미전송)의 배너·parent·발행 후 해시·공유 링크가 10/10 같음.
+- **첫 방문 데모**: 키 `sl.pourdemo.v1`이 없을 때 1.5초 동안 위쪽 가운데(6%)에서 모래 한 줄기(반경 9). 첫 터치에 즉시 멈추고(데모가 부은 모래는 남김 — 옛 홈과 같은 손실감 회피), reduced-motion·재방문·링크로 연 장면이면 없음(손가락 힌트만, 15px). 옛 홈의 900프레임 앰비언트 데모(물·용암 버스트)는 새 홈에 없다 — 계획서 '1.5초 데모'를 따름.
+- **Share**: 첫 획 전(링크 장면 복원 전)에는 흐림 + `aria-disabled` + 숨김 이유("Pour something first."). 누르면 공유 시트(링크 `#g=` 만들기·복사·네이티브 공유, 갤러리 Publish, 10초 녹화). 프리뷰는 Publish·제목 입력 disabled + READ_ONLY_NOTE.
+- **WebGPU 미지원(B4 ③)**: init 실패만(복원 단계 실패는 빈 화면) — 헤드라인 "Today’s puzzle works here." → 오늘 카드 + Solve today(주 CTA) → 실엔진 정지 프레임(`public/ui-next/home/still.webp`, 프리뷰 홈에서 붓고 캡처, 12.6KB) + gpuAdvice 이유 + 카카오면 Open in browser(openExternal 기존 스킴) + Copy link → 벽 미리보기.
+- **진입 상태(B4 ④)**: 헤드라인 = 장면 제목, 부제 = `by <이름> · N remixes`. **단건 조회 API(`GET /api/scenes/:id`)는 작성자 이름을 싣지 않아**(목록만 실음) 지금은 항상 "From the gallery"로 — '익명'이라고 단정하지 않는다. 이름을 보이려면 워커 단건 SELECT에 `creator_name AS creatorName`을 더하는 별도 PR(P9 갤러리 때 권장). 리믹스 배너는 재료 줄 자리(같은 높이 56)를 차지해 밀림 0, 닫으면 재료 줄 + Original(`/s/:id`, 옛 홈과 같은 대상).
+- **CLS**: 헤드라인 두 줄·우물 2:1·재료 줄·랙·도크·오늘 카드·지층·벽을 SSR부터 높이 고정. 로컬 실측(첫 방문 5초) 390·360 = 0, 1440 = 0.0002(prod 홈 0.0047). 계획서의 'prod 0.17'은 Lighthouse 모바일 값이라 같은 조건 재측정은 프리뷰 배포 뒤 03시 QA 몫.
+- 버린 안: SandCanvas에 prop을 더해 새 틀로 그리기(prod 청크·동작이 크게 바뀜), 새 홈에서 작성자 이름을 목록 API로 따로 찾기(요청 1회 추가·정확하지 않음), 시험관 스트립 애니메이션(S7 — 선택 관 루프는 P11).
