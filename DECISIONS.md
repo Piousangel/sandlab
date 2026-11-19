@@ -56,3 +56,6 @@
 - **DailyRec**: `ticks?`·`mask?`(CLEAR=1·GEM=2·PAR=4, score.ts 별 비트와 같음) 선택 필드. 키 `sandlab.spill-daily.v1` 불변, stars·moves만 넘기면 예전과 바이트 단위로 같은 JSON. 공식 기록 = 그날 첫 유효 클리어(덮지 않음). 읽을 때 잘못된 선택 필드는 생략, 그날 항목만 깨졌으면 다음 첫 클리어가 채움, 저장소 값이 통째로 손상됐으면 원본을 지우지 않고 저장을 건너뜀(예전과 같음).
 - **재도전(연습) 기록은 저장하지 않는다.** 필요해지면 제안: 같은 키에 넣지 말고 별도 키 `sandlab.spill-daily-best.v1`에 {day: 최고 기록}만(공식 기록·지층·공유와 분리).
 - **ticks·mask 실제 수집은 P5부터**: P2는 UI 변경 0 조건이라 컴포넌트를 건드리지 않았다. 지금 화면(DailySpill)은 onCleared가 {stars, moves}만 넘겨 그때까지의 기록엔 ticks·mask가 없다(읽기·지층·공유는 없을 때를 처리). P5에서 SpillPlayer onCleared에 `ticks: r.ticks, mask: starMask(st)`를 더해 saveDaily로 넘긴다. 더 일찍 모으고 싶으면 이 두 줄만 별도 PR로(화면 변화 없음).
+## 2026-11-19 아이콘 v1 알갱이 점 규칙(23시 교대, 독립 리뷰 지적 반영)
+- 콘셉트 3.4의 "1.5px 점"을 **반지름 1.25(지름 2.5px)**로 바꾼다. 2px 스트로크 옆에서 1.5px 점은 20px 크기에서 사라진다(시트 실측).
+- "아이콘마다 점 1개"에서 **7종 예외**: pause·sound-off·link·next·back(점이 의미를 바꾸거나 가독성 저하), remix(두 화살촉이 중앙에서 만나 충돌), star-full(채운 원에 하이라이트를 구멍으로 뚫어 점 대신). 목록과 이유는 src/ui-next/icons/icons.ts `GRAIN_EXCEPTIONS`가 단일 출처이고 테스트가 강제한다.
