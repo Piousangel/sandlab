@@ -40,7 +40,7 @@ svg.big{background-color:#fff;background-image:linear-gradient(rgba(42,33,24,.08
 </style></head><body>
 ${spriteSvg()}
 <h1>Glass &amp; Grain icons v1 (${ICON_NAMES.length})</h1>
-<p class="note">20px grid, 2px stroke, round caps, currentColor, one grain dot (r=1.25). Sizes 20 / 24 / 40.</p>
+<p class="note">20px grid, 2px stroke, round caps, currentColor, one grain dot (r=1.25; 7 documented exceptions without one). Sizes 20 / 24 / 40.</p>
 <section class="bone">${grid}</section>
 <section class="kiln">${grid}</section>
 <section class="inspect">${big}</section>
