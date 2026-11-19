@@ -94,6 +94,17 @@
 - P5의 prod 조각 = /daily 공유 문구를 shareTextV2로(레벨 id 제거). 근거·기획: docs/team/specs/2026-11-20-p5-result-share.md.
 - 버린 안: (a) 프리뷰 출시를 출시로 친다 — 사용자가 못 보니 원칙 위반. (b) 리디자인을 멈추고 레벨을 낸다 — 오너 최최우선 지시 위반.
 
+## 2026-11-20 리디자인 P5 결과 화면·공유 이미지 — 공유 텍스트 prod 교체, 연습 판은 이미지 공유 없음, 상위 N%는 자리만
+- **셸 치환**: `@ui-shell`에 `SpillResult`를 더했다(classic = null → prod는 지금 ResultCard 그대로). SpillPlayer는 카드가 뜰 때 SpillResult가 있으면 그것을, 없으면 ResultCard를 그린다. 결과 화면은 플레이 헤더(48/56) 아래를 덮는 Bone 면 — 헤더(뒤로·소리·메뉴)는 그대로.
+- **액자 = 실제 종료 프레임**: 결과 화면이 처음 그려질 때(useLayoutEffect) 엔진 캔버스(재료 + 발광 합성)를 160×240 캔버스로 한 번 복사한다. 오버레이(목표 테두리·연출 입자)는 넣지 않는다(작품만 건다). 이후 잔광 시뮬이 돌아도 액자는 멈춘 그림.
+- **공유 텍스트(prod 포함)**: 데일리 공유는 전부 `shareTextV2`(레벨 id 없음). 결과 카드 Share는 #73(03시 QA)이 단 `share` prop으로 DailySpill 문구를 쓰는데, 그 문구가 옛 `shareText`(`Sandlab Daily #42 (1-3) ⭐⭐ …` — 레벨 id)였다 → 이 PR에서 그 문구를 shareTextV2로 바꿔 결과 카드·본문 버튼이 함께 바뀐다(ResultCard 코드 변경 없음). 옛 `daily.ts shareText`·테스트 삭제. shareTextV2·레벨 모드 v2 텍스트는 새 파일 `src/lib/spill/client/share.ts`로 옮겼다 — daily.ts는 홈 번들에도 들어가는 공용 모듈이라 거기 두면 score.ts 포맷터까지 홈 청크로 끌려간다(첫 빌드에서 실제로 봄).
+- **공식 기록 vs 연습(S4)**: 공유 텍스트·이미지 숫자는 항상 공식 기록(그날 첫 클리어). **연습 판에서는 이미지 공유를 뺀다** — 액자 보드는 연습 판인데 숫자는 공식 기록이라 두 판이 섞인다(독립 리뷰 차단). 주 행동이 "Copy today's result"(공식 기록 텍스트)로 바뀌고 문구로 "Practice run…" 명시. 저장이 막힌 기기는 세션 안 두 번째 클리어부터 연습(ref).
+- **공유 이미지**: 1:1 1080 · OG 1200×630 두 포맷만, 왼쪽 못·걸이줄·액자(보드 정수 배율 3/2), 오른쪽 Daily No.N(레벨 모드는 이름)·유리알·수·시간·sandlab.app. Bone 평면·블러 없음 → PNG가 작다(실측은 PR). 250KB를 넘으면 배율을 낮춰 다시 그린다. 결과 화면이 뜬 뒤 300ms에 두 포맷을 미리 렌더 — 누른 순간 navigator.share를 불러야 iOS 사용자 활성화가 살아 있다. 경로: Web Share Level 2(files) → 파일 공유, 실패(Abort 제외) 시 터치 기기는 텍스트 복사, 데스크톱(pointer: fine)은 다운로드, 파일 공유 없는 폰은 텍스트 복사.
+- **상위 N%**: 서버 집계가 없어 `DailyStanding` 인터페이스와 `standingLine()`(값 없음·표본 < 50이면 null → 줄 미렌더)만. 06시 기획 v1의 '레벨 hist로 Faster than N%'는 쓰지 않았다 — /play 클리어와 섞인 전 기간 표본이라 '오늘 클리어한 사람 중'이 아니다(기획 반증 5와 같은 우려). DailySpill은 늘 null. 집계 설계 제안은 계획서 "P5 메모"(D1 `spill_daily`, 첫 클리어만 제출, 퍼센트·표본만 응답, 개인정보·위조 방어 단계). 집계 자체를 만들지는 오너 결정 대기(프리뷰 쓰기는 #76으로 이미 403 — 프리뷰 제출이 prod 집계에 섞일 걱정은 없음).
+- **모바일 세로 예산**: 보드 높이 = 화면 높이 − 397(헤더·못·줄·매트·캡션 ≤170·stratum·Share image·간격) → 360×640에서도 Share image가 첫 화면 안(테스트 고정). 데스크톱(≥900)은 액자 왼쪽·캡션 오른쪽 2열, 1440×900에서 보드 320×480.
+- **열린 문제 — 공유 이미지 스포일러(06시 기획 반증 1, 이 PR은 프리뷰 전용이라 prod 노출 0)**: 종료 프레임은 판 위치(파낸 자리·물줄기)를 그대로 보여 준다 — 같은 날 모두 같은 퍼즐이라 데일리 이미지는 정답 힌트가 된다. 컷오버(P12) 전에 정한다: ① 그날 데일리 이미지만 보드를 흐리게/모자이크(8셀) ② 다음 날부터 원본 ③ 결과 영역(목표 항아리 아래)만 크롭. 지금 구현은 요구대로 원본 프레임.
+- **공유 시트에는 files + title만**(text 없음): files와 text를 같이 주면 일부 앱(WhatsApp)이 이미지를 버린다(06시 리서치 2). 텍스트는 Copy text.
+
 ## 2026-11-20 프리뷰 Worker = prod와 같은 D1 + 쓰기 차단(오너)
 - 결정(오너 11-20): 프리뷰 Worker(`sandlab-preview`, 계획 S6)는 prod와 **같은 D1(sandlab-gallery)을 읽되 쓰기는 막는다.** 프리뷰 전용 D1은 두지 않는다.
 - 구현: wrangler `env.preview.vars.READ_ONLY = "1"` → 워커 진입점이 `/api/*`의 GET·HEAD 외 모든 메서드를 핸들러 전에 403 `{"error":"preview is read-only"}`로 끊는다(`worker/preview.ts readOnlyBlock`). 라우트 목록이 아니라 **메서드 기준**이라 앞으로 생길 쓰기 라우트(PUT·DELETE 포함)도 자동으로 막힌다. 지금 막히는 것: POST `/api/scenes`(업로드)·`/api/scenes/:id/vote`·`/api/daily`·`/api/spill/level/:id/clear`·`/api/track`. prod(최상위 설정)에는 변수가 없어 동작 불변.

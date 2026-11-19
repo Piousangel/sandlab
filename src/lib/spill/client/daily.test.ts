@@ -11,9 +11,8 @@ import {
   loadDaily,
   parseDailyRec,
   saveDaily,
-  shareText,
-  shareTextV2,
 } from './daily'
+import { beadText, shareTextV2 } from './share'
 import { STAR_CLEAR, STAR_GEMS, STAR_PAR } from '../play/score'
 import { LEVELS } from '../levels'
 
@@ -40,9 +39,6 @@ describe('Spill 데일리', () => {
   })
   it('같은 번호는 항상 같은 레벨', () => {
     expect(dailyIdFor(39)).toBe(dailyIdFor(39))
-  })
-  it('공유 문구에 번호·별·수·링크', () => {
-    expect(shareText(39, 2, 1, '1-4')).toBe('Sandlab Daily #39 (1-4) ⭐⭐ 1 move\nhttps://sandlab.app/daily')
   })
 })
 
@@ -190,7 +186,11 @@ describe('shareTextV2', () => {
     const t = shareTextV2({ stars: 3, moves: 2, ticks: 312, mask: 7 }, 42)
     expect(/\p{Extended_Pictographic}/u.test(t)).toBe(false)
   })
-  it('기존 shareText는 그대로 남아 있다(지금 화면이 씀, P5에서 교체)', () => {
-    expect(shareText(39, 2, 1, '1-4')).toBe('Sandlab Daily #39 (1-4) ⭐⭐ 1 move\nhttps://sandlab.app/daily')
+  it('beadText: 별 수만큼 앞에서부터 ●, 0~3으로 자른다', () => {
+    expect(beadText(0)).toBe('○○○')
+    expect(beadText(2)).toBe('●●○')
+    expect(beadText(3)).toBe('●●●')
+    expect(beadText(7)).toBe('●●●')
+    expect(beadText(Number.NaN)).toBe('○○○')
   })
 })

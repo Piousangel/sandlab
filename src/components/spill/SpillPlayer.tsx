@@ -34,13 +34,17 @@ import FloatButtons from './FloatButtons'
 import ResultCard from './ResultCard'
 import Onboarding from './Onboarding'
 import { C, K, starRow } from './ui'
-import { SpillHud } from '@ui-shell'
+import { SpillHud, SpillResult } from '@ui-shell'
+import type { DailyClear } from '@/ui-next/shell/spillTypes'
 
 interface Props {
   level: LevelDef
   nextId: string | null
-  /** 직접 플레이로 클리어했을 때(자동재생·해답 보기 제외) 한 번 호출 — 데일리가 기록·공유에 쓴다(ticks·mask는 리디자인 P4부터). */
-  onCleared?: (info: { stars: number; moves: number; ticks: number; mask: number }) => void
+  /**
+   * 직접 플레이로 클리어했을 때(자동재생·해답 보기 제외) 한 번 호출 — 데일리가 기록·공유에 쓴다(ticks·mask는 리디자인 P4부터).
+   * 데일리는 DailyClear(공식 기록·공유 텍스트 shareTextV2)를 돌려준다 → 결과 카드의 Share가 그 텍스트를 쓴다(레벨 id 없음, P5).
+   */
+  onCleared?: (info: { stars: number; moves: number; ticks: number; mask: number }) => DailyClear | void
   children?: ReactNode
   /** 새 HUD(프리뷰) 전용: 제목 옆 표식(기본 레벨 id — 데일리는 No.N)과 뒤로 가기 링크. */
   badge?: string
@@ -56,6 +60,8 @@ interface Card {
   starGapMs: number
   key: number
   solution: boolean
+  /** 데일리 직접 플레이 클리어면 onCleared가 돌려준 정보(공유 텍스트), 아니면 null. */
+  daily: DailyClear | null
 }
 
 interface Toast {
@@ -236,6 +242,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
           const st = starsOf(r, level)
           let outcome = { firstClear: true, newBest: true }
           let prevBest = false
+          let daily: DailyClear | null = null
           if (live) {
             const o = recordResult(level.id, r, starMask(st))
             outcome = o
@@ -243,7 +250,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
             prevBest = o.newBest && !o.firstClear
             void postClear(level.id, { pid: getPid(), moves: r.moves, ticks: r.ticks, lh: ctl.lh })
             trackEvent('challenge_clear', level.id, r.ticks)
-            if (modeRef.current === 'play') onCleared?.({ stars: starCount(starMask(st)), moves: r.moves, ticks: r.ticks, mask: starMask(st) })
+            if (modeRef.current === 'play') daily = onCleared?.({ stars: starCount(starMask(st)), moves: r.moves, ticks: r.ticks, mask: starMask(st) }) ?? null
             void fetchHist(level.id).then((h) => setHist(h ? histBars(h, r.moves, r.ticks) : null))
           }
           if (modeRef.current === 'autoplay') document.body.dataset.autoplay = autoplayMark(r, level)
@@ -260,7 +267,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
           }
           if (cardTimer.current) clearTimeout(cardTimer.current)
           cardTimer.current = setTimeout(() => {
-            setCard({ result: r, stars: st, newBest: prevBest, starGapMs: plan.starGapMs, key: Date.now(), solution: modeRef.current === 'watch' })
+            setCard({ result: r, stars: st, newBest: prevBest, starGapMs: plan.starGapMs, key: Date.now(), solution: modeRef.current === 'watch', daily })
           }, plan.cardDelayMs)
           break
         }
@@ -581,7 +588,25 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
       />
     </div>
   )
-  const resultCard = card && s.phase === 'cleared' && (
+  const resultCard = card && s.phase === 'cleared' && (SpillResult ? (
+    // 새 결과 화면(리디자인 P5, 프리뷰 빌드만) — classic(prod)은 SpillResult = null이라 아래 ResultCard 그대로
+    <SpillResult
+      key={card.key}
+      layout={l}
+      level={level}
+      moves={card.result.moves}
+      ticks={card.result.ticks}
+      stars={card.stars}
+      board={() => canvasRef.current}
+      starGapMs={card.starGapMs}
+      onStar={(i) => audio.star(i)}
+      onSkip={() => fx.current.skip()}
+      solution={card.solution}
+      daily={card.daily}
+      nextHref={nextId ? `/play/${nextId}` : null}
+      onPractice={retry}
+    />
+  ) : (
     <ResultCard
       key={card.key}
       def={level}
@@ -598,7 +623,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
       bottom={l.safeBottom + 8}
       share={share}
     />
-  )
+  ))
 
   if (SpillHud) {
     // 새 HUD(리디자인 P4, 프리뷰 빌드만): 보드 위에 아무것도 얹지 않는다 — 메시지·보석·도구는 보드 밖으로

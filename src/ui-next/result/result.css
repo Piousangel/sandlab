@@ -1,0 +1,341 @@
+/*
+ * 새 결과 화면 스타일(리디자인 P5). shell/next.ts만 불러온다 → prod 빌드에는 없다. 접두 sl-rs-, 전역 규칙 없음.
+ * 면 규칙(R3): 바탕 bone(벽), 그 위 한 단계(bone-2: 캡션 카드·보조 버튼 — 서로 형제, 겹쳐 쌓지 않음). 어두운 면은 액자(kiln)뿐.
+ * Ember는 Share image 하나. 누르는 것은 44px 이상. 모노 이름표는 kicker·+1 stratum 둘(헤더 No.N까지 셋, S9 ≤ 4).
+ * 화면은 플레이 헤더(48 / 데스크톱 56) 아래를 덮는다 — 헤더(뒤로·소리·메뉴)는 그대로 쓴다.
+ */
+.sl-rs {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 8;
+  background: var(--sl-bone);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  user-select: text;
+  -webkit-user-select: text;
+}
+.sl-rs-in {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.sl-rs[data-desk] .sl-rs-in {
+  max-width: 940px;
+  min-height: 100%;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 400px);
+  justify-content: center;
+  align-items: center;
+  gap: 56px;
+}
+.sl-rs-side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: sl-rs-up var(--sl-t-move) var(--sl-ease-pour) 220ms both;
+}
+
+/* ---------- 벽: 못 하나 + 1px 걸이줄 + 액자 ---------- */
+.sl-rs-wall {
+  display: flex;
+  justify-content: center;
+}
+.sl-rs-hang {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: 50% 5px;
+  animation: sl-rs-swing var(--sl-t-reward-max) var(--sl-ease-pour) both;
+}
+.sl-rs-nail {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--sl-ink);
+  box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.32), 0 1px 0 rgba(42, 33, 24, 0.25);
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
+.sl-rs-wire {
+  display: block;
+  margin-top: -9px;
+  flex-shrink: 0;
+}
+.sl-rs-wire path {
+  fill: none;
+  stroke: var(--sl-ink-2);
+  stroke-width: 1;
+}
+.sl-rs-frame {
+  margin: 0;
+  padding: 8px;
+  background: var(--sl-kiln);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 16px 26px -16px rgba(42, 33, 24, 0.6);
+}
+.sl-rs-board {
+  display: block;
+  image-rendering: pixelated;
+  border-radius: 3px;
+}
+
+/* ---------- 박물관 캡션 카드 ---------- */
+.sl-rs-cap {
+  background: var(--sl-bone-2);
+  border-radius: var(--sl-r-xs);
+  padding: 14px 16px 16px;
+  box-shadow: var(--sl-lift);
+}
+.sl-rs-kicker {
+  margin: 0;
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-fs-label-tap);
+  font-weight: 500;
+  letter-spacing: var(--sl-ls-label);
+  text-transform: uppercase;
+  color: var(--sl-ink-2);
+}
+.sl-rs-title {
+  margin: 2px 0 10px;
+  font-size: 24px;
+  line-height: var(--sl-lh-tight);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.sl-rs-stars {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sl-rs-beads {
+  display: inline-flex;
+  gap: 4px;
+}
+.sl-rs-bead {
+  color: var(--sl-ink);
+  animation: sl-rs-pop var(--sl-t-move) var(--sl-ease-pour) both;
+}
+.sl-rs-starsl {
+  font-size: 19px;
+  font-weight: 700;
+}
+.sl-rs-parts {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--sl-ink-2);
+}
+.sl-rs-parts [data-got] {
+  color: var(--sl-ink);
+  font-weight: 700;
+}
+.sl-rs-parts s {
+  text-decoration-thickness: 1.5px;
+}
+.sl-rs-stat {
+  margin: 4px 0 0;
+  font-size: 15px;
+  color: var(--sl-ink-2);
+}
+.sl-rs-standing {
+  margin: 4px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--sl-ink);
+}
+.sl-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- +1 stratum(데일리 공식 기록일 때만) ---------- */
+.sl-rs-stratum {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-fs-label-tap);
+  font-weight: 500;
+  letter-spacing: var(--sl-ls-label);
+  text-transform: uppercase;
+  color: var(--sl-ink);
+}
+/* 재료색은 장식(텍스트 아님). sand·seed·acid는 Bone 위 대비가 낮아 ink 1px 테두리(DECISIONS P2 주의) */
+.sl-rs-swatch {
+  width: 24px;
+  height: 14px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px var(--sl-ink);
+  flex-shrink: 0;
+}
+
+/* ---------- 행동 ---------- */
+.sl-rs-primary {
+  display: flex;
+  gap: 8px;
+}
+.sl-rs-share {
+  flex: 1;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--sl-ember);
+  color: var(--sl-on-ember);
+  box-shadow: 0 3px 0 var(--sl-ember-edge), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sl-rs-share:active {
+  transform: translateY(var(--sl-press-y));
+  box-shadow: none;
+}
+.sl-rs-fmt {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 1.5px var(--sl-ink-2);
+  flex-shrink: 0;
+}
+.sl-rs-fmt button {
+  min-width: 60px;
+  min-height: 46px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sl-rs-fmt button[aria-pressed='true'] {
+  background: var(--sl-ink);
+  color: var(--sl-bone);
+}
+.sl-rs-sec {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.sl-rs-btn {
+  flex: 1 1 auto;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--sl-r-sm);
+  background: var(--sl-bone-2);
+  color: var(--sl-ink);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sl-rs-btn:active {
+  transform: translateY(var(--sl-press-y));
+}
+.sl-rs-note {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--sl-ink-2);
+}
+.sl-rs-status {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--sl-ink);
+}
+.sl-rs-status:empty {
+  display: none;
+}
+.sl-rs-copy {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  resize: none;
+  border: 1px solid var(--sl-ink-2);
+  border-radius: var(--sl-r-xs);
+  background: #fff;
+  color: var(--sl-ink);
+  font: 13px/1.4 var(--sl-font-mono);
+}
+.sl-rs-until {
+  margin: 0;
+  font-size: 14px;
+  color: var(--sl-ink-2);
+}
+
+/* ---------- 모션(보상 ≤ 900ms). reduced-motion이면 즉시 최종 상태 ---------- */
+@keyframes sl-rs-swing {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) rotate(-3deg);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(0) rotate(2deg);
+  }
+  65% {
+    transform: rotate(-1deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes sl-rs-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sl-rs-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  70% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: none;
+  }
+}
+.sl-rs[data-reduced] *,
+.sl-rs[data-reduced] {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-rs *,
+  .sl-rs {
+    animation: none !important;
+    transition: none !important;
+  }
+}

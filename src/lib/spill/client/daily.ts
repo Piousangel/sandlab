@@ -2,7 +2,7 @@
  * Spill 데일리 — UTC 날짜 → 번호 → 레벨. 순수 함수라 전 세계가 같은 날 같은 퍼즐을 받는다.
  * 번호 체계는 옛 데일리와 같다(#1 = 2026-10-09). 풀은 고정 id 목록이라 레벨을 추가해도 오늘 퍼즐이 바뀌지 않는다.
  */
-import { STAR_CLEAR, STAR_GEMS, STAR_PAR, formatMoves, formatSecs, starCount } from '../play/score'
+import { STAR_CLEAR, STAR_GEMS, STAR_PAR } from '../play/score'
 
 export const LAUNCH_UTC = Date.UTC(2026, 9, 9)
 const DAY_MS = 86_400_000
@@ -27,24 +27,6 @@ export function dailyIdFor(n: number): string {
   return DAILY_POOL_IDS[((Math.max(1, n) - 1) * stepFor(len)) % len]
 }
 
-export function shareText(n: number, stars: number, moves: number, levelId: string): string {
-  return `Sandlab Daily #${n} (${levelId}) ${'⭐'.repeat(stars)} ${moves} ${moves === 1 ? 'move' : 'moves'}\nhttps://sandlab.app/daily`
-}
-
-/**
- * 공유 텍스트 v2(리디자인 P2) — 레벨 id를 빼고(풀이 9개라 id를 보면 9일 주기가 드러난다) 이모지 대신 유리알 문자.
- * 유리알 규칙(DECISIONS 2026-11-19 P2): 알 3개, 별 수만큼 앞에서부터 ●(U+25CF), 나머지 ○(U+25CB). 칸 위치에 뜻은 없다
- * (mask 유무로 뜻이 달라지지 않게 — 독립 리뷰). 별 수 = mask가 있으면 mask의 비트 수, 없으면 stars(둘은 starMask에서 같이 나와 늘 같다).
- * 시간은 ticks가 있을 때만. ●○는 기하 도형 블록이라 이모지로 바뀌지 않는다.
- * 기존 shareText는 지금 /daily 화면이 쓰므로 P5에서 교체할 때까지 남긴다.
- */
-export function shareTextV2(rec: DailyRec, n: number): string {
-  const s = rec.mask !== undefined && validMask(rec.mask) ? starCount(rec.mask) : clampStars(rec.stars)
-  const beads = '●'.repeat(s) + '○'.repeat(3 - s)
-  const time = rec.ticks !== undefined && validTicks(rec.ticks) ? ` · ${formatSecs(rec.ticks)}` : ''
-  return `Sandlab Daily #${n} ${beads} ${formatMoves(rec.moves)}${time}\nhttps://sandlab.app/daily`
-}
-
 export const DAILY_KEY = 'sandlab.spill-daily.v1'
 /** DailyRec.mask 비트 — score.ts 별 비트와 같은 값(starMask 결과를 그대로 저장). */
 export const DAILY_MASK_CLEAR = STAR_CLEAR
@@ -60,7 +42,6 @@ export type DailyRec = { stars: number; moves: number; ticks?: number; mask?: nu
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 const validTicks = (v: unknown): v is number => finite(v) && v >= 0
 const validMask = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 7
-const clampStars = (s: number) => (finite(s) ? Math.max(0, Math.min(3, Math.round(s))) : 0)
 
 /** 저장소에서 꺼낸 한 날의 값 → 유효하면 정규화한 DailyRec(모르는 필드·잘못된 선택 필드는 버림), 아니면 null. */
 export function parseDailyRec(v: unknown): DailyRec | null {

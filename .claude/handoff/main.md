@@ -1,3 +1,16 @@
+<<<<<<< HEAD
+# 인계 (2026-11-20 아침): 리디자인 v2 P5 「결과 화면 + 공유 이미지」 머지 — 다음은 P6(홈 Pour)
+
+- 계획서 6장 진행표가 기준. P5 = #75(브랜치 shift/redesign-p5-result). 결정은 DECISIONS 2026-11-20 P5, 상위 N% 서버 집계 제안은 계획서 "P5 메모".
+- **새 결과 화면은 `@ui-shell`의 `SpillResult`**(classic = null → prod는 옛 ResultCard). 파일 `src/ui-next/result/`(SpillResult.tsx·model.ts 순수 계산·shareImage.ts 캔버스·result.css·result.test.tsx). SpillPlayer가 카드 때 SpillResult가 있으면 그린다(헤더 아래를 덮는 Bone 면, 헤더는 그대로).
+- 액자 = 결과 화면 첫 레이아웃 때 엔진 캔버스(재료+발광) 복사. 오버레이(목표 테두리)는 안 넣음. 공유 PNG(1:1 1080·OG 1200×630)는 뜬 뒤 300ms에 미리 렌더 → `data-png-square/wide` 속성에 바이트 수(QA 실측용). 실측 80~86KB / 66~69KB.
+- **prod에 들어간 것: 데일리 공유 텍스트 = shareTextV2**(결과 카드 Share — #73의 `share` prop이 DailySpill 문구를 쓰는데 그 문구가 옛 shareText `(1-3) ⭐⭐`였다 — 와 본문 Share result). ResultCard 코드는 main 그대로. 옛 daily.ts shareText 삭제. shareTextV2·beadText·levelShareText는 `src/lib/spill/client/share.ts`(daily.ts는 홈 번들 공용 모듈이라 분리 — 거기 두면 score.ts가 홈 청크로 끌려온다, 첫 빌드에서 실측).
+- DailySpill.onCleared가 `DailyClear {n, official, record, text, standing}`를 돌려주고 SpillPlayer가 card.daily로 넘긴다. `standing`은 늘 null(서버 집계 없음) → "상위 N%" 줄 미렌더. 연결할 땐 DailySpill 몇 줄 + api 함수 1개.
+- **열린 문제: 공유 이미지 스포일러**(06시 기획 반증 1) — 종료 프레임이 판 위치를 보여 준다. 프리뷰 전용이라 prod 노출 0, 컷오버 전에 흐림·다음 날 원본·크롭 중 결정(DECISIONS P5). 공유 시트는 files + title만(WhatsApp이 text와 같이 오면 이미지를 버림).
+- 연습 판(공식 기록 있음)은 이미지 공유 없음 — 주 행동 "Copy today's result"(공식 기록 텍스트). 보드는 연습 판, 숫자는 공식 기록이라 섞이지 않게(리뷰 차단 반영).
+- **P6이 알아야 할 것**: ① 공용 모듈(daily.ts·score.ts·hist.ts)에 export를 더해 prod 컴포넌트가 쓰면 홈 청크까지 바뀐다 — 새 파일로 분리. prod diff 비교 스크립트(스크래치 p5-compare.py — buildId가 HTML 주석에선 `-`가 `_`로 찍혀 둘 다 치환, p5-jsdiff.py — 모듈 단위)를 쓰면 원인을 바로 본다. ② 모바일 결과 세로 예산 `MOBILE_STACK=397`(model.ts) — 캡션 문구를 늘리면 360×640에서 Share image가 첫 화면 밖으로 나간다(테스트가 잡는다). ③ 데스크톱 aside(DailySpill 본문)에 아직 "1-3 Two Pots is…"(describeLevel 요약, 레벨 id)와 옛 주황 Share result 버튼이 남아 있다 — 새 셸에서 숨길지 P7(/daily 허브)·P10에서 결정. ④ 플레이 검사 스크립트 스크래치 p5-play.mjs(Date.now 고정 No.42 = 1-3, canShare/share 가로채 PNG 실측, 360은 파일 공유 없음 폴백, 1440 다운로드, reduced-motion) — 상시화하려면 scripts/로.
+- 함정: 이번 세션 머신 load 200~300(다른 에뮬레이터·세션)이라 `next build` 한 번이 수 시간 걸린 적이 있다(컴퓨터 절전 포함 추정). 빌드·spill:verify는 순서대로, 같은 폴더 체크아웃을 바꾸기 전에 그 폴더를 읽는 작업이 끝났는지 확인. 기준선: verify.test.ts 30s 타임아웃·sweep.test.ts는 main에서도 재현(PR 표).
+=======
 # 인계 (2026-11-20 프리뷰 읽기 전용): 프리뷰 Worker = prod와 같은 D1 + 쓰기 차단(오너 11-20)
 
 - wrangler `env.preview.vars.READ_ONLY="1"` → 워커가 `/api/*`의 GET·HEAD 외 전부 403 `{"error":"preview is read-only"}`(worker/preview.ts `readOnlyBlock`, 진입점 default export에서 app.fetch 전에). 메서드 기준이라 새 쓰기 라우트도 자동 차단. prod는 변수 없음 → 불변. 테스트 worker/read-only.test.ts(가짜 D1로 '차단 요청은 D1 호출 0' 확인).
@@ -5,6 +18,7 @@
 - **다음 P가 할 일**: 새 셸에 업로드·투표·데일리 기록 버튼을 그리면 `PREVIEW_READ_ONLY`로 disabled + `READ_ONLY_NOTE`. DailyStart의 "Your first clear is today's official record."는 프리뷰에서 거짓 — P5에서 PREVIEW_READ_ONLY 분기.
 - 프리뷰 QA 참고: classic 화면(홈 업로드·갤러리 투표)은 프리뷰에서도 버튼이 눌리고, 실패 토스트에 `{"error":"preview is read-only"}` 원문이 뜬다 — 기존 오류 표시 방식 그대로라 **정상**(버그로 올리지 말 것). 데일리·Spill 클리어 기록은 조용히 실패(postClear false).
 - 프리뷰 배포는 여전히 수동·미실행. 첫 배포 뒤 `curl -X POST <프리뷰>/api/daily` → 403, `curl <프리뷰>/api/scenes` → 200 확인.
+>>>>>>> origin/main
 
 ---
 

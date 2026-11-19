@@ -8,6 +8,7 @@ import type { Speed } from '@/lib/spill/play/controller'
 import type { DockRow } from '@/lib/spill/client/dock'
 import type { RunAction, TrayVerb } from '@/lib/spill/client/view'
 import type { Layout, LayoutChrome } from '@/lib/spill/render/layout'
+import type { DailyRec } from '@/lib/spill/client/daily'
 
 export interface SpillFrameProps {
   layout: Layout
@@ -61,4 +62,50 @@ export interface DailyStartProps {
   onStart(): void
   /** 정적 설명(SEO) — 시작 화면 아래에 그린다. */
   children?: ReactNode
+}
+
+/**
+ * "오늘 클리어한 사람 중 상위 N%" 한 줄의 데이터(P5는 자리와 인터페이스만 — 서버 집계 엔드포인트가 아직 없다).
+ * 값이 없거나(null) 표본이 작으면 결과 화면은 그 줄을 아예 그리지 않는다(가짜 수치 금지). 설계 제안은 계획서 P5 메모.
+ */
+export interface DailyStanding {
+  /** 1~100. 공식 기록(첫 클리어) 기준 상위 퍼센트(작을수록 좋음). */
+  topPercent: number
+  /** 그날 공식 기록 수(분모). */
+  sample: number
+}
+
+/**
+ * 데일리 클리어 한 번의 정보 — DailySpill의 onCleared가 돌려준다(SpillPlayer가 결과 카드·결과 화면에 넘김).
+ * text = shareTextV2(공식 기록) — prod 결과 카드의 Share도 이것을 쓴다(레벨 id 없음).
+ */
+export interface DailyClear {
+  n: number
+  /** 이번 클리어가 그날 첫 클리어(공식 기록, S4)인가. 아니면 연습. */
+  official: boolean
+  /** 그날 공식 기록(공유 텍스트·이미지가 말하는 기록). */
+  record: DailyRec
+  text: string
+  standing: DailyStanding | null
+}
+
+export interface SpillResultProps {
+  layout: Layout
+  level: LevelDef
+  /** 이번 판 결과(수·틱). */
+  moves: number
+  ticks: number
+  stars: { clear: boolean; gems: boolean; par: boolean; count: number }
+  /** 엔진 보드 캔버스 — 결과 화면이 처음 그려질 때 한 번 복사해 액자에 건다(실제 종료 프레임, 목업 아님). */
+  board(): HTMLCanvasElement | null
+  starGapMs: number
+  onStar(i: number): void
+  onSkip(): void
+  /** 해답 보기(Watch)가 끝난 결과 — 공유 없이 "직접 해 보기"만. */
+  solution: boolean
+  /** 데일리 직접 플레이 클리어면 그 정보(공유 = 공식 기록 기준 shareTextV2). 레벨 모드·해답 보기는 null(레벨 공유 텍스트를 결과 화면이 만든다). */
+  daily: DailyClear | null
+  /** 레벨 모드 다음 레벨 링크(마지막이면 null → 전체 목록). */
+  nextHref: string | null
+  onPractice(): void
 }
