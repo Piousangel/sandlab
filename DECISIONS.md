@@ -87,3 +87,9 @@
 - **데일리 시작 화면**: 실루엣 = 틱 0 판을 `saturate(.25) brightness(.8)`로. 목표 문장 한 줄(같은 문장은 묶음)만, par·별·보석·레벨 요약(d.summary는 보석·par 별을 말함)은 싣지 않는다(S5). 이미 풀었으면 버튼이 "Practice"(연습)로. 플레이 화면 제목 옆 표식은 레벨 id 대신 No.N(풀 9개라 id가 주기를 드러냄 — P2 공유 규칙과 같은 이유).
 - **ticks·mask 수집(prod 포함)**: SpillPlayer onCleared가 `{stars, moves, ticks, mask: starMask}`를 넘기고 DailySpill이 첫 클리어 때만 saveDaily로 저장. 재도전은 loadDaily 검사 + saveDaily 자체 가드로 덮지 않는다. P2의 "P5부터"를 P4로 당김(오너 지시).
 - **prod 번들 변화의 성격**: 클라이언트 컴포넌트가 `@ui-shell`(classic.ts)을 처음 import해 클라이언트 그래프에 모듈이 하나 늘어나면서 webpack deterministic 모듈 id 두 개(4109↔6490)가 맞바뀌었다 — 그래서 무관한 청크(홈·에디터·벤치)도 바이트가 달라진다(내용 동일). /spill/bench HTML은 RSC 페이로드의 그 id만 다르다.
+
+## 2026-11-20 '일일 출시'와 '리디자인 prod diff 0'의 상충 조정 (06시 회의)
+- 상충: 오너 원칙 "하루 1개 이상 사용자에게 보이는 출시"(OPERATING) vs 리디자인 계획 "P1~P11은 프리뷰에서만, prod HTML diff 0". 11-19 P1~P4는 prod 체감 변화가 거의 0이었다.
+- 결정: 리디자인 순서·prod diff 0 원칙은 그대로 두고, **각 P PR에 prod에 바로 내도 안전한 조각(데이터·문구·버그·접근성, 장식 변경 없음) 1개 이상을 싣는다.** 그 조각이 그날의 '출시'다. 조각이 없는 날은 버그 장부(docs/team/bugs.md) 항목 1개를 같은 날 고쳐 출시한다.
+- P5의 prod 조각 = /daily 공유 문구를 shareTextV2로(레벨 id 제거). 근거·기획: docs/team/specs/2026-11-20-p5-result-share.md.
+- 버린 안: (a) 프리뷰 출시를 출시로 친다 — 사용자가 못 보니 원칙 위반. (b) 리디자인을 멈추고 레벨을 낸다 — 오너 최최우선 지시 위반.
