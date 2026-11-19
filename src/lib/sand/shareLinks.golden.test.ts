@@ -115,6 +115,10 @@ describe('골든셋: 리믹스 parent 연결(클라이언트, urlState 순수 �
       expect(code, name).toContain('sceneIdFromHash(location.hash)')
       expect(code, name).toContain('publishParent(loadedSceneId.current)')
       expect(code, name).toContain('publishedLinks(location.origin, id)')
+      // 계보 연결 지점(예전 트립와이어가 잠그던 것): #s=로 연 id → 계보 원본, 발행 뒤 → 방금 올린 id
+      expect(code, name).toContain('loadedSceneId.current = sid')
+      expect(code, name).toContain('loadedSceneId.current = links.nextLoadedId')
+      expect(code, name).toContain('history.replaceState(null, \'\', links.tabUrl)')
       expect(code, name).not.toMatch(/location\.hash\.match\(/)
     }
   })

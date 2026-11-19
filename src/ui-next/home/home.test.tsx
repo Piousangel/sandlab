@@ -29,7 +29,7 @@ describe('시험관 랙(S7)', () => {
     expect(rack.map((m) => m.slug)).not.toContain('empty')
     expect(rack[0].slug).toBe('sand')
   })
-  it('탭 순서 가루 → 액체 → 고체 → 기체, static은 Solid', () => {
+  it('탭 순서 가루 to 액체 to 고체 to 기체, static은 Solid', () => {
     const tabs = rack.map(tabOf)
     expect([...new Set(tabs)]).toEqual(['powder', 'liquid', 'solid', 'gas'])
     expect(tabOf({ movement: 'static' })).toBe('solid')
@@ -101,14 +101,14 @@ describe('지층 띠', () => {
 })
 
 describe('셸 치환(@ui-shell)', () => {
-  it('classic(prod)은 HomePour = null → 홈이 지금 SandCanvas를 그린다', () => {
+  it('classic(prod)은 HomePour = null to 홈이 지금 SandCanvas를 그린다', () => {
     expect(Classic.HomePour).toBeNull()
   })
 })
 
 describe('HomePour SSR(높이 예약·첫 화면)', () => {
   const html = renderToStaticMarkup(<HomePour />)
-  it('헤드라인·우물 캔버스 1200×600·Share 흐림(aria-disabled)', () => {
+  it('헤드라인·우물 캔버스 1200x600·Share 흐림(aria-disabled)', () => {
     expect(html).toContain(`<h1 class="sl-home-h1">${HEADLINE}</h1>`)
     expect(html).toMatch(/<canvas[^>]*width="1200"[^>]*height="600"/)
     expect(html).toMatch(/aria-disabled="true"[^>]*><svg[^>]*><use href="#i-share"/)

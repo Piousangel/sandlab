@@ -111,6 +111,16 @@
   display: none;
 }
 
+/* 화면에는 안 보이고 스크린리더만 읽는 문구 */
+.sl-vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* ---------- 재료 줄 / 리믹스 배너(같은 높이 56) ---------- */
 .sl-home-tools {
   padding: 0 16px;
@@ -399,7 +409,7 @@
   width: 18px;
   height: 18px;
 }
-.sl-size[aria-checked='true'] .sl-size-dot {
+.sl-size[aria-pressed='true'] .sl-size-dot {
   box-shadow: 0 0 0 3px var(--sl-bone-2), 0 0 0 5px var(--sl-ink);
 }
 .sl-remix-go {
@@ -581,7 +591,7 @@ h2.sl-home-label::after {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  min-height: calc((100vw - 44px) / 4 + 56px);
+  min-height: calc((100% - 12px) / 4 + 56px);
 }
 .sl-wall-card {
   display: block;

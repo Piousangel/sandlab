@@ -105,47 +105,48 @@ export function HomePour() {
     eng.onLost = () => {
       if (!disposed) setLost(true)
     }
-    eng
-      .init()
-      .then(async () => {
+    eng.init().then(
+      async () => {
         if (disposed) return
+        // 복원 단계의 실패(없는 id·깨진 링크·업로드 오류)는 'WebGPU 미지원'이 아니다 — 빈 화면으로 시작한다(옛 홈과 같음)
         const sid = sceneIdFromHash(location.hash)
-        let restored = null
         let next: Entry = { kind: 'blank' }
-        if (sid) {
-          try {
+        try {
+          let restored = null
+          if (sid) {
             const sc = await getScene(sid)
             restored = await decodeScene(sc.data)
-            loadedSceneId.current = sid // 이 장면을 리믹스하면 계보 원본이 된다
             next = { kind: 'scene', id: sid, title: sc.title, creatorName: sc.creatorName ?? null, remixCount: sc.remixCount ?? 0 }
-          } catch {
-            /* 삭제됐거나 잘못된 id — 빈 화면으로 시작한다(옛 홈과 같음) */
+          } else {
+            restored = await readShareUrl()
+            if (restored) next = { kind: 'link' }
           }
-        } else {
-          restored = await readShareUrl()
-          if (restored) next = { kind: 'link' }
+          if (disposed) return
+          if (restored && restored.w === W && restored.h === H) {
+            eng.upload(restored.cells)
+            if (sid) loadedSceneId.current = sid // 이 장면을 리믹스하면 계보 원본이 된다
+            restoredRef.current = true
+            setHasDrawn(true)
+            setBanner(true)
+          } else next = { kind: 'blank' }
+        } catch {
+          next = { kind: 'blank' }
         }
         if (disposed) return
-        if (restored && restored.w === W && restored.h === H) {
-          eng.upload(restored.cells)
-          restoredRef.current = true
-          setHasDrawn(true)
-          setBanner(true)
-          setEntry(next)
-        } else {
-          setEntry({ kind: 'blank' })
-        }
+        setEntry(next)
         engineRef.current = eng
         eng.brush.r = radiusRef.current
         eng.start()
         setReady(true)
-      })
-      .catch(() => {
+      },
+      () => {
+        // init 실패(미지원 WebGPUUnsupported든 requestDevice 거부·파이프라인 실패든)만 미지원 화면 + 계측 — 옛 홈과 같은 분류
         if (disposed) return
         const ua = navigator.userAgent || ''
         setAdvice(gpuAdvice(ua))
         trackEvent('gpu_unsupported', uaClass(ua), 0) // value 0 = 홈 샌드박스(옛 홈과 같은 계측)
-      })
+      },
+    )
     return () => {
       disposed = true
       eng.destroy()
@@ -155,11 +156,10 @@ export function HomePour() {
 
   // 홈 안에서 /#s=… (벽 미리보기 카드)로 해시만 바뀌면 엔진이 다시 읽지 않는다 → 새로고침해서 연다.
   useEffect(() => {
-    let prev = location.hash
+    // 비교 기준은 '지금 캔버스에 열린 장면'(공유 시트의 replaceState는 hashchange를 안 내므로 직전 해시를 믿지 않는다)
     const on = () => {
-      const next = location.hash
-      if (hashNeedsReload(prev, next, sceneIdFromHash)) location.reload()
-      prev = next
+      const opened = loadedSceneId.current ? `#s=${loadedSceneId.current}` : ''
+      if (hashNeedsReload(opened, location.hash, sceneIdFromHash)) location.reload()
     }
     window.addEventListener('hashchange', on)
     return () => window.removeEventListener('hashchange', on)
@@ -209,7 +209,10 @@ export function HomePour() {
       raf = requestAnimationFrame(tick)
     }
     raf = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(raf)
+    return () => {
+      cancelAnimationFrame(raf)
+      if (!interacted.current) eng.brush.mat = NO_BRUSH // 데모 도중 정리(StrictMode 이중 실행 등)에도 모래가 계속 쏟아지지 않게
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready])
 
@@ -271,6 +274,13 @@ export function HomePour() {
     strokeEraseRef.current.delete(e.pointerId)
   }
 
+  // Remix this = 이 장면 위에 바로 붓기 시작: 배너를 접고, 우물을 화면에 맞춰 보이고, 안내 한 줄
+  const remixNow = () => {
+    setBanner(false)
+    canvasRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    flash('Pick a tube and drag on the scene.')
+  }
+
   const pick = (slug: string) => {
     setSel(slug)
     setErasing(false)
@@ -283,13 +293,17 @@ export function HomePour() {
   const [linkErr, setLinkErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [title, setTitle] = useState('')
-  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+  // 마운트 뒤에 판정 — 렌더 중에 navigator를 보면 정적 HTML(Copy link)과 모바일 클라이언트(Share link)가 어긋나 하이드레이션 불일치
+  const [canNativeShare, setCanNativeShare] = useState(false)
+  useEffect(() => setCanNativeShare(typeof navigator.share === 'function'), [])
+  const linkReq = useRef(0)
 
   const openShare = async () => {
     if (!hasDrawn) return flash('Pour something first.')
     const eng = engineRef.current
     if (!eng) return
     trackEvent('share_click', 'sandbox-link')
+    const req = ++linkReq.current // 시트를 닫았다 다시 열면 앞선 요청 결과는 버린다
     setLink(null)
     setLinkErr(null)
     sheetRef.current?.showModal()
@@ -302,6 +316,7 @@ export function HomePour() {
       } catch {
         /* 미리보기만 생략 */
       }
+      if (req !== linkReq.current) return
       if (!res.ok) {
         setLink(null)
         setLinkErr(`Too detailed for a link (${(res.size / res.budget).toFixed(1)}x over). Publish it to the gallery instead.`)
@@ -310,7 +325,7 @@ export function HomePour() {
       history.replaceState(null, '', res.url)
       setLink({ url: res.url, thumb, published: false })
     } catch (e) {
-      setLinkErr(e instanceof Error ? e.message : 'Link failed.')
+      if (req === linkReq.current) setLinkErr(e instanceof Error ? e.message : 'Link failed.')
     }
   }
 
@@ -360,6 +375,8 @@ export function HomePour() {
       const links = publishedLinks(location.origin, id)
       loadedSceneId.current = links.nextLoadedId
       history.replaceState(null, '', links.tabUrl)
+      linkReq.current++ // 늦게 끝나는 링크 요청이 발행 결과를 덮지 않게
+      setLinkErr(null)
       setLink({ url: links.shareUrl, thumb, published: true })
       flash('Published to the gallery.')
     } catch (e) {
@@ -503,7 +520,7 @@ export function HomePour() {
               {banner && entry.kind !== 'blank' && entry.kind !== 'opening' ? (
                 <div className="sl-remix" role="region" aria-label="Remix">
                   <p className="sl-remix-t">Pour on it to make your own version.</p>
-                  <button type="button" className="sl-btn sl-btn-ember sl-remix-go" onClick={() => setBanner(false)}>
+                  <button type="button" className="sl-btn sl-btn-ember sl-remix-go" onClick={remixNow}>
                     <Icon name="remix" />
                     <span>Remix this</span>
                   </button>
@@ -535,13 +552,12 @@ export function HomePour() {
                   <Icon name="erase" />
                   <span>Erase</span>
                 </button>
-                <div className="sl-sizes" role="radiogroup" aria-label="Brush size">
+                <div className="sl-sizes" role="group" aria-label="Brush size">
                   {BRUSH_SIZES.map((b, i) => (
                     <button
                       key={b.r}
                       type="button"
-                      role="radio"
-                      aria-checked={radius === b.r}
+                      aria-pressed={radius === b.r}
                       aria-label={b.label}
                       className="sl-size"
                       onClick={() => setRadius(b.r)}
@@ -555,12 +571,15 @@ export function HomePour() {
                   type="button"
                   className="sl-btn sl-dock-share"
                   aria-disabled={!hasDrawn || undefined}
-                  title={hasDrawn ? undefined : 'Pour something first'}
+                  aria-describedby={hasDrawn ? undefined : 'sl-share-why'}
                   onClick={openShare}
                 >
                   <Icon name="share" />
                   <span>Share</span>
                 </button>
+                <span id="sl-share-why" className="sl-vh">
+                  Pour something first.
+                </span>
               </div>
             </div>
             <div className="sl-home-below">

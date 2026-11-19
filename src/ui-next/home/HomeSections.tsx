@@ -4,7 +4,7 @@
  * 홈 아래쪽 세 구역 — 오늘 카드(S5: 실루엣·제목·한 줄 + Solve today), 지층 띠(P2 readStrata, 띠 + "N days"만),
  * 벽 미리보기(갤러리 2점, 없으면 한 줄). 셋 다 높이를 CSS로 예약해 마운트 뒤 내용이 바뀌어도 아래가 밀리지 않는다(CLS).
  */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { PRESETS } from '@/lib/sand/materials'
 import { dayNumber, dailyIdFor } from '@/lib/spill/client/daily'
 import { levelById } from '@/lib/spill/client/catalog'
@@ -23,9 +23,12 @@ const COLOR: Record<string, string> = Object.fromEntries(PRESETS.map((m) => [m.s
 function useToday() {
   const [n, setN] = useState<number | null>(null)
   useEffect(() => setN(dayNumber(Date.now())), [])
-  if (n === null) return null
-  const level = levelById(LEVELS, dailyIdFor(n))
-  return level ? { n, level } : null
+  // 같은 날이면 같은 객체 — 아래 effect가 렌더마다 판을 다시 그리지 않게
+  return useMemo(() => {
+    if (n === null) return null
+    const level = levelById(LEVELS, dailyIdFor(n))
+    return level ? { n, level } : null
+  }, [n])
 }
 
 export function TodayCard() {

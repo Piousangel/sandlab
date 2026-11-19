@@ -246,6 +246,7 @@ export function hasEmbeddedScene(hash: string): boolean {
  * 리믹스 계보: Publish 때 서버로 보낼 parent = 지금 캔버스의 원본 장면 id(#s=로 열었거나 방금 발행한 내 장면).
  * 없으면 null(원작). 서버가 형식·실재를 다시 검사한다(worker/index.ts).
  */
+// 지금은 항등 함수지만 의도적인 이음매다 — 두 홈이 parent 규칙을 따로 쓰지 않게 하고, 규칙이 바뀌면(예: 자기 장면은 계보 제외) 여기 한 곳만 고친다.
 export function publishParent(loadedSceneId: string | null): string | null {
   return loadedSceneId
 }
