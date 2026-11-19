@@ -1,6 +1,6 @@
 # 인계 (2026-11-20 새벽): 리디자인 v2 P4 「Spill 플레이 HUD + 데일리 시작」 머지 — 다음은 P5(결과 화면 + 공유 이미지)
 
-- 계획서 6장 진행표가 기준. P4 = 브랜치 shift/redesign-p4-spill. 결정은 DECISIONS 2026-11-20 P4.
+- 계획서 6장 진행표가 기준. P4 = #72(브랜치 shift/redesign-p4-spill). 결정은 DECISIONS 2026-11-20 P4.
 - **새 HUD는 `@ui-shell`의 `SpillHud`(chrome(vw)·Frame)와 `DailyStart`.** classic.ts는 둘 다 null(+ `import type` 계약 `shell/spillTypes.ts`), SpillPlayer·DailySpill은 null이면 지금 화면 그대로. 파일: `src/ui-next/spill/`(SpillHud.tsx·DailyStart.tsx·chrome.ts·spill.css·spill.test.tsx). 세로 예산은 chrome.ts(HUD 상수)와 CSS가 같은 값이어야 한다 — 하나만 바꾸면 보드가 트레이와 겹친다(spill.test가 vh 안에 들어가는지만 잰다).
 - 보드 위에는 캔버스 2장뿐(FloatButtons·메시지 알약·보석 알약 없음). 메시지·Watch는 진행 줄, 목표·보석은 목표 줄(데스크톱은 오른쪽 카드). `MenuSheet`를 ShellHeader에서 export(제어 모드 sound·onSound — SpillAudio와 맞추려고).
 - **prod에 들어간 것: 데일리 첫 클리어에 ticks·mask 저장**(`{"42":{"stars":2,"moves":2,"ticks":276,"mask":5}}` 실측). P5는 이걸로 shareTextV2로 교체하고 옛 shareText 제거.
