@@ -8,7 +8,7 @@
  *
  * 실행: pnpm build && node scripts/verify-ads.mjs
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 
 const OUT = 'out'
@@ -63,6 +63,21 @@ for (const file of walk(OUT)) {
   }
 }
 if (allowedSeen === 0) failures.push('허용 페이지가 하나도 빌드되지 않음')
+
+// 프리뷰 산출물(S6)이 prod로 나가는 사고 방지. 모드는 env가 아니라 인자로 정한다(env가 새면 가드가 스스로 꺼지므로).
+//  - 기본(prod): NEXT_PUBLIC_UI=next면 실패, out/_headers(noindex)·전체 차단 robots가 있으면 실패.
+//  - --preview: 위 검사를 건너뛴다(pnpm run deploy:preview 전용).
+if (!process.argv.includes('--preview')) {
+  if (process.env.NEXT_PUBLIC_UI === 'next') failures.push('NEXT_PUBLIC_UI=next 환경에서 prod 검증 — 프리뷰 빌드가 prod로 나갈 수 있다(변수를 비우고 다시 빌드)')
+  if (existsSync(join(OUT, '_headers'))) failures.push('out/_headers 있음 — 프리뷰 빌드 산출물(noindex)이 남아 있다. prod는 다시 빌드')
+  const robotsPath = join(OUT, 'robots.txt')
+  if (existsSync(robotsPath) && /Disallow:\s*\/\s*$/m.test(readFileSync(robotsPath, 'utf8')))
+    failures.push('out/robots.txt가 전체 차단 — 프리뷰 빌드 산출물. prod는 NEXT_PUBLIC_UI 없이 다시 빌드')
+  // 새 셸 토큰(--sl-*)이 prod CSS에 있으면 새 셸이 섞인 것(컷오버 P12 전까지 prod에는 없어야 한다)
+  const cssDir = join(OUT, '_next/static/css')
+  if (existsSync(cssDir) && readdirSync(cssDir).some((f) => readFileSync(join(cssDir, f), 'utf8').includes('--sl-')))
+    failures.push('prod CSS에 새 셸 토큰(--sl-*)이 있다 — 프리뷰 셸이 섞였다. .next 캐시를 지우고 prod 다시 빌드')
+}
 
 if (failures.length) {
   console.error(`FAIL (${failures.length})\n` + failures.map((f) => '  - ' + f).join('\n'))

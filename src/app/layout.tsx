@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import { SITE, TAGLINE } from '@/lib/site'
 import LandingBeacon from '@/components/LandingBeacon'
+import { UI_NEXT } from '@/ui-next/flag'
+// 리디자인 셸(S6): prod는 classic(아무것도 안 더함), NEXT_PUBLIC_UI=next 빌드만 새 셸 — next.config.ts 별칭
+import { shellHtmlProps } from '@ui-shell'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
@@ -24,6 +27,8 @@ export const metadata: Metadata = {
   alternates: { canonical: SITE },
   // AdSense 사이트 소유권 확인 — 모든 페이지에 있어야 한다 (ads.txt와 별개).
   other: { 'google-adsense-account': 'ca-pub-9363381710674627' },
+  // 프리뷰 Worker(NEXT_PUBLIC_UI=next)는 색인 금지. prod 빌드에서는 이 키 자체가 없다.
+  ...(UI_NEXT ? { robots: { index: false, follow: false } } : {}),
 }
 
 // VideoGame 구조화 데이터는 페이지별(src/lib/gameJsonLd.ts) — 홈만 WebGPU, Spill 퍼즐은 CPU.
@@ -36,7 +41,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" {...shellHtmlProps}>
       <body
         style={{
           margin: 0,

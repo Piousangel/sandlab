@@ -11,6 +11,7 @@ import { parseTrack } from './track'
 import { validateDaily, summarize } from './daily'
 import { handleSpill, levelFloors, levelHashes } from './spill'
 import { spillRedirect } from './spill-redirects'
+import { withNoindex } from './preview'
 import { LEVELS as SPILL_LEVELS } from '../src/lib/spill/levels'
 import {
   HOT_WINDOW_DAYS,
@@ -48,6 +49,8 @@ interface Env {
   DB: D1Database
   // 선택 바인딩 — 없어도(로컬/미프로비저닝) 계측만 no-op이고 요청은 정상 동작한다.
   AE?: AnalyticsEngine
+  // 프리뷰 Worker(wrangler env preview)만 '1'. prod에는 없다 → 응답 그대로.
+  NOINDEX?: string
 }
 
 /**
@@ -126,7 +129,7 @@ async function tooManyVotes(env: Env, hash: string): Promise<boolean> {
 let spillKnown: Map<string, string> | null = null
 let spillFloors: Map<string, number> | null = null
 
-export default {
+const app = {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
     const p = url.pathname
@@ -492,5 +495,13 @@ export default {
             headers: { 'content-type': 'text/plain; charset=utf-8' },
           })
     }
+  },
+}
+
+export default {
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const res = await app.fetch(request, env)
+    // 프리뷰(S6)는 워커가 만든 응답(/s/:id OG 페이지·리다이렉트·API)에도 noindex를 단다. 정적 에셋은 out/_headers.
+    return env.NOINDEX === '1' ? withNoindex(res) : res
   },
 }
