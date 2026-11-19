@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Sandlab v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=block" rel="stylesheet">
+<style>
+:root{
+  --bone:#F4ECDD;--bone-2:#EADFCB;--bone-line:#D9CBB2;--ink:#2A2118;--ink-2:#5E5040;
+  --kiln:#14110E;--kiln-2:#1E1A16;--empty:#07090D;--ember:#E0661B;--ember-text:#A9470A;
+  --glass-hi:rgba(255,255,255,.55);--glass-lo:rgba(42,33,24,.18);
+  --lift:0 2px 0 rgba(42,33,24,.18);
+  --glass:inset 0 1px 0 var(--glass-hi),inset 0 -2px 0 var(--glass-lo),0 6px 14px -8px rgba(42,33,24,.35);
+  --m-sand:#E8C87A;--m-water:#2E6FD9;--m-lava:#FF5A0A;--m-wood:#6B4423;--m-plant:#43B04A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#CFC4B1;font-family:'Bricolage Grotesque',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.board{display:flex;gap:80px;padding:120px 80px 80px;align-items:flex-start}
+.art{position:relative;flex:none}
+.art-label{position:absolute;top:-84px;left:0;white-space:nowrap}
+.art-label b{font:700 22px/1 'Bricolage Grotesque';display:block;margin-bottom:10px}
+.art-label span{font:500 13px/1 'JetBrains Mono';color:var(--ink-2)}
+.frame{background:var(--bone);overflow:hidden;position:relative}
+.mono{font-family:'JetBrains Mono',monospace;font-feature-settings:"tnum"}
+.lbl{font:500 10px/12px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.lbl b{color:var(--ink);font-weight:700}
+.ic{width:20px;height:20px;flex:none;display:block}
+.notes{width:300px;flex:none;padding-top:0}
+.notes h4{font:700 15px/1.3 'Bricolage Grotesque';margin-bottom:12px}
+.notes ol{list-style:none;counter-reset:n}
+.notes li{counter-increment:n;font:400 13px/1.55 'Bricolage Grotesque';color:var(--ink);padding:10px 0 10px 28px;border-top:1px solid rgba(42,33,24,.18);position:relative}
+.notes li::before{content:counter(n,decimal-leading-zero);position:absolute;left:0;top:12px;font:700 10px/1 'JetBrains Mono';color:var(--ink-2)}
+
+/* ---------- shared atoms ---------- */
+.hdr{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 16px}
+.wordmark{font:800 21px/1 'Bricolage Grotesque';letter-spacing:-.02em;display:flex;align-items:flex-end;gap:2px}
+.wordmark i{display:inline-block;width:4px;height:4px;background:var(--m-sand);border-radius:1px;margin-bottom:3px;box-shadow:5px -2px 0 -1px var(--m-sand),9px 1px 0 -1.5px var(--m-sand)}
+.hit{min-width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.chip-daily{height:32px;padding:0 12px 0 10px;border-radius:999px;background:var(--bone-2);display:flex;align-items:center;gap:8px;font:500 11px/1 'JetBrains Mono';letter-spacing:.04em}
+.chip-daily .ic{width:16px;height:16px}
+
+.well{background:var(--kiln);border-radius:22px;padding:6px;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 1px 0 rgba(255,255,255,.6),0 18px 28px -18px rgba(42,33,24,.55);position:relative}
+.well .glass{position:relative;border-radius:16px;overflow:hidden;background:var(--empty)}
+.well .glass img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.well .glass::after{content:"";position:absolute;inset:0;border-radius:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 1px 0 rgba(255,255,255,.16);pointer-events:none;
+  background:linear-gradient(105deg,rgba(255,255,255,.07) 0 9%,transparent 9.2% 100%)}
+.ruler{display:flex;justify-content:space-between;position:relative;height:16px;margin:8px 10px 0}
+.ruler::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;
+  background:repeating-linear-gradient(90deg,var(--ink-2) 0 1px,transparent 1px 100%) 0 0/calc((100% - 1px)/24) 3px no-repeat,
+             repeating-linear-gradient(90deg,var(--ink-2) 0 1px,transparent 1px 100%) 0 0/calc((100% - 1px)/4) 6px repeat-x;
+  opacity:.55}
+.ruler span{font:500 9px/1 'JetBrains Mono';color:var(--ink-2);padding-top:8px;letter-spacing:.04em}
+
+/* tubes */
+.rack{display:flex;gap:10px;align-items:flex-end}
+.tube{width:40px;flex:none;display:flex;flex-direction:column;align-items:center;position:relative}
+.tube .cork{width:28px;height:11px;border-radius:3px 3px 2px 2px;background:var(--m-wood);box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -2px 0 rgba(0,0,0,.25);position:relative;z-index:2;margin-bottom:-3px}
+.tube .lip{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.55);box-shadow:inset 0 0 0 1.5px rgba(42,33,24,.30);position:relative;z-index:1}
+.tube .body{width:34px;height:84px;border-radius:2px 2px 17px 17px;background:rgba(255,255,255,.38);box-shadow:inset 0 0 0 1.5px rgba(42,33,24,.30),inset 0 -2px 0 rgba(42,33,24,.10);position:relative;overflow:hidden;margin-top:-1px}
+.tube .fill{position:absolute;left:3px;right:3px;bottom:3px;border-radius:0 0 14px 14px;background-size:cover;background-position:center;image-rendering:pixelated}
+.tube .fill::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:rgba(255,255,255,.28)}
+.tube .body::after{content:"";position:absolute;left:6px;top:8px;bottom:22px;width:3px;border-radius:2px;background:rgba(255,255,255,.75)}
+.tube .name{font:500 10px/12px 'JetBrains Mono';color:var(--ink-2);margin-top:8px;letter-spacing:.02em}
+.tube.on{transform:translateY(-8px)}
+.tube.on .cork{transform:translate(10px,-6px) rotate(22deg)}
+.tube.on .name{color:var(--ink);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.tube.on::after{content:"";position:absolute;bottom:-14px;width:18px;height:2px;border-radius:2px;background:var(--ink)}
+.tube .key{position:absolute;top:22px;right:-2px;font:500 8px/1 'JetBrains Mono';color:var(--ink-2);opacity:0}
+
+.tabs{display:flex;gap:4px;height:44px;align-items:center}
+.tab{height:44px;display:flex;align-items:center;padding:0 8px;font:500 11px/1 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.tab sup{font-size:8px;margin-left:3px;vertical-align:4px}
+.tab.on{color:var(--ink);font-weight:700;box-shadow:inset 0 -2px 0 var(--ink)}
+
+.dock{height:64px;border-radius:22px;background:var(--bone-2);display:flex;align-items:center;gap:8px;padding:0 10px;box-shadow:inset 0 1px 0 var(--glass-hi),inset 0 -1px 0 var(--glass-lo)}
+.tool{height:44px;border-radius:12px;background:var(--bone);box-shadow:var(--lift);display:flex;align-items:center;gap:8px;padding:0 12px;font:600 14px/1 'Bricolage Grotesque'}
+.tool.icon{width:44px;padding:0;justify-content:center}
+.tool.ink{background:var(--ink);color:var(--bone);box-shadow:0 2px 0 #000}
+.grains{display:flex;align-items:center;gap:2px;height:44px;padding:0 6px 0 4px;margin-left:auto}
+.grain{width:28px;height:44px;display:flex;align-items:center;justify-content:center}
+.grain i{display:block;border-radius:50%;background:var(--ink-2)}
+.grain.on i{background:var(--ink);box-shadow:0 0 0 3px var(--bone-2),0 0 0 4.5px var(--ink)}
+
+.btn-ember{height:48px;border-radius:12px;background:var(--ember);color:#fff;font:700 17px/1 'Bricolage Grotesque';display:inline-flex;align-items:center;gap:8px;padding:0 18px 0 20px;box-shadow:0 2px 0 #9C430D,inset 0 1px 0 rgba(255,255,255,.25);letter-spacing:-.005em}
+.btn-text{height:48px;display:inline-flex;align-items:center;gap:6px;font:600 15px/1 'Bricolage Grotesque';color:var(--ink);padding:0 8px}
+
+.sec-h{display:flex;align-items:center;gap:12px;height:20px}
+.sec-h .rule{flex:1;height:1px;background:var(--bone-line)}
+
+.vitrine{border-radius:16px;background:var(--bone-2);box-shadow:var(--glass);position:relative;overflow:hidden}
+.mini-glass{border-radius:12px;background:var(--kiln);padding:4px;box-shadow:0 1px 0 rgba(255,255,255,.6)}
+.mini-glass .g{border-radius:9px;overflow:hidden;position:relative;background:var(--empty)}
+.mini-glass .g img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.mini-glass .g::after{content:"";position:absolute;inset:0;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 1px 0 rgba(255,255,255,.14);background:linear-gradient(105deg,rgba(255,255,255,.07) 0 12%,transparent 12.3%)}
+
+.bead{width:18px;height:18px;border-radius:50%;position:relative;box-shadow:inset 0 0 0 1.5px rgba(42,33,24,.35);background:rgba(255,255,255,.45);overflow:hidden}
+.bead.full{background-size:cover;image-rendering:pixelated;box-shadow:inset 0 0 0 1.5px rgba(42,33,24,.35)}
+.bead::after{content:"";position:absolute;left:4px;top:3px;width:5px;height:3px;border-radius:50%;background:rgba(255,255,255,.85);transform:rotate(-30deg)}
+
+.footer-strata{display:flex;height:4px}
+.footer-strata i{flex:1}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+ <defs>
+  <!-- 20px / 2px stroke / round, each with one grain dot -->
+  <symbol id="i-menu" viewBox="0 0 20 20"><path d="M3 7h14M3 13h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="13" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-glass" viewBox="0 0 20 20"><path d="M5 3h10M5 17h10M6.5 3v1.8c0 2.4 3.5 3.4 3.5 5.2s-3.5 2.8-3.5 5.2V17M13.5 3v1.8c0 2.4-3.5 3.4-3.5 5.2s3.5 2.8 3.5 5.2V17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="14.6" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-erase" viewBox="0 0 20 20"><path d="M8 16.5 3.6 12.1a1.5 1.5 0 0 1 0-2.1l6.4-6.4a1.5 1.5 0 0 1 2.1 0l4.3 4.3a1.5 1.5 0 0 1 0 2.1l-6.3 6.5ZM6.5 7.5l6 6M8 16.5h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 20 20"><path d="M7 4.5 3.5 8 7 11.5M4 8h7.5a4.5 4.5 0 0 1 0 9H8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4.75" cy="17" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-share" viewBox="0 0 20 20"><path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5M4 11v4.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pour" viewBox="0 0 20 20"><path d="M4 10h11M11 5.5 15.5 10 11 14.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="15.5" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-next" viewBox="0 0 20 20"><path d="M7.5 4.5 13 10l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-back" viewBox="0 0 20 20"><path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-remix" viewBox="0 0 20 20"><path d="M15.5 8.5A6 6 0 0 0 4.6 7.2M4.5 11.5a6 6 0 0 0 10.9 1.3M15.8 3.8v4.7h-4.7M4.2 16.2v-4.7h4.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 20 20"><path d="M3.5 8v4h3l4 3.5v-11l-4 3.5h-3ZM14 7.5a3.5 3.5 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16.75" cy="10" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-retry" viewBox="0 0 20 20"><path d="M4.5 10a5.5 5.5 0 1 0 1.8-4.1M6 3v3.5H2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-frame" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 13l2.6-3 2 2 1.4-1.5L14 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+ </defs>
+</svg>
+
+<div class="board">
+
+<!-- ======================= 390 HOME ======================= -->
+<div class="art">
+ <div class="art-label"><b>샌드랩 · Home 390 · v2 “Vitrine”</b><span>진짜 엔진 장면 · 2:1 정직한 우물 · 계기판 라벨 · Ember 1개</span></div>
+ <div class="frame" id="m-home" style="width:390px">
+  <div class="hdr">
+   <div class="wordmark">SANDLAB</div>
+   <div style="display:flex;align-items:center;gap:0">
+    <div class="hit"><div class="chip-daily"><svg class="ic"><use href="#i-glass"/></svg>No.42 <span style="color:var(--ink-2)">06:12</span></div></div>
+    <div class="hit"><svg class="ic"><use href="#i-menu"/></svg></div>
+   </div>
+  </div>
+
+  <div style="padding:12px 16px 0">
+   <div class="lbl" style="display:flex;justify-content:space-between"><span>Specimen 0381 · strata, lava</span><span>1200 × 600</span></div>
+   <h1 style="font:600 38px/38px 'Bricolage Grotesque';letter-spacing:-.035em;margin-top:12px">Pour something.<br><span style="color:var(--ink-2)">See what it becomes.</span></h1>
+  </div>
+
+  <div style="padding:20px 12px 0">
+   <div class="well"><div class="glass" style="height:177px">
+     <img src="hero.png" alt="">
+     <div style="position:absolute;left:12px;bottom:10px;display:flex;align-items:center;gap:8px">
+       <svg width="44" height="18" viewBox="0 0 44 18"><g fill="#F4ECDD"><circle cx="4" cy="14" r="1.2" opacity=".35"/><circle cx="11" cy="11" r="1.3" opacity=".5"/><circle cx="18" cy="9" r="1.4" opacity=".7"/><circle cx="25" cy="8" r="1.5" opacity=".85"/></g><circle cx="36" cy="8" r="6" fill="none" stroke="#F4ECDD" stroke-width="1.5"/><circle cx="36" cy="8" r="2" fill="#F4ECDD"/></svg>
+       <span class="mono" style="font:500 10px/1 'JetBrains Mono';letter-spacing:.08em;color:#F4ECDD;text-transform:uppercase">drag to pour</span>
+     </div>
+   </div></div>
+   <div class="ruler"><span>0</span><span>300</span><span>600</span><span>900</span><span>1200</span></div>
+  </div>
+
+  <div style="padding:10px 16px 0" class="lbl"><b>Sand</b> &nbsp;·&nbsp; grain 06 &nbsp;·&nbsp; 412,019 cells moving</div>
+
+  <div style="padding:12px 8px 0" class="tabs">
+   <div class="tab on">All<sup>18</sup></div><div class="tab">Powder<sup>5</sup></div><div class="tab">Liquid<sup>4</sup></div><div class="tab">Solid<sup>6</sup></div><div class="tab">Gas<sup>3</sup></div>
+  </div>
+
+  <div style="padding:34px 0 0 16px;overflow:hidden;width:390px;position:relative">
+   <div class="rack" id="rack-m"></div>
+   <div style="position:absolute;right:0;top:0;bottom:0;width:36px;background:linear-gradient(90deg,rgba(244,236,221,0),var(--bone))"></div>
+  </div>
+
+  <div style="padding:30px 12px 0">
+   <div class="dock">
+    <div class="tool"><svg class="ic"><use href="#i-erase"/></svg>Erase</div>
+    <div class="tool icon"><svg class="ic"><use href="#i-undo"/></svg></div>
+    <div class="grains">
+      <div class="grain"><i style="width:4px;height:4px"></i></div>
+      <div class="grain on"><i style="width:8px;height:8px"></i></div>
+      <div class="grain"><i style="width:14px;height:14px"></i></div>
+    </div>
+    <div class="tool ink"><svg class="ic"><use href="#i-share"/></svg>Share</div>
+   </div>
+  </div>
+
+  <!-- TODAY -->
+  <div style="padding:40px 16px 0">
+   <div class="sec-h"><span class="lbl"><b>Today</b></span><span class="rule"></span><span class="lbl">Daily No.42</span></div>
+   <div class="vitrine" style="margin-top:16px;padding:20px 20px 20px 20px;display:flex;gap:16px">
+    <div style="flex:1;min-width:0">
+     <div class="lbl">World 1 · puzzle 3</div>
+     <div style="font:700 32px/32px 'Bricolage Grotesque';letter-spacing:-.03em;margin-top:10px">Two Pots</div>
+     <div style="font:400 15px/22px 'Bricolage Grotesque';color:var(--ink-2);margin-top:8px">Fill both pots with water.<br>Dig twice, then pour.</div>
+     <div class="lbl" style="margin-top:14px;line-height:16px">Par <b>2</b> moves · <b>5.3</b> s<br>Gem <b>1</b></div>
+    </div>
+    <div class="mini-glass" style="width:96px;flex:none;align-self:flex-start"><div class="g" style="height:140px"><img src="daily_raw.png" alt="" style="filter:saturate(.35) brightness(.85)"></div></div>
+   </div>
+   <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+    <div class="btn-ember">Solve today<svg class="ic"><use href="#i-pour"/></svg></div>
+    <div style="display:flex;align-items:center;gap:10px">
+     <svg width="22" height="34" viewBox="0 0 22 34" id="hg"></svg>
+     <div><div class="mono" style="font:700 15px/1 'JetBrains Mono'">06:12:40</div><div class="lbl" style="margin-top:4px">until UTC 00:00</div></div>
+    </div>
+   </div>
+  </div>
+
+  <!-- STRATA -->
+  <div style="padding:40px 16px 0">
+   <div class="sec-h"><span class="lbl"><b>Your strata</b></span><span class="rule"></span><span class="lbl">5 days</span></div>
+   <div style="display:flex;gap:16px;margin-top:16px;align-items:stretch">
+    <div id="jar" style="width:132px;flex:none"></div>
+    <div id="strata-notes" style="flex:1;position:relative;height:172px"></div>
+   </div>
+  </div>
+
+  <!-- WALL -->
+  <div style="padding:40px 16px 0">
+   <div class="sec-h"><span class="lbl"><b>On the wall</b></span><span class="rule"></span><span class="lbl" style="display:flex;align-items:center;gap:2px;color:var(--ink)">Browse<svg class="ic" style="width:14px;height:14px"><use href="#i-next"/></svg></span></div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+    <div><div class="mini-glass"><div class="g" style="height:77px"><img src="gal_s2.png"></div></div>
+     <div style="font:600 14px/18px 'Bricolage Grotesque';margin-top:10px">Shelf, slipping</div>
+     <div class="lbl" style="margin-top:4px;text-transform:none;letter-spacing:.02em">sand, salt, wood · lava</div>
+     <div class="lbl" style="margin-top:6px;display:flex;align-items:center;gap:4px"><svg class="ic" style="width:12px;height:12px"><use href="#i-remix"/></svg>3 remixes</div></div>
+    <div><div class="mini-glass"><div class="g" style="height:77px"><img src="gal_s3.png"></div></div>
+     <div style="font:600 14px/18px 'Bricolage Grotesque';margin-top:10px">Three peaks, one fire</div>
+     <div class="lbl" style="margin-top:4px;text-transform:none;letter-spacing:.02em">sand, ash, gunpowder</div>
+     <div class="lbl" style="margin-top:6px;display:flex;align-items:center;gap:4px"><svg class="ic" style="width:12px;height:12px"><use href="#i-remix"/></svg>1 remix</div></div>
+   </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="margin-top:40px">
+   <div class="footer-strata" id="fs"></div>
+   <div style="background:var(--bone-2);padding:20px 16px 24px">
+    <div style="display:flex;gap:20px;font:600 14px/20px 'Bricolage Grotesque'"><span>Notes</span><span>Materials</span><span>About</span><span>Privacy</span></div>
+    <div class="lbl" style="margin-top:12px;text-transform:none;letter-spacing:.02em">Made by Piousangel · no install, no sign-up</div>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="notes" id="n-home"><h4>설계 의도 · Home 390</h4><ol>
+ <li><b>정직한 우물</b>: 엔진 격자가 1200×600(2:1) 고정이라 모바일 우물도 2:1. v1의 세로 우물은 실제로 만들 수 없는 그림이었다. 안의 장면은 엔진 실캡처(층층이 부은 모래·소금·화약 + 용암 기둥).</li>
+ <li><b>계기판 문법</b>: 모든 메타 정보는 JetBrains Mono 10px 대문자 + 숫자 고정폭(SPECIMEN·눈금자·셀 수). 헤드라인만 Bricolage 38px, 2행은 ink-2로 낮춰 위계를 한 번에 만든다.</li>
+ <li><b>Ember는 한 곳</b>: 홈의 주 행동은 캔버스에 붓기 자체라 버튼이 아님. Ember는 데일리 ‘Solve today’ 하나. Share는 잉크 면 칩.</li>
+ <li><b>시험관 = 진짜 재료</b>: 관 안은 엔진 캡처 결. 선택하면 6~8px 들리고 마개(wood 재료색)가 기울어 열림, 아래 2px 잉크 표식. 오른쪽 끝이 잘려 가로 스크롤을 말한다.</li>
+ <li><b>붓 크기 = 알갱이 3개</b>: 기본 range 슬라이더(R4) 제거. 지층은 색 띠가 아니라 유리병 속 물결 단면 + 박물관식 지시선 캡션. 홈은 게임 화면이라 광고 0.</li>
+</ol></div>
+
+<!-- ======================= 390 DAILY RESULT ======================= -->
+<div class="art">
+ <div class="art-label"><b>샌드랩 · Daily 결과 390 · v2 “Framing”</b><span>보드가 액자에 걸린다 · 캡션 카드 · 유리알 별</span></div>
+ <div class="frame" id="m-result" style="width:390px;height:930px">
+  <div class="hdr" style="padding:0 4px">
+   <div style="display:flex;align-items:center"><div class="hit"><svg class="ic"><use href="#i-back"/></svg></div><span class="lbl"><b>No.42</b> · Two Pots</span></div>
+   <div style="display:flex;align-items:center"><div class="hit"><svg class="ic"><use href="#i-sound"/></svg></div><div class="hit"><svg class="ic"><use href="#i-menu"/></svg></div></div>
+  </div>
+  <div style="text-align:center;padding-top:20px"><span class="lbl" style="color:var(--ember-text)"><b style="color:var(--ember-text)">Cleared</b> · 6.1 s</span></div>
+  <!-- the frame on the wall -->
+  <div style="display:flex;justify-content:center;padding-top:28px;position:relative">
+   <svg width="180" height="30" viewBox="0 0 180 30" style="position:absolute;top:2px;left:105px"><path d="M8 30 90 3 172 30" fill="none" stroke="var(--ink-2)" stroke-width="1" opacity=".55"/><circle cx="90" cy="3" r="2.5" fill="var(--ink)"/></svg>
+   <div style="width:264px;border-radius:22px;background:var(--kiln);padding:10px;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 1px 0 rgba(255,255,255,.6),0 24px 30px -18px rgba(42,33,24,.6)">
+    <div style="border-radius:14px;overflow:hidden;height:366px;position:relative;background:var(--empty)"><img src="daily_solved.png" style="width:100%;height:100%;object-fit:cover;display:block;image-rendering:pixelated">
+     <div style="position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 1px 0 rgba(255,255,255,.16);border-radius:14px;background:linear-gradient(105deg,rgba(255,255,255,.05) 0 7%,transparent 7.3%)"></div>
+    </div>
+   </div>
+  </div>
+  <!-- caption -->
+  <div style="margin:28px 16px 0;padding:20px;background:var(--bone-2);border-radius:16px;box-shadow:var(--glass)">
+   <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="lbl"><b>No.42</b> · World 1-3</span><span class="lbl">Specimen 42-0381</span></div>
+   <div style="font:700 28px/30px 'Bricolage Grotesque';letter-spacing:-.03em;margin-top:10px">Two Pots</div>
+   <div style="font:400 14px/20px 'Bricolage Grotesque';color:var(--ink-2);margin-top:4px">water, dirt · 2 moves · 6.1 s</div>
+   <div style="height:1px;background:var(--bone-line);margin:16px 0"></div>
+   <div style="display:flex;align-items:center;gap:20px">
+    <div style="display:flex;gap:8px" id="beads"></div>
+    <div class="lbl" style="line-height:16px">Clear · Gem · <span style="text-decoration:line-through;text-decoration-thickness:1px">Par</span><br><b>Par missed by 0.8 s</b></div>
+   </div>
+  </div>
+  <div style="margin:16px 16px 0;display:flex;align-items:center;gap:12px">
+   <svg width="56" height="28" viewBox="0 0 56 28" id="stratum-plus"></svg>
+   <div class="lbl" style="line-height:16px"><b>+1 stratum</b> · water<br>6 days · vein at 7</div>
+  </div>
+  <div style="margin:28px 16px 0;display:flex;align-items:center;justify-content:space-between">
+   <div class="btn-ember" style="padding:0 20px"><svg class="ic"><use href="#i-frame"/></svg>Share framed</div>
+   <div class="btn-text"><svg class="ic"><use href="#i-retry"/></svg>Try for 3</div>
+  </div>
+  <div class="lbl" style="margin:20px 16px 0;display:flex;justify-content:space-between"><span>Next pour in <b>06:12</b></span><span style="display:flex;align-items:center;gap:2px;color:var(--ink)">Play 2-1<svg class="ic" style="width:12px;height:12px"><use href="#i-next"/></svg></span></div>
+ </div>
+</div>
+<div class="notes"><h4>설계 의도 · Daily 결과</h4><ol>
+ <li><b>판화 한 장</b>: 결과 = 벽에 걸린 액자. 걸이줄(1px)과 못 한 점만으로 ‘전시’ 문맥을 만든다. 보드는 2:3 Spill 격자 그대로.</li>
+ <li><b>박물관 캡션</b>: 번호·제목·재료·수치 순서의 캡션 카드. 같은 카드가 공유 이미지·갤러리 카드에 그대로 쓰인다(한 번 디자인, 세 곳 사용).</li>
+ <li><b>유리알 별</b>: 채운 알은 그날 주재료(물) 엔진 결로 채워지고, 빈 알은 투명 유리로 남아 ‘Try for 3’의 이유가 된다. 질책 문구 없음.</li>
+ <li><b>Ember 1개</b>: ‘Share framed’만 Ember. 재도전은 텍스트 버튼, 다음 레벨은 모노 링크.</li>
+ <li><b>주의</b>: 보드 속 물이 찬 모습은 /daily 초기 프레임을 브라우저에서 편집한 목업. 실제 클리어 프레임 캡처로 교체 필요.</li>
+</ol></div>
+
+<!-- ======================= 1440 DESKTOP ======================= -->
+<div class="art">
+ <div class="art-label"><b>샌드랩 · Home 1440 · v2 “Vitrine”</b><span>좌 시험관 선반 · 가운데 우물 · 우 오늘/지층 · 첫 화면 1440×900</span></div>
+ <div class="frame" id="d-home" style="width:1440px;height:900px">
+  <div style="height:72px;display:flex;align-items:center;padding:0 40px;position:relative">
+   <div class="wordmark" style="font-size:24px">SANDLAB</div>
+   <nav style="position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:8px;font:600 15px/1 'Bricolage Grotesque'">
+    <span style="height:44px;display:flex;align-items:center;padding:0 14px;box-shadow:inset 0 -2px 0 var(--ink)">Pour</span>
+    <span style="height:44px;display:flex;align-items:center;padding:0 14px;color:var(--ink-2)">Solve</span>
+    <span style="height:44px;display:flex;align-items:center;padding:0 14px;color:var(--ink-2)">Browse</span>
+    <span style="height:44px;display:flex;align-items:center;padding:0 14px;color:var(--ink-2)">Notes</span>
+   </nav>
+   <div style="margin-left:auto;display:flex;align-items:center;gap:4px">
+    <div class="chip-daily" style="height:36px"><svg class="ic"><use href="#i-glass"/></svg>No.42 <span style="color:var(--ink-2)">06:12:40</span></div>
+    <div class="hit"><svg class="ic"><use href="#i-sound"/></svg></div>
+   </div>
+  </div>
+
+  <div style="display:flex;gap:32px;padding:16px 40px 0">
+   <!-- RACK RAIL -->
+   <div style="width:184px;flex:none" id="rail"></div>
+
+   <!-- CENTER -->
+   <div style="width:872px;flex:none">
+    <div class="lbl" style="display:flex;justify-content:space-between"><span>Specimen 0381 · strata, lava</span><span>1200 × 600 cells · WebGPU</span></div>
+    <h1 style="font:600 44px/48px 'Bricolage Grotesque';letter-spacing:-.035em;margin-top:10px">Pour something. <span style="color:var(--ink-2)">See what it becomes.</span></h1>
+    <div class="well" style="margin-top:24px;padding:8px"><div class="glass" style="height:428px;border-radius:15px">
+      <img src="hero.png" alt="">
+    </div></div>
+    <div class="ruler" style="margin:8px 12px 0"><span>0</span><span>300</span><span>600</span><span>900</span><span>1200</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+     <div class="lbl"><b>Sand</b> · grain 06 · 412,019 cells moving · <span style="color:var(--ink)">E</span> erase · <span style="color:var(--ink)">⌘Z</span> undo</div>
+     <div style="display:flex;align-items:center;gap:8px">
+      <div class="tool" style="background:var(--bone-2)"><svg class="ic"><use href="#i-erase"/></svg>Erase</div>
+      <div class="tool icon" style="background:var(--bone-2)"><svg class="ic"><use href="#i-undo"/></svg></div>
+      <div class="grains" style="margin:0;background:var(--bone-2);border-radius:12px;padding:0 6px">
+       <div class="grain"><i style="width:4px;height:4px"></i></div><div class="grain on"><i style="width:8px;height:8px"></i></div><div class="grain"><i style="width:14px;height:14px"></i></div>
+      </div>
+      <div class="tool ink"><svg class="ic"><use href="#i-share"/></svg>Share</div>
+     </div>
+    </div>
+    <div class="sec-h" style="margin-top:28px"><span class="lbl"><b>On the wall</b></span><span class="rule"></span><span class="lbl" style="display:flex;align-items:center;gap:2px;color:var(--ink)">Browse all<svg class="ic" style="width:14px;height:14px"><use href="#i-next"/></svg></span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:14px">
+     <div style="display:flex;gap:12px;align-items:center"><div class="mini-glass" style="width:120px;flex:none"><div class="g" style="height:56px"><img src="gal_s2.png"></div></div><div><div style="font:600 14px/18px 'Bricolage Grotesque'">Shelf, slipping</div><div class="lbl" style="margin-top:4px;display:flex;gap:4px;align-items:center"><svg class="ic" style="width:12px;height:12px"><use href="#i-remix"/></svg>3 remixes</div></div></div>
+     <div style="display:flex;gap:12px;align-items:center"><div class="mini-glass" style="width:120px;flex:none"><div class="g" style="height:56px"><img src="gal_s3.png"></div></div><div><div style="font:600 14px/18px 'Bricolage Grotesque'">Three peaks</div><div class="lbl" style="margin-top:4px;display:flex;gap:4px;align-items:center"><svg class="ic" style="width:12px;height:12px"><use href="#i-remix"/></svg>1 remix</div></div></div>
+     <div style="display:flex;gap:12px;align-items:center"><div class="mini-glass" style="width:120px;flex:none"><div class="g" style="height:56px"><img src="bins.png" style="object-position:50% 100%"></div></div><div><div style="font:600 14px/18px 'Bricolage Grotesque'">Eighteen jars</div><div class="lbl" style="margin-top:4px">Sandlab pick</div></div></div>
+    </div>
+   </div>
+
+   <!-- RIGHT -->
+   <div style="flex:1;min-width:0">
+    <div class="sec-h"><span class="lbl"><b>Today</b></span><span class="rule"></span><span class="lbl">No.42</span></div>
+    <div class="vitrine" style="margin-top:14px;padding:16px">
+     <div class="mini-glass"><div class="g" style="height:118px"><img src="daily_raw.png" style="object-position:50% 6%;filter:saturate(.35) brightness(.85)"></div></div>
+     <div class="lbl" style="margin-top:14px">World 1 · puzzle 3</div>
+     <div style="font:700 26px/28px 'Bricolage Grotesque';letter-spacing:-.03em;margin-top:6px">Two Pots</div>
+     <div class="lbl" style="margin-top:8px">Par <b>2</b> moves · <b>5.3</b> s · gem <b>1</b></div>
+     <div class="btn-ember" style="margin-top:16px;width:100%;justify-content:center">Solve today<svg class="ic"><use href="#i-pour"/></svg></div>
+    </div>
+    <div class="sec-h" style="margin-top:28px"><span class="lbl"><b>Strata</b></span><span class="rule"></span><span class="lbl">5 days</span></div>
+    <div style="display:flex;gap:14px;margin-top:14px;align-items:flex-end">
+     <div id="jar-d" style="width:84px;flex:none"></div>
+     <div class="lbl" style="line-height:18px;padding-bottom:6px"><b>11-19</b> water<br>11-18 sand<br>11-17 lava<br><span style="opacity:.6">11-16 —</span><br>11-15 salt<br><span style="color:var(--ember-text)">vein at 7 · 2 to go</span></div>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+<div class="notes"><h4>설계 의도 · Home 1440</h4><ol>
+ <li><b>세 칸 전시</b>: 선반(재료) · 진열장(우물) · 안내판(오늘/지층). 회색 패널 없이 Bone 한 면 위에 Kiln 우물만 어둡다.</li>
+ <li><b>선반 = 키보드</b>: 18개 시험관을 4단(가루·액체·고체·기체)으로, 관마다 1~9·0 단축키 모노 표기. 도구 막대 한 줄(R1) 폐기.</li>
+ <li><b>우물이 주인공</b>: 872px 폭(실제 1200×600의 0.72배, 정수 배율 아님 — 구현 시 600·900·1200 중 맞는 폭 선택 권장). 도구는 우물 아래 오른쪽 4개로만.</li>
+ <li><b>Ember 1개</b>: 우측 ‘Solve today’. 내비는 3동사 + Notes, 활성은 2px 잉크 밑줄.</li>
+</ol></div>
+
+</div>
+
+<script>
+const T = n => `tex/${n}.png`;
+const mats = [
+ ['sand','sand_tall'],['water','water_tall'],['lava','lava'],['salt','salt_tall'],['gunpowder','gunpowder_tall'],['stone','stone'],['plant','plant'],['oil',null,'#4A3520']
+];
+function tube(name, tex, on, color, fillH, key){
+  const fill = tex ? `background-image:url(${T(tex)})` : `background:${color}`;
+  return `<div class="tube${on?' on':''}"><div class="cork"></div><div class="lip"></div><div class="body"><div class="fill" style="height:${fillH}px;${fill}"></div></div><div class="name">${on?name:name}</div>${key?`<span class="mono" style="font:500 9px/1 'JetBrains Mono';color:var(--ink-2);margin-top:3px">${key}</span>`:''}</div>`;
+}
+document.getElementById('rack-m').innerHTML = mats.map((m,i)=>tube(m[0],m[1],i===0,m[2],[62,58,66,54,60,64,58,60][i])).join('');
+
+// desktop rail
+const shelves = [
+ ['Powder',[['sand','sand_tall'],['salt','salt_tall'],['ash','ash'],['gun-<br>powder','gunpowder_tall'],['seed','seed']]],
+ ['Liquid',[['water','water_tall'],['oil',null,'#4A3520'],['acid','acid'],['lava','lava']]],
+ ['Solid',[['wall','wall'],['stone','stone'],['metal','metal'],['wood','wood'],['plant','plant'],['ice','ice']]],
+ ['Gas',[['fire',null,'#FF7A18'],['steam',null,'#D6E2EA'],['smoke',null,'#4C5058']]],
+];
+let k=0;
+document.getElementById('rail').innerHTML = shelves.map(([s,list])=>`<div class="sec-h" style="margin-bottom:16px"><span class="lbl"><b>${s}</b></span><span class="rule"></span><span class="lbl">${list.length}</span></div><div class="rail-grid" style="display:grid;grid-template-columns:repeat(5,32px);column-gap:6px;row-gap:16px;margin-bottom:22px">${list.map(([n,t,c])=>{k++; return tube(n,t,n==='sand',c,[34,30,36,32][k%4])}).join('')}</div>`).join('') + `<div class="lbl" style="line-height:16px;margin-top:4px">Keys <b>1–9</b> pick<br>Hold a tube to inspect</div>`;
+document.querySelectorAll('#rail .tube').forEach((tb,i)=>{tb.style.width='32px'; const nm=tb.querySelector('.name'); nm.style.fontSize='9px'; nm.style.marginTop='6px'; nm.style.whiteSpace='nowrap'; nm.style.textAlign='center'; nm.style.lineHeight='11px'; if(false){ const kk=document.createElement('span'); kk.textContent=(i+1)%10; kk.style.cssText="position:absolute;top:24px;left:-1px;width:12px;text-align:center;font:700 8px/12px 'JetBrains Mono';color:#5E5040;background:#F4ECDD;border-radius:3px;box-shadow:0 0 0 1px #D9CBB2;z-index:3"; tb.appendChild(kk);} });
+document.querySelectorAll('#rail .tube .body').forEach(b=>{b.style.height='46px';b.style.width='28px';b.style.borderRadius='2px 2px 14px 14px'});
+document.querySelectorAll('#rail .tube .fill').forEach(b=>{b.style.borderRadius='0 0 11px 11px'});
+document.querySelectorAll('#rail .tube .lip').forEach(b=>{b.style.width='32px';b.style.height='4px'});
+document.querySelectorAll('#rail .tube .cork').forEach(b=>{b.style.width='22px';b.style.height='9px'});
+document.querySelectorAll('#rail .tube .body').forEach(b=>{b.style.setProperty('--x','1')});
+
+// hourglass with sand amount (26% left)
+function hourglass(el,w,h,left){
+  const s=getComputedStyle(document.documentElement);
+  const midY=h/2, top=3, bot=h-3;
+  const topSand = midY - 2 - (midY-2-top-2)*left; // surface y in top bulb
+  el.innerHTML = `
+   <defs><clipPath id="hgT${w}"><path d="M3 ${top+1} H${w-3} C${w-3} ${midY-6} ${w/2+1.5} ${midY-3} ${w/2+1.5} ${midY} H${w/2-1.5} C${w/2-1.5} ${midY-3} 3 ${midY-6} 3 ${top+1}Z"/></clipPath>
+   <clipPath id="hgB${w}"><path d="M${w/2-1.5} ${midY} H${w/2+1.5} C${w/2+1.5} ${midY+3} ${w-3} ${midY+6} ${w-3} ${bot-1} H3 C3 ${midY+6} ${w/2-1.5} ${midY+3} ${w/2-1.5} ${midY}Z"/></clipPath></defs>
+   <rect x="0" y="${topSand}" width="${w}" height="${midY-topSand}" fill="#E8C87A" clip-path="url(#hgT${w})"/>
+   <path d="M${w/2-0.6} ${midY} V${bot-6}" stroke="#E8C87A" stroke-width="1.2" stroke-dasharray="1.2 1.6"/>
+   <path d="M3 ${bot-1} Q${w/2} ${bot-1-(bot-midY)*0.62} ${w-3} ${bot-1}Z" fill="#E8C87A" clip-path="url(#hgB${w})"/>
+   <path d="M3 ${top+1} H${w-3} C${w-3} ${midY-6} ${w/2+1.5} ${midY-3} ${w/2+1.5} ${midY} C${w/2+1.5} ${midY+3} ${w-3} ${midY+6} ${w-3} ${bot-1} H3 C3 ${midY+6} ${w/2-1.5} ${midY+3} ${w/2-1.5} ${midY} C${w/2-1.5} ${midY-3} 3 ${midY-6} 3 ${top+1}Z" fill="none" stroke="#2A2118" stroke-width="1.5" stroke-linejoin="round"/>
+   <rect x="0.75" y="0.75" width="${w-1.5}" height="2.5" rx="1.25" fill="#2A2118"/><rect x="0.75" y="${h-3.25}" width="${w-1.5}" height="2.5" rx="1.25" fill="#2A2118"/>`;
+}
+hourglass(document.getElementById('hg'),22,34,0.26);
+
+// strata jar with wavy poured layers, textured
+function jar(el,W,H,layers,notes){
+  // layers bottom->top: [tex, thickness, gap?]
+  const inX=6, inW=W-12, bottom=H-8;
+  let y=bottom, defs='', body='';
+  const pts=[];
+  layers.forEach((L,i)=>{
+    const th=L.t; const yTop=y-th;
+    const a=(i%2?1:-1)*(3+ (i%3));
+    const path = `M${inX} ${y} L${inX} ${yTop+a} C${inX+inW*0.3} ${yTop-a} ${inX+inW*0.6} ${yTop+a*1.2} ${inX+inW} ${yTop-a*0.6} L${inX+inW} ${y} Z`;
+    if(L.gap){ body += `<path d="M${inX} ${yTop+a} C${inX+inW*0.3} ${yTop-a} ${inX+inW*0.6} ${yTop+a*1.2} ${inX+inW} ${yTop-a*0.6}" fill="none" stroke="#5E5040" stroke-width="1" stroke-dasharray="2 2" opacity=".7"/>`; }
+    else {
+      defs += `<pattern id="p${el.id}${i}" patternUnits="userSpaceOnUse" width="${inW}" height="${th+16}" x="${inX}" y="${yTop-8}"><image href="${T(L.tex)}" width="${inW}" height="${th+16}" preserveAspectRatio="xMidYMid slice" style="image-rendering:pixelated"/></pattern>`;
+      body += `<path d="${path}" fill="url(#p${el.id}${i})"/>`;
+      if(L.vein) body += `<circle cx="${inX+inW*0.62}" cy="${y-th/2}" r="1.6" fill="#fff"/><circle cx="${inX+inW*0.3}" cy="${y-th/2+2}" r="1.1" fill="#fff" opacity=".8"/>`;
+    }
+    pts.push((y+yTop)/2);
+    y = yTop + (L.gap?0:0);
+  });
+  // draw from top down: later layers painted first would cover; we painted bottom first, top overlay over? fix: reverse order paint
+  el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${defs}<clipPath id="c${el.id}"><rect x="${inX}" y="10" width="${inW}" height="${bottom-10}" rx="0" ry="0"/><rect x="${inX}" y="${bottom-24}" width="${inW}" height="24" rx="14"/></clipPath></defs>
+    <rect x="3" y="6" width="${W-6}" height="${H-9}" rx="16" fill="rgba(255,255,255,.38)"/>
+    <g clip-path="url(#c${el.id})">${body}</g>
+    <rect x="3" y="6" width="${W-6}" height="${H-9}" rx="16" fill="none" stroke="rgba(42,33,24,.32)" stroke-width="1.5"/>
+    <rect x="9" y="16" width="3" height="${H-50}" rx="1.5" fill="rgba(255,255,255,.8)"/>
+    <rect x="0.75" y="1" width="${W-1.5}" height="7" rx="3.5" fill="rgba(255,255,255,.6)" stroke="rgba(42,33,24,.32)" stroke-width="1.5"/>
+  </svg>`;
+  return pts;
+}
+// paint order: top layers last means they overlap lower ones' wavy tops — we want each layer's wavy top visible, so paint bottom-first and let next layer start at previous top: ok.
+const L = [
+ {tex:'salt_tall',t:26},{gap:true,t:6},{tex:'lava',t:30,vein:true},{tex:'sand_tall',t:30},{tex:'water_tall',t:34}
+];
+const pts = jar(document.getElementById('jar'),132,172,L);
+const labels=[['11-15','salt','●○○'],null,['11-17','lava','●●●'],['11-18','sand','●●○'],['11-19 today','water','●●○']];
+const sn=document.getElementById('strata-notes');
+const ys=[]; pts.forEach((y,i)=>{ys[i]=y}); for(let i=1;i<ys.length;i++){ if(ys[i-1]-ys[i]<17) ys[i]=ys[i-1]-17; }
+sn.innerHTML = labels.map((l,i)=>{ const y=ys[i]; const yl=pts[i]; if(!l) return `<div class="lbl" style="position:absolute;left:28px;top:${y-6}px;opacity:.7">11-16 missed</div><svg style="position:absolute;left:-14px;top:0;overflow:visible" width="40" height="1"><path d="M0 ${yl} L22 ${yl} L36 ${y}" fill="none" stroke="#5E5040" stroke-dasharray="2 2" stroke-width="1" opacity=".6"/></svg>`;
+  return `<svg style="position:absolute;left:-14px;top:0;overflow:visible" width="40" height="1"><circle cx="2" cy="${yl}" r="2" fill="#2A2118"/><path d="M2 ${yl} L22 ${yl} L36 ${y}" fill="none" stroke="#5E5040" stroke-width="1" opacity=".8"/></svg>
+  <div class="lbl" style="position:absolute;left:28px;top:${y-6}px;white-space:nowrap"><b>${l[0]}</b> · ${l[1]}</div>`}).join('') +
+  `<div class="lbl" style="position:absolute;left:28px;top:0;color:var(--ember-text)"><b style="color:var(--ember-text)">Vein at 7 days</b> · 2 to go</div>`;
+jar(document.getElementById('jar-d'),84,124,[{tex:'salt_tall',t:16},{gap:true,t:4},{tex:'lava',t:18,vein:true},{tex:'sand_tall',t:18},{tex:'water_tall',t:20}]);
+
+// beads
+const b=document.getElementById('beads');
+b.innerHTML = [1,1,0].map(f=>`<div class="bead${f?' full':''}" style="width:22px;height:22px;${f?`background-image:url(${T('water_tall')})`:''}"></div>`).join('');
+// +1 stratum mini
+document.getElementById('stratum-plus').innerHTML = `<rect x="1" y="1" width="54" height="26" rx="8" fill="rgba(255,255,255,.38)" stroke="rgba(42,33,24,.32)" stroke-width="1.5"/>
+ <path d="M4 24 V16 C18 12 34 18 52 13 V24Z" fill="#E8C87A" opacity=".9"/><path d="M4 16 C18 12 34 18 52 13 V9 C36 13 20 7 4 11Z" fill="#2E6FD9"/>`;
+
+// footer strata
+const cols=['#525A6B','#79808C','#B9C2CE','#6B4423','#43B04A','#A8E4EC','#E8C87A','#F2F4F7','#5E5A57','#2E3033','#B4D96A','#2E6FD9','#4A3520','#8CFF2E','#FF5A0A','#FF7A18','#D6E2EA','#4C5058'];
+document.getElementById('fs').innerHTML = cols.map(c=>`<i style="background:${c}"></i>`).join('');
+</script>
+</body></html>
