@@ -22,11 +22,13 @@ interface Props {
   onSkip(): void
   solution?: boolean
   bottom?: number
+  /** 공유 문구 덮어쓰기(데일리). 없으면 레벨 공유 문구. */
+  share?: { text: string; onClick?(): void }
 }
 
 const LABELS = ['Clear', 'Gems', 'Par'] as const
 
-export default function ResultCard({ def, result, stars, newBest, starGapMs, nextId, hist, onStar, onRetry, onSkip, solution = false, bottom = 8 }: Props) {
+export default function ResultCard({ def, result, stars, newBest, starGapMs, nextId, hist, onStar, onRetry, onSkip, solution = false, bottom = 8, share: shareOverride }: Props) {
   const got = [stars.clear, stars.gems, stars.par]
   const [shown, setShown] = useState(starGapMs > 0 ? 0 : 3)
   const [copy, setCopy] = useState<string | null>(null)
@@ -48,7 +50,8 @@ export default function ResultCard({ def, result, stars, newBest, starGapMs, nex
   }, [])
 
   const share = async () => {
-    const text = shareText(def.id, stars.count, result.moves, result.ticks, location.host || 'sandlab.app')
+    shareOverride?.onClick?.()
+    const text = shareOverride?.text || shareText(def.id, stars.count, result.moves, result.ticks, location.host || 'sandlab.app')
     const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
     if (nav.share) {
       try {

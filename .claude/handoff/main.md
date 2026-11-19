@@ -1,3 +1,13 @@
+# 인계 (2026-11-20 03시 야간 QA): 데일리 결과 카드 Share 버그 수정 + 헤딩 a11y + QA 스크립트 상시화
+
+- **라이브 접근 불가**: 이 컨테이너 프록시가 sandlab.app CONNECT 403 → 로컬 prod 빌드(`NEXT_PUBLIC_UI= pnpm build`) + `npx wrangler dev --port 8799 --local`(D1 로컬: `wrangler d1 execute sandlab-gallery --local --file=schema.sql` + migrations/0001)로 점검. 배포 run 74(#72) 성공. 11-19 23시가 맡긴 `/ui-next/posters/atlas.json`·`/ui-next/icons.svg` 200은 **로컬에서만** 확인 — 라이브는 다음 교대가 접근되면 확인.
+- 점검: 사이트맵 37쪽 × (390x844 터치, 1366x768) 콘솔 에러 0(외부 광고 스크립트 터널 실패만), 4xx 0, 가로 넘침 0, 이름 없는 버튼 0, 깨진 내부 링크 0/49. /daily·/play/1-1 정답 드래그 재생 → 클리어, 드래그 중 페이지 스크롤 0, 데일리 기록 `{"42":{"stars":2,"moves":2,"ticks":276,"mask":5}}`(#72 회귀 없음).
+- **수정(이 PR)**: /daily 결과 카드 Share가 레벨 문구(/play/1-3)를 공유하던 것 → 데일리 문구(/daily) + `share_click daily` 계측. SpillPlayer·ResultCard에 선택 prop `share`(없으면 그대로). /daily h1 2개→1, /gallery h1 0→1(화면 밖). 상세·열린 항목은 **docs/team/bugs.md**(새 장부).
+- QA 스크립트 상시화: `scripts/qa/crawl.cjs`(전 페이지 검사), `scripts/qa/play.cjs`(정답 동작 드래그 재생 → 카드 Share 문구·localStorage).
+- 다음 교대: P5(결과 화면) 착수 시 ResultCard `share` prop을 그대로 쓰면 된다(shareTextV2 교체). 홈 h1·본문 0은 첫 화면 실험 1 판정(11-21) 뒤. 홈 샌드박스·데일리 카드 실화면은 헤드리스 불가 → 실기기.
+
+---
+
 # 인계 (2026-11-20 새벽): 리디자인 v2 P4 「Spill 플레이 HUD + 데일리 시작」 머지 — 다음은 P5(결과 화면 + 공유 이미지)
 
 - 계획서 6장 진행표가 기준. P4 = #72(브랜치 shift/redesign-p4-spill). 결정은 DECISIONS 2026-11-20 P4.
