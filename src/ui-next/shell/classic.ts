@@ -8,6 +8,7 @@
  * 아래 `import type`은 컴파일 때 지워진다(런타임 import 0개 유지 — 번들 그래프에 아무것도 더하지 않는다).
  */
 import type { DailyAsideProps, DailyStartProps, SpillHudKit, SpillResultProps } from './spillTypes'
+import type { LevelAsideProps, PlayGalleryProps } from './playTypes'
 
 export const shellHtmlProps: { className?: string } = {}
 
@@ -19,3 +20,6 @@ export const DailyStart: null | ((p: DailyStartProps) => React.JSX.Element) = nu
 export const SpillResult: null | ((p: SpillResultProps) => React.JSX.Element) = null
 /** P7: null → DailySpill이 지금 설명 패널(레벨 요약·주황 Share result)을 그대로 그린다. */
 export const DailyAside: null | ((p: DailyAsideProps) => React.JSX.Element) = null
+/** P8: null → /play가 지금 ContentShell 화면(LevelList·목록)을, /play/[id]가 지금 설명 패널을 그대로 그린다. */
+export const PlayGallery: null | ((p: PlayGalleryProps) => React.JSX.Element) = null
+export const LevelAside: null | ((p: LevelAsideProps) => React.JSX.Element) = null

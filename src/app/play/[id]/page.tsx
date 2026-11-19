@@ -5,6 +5,8 @@ import { levelById, nextLevel, ordered, worldName } from '@/lib/spill/client/cat
 import { describeLevel } from '@/lib/spill/client/describe'
 import { materialStaticParams } from '@/lib/guide/reactions'
 import { guideFor } from '@/lib/spill/guide/guides'
+// 리디자인 P8: 새 셸(프리뷰 빌드)은 설명 패널을 LevelAside로(인라인 색 없음, 목표 → 방법 순), classic(prod)은 null → 아래 지금 패널 그대로
+import { LevelAside } from '@ui-shell'
 
 export const dynamicParams = false
 
@@ -37,6 +39,20 @@ export default async function Page({ params }: Props) {
   const next = nextLevel(LEVELS, level.id)
   return (
     <SpillPlayer level={level} nextId={next?.id ?? null}>
+      {LevelAside ? (
+        <LevelAside
+          id={level.id}
+          name={level.name}
+          world={level.world}
+          worldName={worldName(level.world)}
+          summary={d.summary}
+          verbs={d.verbs}
+          materials={d.materials.map((m) => ({ slug: m, page: guidePages.has(m) }))}
+          hint={level.hint ?? null}
+          guide={!!guideFor(level.id)}
+          next={next ? { id: next.id, name: next.name } : null}
+        />
+      ) : (
       <section>
         <h2>About this level</h2>
         <p>{d.summary}</p>
@@ -79,6 +95,7 @@ export default async function Page({ params }: Props) {
           )}
         </p>
       </section>
+      )}
     </SpillPlayer>
   )
 }
