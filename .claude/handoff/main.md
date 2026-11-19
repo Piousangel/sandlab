@@ -1,3 +1,13 @@
+# 인계 (2026-11-20 프리뷰 읽기 전용): 프리뷰 Worker = prod와 같은 D1 + 쓰기 차단(오너 11-20)
+
+- wrangler `env.preview.vars.READ_ONLY="1"` → 워커가 `/api/*`의 GET·HEAD 외 전부 403 `{"error":"preview is read-only"}`(worker/preview.ts `readOnlyBlock`, 진입점 default export에서 app.fetch 전에). 메서드 기준이라 새 쓰기 라우트도 자동 차단. prod는 변수 없음 → 불변. 테스트 worker/read-only.test.ts(가짜 D1로 '차단 요청은 D1 호출 0' 확인).
+- 화면: build:preview에만 `NEXT_PUBLIC_READ_ONLY=1` → 새 셸 헤더 아래·메뉴 시트에 안내 한 줄(`src/ui-next/shell/ReadOnlyNote.tsx`, `PREVIEW_READ_ONLY`). UI 플래그와 분리(컷오버 뒤에도 prod에 안 뜸). verify-ads prod 모드가 변수·`data-sl-read-only`를 잡는다.
+- **다음 P가 할 일**: 새 셸에 업로드·투표·데일리 기록 버튼을 그리면 `PREVIEW_READ_ONLY`로 disabled + `READ_ONLY_NOTE`. DailyStart의 "Your first clear is today's official record."는 프리뷰에서 거짓 — P5에서 PREVIEW_READ_ONLY 분기.
+- 프리뷰 QA 참고: classic 화면(홈 업로드·갤러리 투표)은 프리뷰에서도 버튼이 눌리고, 실패 토스트에 `{"error":"preview is read-only"}` 원문이 뜬다 — 기존 오류 표시 방식 그대로라 **정상**(버그로 올리지 말 것). 데일리·Spill 클리어 기록은 조용히 실패(postClear false).
+- 프리뷰 배포는 여전히 수동·미실행. 첫 배포 뒤 `curl -X POST <프리뷰>/api/daily` → 403, `curl <프리뷰>/api/scenes` → 200 확인.
+
+---
+
 # 인계 (2026-11-20 06시 회의): 오늘 = 리디자인 P5(결과 액자 + 공유 이미지) — 리서치 1·기획 v1 완료, 13시가 반증부터
 
 - 회의록 docs/team/meetings/2026-11-20.md, 기획 docs/team/specs/2026-11-20-p5-result-share.md(4장 '13시 반증 과제' 5개를 먼저).
@@ -39,7 +49,7 @@
 - 셸 파일: `shell/ShellHeader.tsx`(client: wordmark 첫 방문 낙하·DailyPill·MenuSheet), `ShellFooter.tsx`, `nav.ts`(링크 표 단일 출처, 테스트가 sitemap과 대조), `dailyPill.ts`(순수), `shell.css`(전역 규칙 없음, `sl-` 접두). 메뉴 시트·소리 토글(키 `spill.v1.sound`, Spill과 공유)은 P4 Spill 헤더에서 재사용 가능. 내비는 840px 이상만 헤더에.
 - 광고 안내판 `src/ui-next/ads/AdPlate.tsx`: `ads`+`slot` 둘 다 있어야 렌더, AD_SLOTS 비어 있음(P8·P10에서 오너가 AdSense 고정 크기 단위 만든 뒤 채움). 바탕 Bone 위에만, 24px+ 간격·높이 예약은 컴포넌트가 강제.
 - `pnpm lint:ui` 규칙 2(회색 패널 중첩): CSS 조상 선택자·같은 파일 JSX 중첩. 시안의 도크 `.grains`(bone-2 도크 안 잉크 틴트)는 이 규칙에 걸린다 — P4에서 도크를 만들 때 틴트를 빼거나 이유를 `lint-ui-allow`로 단다.
-- **프리뷰 배포 워크플로 `.github/workflows/deploy-preview.yml`은 수동 실행만(confirm=preview), 한 번도 실행 안 함.** ⚠ 같은 D1이라 프리뷰에서 올린 씬·투표·기록이 prod에 섞인다 — 오너 결정(프리뷰 전용 D1 vs 프리뷰 쓰기 차단) 전에는 실행하지 않는다. workers.dev 하위 도메인 활성 여부도 오너 확인 대기.
+- **프리뷰 배포 워크플로 `.github/workflows/deploy-preview.yml`은 수동 실행만(confirm=preview), 한 번도 실행 안 함.** D1 공유는 11-20 오너 결정으로 **같은 D1 + 프리뷰 쓰기 차단**(READ_ONLY=1, 아래 11-20 프리뷰 읽기 전용 절). workers.dev 하위 도메인 활성 여부는 여전히 오너 확인 대기.
 - 측정(로컬 Lighthouse 모바일, load 24~26이라 절대값 부풀려짐): /learn LCP prod 4.3s vs 프리뷰 4.4s, CLS 0/0, FCP 0.8→1.1~1.4s. 폰트 preload false 유지(LCP 요소가 본문 시스템 폰트). 홈 CLS 0.17은 prod에도 있는 기존 값. 실제 프리뷰 Worker에서 03시 QA가 다시 잴 것.
 - 함정: 검사용 스크립트(정적 서버·Playwright 셸 검사·prod/프리뷰 h1·단어 수 대조)는 세션 스크래치패드에만 있다(p3-serve.mjs·p3-browser.mjs·p3-parity.mjs) — 03시 QA가 상시화하려면 scripts/로 옮길 것. 로컬 정적 서버에서는 `/api/track` 404가 콘솔에 뜬다(워커 없음, 무해). `verify.test.ts`는 부하 25에서 30s 타임아웃 4건(기준선, CI도 제외).
 - 남은 사소(리뷰): ShellHeader가 client 컴포넌트 안에서 인라인 `<script>`를 그린다 — 클라이언트 이동 때 실행 안 되는 게 의도지만 `next dev`에서 콘솔 경고가 날 수 있다(prod 무관). 거슬리면 서버 래퍼로 옮긴다.

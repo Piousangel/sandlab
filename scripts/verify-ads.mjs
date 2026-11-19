@@ -69,6 +69,10 @@ if (allowedSeen === 0) failures.push('허용 페이지가 하나도 빌드되지
 //  - --preview: 위 검사를 건너뛴다(pnpm run deploy:preview 전용).
 if (!process.argv.includes('--preview')) {
   if (process.env.NEXT_PUBLIC_UI === 'next') failures.push('NEXT_PUBLIC_UI=next 환경에서 prod 검증 — 프리뷰 빌드가 prod로 나갈 수 있다(변수를 비우고 다시 빌드)')
+  // 프리뷰 읽기 전용 안내(오너 11-20, src/ui-next/shell/ReadOnlyNote.tsx)는 prod에 뜨면 안 된다 — 컷오버(P12) 뒤에도.
+  if (process.env.NEXT_PUBLIC_READ_ONLY === '1') failures.push('NEXT_PUBLIC_READ_ONLY=1 환경에서 prod 검증 — 프리뷰 읽기 전용 안내가 prod에 실린다(변수를 비우고 다시 빌드)')
+  const roPages = walk(OUT).filter((f) => readFileSync(f, 'utf8').includes('data-sl-read-only'))
+  if (roPages.length) failures.push(`prod HTML ${roPages.length}쪽에 프리뷰 읽기 전용 안내(data-sl-read-only) — 프리뷰 빌드 산출물. prod는 다시 빌드`)
   if (existsSync(join(OUT, '_headers'))) failures.push('out/_headers 있음 — 프리뷰 빌드 산출물(noindex)이 남아 있다. prod는 다시 빌드')
   const robotsPath = join(OUT, 'robots.txt')
   if (existsSync(robotsPath) && /Disallow:\s*\/\s*$/m.test(readFileSync(robotsPath, 'utf8')))

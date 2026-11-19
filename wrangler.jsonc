@@ -25,7 +25,8 @@
   // 위 최상위(prod) 설정은 그대로 — `wrangler deploy`(env 없음)는 이 블록을 읽지 않는다.
   // routes·d1·AE·vars는 env로 상속되지 않아 여기서 다시 적는다:
   //  - 도메인 없음: <name>.<계정>.workers.dev에만 뜬다(sandlab.app에 붙지 않음).
-  //  - 같은 D1 = 같은 API(계획 S6). 프리뷰에서 올린 갤러리 씬·투표·데일리 기록은 prod 데이터에 섞인다.
+  //  - 같은 D1 = 같은 API(계획 S6). 대신 READ_ONLY=1로 쓰기 차단(오너 11-20): /api/*의 GET·HEAD 외 요청은 워커가
+  //    403 {"error":"preview is read-only"}(worker/preview.ts) → 프리뷰에서 씬·투표·데일리 기록이 prod 데이터에 섞이지 않는다.
   //  - AE 없음: 프리뷰 트래픽이 prod 지표(sandlab_events)를 오염하지 않게. 계측은 no-op.
   //  - NOINDEX=1: 워커 응답에 X-Robots-Tag(worker/preview.ts). 정적 에셋은 out/_headers, robots.txt 전체 차단.
   "env": {
@@ -33,7 +34,7 @@
       "name": "sandlab-preview",
       "workers_dev": true,
       "routes": [],
-      "vars": { "NOINDEX": "1" },
+      "vars": { "NOINDEX": "1", "READ_ONLY": "1" },
       "analytics_engine_datasets": [],
       "d1_databases": [
         {
