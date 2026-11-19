@@ -14,6 +14,8 @@
 
 # 인계 (2026-11-19 23시 야간): 리디자인 v2 제작물 — 실엔진 포스터 캡처 + 아이콘 v1
 
+- **배포 확인(23시 마감)**: #68 머지 직후 deploy run 69는 `src/lib/spill/sim/sim.test.ts:205`(fuse 줄 salt 16개) **5초 타임아웃**으로 실패(러너 부하, 이 PR 무관 파일) → 이어진 run 70(#67)·71(#69)이 같은 코드 포함해 성공·배포. 이 테스트는 부하에 약하다 — 반복되면 해당 it에 명시 타임아웃을 주는 PR(단언은 그대로)을 검토. 라이브 URL은 이 컨테이너에서 접속 불가(curl 000) → 03시 QA가 `/ui-next/posters/atlas.json`·`/ui-next/icons.svg` 200 확인.
+
 - **판을 바꾸는 발견: 헤드리스 WebGPU 된다.** 크로미움 `--enable-unsafe-webgpu --enable-features=Vulkan --use-angle=swiftshader --use-vulkan=swiftshader` + **localhost 출처**(about:blank·file://은 navigator.gpu 없음)면 SwiftShader 어댑터가 잡힌다. 단 **캔버스 표시(스왑체인)는 못 한다** — DOM·OffscreenCanvas 모두 첫 프레임에 "Device was destroyed". 우회: `getContext('webgpu')`를 자체 텍스처로 받는 가짜 컨텍스트(scripts/capture/posters.ts `FakeSurface`) → copyTextureToBuffer. 엔진 무수정. 위 "390 실캡처 불가"류 메모는 이걸로 풀 수 있다(03시 QA·P6 골든셋 e2e에 재사용).
 - 함정 2: SwiftShader가 느려 엔진 적응형 품질이 lite로 떨어져 **블룸을 건너뛰고 이전 장면 발광이 남는다** → 하네스에서 매 틱 `lite=false` 고정.
 - 함정 3: Vite 개발 서버로 띄울 때 `optimizeDeps.noDiscovery` + `hmr:false` 안 하면 자동 새로고침이 캡처를 끊는다. vite는 vitest 하위 의존성이라 vitest 기준 resolve.
