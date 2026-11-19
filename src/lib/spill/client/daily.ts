@@ -27,22 +27,23 @@ export function dailyIdFor(n: number): string {
   return DAILY_POOL_IDS[((Math.max(1, n) - 1) * stepFor(len)) % len]
 }
 
-export function shareText(n: number, stars: number, moves: number, levelId: string): string {
-  return `Sandlab Daily #${n} (${levelId}) ${'⭐'.repeat(stars)} ${moves} ${moves === 1 ? 'move' : 'moves'}\nhttps://sandlab.app/daily`
-}
-
 /**
  * 공유 텍스트 v2(리디자인 P2) — 레벨 id를 빼고(풀이 9개라 id를 보면 9일 주기가 드러난다) 이모지 대신 유리알 문자.
  * 유리알 규칙(DECISIONS 2026-11-19 P2): 알 3개, 별 수만큼 앞에서부터 ●(U+25CF), 나머지 ○(U+25CB). 칸 위치에 뜻은 없다
  * (mask 유무로 뜻이 달라지지 않게 — 독립 리뷰). 별 수 = mask가 있으면 mask의 비트 수, 없으면 stars(둘은 starMask에서 같이 나와 늘 같다).
  * 시간은 ticks가 있을 때만. ●○는 기하 도형 블록이라 이모지로 바뀌지 않는다.
- * 기존 shareText는 지금 /daily 화면이 쓰므로 P5에서 교체할 때까지 남긴다.
+ * P5부터 /daily 공유(prod 결과 카드·본문 버튼, 새 결과 화면)가 전부 이것을 쓴다 — 옛 shareText(레벨 id·⭐)는 지웠다.
  */
 export function shareTextV2(rec: DailyRec, n: number): string {
   const s = rec.mask !== undefined && validMask(rec.mask) ? starCount(rec.mask) : clampStars(rec.stars)
-  const beads = '●'.repeat(s) + '○'.repeat(3 - s)
   const time = rec.ticks !== undefined && validTicks(rec.ticks) ? ` · ${formatSecs(rec.ticks)}` : ''
-  return `Sandlab Daily #${n} ${beads} ${formatMoves(rec.moves)}${time}\nhttps://sandlab.app/daily`
+  return `Sandlab Daily #${n} ${beadText(s)} ${formatMoves(rec.moves)}${time}\nhttps://sandlab.app/daily`
+}
+
+/** 유리알 3개 문자열 — 별 수만큼 앞에서부터 ●, 나머지 ○(0~3으로 자른다). 공유 텍스트 공용. */
+export function beadText(stars: number): string {
+  const s = clampStars(stars)
+  return '●'.repeat(s) + '○'.repeat(3 - s)
 }
 
 export const DAILY_KEY = 'sandlab.spill-daily.v1'

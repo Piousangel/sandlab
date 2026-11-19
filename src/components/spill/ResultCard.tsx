@@ -22,11 +22,13 @@ interface Props {
   onSkip(): void
   solution?: boolean
   bottom?: number
+  /** 데일리 공유 텍스트(shareTextV2, 레벨 id 없음 — P5). 없으면 레벨 공유 텍스트. */
+  shareText?: string
 }
 
 const LABELS = ['Clear', 'Gems', 'Par'] as const
 
-export default function ResultCard({ def, result, stars, newBest, starGapMs, nextId, hist, onStar, onRetry, onSkip, solution = false, bottom = 8 }: Props) {
+export default function ResultCard({ def, result, stars, newBest, starGapMs, nextId, hist, onStar, onRetry, onSkip, solution = false, bottom = 8, shareText: dailyText }: Props) {
   const got = [stars.clear, stars.gems, stars.par]
   const [shown, setShown] = useState(starGapMs > 0 ? 0 : 3)
   const [copy, setCopy] = useState<string | null>(null)
@@ -48,7 +50,7 @@ export default function ResultCard({ def, result, stars, newBest, starGapMs, nex
   }, [])
 
   const share = async () => {
-    const text = shareText(def.id, stars.count, result.moves, result.ticks, location.host || 'sandlab.app')
+    const text = dailyText ?? shareText(def.id, stars.count, result.moves, result.ticks, location.host || 'sandlab.app')
     const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
     if (nav.share) {
       try {
