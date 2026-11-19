@@ -1,6 +1,6 @@
 # 인계 (2026-11-20 오전): 리디자인 v2 P7 「/daily 지층 허브」 머지 — P6(홈)은 별도 교대 진행 중, 다음은 P8(/play 전시실)
 
-- 계획서 6장 진행표가 기준. P7 = #PRNUM(브랜치 shift/redesign-p7-daily-strata). 결정은 DECISIONS 2026-11-20 P7. (이 파일 맨 위에 있던 머지 충돌 표식 `<<<<<<<`·`=======`·`>>>>>>>`은 양쪽 절을 다 살려 지웠다.)
+- 계획서 6장 진행표가 기준. P7 = #77(브랜치 shift/redesign-p7-daily-strata). 결정은 DECISIONS 2026-11-20 P7. (이 파일 맨 위에 있던 머지 충돌 표식 `<<<<<<<`·`=======`·`>>>>>>>`은 양쪽 절을 다 살려 지웠다.)
 - **지층 병 = `src/ui-next/daily/`**: strataModel.ts(순수 — buildJar·runs·pickLabels·needsEdge·waveAmp), StrataJar.tsx(SVG, 첫 렌더에서 localStorage 읽음 — DailySpill이 클라이언트에서만 그리므로 CLS 0), daily.css, daily.test.tsx. DailyStart(P4)가 `.sl-ds-hub` 안에 오늘 카드 + StrataJar를 그린다. 전 기간을 읽어 연속·광맥을 세고 최근 30일만 그린다.
 - 상태 규칙: 오늘 미해결 = 'pending'(점선 윤곽·"today · not yet"), 결측 = 빗금 공백층(4px), 첫 기록 이전 결측은 안 그림(전 기간 기준), 광맥 = 실제 연속 7·14·30…의 그 날. 3:1 미만 재료는 계산으로 ink 경계(sand·seed·acid·lava·plant).
 - **새 셸 플레이 패널 = `@ui-shell` DailyAside**(classic null → prod 패널 그대로). 레벨 id·"Open 1-3"·옛 주황 Share result 없음. `.sl-sp-aside a`의 `!important`는 `a[style]`로 좁힘 — /play/[id] 본문이 새 셸로 가면(P8·P10) `a[style]`·`p[style*=opacity]` 두 규칙 삭제.
