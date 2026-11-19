@@ -2,7 +2,16 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { findViolations, isBanned, lintPaths, stripComments } from './lint-ui-rules.mjs'
+import {
+  findCssPanelNesting,
+  findJsxPanelNesting,
+  findViolations,
+  isBanned,
+  isPanelBackground,
+  lintPaths,
+  panelClassesFromCss,
+  stripComments,
+} from './lint-ui-rules.mjs'
 
 // 금지 문자는 코드 포인트로만 만든다(이 파일 자체에 기호 문자가 들어가지 않게).
 const ch = (cp: number) => String.fromCodePoint(cp)
@@ -65,5 +74,74 @@ describe('lint-ui-rules', () => {
 
   it('지금 src/ui-next는 위반 0', () => {
     expect(lintPaths().problems).toEqual([])
+  })
+})
+
+describe('lint-ui-rules 규칙 2: 회색 패널 중첩(R3)', () => {
+  const CSS = `
+.card { background: var(--sl-bone-2); border-radius: 16px }
+.dock{background-color:#EADFCB}
+.tint { background: rgba(42, 33, 24, .06) }
+.bone { background: var(--sl-bone) }
+.line { border-color: var(--sl-bone-2) }
+@media (min-width: 720px) { .wide { background: var(--sl-ad) } }
+@keyframes k { from { background: var(--sl-bone-2) } }
+`
+  it('무채 면 클래스를 모은다(배경만, 테두리·바탕 면·keyframes 제외, @media 안 포함)', () => {
+    expect([...panelClassesFromCss(CSS)].sort()).toEqual(['card', 'dock', 'tint', 'wide'])
+    expect(isPanelBackground('background: var(--sl-ad-line)')).toBe(false) // ad-line은 선 색, ad 면 아님
+    expect(isPanelBackground('background: var(--sl-kiln-2)')).toBe(true)
+  })
+
+  it('CSS: 면 클래스 아래에서 또 무채 배경을 칠하면 위반, 형제·바탕 면은 통과', () => {
+    const bad = `${CSS}\n.card .chip { background: var(--sl-bone-2) }\n.dock > .grains{background:rgba(42,33,24,.06)}`
+    const v = findCssPanelNesting(bad)
+    expect(v.map((x) => x.detail)).toEqual([expect.stringContaining('.card'), expect.stringContaining('.dock')])
+    expect(findCssPanelNesting(`${CSS}\n.card + .chip { background: var(--sl-bone-2) }\n.bone .chip{background:var(--sl-bone-2)}`)).toEqual([])
+    expect(findCssPanelNesting(`${CSS}\n.card .chip { background: var(--sl-bone-2) } /* lint-ui-allow: 이유 */`)).toEqual([])
+  })
+
+  it('TSX: 같은 파일 JSX에서 면 안의 면(클래스·inline style 둘 다)', () => {
+    const panels = new Set(['card', 'dock'])
+    const src = [
+      'export const A = () => (',
+      '  <div className="card">',
+      '    <span className="x dock">a</span>',
+      '  </div>',
+      ')',
+      "export const B = () => <div style={{ background: 'var(--sl-bone-2)' }}><i style={{ backgroundColor: '#EADFCB' }} /></div>",
+    ].join('\n')
+    const v = findJsxPanelNesting(src, panels)
+    expect(v.map((x) => x.line)).toEqual([3, 6])
+    // 잉크 반투명 틴트(쉼표가 든 rgba)도 inline style에서 잡는다
+    const tint = "<div style={{ background: 'rgba(42, 33, 24, .06)' }}><i style={{ background: \"rgba(42,33,24,.1)\" }} /></div>"
+    expect(findJsxPanelNesting(tint)).toHaveLength(1)
+  })
+
+  it('TSX: 형제 면·닫힌 뒤의 면·제네릭·화살표 속성은 오탐하지 않는다', () => {
+    const panels = new Set(['card'])
+    const src = [
+      "import { useState } from 'react'",
+      'export function C() {',
+      '  const [a] = useState<string>(\'\')',
+      '  return (',
+      '    <>',
+      '      <div className="card" onClick={() => a > "b"}>x</div>',
+      '      <div className="card">y</div>',
+      '      <section><p className={`card ${a}`} /></section>',
+      '    </>',
+      '  )',
+      '}',
+    ].join('\n')
+    expect(findJsxPanelNesting(src, panels)).toEqual([])
+  })
+
+  it('폴더 검사에서 CSS의 면 클래스를 TSX에 적용한다', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lint-ui-panel-'))
+    writeFileSync(join(dir, 'a.css'), '.plate{background:var(--sl-bone-2)}\n')
+    writeFileSync(join(dir, 'a.tsx'), 'export const A = () => <div className="plate"><b className="plate">x</b></div>\n')
+    const r = lintPaths([dir])
+    expect(r.panels).toEqual(['plate'])
+    expect(r.problems).toEqual([expect.objectContaining({ rule: 'panel', line: 1 })])
   })
 })

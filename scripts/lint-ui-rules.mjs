@@ -8,6 +8,12 @@
  * 알려진 한계: 정규식 리터럴 안의 // 나 따옴표, `return 'http://…'`처럼 문자열 안 URL 뒤쪽은 놓칠 수 있다(미탐 방향).
  * 꼭 필요한 줄은 그 줄에 `lint-ui-allow` 주석을 단다(리뷰에서 이유를 본다).
  *
+ * 규칙 2(P3, R3 '회색 패널 위 회색 패널' 금지): 무채 면(bone-2·ad·bone-line·kiln-2·잉크 반투명 틴트) 위에 또 무채 면을 쌓지 않는다.
+ *   - CSS: 무채 배경을 칠하는 규칙의 선택자 조상 부분에 다른 무채 면 클래스가 있으면 위반(예: `.sl-foot .chip{background:var(--sl-bone-2)}`).
+ *   - TSX: 같은 파일 JSX 안에서 무채 면 요소(검사 대상 CSS의 무채 면 클래스 또는 inline style background) 안에 또 무채 면 요소가 있으면 위반.
+ *   - 한계: 컴포넌트 경계를 넘는 중첩(A의 면 안에 B 컴포넌트가 면을 그림)은 못 잡는다 — 리뷰·캡처로 본다. 바탕 면(bone·kiln·empty)은 대상 아님.
+ *     CSS는 `:is(.a, .b) .c`처럼 괄호 안 쉼표와 네이티브 CSS 중첩을 처리하지 않는다(미탐 방향). CSS의 lint-ui-allow는 규칙의 여는 중괄호 줄에 단다.
+ *
  * 실행: pnpm lint:ui   (위반이 있으면 exit 1 — CI에 그대로 넣을 수 있다)
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs'
@@ -134,24 +140,178 @@ function walk(p) {
   return readdirSync(p).flatMap((f) => (f === 'node_modules' ? [] : walk(join(p, f))))
 }
 
+// ---------- 규칙 2: 회색 패널 중첩(R3) ----------
+
+/** 무채 면으로 보는 배경 값: 토큰 이름 또는 같은 색의 hex, 잉크(42,33,24) 반투명 틴트 */
+const PANEL_VALUE = /--sl-(?:bone-2|bone-line|ad|kiln-2)(?![\w-])|#(?:EADFCB|E2DFD8|D9CBB2|1E1A16)\b|rgba\(\s*42\s*,\s*33\s*,\s*24\s*,/i
+const BG_DECL = /(?:^|[;{\s])background(?:-color|-image)?\s*:\s*([^;}]+)/gi
+
+export function isPanelBackground(declarations) {
+  for (const m of String(declarations).matchAll(BG_DECL)) if (PANEL_VALUE.test(m[1])) return true
+  return false
+}
+
+/** CSS 규칙 목록(@media 안쪽 포함, @keyframes 안은 제외): [{ selector, body, line }] */
+export function cssRules(css) {
+  const src = stripComments(css, { css: true })
+  const rules = []
+  const stack = []
+  let start = 0
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i]
+    if (c === '{') {
+      stack.push({ head: src.slice(start, i).trim(), open: i })
+      start = i + 1
+    } else if (c === '}') {
+      const top = stack.pop()
+      if (top && !top.head.startsWith('@') && !stack.some((s) => /^@(?:-\w+-)?keyframes/.test(s.head))) {
+        rules.push({ selector: top.head, body: src.slice(top.open + 1, i), line: src.slice(0, top.open).split('\n').length })
+      }
+      start = i + 1
+    } else if (c === ';' && stack.length === 0) start = i + 1
+  }
+  return rules
+}
+
+const classesIn = (compound) => [...compound.matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1])
+
+/** 선택자 하나를 조상 부분들과 대상(마지막) 부분으로 나눈다. 형제 결합자(+ ~) 앞은 조상이 아니라 끊는다. */
+function splitSelector(sel) {
+  const parts = sel.replace(/\s*([>+~])\s*/g, ' $1 ').trim().split(/\s+/)
+  const ancestors = []
+  let subject = ''
+  for (const p of parts) {
+    if (p === '+' || p === '~') {
+      subject = ''
+      continue
+    }
+    if (p === '>') continue
+    if (subject) ancestors.push(subject)
+    subject = p
+  }
+  return { ancestors, subject }
+}
+
+/** CSS 텍스트에서 무채 면 클래스(대상 부분이 그 클래스이고 무채 배경을 칠하는 규칙) */
+export function panelClassesFromCss(css) {
+  const out = new Set()
+  for (const r of cssRules(css)) {
+    if (!isPanelBackground(r.body)) continue
+    for (const sel of r.selector.split(',')) for (const c of classesIn(splitSelector(sel).subject)) out.add(c)
+  }
+  return out
+}
+
+/** CSS 안의 중첩: 무채 배경 규칙인데 선택자 조상에 무채 면 클래스가 있다 */
+export function findCssPanelNesting(css, panels = panelClassesFromCss(css)) {
+  const rawLines = css.split('\n')
+  const found = []
+  for (const r of cssRules(css)) {
+    if (!isPanelBackground(r.body)) continue
+    if (rawLines[r.line - 1]?.includes('lint-ui-allow')) continue
+    for (const sel of r.selector.split(',')) {
+      const outer = splitSelector(sel).ancestors.flatMap(classesIn).find((c) => panels.has(c))
+      if (outer) found.push({ line: r.line, rule: 'panel', detail: `${sel.trim()} — .${outer} 면 위에 또 무채 면` })
+    }
+  }
+  return found
+}
+
+// JSX 여는 태그로 볼 '<' 앞 글자(식별자 뒤의 '<'는 제네릭·비교: useState<T>, a<b)
+const JSX_BEFORE = new Set(['(', '>', '}', '{', '=', '?', ':', '&', '|', ',', ';', '[', ''])
+
+/** TSX: 같은 파일 JSX 트리에서 무채 면 요소 안의 무채 면 요소 */
+export function findJsxPanelNesting(src, panels = new Set()) {
+  const code = stripComments(src)
+  const rawLines = src.split('\n')
+  const lineAt = (i) => code.slice(0, i).split('\n').length
+  const esc = (c) => c.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&')
+  const classRe = panels.size ? new RegExp(`(?:^|[\\s'"\`{])(?:${[...panels].map(esc).join('|')})(?=$|[\\s'"\`}])`) : null
+  const isPanel = (attrs) => {
+    const cls = attrs.match(/className\s*=\s*(\{[\s\S]*?\}|"[^"]*"|'[^']*')/)
+    if (cls && classRe && classRe.test(cls[1])) return true
+    // style={{ background: 'var(--sl-bone-2)' }} · backgroundColor
+    // 값은 따옴표 단위로 잡는다 — 쉼표에서 끊으면 'rgba(42, 33, 24, .06)'를 놓친다(독립 리뷰 실측)
+    for (const m of attrs.matchAll(/background(?:Color|Image)?\s*:\s*(?:(['"`])([^'"`]*)\1|([^,}]+))/g)) if (PANEL_VALUE.test(m[2] ?? m[3])) return true
+    return false
+  }
+  const stack = []
+  const found = []
+  for (let i = 0; i < code.length; i++) {
+    if (code[i] !== '<') continue
+    const n = code[i + 1] ?? ''
+    if (n === '/') {
+      const m = code.slice(i, i + 200).match(/^<\/\s*([\w.:-]*)\s*>/)
+      if (!m) continue
+      const at = stack.map((s) => s.name).lastIndexOf(m[1])
+      if (at !== -1) stack.length = at
+      i += m[0].length - 1
+      continue
+    }
+    if (!(n === '>' || /[A-Za-z]/.test(n))) continue
+    let j = i - 1
+    while (j >= 0 && /\s/.test(code[j])) j--
+    const before = j >= 0 ? code[j] : ''
+    const word = code.slice(Math.max(0, j - 10), j + 1).match(/(\w+)$/)?.[1]
+    if (!JSX_BEFORE.has(before) && word !== 'return') continue
+    // 태그 끝(>) 찾기: 중괄호 깊이·따옴표를 따라간다(속성 안의 => 와 문자열 속 > 를 건너뜀)
+    let depth = 0
+    let quote = null
+    let k = i + 1
+    for (; k < code.length; k++) {
+      const c = code[k]
+      if (quote) {
+        if (c === '\\') k++
+        else if (c === quote) quote = null
+        continue
+      }
+      if (c === '"' || c === "'" || c === '`') quote = c
+      else if (c === '{') depth++
+      else if (c === '}') depth--
+      else if (c === '>' && depth === 0) break
+    }
+    if (k >= code.length) break
+    const inner = code.slice(i + 1, k)
+    const name = inner.match(/^([\w.:-]*)/)[1]
+    const panel = isPanel(inner)
+    const line = lineAt(i)
+    if (panel && !rawLines[line - 1]?.includes('lint-ui-allow')) {
+      const outer = [...stack].reverse().find((s) => s.panel)
+      if (outer) found.push({ line, rule: 'panel', detail: `<${name || '>'}> 무채 면이 ${outer.line}행 <${outer.name || '>'}> 면 안에 있다` })
+    }
+    if (!inner.trimEnd().endsWith('/')) stack.push({ name, panel, line })
+    i = k
+  }
+  return found
+}
+
 export function lintPaths(targets = DEFAULT_TARGETS) {
   const files = targets.flatMap(walk)
   const problems = []
+  const panels = new Set()
+  for (const f of files) if (f.endsWith('.css')) for (const c of panelClassesFromCss(readFileSync(f, 'utf8'))) panels.add(c)
   for (const f of files) {
-    for (const v of findViolations(readFileSync(f, 'utf8'), f)) problems.push({ file: relative(process.cwd(), f), ...v })
+    const src = readFileSync(f, 'utf8')
+    const file = relative(process.cwd(), f)
+    for (const v of findViolations(src, f)) problems.push({ file, rule: 'symbol', ...v })
+    if (f.endsWith('.css')) for (const v of findCssPanelNesting(src, panels)) problems.push({ file, ...v })
+    if (/\.[jt]sx$/.test(f)) for (const v of findJsxPanelNesting(src, panels)) problems.push({ file, ...v })
   }
-  return { files: files.length, problems }
+  return { files: files.length, problems, panels: [...panels].sort() }
 }
 
 function main() {
   const targets = process.argv.slice(2)
-  const { files, problems } = lintPaths(targets.length ? targets : DEFAULT_TARGETS)
+  const { files, problems, panels } = lintPaths(targets.length ? targets : DEFAULT_TARGETS)
   if (problems.length) {
-    for (const p of problems) console.error(`${p.file}:${p.line}:${p.col}  금지 문자 ${p.char} (${p.code}) — 이모지·기호 아이콘 대신 <Icon name=…/>`)
+    for (const p of problems) {
+      if (p.rule === 'panel') console.error(`${p.file}:${p.line}  회색 패널 중첩(R3) ${p.detail} — 바탕(Bone/Kiln) 위에 면 하나만, 위계는 크기·여백으로`)
+      else console.error(`${p.file}:${p.line}:${p.col}  금지 문자 ${p.char} (${p.code}) — 이모지·기호 아이콘 대신 <Icon name=…/>`)
+    }
     console.error(`\nlint-ui-rules: 위반 ${problems.length}건 (${files}개 파일)`)
     process.exit(1)
   }
-  console.log(`lint-ui-rules: OK (${files}개 파일, 이모지·기호 아이콘 0)`)
+  console.log(`lint-ui-rules: OK (${files}개 파일, 이모지·기호 아이콘 0, 회색 패널 중첩 0 — 무채 면 클래스 ${panels.length}개: ${panels.join(' ')})`)
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main()
