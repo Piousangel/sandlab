@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props) {
 }
 
 const guidePages = new Set(materialStaticParams().map((p) => p.slug))
-const a = { color: '#eef1f6' } as const
+const a = { color: '#C96A08', fontWeight: 700 } as const
 
 export default async function Page({ params }: Props) {
   const { id } = await params

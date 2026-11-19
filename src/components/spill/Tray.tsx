@@ -54,7 +54,7 @@ export default function Tray({ height, safeBottom, verbs, selected, run, runHigh
         onClick={() => onRun(run.action)}
         style={{
           minHeight: 48, minWidth: 108, padding: '0 18px', borderRadius: 999, border: 0, fontSize: 17, fontWeight: 800, letterSpacing: 0.5,
-          background: run.action === 'run' || run.action === 'next' ? K.accent : K.panel, color: run.action === 'run' || run.action === 'next' ? '#fff' : K.ink,
+          background: run.action === 'run' || run.action === 'next' ? K.accent : K.panel, color: K.ink,
           cursor: 'pointer', boxShadow: `${run.action === 'run' || run.action === 'next' ? '0 4px 0 ' + K.accentDeep : K.lift}${runHighlight ? ', 0 0 0 4px rgba(242,138,27,0.4)' : ''}`, touchAction: 'manipulation', whiteSpace: 'nowrap',
         }}
       >

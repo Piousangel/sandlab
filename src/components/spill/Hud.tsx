@@ -56,11 +56,11 @@ export default function Hud({ id, name, parts, showMoves, phase, sound, navColla
       </h1>
       {showMoves && (
         <span data-testid="hud-moves" style={{ ...chip, marginLeft: 'auto' }}>
-          <span style={{ color: parts.movesOver ? K.coral : K.ink }}>{parts.moves}</span>
+          <span style={{ color: parts.movesOver ? K.coralText : K.ink }}>{parts.moves}</span>
           {parts.par && (
             <span style={{ color: K.dim }}>
               {' · '}
-              <span style={{ color: parts.movesOver || parts.timeOver ? K.coral : undefined }}>{parts.par}</span>
+              <span style={{ color: parts.movesOver || parts.timeOver ? K.coralText : undefined }}>{parts.par}</span>
             </span>
           )}
         </span>

@@ -17,7 +17,7 @@ function Ring({ frac, done, bad }: { frac: number; done: boolean; bad: boolean }
   const c = 2 * Math.PI * r
   const color = bad ? K.coral : done ? K.green : K.blue
   return (
-    <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden style={{ flexShrink: 0 }}>
+    <svg width="28" height="28" viewBox="0 0 30 30" aria-hidden style={{ flexShrink: 0 }}>
       <circle cx="15" cy="15" r={r} fill="none" stroke={K.line} strokeWidth="4" />
       <circle
         cx="15" cy="15" r={r} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round"
@@ -36,19 +36,21 @@ function Ring({ frac, done, bad }: { frac: number; done: boolean; bad: boolean }
 }
 
 const chipBase = {
-  display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px 4px 6px', borderRadius: 999, background: K.panel,
-  boxSizing: 'border-box', minHeight: 40, fontSize: 13, fontWeight: 700, color: K.ink, whiteSpace: 'nowrap',
+  display: 'inline-flex', alignItems: 'center', gap: 8, padding: '2px 12px 2px 4px', borderRadius: 999, background: K.panel,
+  boxSizing: 'border-box', minHeight: 34, fontSize: 13, fontWeight: 700, color: K.ink, whiteSpace: 'nowrap',
 } as const
+
+const mini = { padding: '3px 10px', borderRadius: 999, background: K.panel, border: `2px solid ${K.line}` } as const
 
 export default function GoalDock({ rows, gems, par, over, compact }: Props) {
   if (compact) {
     const hit = rows.some((r) => r.kind === 'bad' && r.frac > 0)
     return (
-      <div aria-label="Goals" style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', gap: 12, padding: '0 14px', fontSize: 13, color: K.dim, whiteSpace: 'nowrap', overflow: 'hidden', fontWeight: 700 }}>
-        <span style={{ color: K.ink }}>{dockSummary(rows)}</span>
-        {hit && <span style={{ color: K.coral }}>☠ hit</span>}
-        {gems.total > 0 && <span style={{ color: K.gem }}>◆ {gems.got}/{gems.total}</span>}
-        {par && <span style={{ color: over ? K.coral : undefined }}>★ {par}</span>}
+      <div aria-label="Goals" style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+        <span style={{ ...mini, color: K.ink }}>{dockSummary(rows)}</span>
+        {hit && <span style={{ ...mini, color: K.coralText, borderColor: K.coral }}>✕ hit</span>}
+        {gems.total > 0 && <span style={{ ...mini, color: K.gemText }}>◆ {gems.got}/{gems.total}</span>}
+        {par && <span style={{ ...mini, color: over ? K.coralText : K.ink }}>★ {par}</span>}
       </div>
     )
   }
@@ -56,8 +58,8 @@ export default function GoalDock({ rows, gems, par, over, compact }: Props) {
     <div
       aria-label="Goals"
       style={{
-        flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexWrap: 'wrap', alignContent: 'center', gap: 8,
-        padding: '8px 12px',
+        flex: 1, minHeight: 0, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 8, overflowX: 'auto', scrollbarWidth: 'none',
+        padding: '0 12px',
       }}
     >
       {rows.map((r, k) => {
@@ -67,17 +69,19 @@ export default function GoalDock({ rows, gems, par, over, compact }: Props) {
           <div
             key={k}
             data-done={r.done ? '1' : undefined}
+            role="group"
+            aria-label={`${r.label}, ${r.value}${r.done ? ', done' : bad ? (hit ? ', hit' : ', safe') : ''}`}
             className={r.done ? 'spill-pop' : undefined}
-            style={{ ...chipBase, border: `2px solid ${bad ? (hit ? K.coral : '#F3C9C4') : r.done ? K.green : K.line}`, animation: r.done ? 'spill-pop 120ms ease-out' : undefined }}
+            style={{ ...chipBase, flexShrink: 0, border: `2px solid ${bad ? (hit ? K.coral : '#F3C9C4') : r.done ? K.green : K.line}`, animation: r.done ? 'spill-pop 120ms ease-out' : undefined }}
           >
             <Ring frac={r.frac} done={r.done} bad={bad} />
-            <span style={{ color: bad ? K.coral : K.ink, overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '9em' }}>{r.label}</span>
-            <span style={{ fontVariantNumeric: 'tabular-nums', color: hit ? K.coral : K.dim }}>{r.value}</span>
+            <span style={{ color: bad ? K.coralText : K.ink }}>{r.label}</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums', color: hit ? K.coralText : K.dim }}>{r.value}</span>
           </div>
         )
       })}
-      {gems.total > 0 && <div style={{ ...chipBase, border: `2px solid ${K.line}`, color: K.gem, paddingLeft: 12 }}>◆ {gems.got}/{gems.total} gems</div>}
-      {par && <div style={{ ...chipBase, border: `2px solid ${K.line}`, paddingLeft: 12, color: over ? K.coral : K.ink }}>★ {par}</div>}
+      {gems.total > 0 && <div style={{ ...chipBase, flexShrink: 0, border: `2px solid ${K.line}`, color: K.gemText, paddingLeft: 12 }}>◆ {gems.got}/{gems.total} gems</div>}
+      {par && <div style={{ ...chipBase, flexShrink: 0, border: `2px solid ${K.line}`, paddingLeft: 12, color: over ? K.coralText : K.ink }}>★ {par}</div>}
     </div>
   )
 }
