@@ -13,7 +13,7 @@ import { dailyIdFor, dayNumber, loadDaily, saveDaily, shareText, type DailyRec }
 import { trackEvent } from '@/lib/sand/gallery'
 import type { LevelDef } from '@/lib/spill/level/define'
 
-const a = { color: '#C96A08', fontWeight: 700 } as const
+const a = { color: '#A04F00', fontWeight: 700 } as const
 
 export default function DailySpill({ children }: { children?: ReactNode }) {
   const [today, setToday] = useState<{ n: number; level: LevelDef } | null>(null)

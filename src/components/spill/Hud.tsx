@@ -51,7 +51,7 @@ export default function Hud({ id, name, parts, showMoves, phase, sound, navColla
         </a>
       )}
       <h1 style={{ margin: 0, fontSize: 15, fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, flexShrink: 1 }}>
-        <span style={{ color: K.accentDeep, marginRight: 6 }}>{id}</span>
+        <span style={{ color: K.accentText, marginRight: 6 }}>{id}</span>
         {name}
       </h1>
       {showMoves && (

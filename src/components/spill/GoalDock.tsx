@@ -37,7 +37,7 @@ function Ring({ frac, done, bad }: { frac: number; done: boolean; bad: boolean }
 
 const chipBase = {
   display: 'inline-flex', alignItems: 'center', gap: 8, padding: '2px 12px 2px 4px', borderRadius: 999, background: K.panel,
-  boxSizing: 'border-box', minHeight: 34, fontSize: 13, fontWeight: 700, color: K.ink, whiteSpace: 'nowrap',
+  boxSizing: 'border-box', minHeight: 36, fontSize: 13, fontWeight: 700, color: K.ink, whiteSpace: 'nowrap',
 } as const
 
 const mini = { padding: '3px 10px', borderRadius: 999, background: K.panel, border: `2px solid ${K.line}` } as const
@@ -57,12 +57,13 @@ export default function GoalDock({ rows, gems, par, over, compact }: Props) {
   return (
     <div
       aria-label="Goals"
+      role="group"
       style={{
         flex: 1, minHeight: 0, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 8, overflowX: 'auto', scrollbarWidth: 'none',
-        padding: '0 12px',
+        padding: '0 12px', maskImage: 'linear-gradient(90deg,#000 calc(100% - 20px),transparent)', WebkitMaskImage: 'linear-gradient(90deg,#000 calc(100% - 20px),transparent)',
       }}
     >
-      {rows.map((r, k) => {
+      {[...rows].sort((a, b) => Number(b.kind === 'bad') - Number(a.kind === 'bad')).map((r, k) => {
         const bad = r.kind === 'bad'
         const hit = bad && r.frac > 0
         return (
@@ -70,7 +71,7 @@ export default function GoalDock({ rows, gems, par, over, compact }: Props) {
             key={k}
             data-done={r.done ? '1' : undefined}
             role="group"
-            aria-label={`${r.label}, ${r.value}${r.done ? ', done' : bad ? (hit ? ', hit' : ', safe') : ''}`}
+            aria-label={`${r.label}, ${r.value}${r.done ? ', done' : ''}`}
             className={r.done ? 'spill-pop' : undefined}
             style={{ ...chipBase, flexShrink: 0, border: `2px solid ${bad ? (hit ? K.coral : '#F3C9C4') : r.done ? K.green : K.line}`, animation: r.done ? 'spill-pop 120ms ease-out' : undefined }}
           >
@@ -80,8 +81,12 @@ export default function GoalDock({ rows, gems, par, over, compact }: Props) {
           </div>
         )
       })}
-      {gems.total > 0 && <div style={{ ...chipBase, flexShrink: 0, border: `2px solid ${K.line}`, color: K.gemText, paddingLeft: 12 }}>◆ {gems.got}/{gems.total} gems</div>}
-      {par && <div style={{ ...chipBase, flexShrink: 0, border: `2px solid ${K.line}`, paddingLeft: 12, color: over ? K.coralText : K.ink }}>★ {par}</div>}
+      {(gems.total > 0 || par) && (
+        <div style={{ ...chipBase, flexShrink: 0, border: `2px solid ${K.line}`, paddingLeft: 12, gap: 12 }}>
+          {gems.total > 0 && <span style={{ color: K.gemText }}>◆ {gems.got}/{gems.total}</span>}
+          {par && <span style={{ color: over ? K.coralText : K.ink }}>★ {par}</span>}
+        </div>
+      )}
     </div>
   )
 }

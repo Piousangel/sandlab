@@ -27,7 +27,8 @@ describe('트레이 아래 목표 독', () => {
   })
   it('행이 다 들어가면 full, 한 줄만 들어가면 compact, 그보다 작으면 숨긴다', () => {
     expect(dockMode(200, 4)).toBe('full')
-    expect(dockMode(4 * 21 + 21 + 20 - 1, 4)).toBe('compact')
+    expect(dockMode(43, 4)).toBe('compact')
+    expect(dockMode(44, 4)).toBe('full')
     expect(dockMode(30, 4)).toBe('compact')
     expect(dockMode(29, 4)).toBe(null)
   })

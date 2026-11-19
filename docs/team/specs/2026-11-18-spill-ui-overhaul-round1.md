@@ -107,6 +107,7 @@
 ---
 # 부록 R3 — 13시 구현·독립 혹평 (2026-11-19)
 - 구현(1단계): `ui.ts` K 토큰(크림·잉크·코랄·텍스트용 어두운 변형), `Hud` SVG 아이콘·moves 칩, `GoalDock` 링 칩(체크/X 모양, aria-label 상태), `Tray` 알약·입체 RUN, `FloatButtons` 크림 알약, 패널 링크 색. 보드 캔버스·레이아웃 높이·시뮬 불변.
-- 독립 혹평 1차 **5.5/10**(기준 6.5 미달). 수용: ① 칩이 dockMode 높이 예산 초과(→ 한 줄 nowrap·가로 스크롤, 칩 34px로 62px 예산 내) ② 크림 위 옛 흰 링크(DailySpill·play/[id]) 수정 ③ 텍스트 대비(coralText·gemText, RUN 글씨 잉크색) ④ 칩 aria-label ⑤ compact도 칩화 ⑥ GoalDock 테스트 추가.
+- 독립 혹평 1차 **5.5/10**(기준 6.5 미달). 수용: ① 칩이 dockMode 높이 예산 초과(→ 한 줄 nowrap·가로 스크롤, 칩 36px 한 줄, dockMode full 임계 44px(DOCK_FULL_MIN)) ② 크림 위 옛 흰 링크(DailySpill·play/[id]) 수정 ③ 텍스트 대비(coralText·gemText, RUN 글씨 잉크색) ④ 칩 aria-label ⑤ compact도 칩화 ⑥ GoalDock 테스트 추가.
 - 거부/보류(2단계 범위로 기록): ResultCard·LevelList·Editor의 다크 잔존(클리어 연출 2단계에서 한 번에), RUN 뒤 floatButtons 하단 이동(레이아웃 박스 변경이라 별도 라운드), 진행 링 reduced-motion(120ms, 영향 작음).
 - 미검증 정직: 390/360px 실캡처 없음(WebGPU 헤드리스 불가) — 사람 확인 필요. 재혹평은 수정 후 미실시 → 머지 전 재리뷰.
+- 재혹평 2차 **6.3/10**(0.2 부족). 수용·반영: H1 위험 칩을 맨 앞·gems+par 한 칩·오른쪽 fade·웹킷 스크롤바 숨김, H2 `greenText/coralText/accentText`·dim 알파 0.74, H3 full 임계를 칩 높이 기준(44px)으로, M3 aria 중복 제거·group role, 칩 높이 36으로 정정. 보류: M1 pop이 재마운트에서 재발동(실캡처 후 판단), 비활성 알약 대비. 3차 재리뷰 후 머지.

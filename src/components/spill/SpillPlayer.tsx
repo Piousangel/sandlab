@@ -71,6 +71,7 @@ const CSS = `
   .spill-root{display:grid;grid-template-columns:minmax(0,1fr) 320px;height:100dvh;overflow:hidden}
   .spill-panel{height:100dvh;overflow-y:auto;border-left:1px solid ${K.line};max-width:none;margin:0;padding:20px 20px 40px}
 }
+[aria-label=Goals]::-webkit-scrollbar{display:none}
 @keyframes spill-pop{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.spill-pop{animation:none!important}}
 @keyframes spill-up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
@@ -665,14 +666,14 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
           {desc.goals.map((g, k) => {
             const t = s.targets.filter((x) => x.kind !== 'bad')[k]
             return (
-              <li key={k} style={{ color: t?.latched ? K.green : undefined }}>
+              <li key={k} style={{ color: t?.latched ? K.greenText : undefined }}>
                 {g}
                 {t?.latched ? ' ✓' : ''}
               </li>
             )
           })}
           {desc.warnings.map((w) => (
-            <li key={w} style={{ color: K.coral }}>{w}</li>
+            <li key={w} style={{ color: K.coralText }}>{w}</li>
           ))}
         </ul>
         <h2>Stars</h2>
@@ -682,7 +683,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
           <li>★ {desc.par ?? 'No par for this level'}</li>
         </ul>
         {best > 0 && (
-          <p style={{ margin: '10px 0 0', color: K.accentDeep }}>Your best: {starRow(best)}</p>
+          <p style={{ margin: '10px 0 0', color: K.accentText }}>Your best: {starRow(best)}</p>
         )}
         {children}
       </aside>
