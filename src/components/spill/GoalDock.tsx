@@ -60,7 +60,7 @@ export default function GoalDock({ rows, gems, par, over, compact }: Props) {
       role="group"
       style={{
         flex: 1, minHeight: 0, display: 'flex', flexWrap: 'nowrap', alignItems: 'center', gap: 8, overflowX: 'auto', scrollbarWidth: 'none',
-        padding: '0 12px', maskImage: 'linear-gradient(90deg,#000 calc(100% - 20px),transparent)', WebkitMaskImage: 'linear-gradient(90deg,#000 calc(100% - 20px),transparent)',
+        padding: '0 24px 0 12px', maskImage: 'linear-gradient(90deg,#000 calc(100% - 20px),transparent)', WebkitMaskImage: 'linear-gradient(90deg,#000 calc(100% - 20px),transparent)',
       }}
     >
       {[...rows].sort((a, b) => Number(b.kind === 'bad') - Number(a.kind === 'bad')).map((r, k) => {

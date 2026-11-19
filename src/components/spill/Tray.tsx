@@ -29,7 +29,7 @@ export default function Tray({ height, safeBottom, verbs, selected, run, runHigh
       }}
     >
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '7px 10px 0', flexShrink: 0 }}>
-      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', flex: 1, minWidth: 0, scrollbarWidth: 'none' }}>
+      <div style={{ display: 'flex', gap: 8, overflowX: 'auto', flex: 1, minWidth: 0, scrollbarWidth: 'none', paddingBottom: 4 }}>
         {verbs.map((v) => {
           const mode = v.verb !== 'trigger'
           const out = v.left === 0
