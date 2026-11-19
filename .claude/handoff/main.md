@@ -1,3 +1,17 @@
+# 인계 (2026-11-19 밤): 리디자인 v2 P1 「기반」 머지 — P2(#66)·아이콘(#68)도 머지됨, 다음은 P3(앱 셸)
+
+- 계획서 docs/plans/2026-11-19-redesign-v2.md 6장 진행표가 기준. P1 = #69(브랜치 shift/redesign-p1-foundation).
+- **새 UI는 전부 `src/ui-next/`**. 토큰 `tokens.css`(`--sl-*`, 기존 K/C는 P12까지 그대로), 서체 `fonts.ts`(next/font/local, preload false, 재현 `scripts/fonts/build-fonts.py`), 플래그 `flag.ts`(`UI_NEXT`). 아이콘은 이 PR에서 빼고 동시 진행된 #68(`src/ui-next/icons/`, 27종, 머지됨)을 쓴다.
+- **셸 전환 구조(S6)**: layout.tsx가 `@ui-shell`을 import → 기본은 `shell/classic.ts`(빈 객체), `NEXT_PUBLIC_UI=next` 빌드에서만 next.config.ts의 NormalModuleReplacementPlugin이 `shell/next.ts`로 바꾼다. 새 셸 코드는 **shell/next.ts에서부터 import 그래프로만** 들어오게 한다 — layout·기존 페이지가 ui-next 모듈(fonts·tokens.css)을 직접 import하면 prod HTML에 CSS 링크가 붙는다.
+- **prod HTML diff 0 확인법**: 같은 절대 경로 폴더에서 base → 브랜치 순으로 `pnpm build`하고 out/을 buildId만 치환해 비교(경로가 다르면 webpack 모듈 id가 달라져 전 청크가 달라 보인다). P1 결과 156파일 전부 동일.
+- prod 배포 스크립트는 이제 `NEXT_PUBLIC_UI= next build`(셸에 변수가 새도 classic으로 빌드), verify-ads는 기본이 prod 모드(변수 next·_headers·Disallow robots면 실패), 프리뷰는 `--preview`.
+- 프리뷰: `pnpm run build:preview`(robots 전체 차단 + out/_headers noindex) / `pnpm run deploy:preview`(wrangler `--env preview` → sandlab-preview.<계정>.workers.dev, 같은 D1, AE 없음, NOINDEX=1). **아직 한 번도 배포 안 함**(오너 할 일 참고: workers.dev 하위 도메인 활성 여부). 첫 배포 뒤 `curl -I`로 정적 파일·404·`/s/x`·`/api/scenes` 네 종류 모두 `x-robots-tag: noindex, nofollow`인지, `<html>`에 class가 있는지(=새 셸로 빌드됨) 확인한다.
+- 함정: `wrangler deploy`(env 없음)는 이제 "Multiple environments" 경고를 낸다 — 무해, prod는 최상위 설정 그대로. `ember-text`는 bone 위에서만(bone-2 위 4.43:1 미달 → ink + 밑줄). 아이콘은 이모지·기호 금지(`pnpm lint:ui`), 색 쌍은 `pnpm check:contrast`.
+- 이월: 회색 패널 중첩 린트(P3, 셸 컴포넌트가 생긴 뒤). 린트 알려진 한계: 정규식 리터럴·`return 'http://…'` 뒤쪽은 미탐 가능.
+- P3가 할 일: 첫 화면에서 서체를 쓰기 시작하면 Display preload 여부 결정 + 프리뷰에서 Lighthouse LCP 실측해 DECISIONS(웹폰트 도입)에 적기. 프리뷰 배포 워크플로(main 머지 시 `deploy:preview`)는 PR P1 본문의 계획대로 추가.
+
+---
+
 # 인계 (2026-11-19 23시 야간): 리디자인 v2 제작물 — 실엔진 포스터 캡처 + 아이콘 v1
 
 - **판을 바꾸는 발견: 헤드리스 WebGPU 된다.** 크로미움 `--enable-unsafe-webgpu --enable-features=Vulkan --use-angle=swiftshader --use-vulkan=swiftshader` + **localhost 출처**(about:blank·file://은 navigator.gpu 없음)면 SwiftShader 어댑터가 잡힌다. 단 **캔버스 표시(스왑체인)는 못 한다** — DOM·OffscreenCanvas 모두 첫 프레임에 "Device was destroyed". 우회: `getContext('webgpu')`를 자체 텍스처로 받는 가짜 컨텍스트(scripts/capture/posters.ts `FakeSurface`) → copyTextureToBuffer. 엔진 무수정. 위 "390 실캡처 불가"류 메모는 이걸로 풀 수 있다(03시 QA·P6 골든셋 e2e에 재사용).

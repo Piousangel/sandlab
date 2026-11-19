@@ -1,0 +1,117 @@
+/*
+ * 리디자인 v2 「Glass & Grain」 토큰 v1 (P1). S1 = A 라이트(오너 11-19), S2 Ember 대비.
+ * 근거: docs/team/research/2026-11-19/redesign-concept.md 3장, 시안 docs/design/redesign-v2/v3/sandlab-v3.html.
+ *
+ * - 새 이름공간 --sl-* 만 쓴다. 기존 K/C 토큰(src/components/spill/ui.ts)은 컷오버(P12)까지 그대로 둔다.
+ * - 이 파일은 새 셸(src/ui-next/shell/next.ts)만 불러온다 → prod 빌드(NEXT_PUBLIC_UI 미설정)에는 실리지 않는다.
+ * - 색 쌍의 대비는 scripts/check-contrast.mjs가 이 파일을 직접 읽어 검사한다(값을 바꾸면 pnpm check:contrast).
+ * - 재료색(materials.ts)은 텍스트 색으로 쓰지 않는다. 텍스트는 ink·ink-2·ember-text·on-kiln만.
+ */
+:root {
+  /* 면 — 화면 전체 Bone 한 면, 어두운 면은 캔버스 우물·Spill 보드 둘레(kiln)만 */
+  --sl-bone: #F4ECDD;
+  --sl-bone-2: #EADFCB; /* 카드·도크 */
+  --sl-bone-line: #D9CBB2; /* 1px 구분선, 장식 전용(텍스트·아이콘 금지) */
+  --sl-kiln: #14110E;
+  --sl-kiln-2: #1E1A16;
+  --sl-kiln-line: rgba(239, 230, 214, 0.12);
+  --sl-empty: #07090D; /* 엔진 캔버스 empty 색 — 셰이더 소관, 바꾸지 않는다 */
+
+  /* 글자 */
+  --sl-ink: #2A2118;
+  --sl-ink-2: #5E5040;
+  --sl-on-kiln: #EFE6D6;
+  --sl-on-kiln-2: #B3A58F;
+
+  /* 주 행동(화면당 하나) — S2: #C4520F 위 흰 글자 ≥ 4.5:1 */
+  --sl-ember: #C4520F;
+  --sl-ember-edge: #8E3A08;
+  --sl-on-ember: #FFFFFF;
+  --sl-ember-text: #A9470A; /* 링크·강조 텍스트 — bone 위에서만(4.98:1). bone-2 위는 4.43:1 미달 → ink + 밑줄 */
+
+  /* 상태 — 항상 아이콘과 함께(색만으로 구분 금지) */
+  --sl-ok: #2E8B57;
+  --sl-warn: #C2412D;
+
+  /* 광고 안내판(S11) — 콘텐츠 카드(bone-2)와 다른 면 */
+  --sl-ad: #E2DFD8;
+  --sl-ad-line: #B9B3A8;
+
+  /* 유리 */
+  --sl-glass-hi: rgba(255, 255, 255, 0.55);
+  --sl-glass-lo: rgba(42, 33, 24, 0.18);
+  --sl-tube-line: rgba(42, 33, 24, 0.58); /* 시험관 윤곽, bone 위 ≥ 3:1 (S1 보완) */
+  --sl-tube-bg: rgba(255, 255, 255, 0.42);
+
+  /* 모서리 */
+  --sl-r-xs: 6px; /* 칩 */
+  --sl-r-sm: 10px; /* 버튼 */
+  --sl-r-md: 16px; /* 카드 */
+  --sl-r-glass: 22px; /* 유리 용기·액자 안쪽 */
+  --sl-r-pill: 999px;
+  --sl-r-tube: 0 0 14px 14px; /* 시험관은 아래만 둥글게 */
+
+  /* 간격(4px 베이스) */
+  --sl-s-1: 4px;
+  --sl-s-2: 8px;
+  --sl-s-3: 12px;
+  --sl-s-4: 16px;
+  --sl-s-5: 24px;
+  --sl-s-6: 32px;
+  --sl-s-7: 48px;
+  --sl-s-8: 64px;
+  --sl-hit: 44px; /* 터치 최소(S9) */
+
+  /* 그림자 — 블러 남발 금지 */
+  --sl-lift: 0 2px 0 rgba(42, 33, 24, 0.18);
+  --sl-glass: inset 0 1px 0 var(--sl-glass-hi), inset 0 -2px 0 var(--sl-glass-lo), 0 6px 14px -8px rgba(42, 33, 24, 0.35);
+  --sl-press-y: 2px; /* 눌림: translateY(var(--sl-press-y)) + box-shadow none */
+  --sl-focus: 0 0 0 2px var(--sl-bone), 0 0 0 4px var(--sl-ink);
+
+  /* 모션 */
+  --sl-t-tap: 80ms;
+  --sl-t-quick: 160ms;
+  --sl-t-move: 240ms;
+  --sl-t-settle: 400ms;
+  --sl-t-reward-max: 900ms;
+  --sl-ease-pour: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --sl-ease-drop: cubic-bezier(0.55, 0, 0.75, 0.2);
+  --sl-ease-grain: steps(6, end);
+
+  /* 서체 — 변수(--sl-font-bricolage·--sl-font-jbmono)는 next/font가 html 클래스로 단다 */
+  --sl-font-display: var(--sl-font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --sl-font-mono: var(--sl-font-jbmono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* 타이포 스케일(redesign-concept 3.2) — 모바일(390) 값, 데스크톱은 아래 미디어 쿼리 */
+  --sl-fs-display: 40px;
+  --sl-fs-h1: 28px;
+  --sl-fs-h2: 20px;
+  --sl-fs-body: 16px;
+  --sl-fs-label: 11px; /* 모노 라벨 최소(S9). 누르는 라벨은 --sl-fs-label-tap */
+  --sl-fs-label-tap: 12px;
+  --sl-fs-gauge: 24px;
+  --sl-lh-body: 1.55;
+  --sl-lh-tight: 1.15;
+  --sl-ls-label: 0.08em; /* 모노 라벨: uppercase + 이 자간 */
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --sl-fs-display: 64px;
+    --sl-fs-h1: 40px;
+    --sl-fs-h2: 24px;
+    --sl-fs-body: 17px;
+    --sl-fs-label: 12px;
+    --sl-fs-gauge: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sl-t-tap: 0.01ms;
+    --sl-t-quick: 0.01ms;
+    --sl-t-move: 0.01ms;
+    --sl-t-settle: 0.01ms;
+    --sl-t-reward-max: 0.01ms;
+  }
+}
