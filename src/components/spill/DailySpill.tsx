@@ -70,11 +70,12 @@ export default function DailySpill({ children }: { children?: ReactNode }) {
   }
 
   return (
-    <SpillPlayer level={level} nextId={null} onCleared={onCleared} badge={DailyStart ? `No.${n}` : undefined} back={DailyStart ? { href: '/daily', label: 'Daily start' } : undefined}>
+    <SpillPlayer level={level} nextId={null} onCleared={onCleared} badge={DailyStart ? `No.${n}` : undefined} back={DailyStart ? { href: '/daily', label: 'Daily start' } : undefined} share={text ? { text, onClick: () => trackEvent('share_click', 'daily') } : undefined}>
       <section style={{ marginTop: 18 }}>
-        <h1 style={{ fontSize: 20, margin: '0 0 4px' }}>
+        {/* 플레이 화면 헤더(Hud)가 이미 h1 — 페이지 제목 중복을 피해 h2(겉모습은 인라인 스타일 그대로) */}
+        <h2 style={{ fontSize: 20, margin: '0 0 4px' }}>
           Daily #{n}: {level.name}
-        </h1>
+        </h2>
         <p style={{ margin: '0 0 10px', opacity: 0.75 }}>
           {mine
             ? `Solved today in ${mine.moves} ${mine.moves === 1 ? 'move' : 'moves'} (${'★'.repeat(mine.stars)}). Replay for fun; your first clear is what the share text uses.`
