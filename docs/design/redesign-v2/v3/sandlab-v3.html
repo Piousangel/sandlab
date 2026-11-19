@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sandlab v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=block" rel="stylesheet">
+<style>
+/* =========================================================
+   Sandlab v3 · Glass & Grain — PR 0 시안 보강 (리뷰 6.4 반영)
+   v2 대비 토큰 변경: --ember #E0661B → #C4520F (흰 글자 4.5:1 이상)
+   ========================================================= */
+:root{
+  --bone:#F4ECDD;--bone-2:#EADFCB;--bone-line:#D9CBB2;--ink:#2A2118;--ink-2:#5E5040;
+  --kiln:#14110E;--kiln-2:#1E1A16;--kiln-3:#2A241E;--kiln-line:rgba(239,230,214,.12);
+  --on-kiln:#EFE6D6;--on-kiln-2:#B3A58F;
+  --empty:#07090D;
+  --ember:#C4520F;--ember-edge:#8E3A08;--ember-text:#A9470A;
+  --ad:#E2DFD8;--ad-line:#B9B3A8;
+  --glass-hi:rgba(255,255,255,.55);--glass-lo:rgba(42,33,24,.18);
+  --lift:0 2px 0 rgba(42,33,24,.18);
+  --glass:inset 0 1px 0 var(--glass-hi),inset 0 -2px 0 var(--glass-lo),0 6px 14px -8px rgba(42,33,24,.35);
+  --spot:radial-gradient(90% 60% at 50% 58%,rgba(255,168,92,.14),rgba(255,168,92,.05) 45%,rgba(255,168,92,0) 72%);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+button{font:inherit;color:inherit;background:none;border:0}
+a{color:inherit;text-decoration:none}
+body{background:#CFC4B1;font-family:'Bricolage Grotesque',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.board{display:flex;flex-wrap:wrap;gap:120px 72px;padding:140px 72px 96px;align-items:flex-start;width:3000px}
+.row{display:flex;gap:56px;align-items:flex-start;width:100%}
+.art{position:relative;flex:none}
+.art-label{position:absolute;top:-92px;left:0;white-space:nowrap}
+.art-label b{font:700 22px/1 'Bricolage Grotesque';display:block;margin-bottom:10px}
+.art-label span{font:500 13px/1.4 'JetBrains Mono';color:var(--ink-2)}
+.frame{background:var(--bone);overflow:hidden;position:relative;width:390px}
+.mono{font-family:'JetBrains Mono',monospace;font-feature-settings:"tnum"}
+/* 모노 라벨: 최소 11px, 누르는 라벨은 12px(.lbl-t) */
+.lbl{font:500 11px/14px 'JetBrains Mono';letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.lbl b{color:var(--ink);font-weight:700}
+.lbl-t{font:600 12px/14px 'JetBrains Mono';letter-spacing:.05em;text-transform:uppercase}
+.ic{width:20px;height:20px;flex:none;display:block}
+.notes{width:320px;flex:none}
+.notes h4{font:700 15px/1.3 'Bricolage Grotesque';margin-bottom:12px}
+.notes ol{list-style:none;counter-reset:n}
+.notes li{counter-increment:n;font:400 13px/1.55 'Bricolage Grotesque';padding:10px 0 10px 28px;border-top:1px solid rgba(42,33,24,.18);position:relative}
+.notes li::before{content:counter(n,decimal-leading-zero);position:absolute;left:0;top:12px;font:700 11px/1 'JetBrains Mono';color:var(--ink-2)}
+
+/* ---------- header ---------- */
+.hdr{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 4px 0 8px;background:var(--bone)}
+.wordmark{font:800 21px/1 'Bricolage Grotesque';letter-spacing:-.02em;height:44px;display:flex;align-items:center;padding:0 8px}
+.hit{min-width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.chip-daily{height:32px;padding:0 12px 0 10px;border-radius:999px;background:var(--bone-2);display:flex;align-items:center;gap:6px;font:600 12px/1 'JetBrains Mono';letter-spacing:.03em}
+.chip-daily .ic{width:16px;height:16px}
+.chip-daily span{color:var(--ink-2);font-weight:500}
+.hdr-title{display:flex;align-items:center;gap:8px;min-width:0}
+.hdr-title b{font:600 16px/1 'Bricolage Grotesque'}
+
+/* ---------- headline ---------- */
+.h1{font:650 28px/34px 'Bricolage Grotesque';letter-spacing:-.03em;white-space:nowrap;padding:4px 16px 14px}
+.h1 span{color:var(--ink-2)}
+
+/* ---------- canvas, full-bleed 390×195 (= 1200×600 의 0.325배, 2:1) ---------- */
+.cv{position:relative;width:100%;aspect-ratio:2/1;background:var(--empty);overflow:hidden}
+.cv>img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.cv::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,rgba(255,255,255,.06) 0 8%,transparent 8.2%)}
+.hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:10px;height:44px;padding:0 16px 0 12px;border-radius:999px;background:rgba(20,17,14,.74);box-shadow:inset 0 0 0 1px rgba(239,230,214,.14);font:600 15px/1 'Bricolage Grotesque';color:var(--on-kiln);white-space:nowrap;z-index:2}
+.hint .ic{width:22px;height:22px}
+.ghost{position:absolute;z-index:1;pointer-events:none}
+
+/* ---------- material status / nameplate ---------- */
+.status{display:flex;align-items:center;gap:8px;padding:12px 16px 0;font:600 15px/20px 'Bricolage Grotesque'}
+.status i{width:12px;height:12px;border-radius:3px;display:block;box-shadow:inset 0 0 0 1px rgba(42,33,24,.4)}
+.status span{color:var(--ink-2);font-weight:400}
+.plate{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 11px 0 9px;border-radius:6px;background:#241E19;box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 0 1px rgba(0,0,0,.45),0 4px 10px -6px rgba(0,0,0,.8);font:600 13px/1 'Bricolage Grotesque';color:var(--on-kiln);white-space:nowrap}
+.plate i{width:10px;height:10px;border-radius:2px;display:block}
+.plate span{color:var(--on-kiln-2);font-weight:400}
+
+/* ---------- tabs (Bricolage, 모노 아님 → 첫 화면 모노 라벨 수 절약) ---------- */
+.tabs{display:flex;gap:0;height:44px;align-items:stretch;padding:0 8px}
+.tab{min-width:44px;height:44px;display:flex;align-items:center;justify-content:center;padding:0 10px;font:600 14px/1 'Bricolage Grotesque';color:var(--ink-2)}
+.tab.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
+.kz .tab{color:var(--on-kiln-2)}
+.kz .tab.on{color:var(--on-kiln);box-shadow:inset 0 -2px 0 var(--on-kiln)}
+
+/* ---------- rack ---------- */
+.rack-wrap{position:relative}
+.rack{display:flex;gap:2px;align-items:flex-end;overflow-x:auto;scrollbar-width:none;padding:18px 16px 6px 12px}
+.rack::-webkit-scrollbar{display:none}
+.rack-fade{position:absolute;right:0;top:0;bottom:0;width:40px;pointer-events:none;background:linear-gradient(90deg,rgba(244,236,221,0),var(--bone))}
+.kz .rack-fade{background:linear-gradient(90deg,rgba(20,17,14,0),var(--kiln) 85%)}
+.tube{min-width:46px;padding:0 1px;flex:none;display:flex;flex-direction:column;align-items:center;position:relative;height:122px;justify-content:flex-end}
+.tube .cork{width:24px;height:10px;border-radius:3px 3px 2px 2px;background:#6B4423;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -2px 0 rgba(0,0,0,.25);position:relative;z-index:2;margin-bottom:-3px}
+.tube .lip{width:36px;height:5px;border-radius:3px;background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1.5px var(--tube-line);position:relative;z-index:1}
+.tube .body{width:30px;height:72px;border-radius:2px 2px 15px 15px;background:var(--tube-bg);box-shadow:inset 0 0 0 1.5px var(--tube-line);position:relative;overflow:hidden;margin-top:-1px}
+.tube .fill{position:absolute;left:3px;right:3px;bottom:3px;border-radius:0 0 12px 12px;background-size:cover;background-position:center;image-rendering:pixelated}
+.tube .body::after{content:"";position:absolute;left:5px;top:7px;bottom:20px;width:3px;border-radius:2px;background:rgba(255,255,255,.7)}
+.tube .name{font:500 12px/14px 'Bricolage Grotesque';color:var(--ink-2);margin-top:8px;white-space:nowrap;height:14px}
+.tube.on .tv{transform:translateY(-6px)}
+.tube .tv{display:flex;flex-direction:column;align-items:center}
+.tube.on .cork{transform:translate(9px,-5px) rotate(22deg)}
+.tube.on .name{color:var(--ink);font-weight:700}
+.tube.on::after{content:"";position:absolute;bottom:-5px;width:18px;height:2px;border-radius:2px;background:var(--ink)}
+/* 라이트: 윤곽 .58 (≥.55 요구), 키른: 밝은 윤곽 */
+.frame{--tube-line:rgba(42,33,24,.58);--tube-bg:rgba(255,255,255,.42)}
+.kz{--tube-line:rgba(239,230,214,.42);--tube-bg:rgba(255,255,255,.05)}
+.kz .tube .lip{background:rgba(239,230,214,.22)}
+.kz .tube .body::after{background:rgba(255,255,255,.38)}
+.kz .tube .name{color:var(--on-kiln-2)}
+.kz .tube.on .name{color:var(--on-kiln)}
+.kz .tube.on::after{background:var(--on-kiln)}
+
+/* ---------- dock ---------- */
+.dock{height:64px;border-radius:20px;background:var(--bone-2);display:flex;align-items:center;gap:8px;padding:0 10px;box-shadow:inset 0 1px 0 var(--glass-hi),inset 0 -1px 0 var(--glass-lo)}
+.tool{height:44px;min-width:44px;border-radius:12px;background:var(--bone);box-shadow:var(--lift);display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;font:600 14px/1 'Bricolage Grotesque';white-space:nowrap}
+.tool.icon{width:44px;padding:0}
+.tool.ink{background:var(--ink);color:var(--bone);box-shadow:0 2px 0 #000}
+.tool.off{opacity:.4}
+.grains{display:flex;align-items:center;gap:0;margin-left:auto;border-radius:12px;background:rgba(42,33,24,.06)}
+.kz .grains{background:rgba(255,255,255,.045)}
+.grain{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px}
+.grain i{display:block;border-radius:50%;background:var(--ink-2)}
+.grain.on i{background:var(--ink);box-shadow:0 0 0 3px var(--bone-2),0 0 0 4.5px var(--ink)}
+.kz .dock{background:var(--kiln-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.5)}
+.kz .tool{background:var(--kiln-3);color:var(--on-kiln);box-shadow:0 2px 0 #000,inset 0 1px 0 rgba(255,255,255,.07)}
+.kz .tool.ink{background:var(--on-kiln);color:var(--ink);box-shadow:0 2px 0 #000}
+.kz .grain i{background:var(--on-kiln-2)}
+.kz .grain.on i{background:var(--on-kiln);box-shadow:0 0 0 3px var(--kiln-2),0 0 0 4.5px var(--on-kiln)}
+
+/* ---------- kiln zone (B) ---------- */
+.kz{background:var(--spot),var(--kiln);color:var(--on-kiln);position:relative}
+.kz .lbl{color:var(--on-kiln-2)}
+.kz .lbl b{color:var(--on-kiln)}
+
+/* ---------- buttons ---------- */
+.btn-ember{height:48px;border-radius:12px;background:var(--ember);color:#fff;font:700 17px/1 'Bricolage Grotesque';display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 18px 0 20px;box-shadow:0 2px 0 var(--ember-edge),inset 0 1px 0 rgba(255,255,255,.22);white-space:nowrap}
+.btn-text{min-height:44px;display:inline-flex;align-items:center;gap:6px;font:600 15px/1 'Bricolage Grotesque';padding:0 8px;white-space:nowrap}
+.btn-ghost{height:44px;border-radius:12px;display:inline-flex;align-items:center;gap:8px;padding:0 14px;font:600 15px/1 'Bricolage Grotesque';box-shadow:inset 0 0 0 1.5px currentColor;white-space:nowrap}
+.link-t{min-height:44px;display:inline-flex;align-items:center;gap:2px}
+
+/* ---------- sections ---------- */
+.sec{padding:36px 16px 0}
+.sec-h{display:flex;align-items:center;gap:12px;min-height:20px}
+.sec-h .rule{flex:1;height:1px;background:var(--bone-line)}
+.vitrine{border-radius:16px;background:var(--bone-2);box-shadow:var(--glass);position:relative;overflow:hidden}
+.mini-glass{border-radius:12px;background:var(--kiln);padding:4px;box-shadow:0 1px 0 rgba(255,255,255,.6)}
+.mini-glass .g{border-radius:9px;overflow:hidden;position:relative;background:var(--empty)}
+.mini-glass .g img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+.mini-glass .g::after{content:"";position:absolute;inset:0;border-radius:9px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 1px 0 rgba(255,255,255,.14)}
+.sil{filter:saturate(.45) brightness(1.05) contrast(1.05)}
+
+.strata{height:28px;border-radius:8px;display:flex;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(42,33,24,.35);position:relative}
+.strata i{flex:1;position:relative}
+.strata i::after{content:"";position:absolute;inset:0;background:url(tex/sand.png) 0 0/38px 26px;mix-blend-mode:soft-light;opacity:.5;image-rendering:pixelated}
+.strata i.gap{background:repeating-linear-gradient(135deg,rgba(42,33,24,.18) 0 2px,transparent 2px 6px)}
+.strata i.gap::after{display:none}
+.strata i+i{box-shadow:inset 1px 0 0 rgba(42,33,24,.25)}
+
+.bead{width:22px;height:22px;border-radius:50%;position:relative;box-shadow:inset 0 0 0 1.5px rgba(42,33,24,.45);background:rgba(255,255,255,.5);overflow:hidden;flex:none}
+.bead.full{background-size:cover;image-rendering:pixelated}
+.bead::after{content:"";position:absolute;left:5px;top:4px;width:6px;height:3px;border-radius:50%;background:rgba(255,255,255,.85);transform:rotate(-30deg)}
+.bead.s{width:14px;height:14px}
+.bead.s::after{left:3px;top:2px;width:4px;height:2px}
+
+.foot{margin-top:40px}
+.foot-strata{display:flex;height:4px}
+.foot-strata i{flex:1}
+.foot-body{background:var(--bone-2);padding:8px 8px 24px}
+.foot-links{display:flex;flex-wrap:wrap}
+.foot-links a{height:44px;display:inline-flex;align-items:center;padding:0 8px;font:600 14px/1 'Bricolage Grotesque'}
+
+/* ---------- Spill HUD ---------- */
+.goals{height:56px;display:flex;align-items:center;gap:6px;padding:0 12px}
+.goal{display:flex;align-items:center;gap:8px;height:40px;padding:0 10px 0 8px;border-radius:12px;background:var(--kiln-2);box-shadow:inset 0 0 0 1px var(--kiln-line);white-space:nowrap}
+.goal .t{font:600 13px/1 'Bricolage Grotesque';color:var(--on-kiln)}
+.goal .v{font:500 12px/1 'JetBrains Mono';color:var(--on-kiln-2)}
+.tray{background:var(--kiln-2);border-radius:22px 22px 0 0;padding:10px 12px 34px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.verb.on{box-shadow:inset 0 0 0 2px var(--on-kiln),0 2px 0 #000 !important}
+.run{height:52px;border-radius:14px;background:var(--ember);color:#fff;font:800 17px/1 'Bricolage Grotesque';letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 3px 0 var(--ember-edge),inset 0 1px 0 rgba(255,255,255,.22)}
+
+/* ---------- /play ---------- */
+.lvl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px 12px;margin-top:16px}
+.lvl{display:block;min-height:44px}
+.lvl .nm{font:600 13px/16px 'Bricolage Grotesque';margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lvl .st{display:flex;gap:4px;margin-top:6px;align-items:center}
+.soon{border-radius:12px;border:1.5px dashed var(--bone-line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--ink-2)}
+.ad-slot{margin:32px 16px 0;padding-bottom:0}
+.ad-face{height:250px;border-radius:4px;background:var(--ad);box-shadow:inset 0 0 0 1px var(--ad-line);display:flex;align-items:center;justify-content:center;
+  background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.035) 0 8px,transparent 8px 16px)}
+
+/* ---------- 비교·검사 패널 ---------- */
+.panel{width:640px;flex:none;background:var(--bone);border-radius:16px;padding:28px;box-shadow:var(--glass)}
+.panel h3{font:700 18px/1.3 'Bricolage Grotesque';margin-bottom:14px}
+.panel table{width:100%;border-collapse:collapse;font:400 13px/1.45 'Bricolage Grotesque'}
+.panel th{text-align:left;font:700 11px/1.3 'JetBrains Mono';letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);padding:6px 8px;border-bottom:1px solid var(--bone-line)}
+.panel td{padding:7px 8px;border-bottom:1px solid rgba(42,33,24,.1);vertical-align:top}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2);margin-right:4px}
+.pass{color:#2E6B3F;font-weight:700}.fail{color:#B0341F;font-weight:700}
+
+/* ?only= 모드: 한 프레임만 단독 렌더(가로 스크롤 검사용) */
+body.only{background:var(--bone)}
+body.only .board{padding:0;gap:0;width:auto;display:block}
+body.only .row{display:block}
+body.only .art-label,body.only .notes,body.only .panel{display:none}
+body.only .art{display:none}
+body.only .art.keep{display:block}
+</style></head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+ <defs>
+  <symbol id="i-menu" viewBox="0 0 20 20"><path d="M3 7h14M3 13h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="13" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-glass" viewBox="0 0 20 20"><path d="M5 3h10M5 17h10M6.5 3v1.8c0 2.4 3.5 3.4 3.5 5.2s-3.5 2.8-3.5 5.2V17M13.5 3v1.8c0 2.4-3.5 3.4-3.5 5.2s3.5 2.8 3.5 5.2V17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="14.6" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-erase" viewBox="0 0 20 20"><path d="M8 16.5 3.6 12.1a1.5 1.5 0 0 1 0-2.1l6.4-6.4a1.5 1.5 0 0 1 2.1 0l4.3 4.3a1.5 1.5 0 0 1 0 2.1l-6.3 6.5ZM6.5 7.5l6 6M8 16.5h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 20 20"><path d="M7 4.5 3.5 8 7 11.5M4 8h7.5a4.5 4.5 0 0 1 0 9H8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4.75" cy="17" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-share" viewBox="0 0 20 20"><path d="M10 12.5V3M6.5 6.5 10 3l3.5 3.5M4 11v4.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-pour" viewBox="0 0 20 20"><path d="M4 10h11M11 5.5 15.5 10 11 14.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="4" cy="15.5" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-next" viewBox="0 0 20 20"><path d="M7.5 4.5 13 10l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-back" viewBox="0 0 20 20"><path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-remix" viewBox="0 0 20 20"><path d="M15.5 8.5A6 6 0 0 0 4.6 7.2M4.5 11.5a6 6 0 0 0 10.9 1.3M15.8 3.8v4.7h-4.7M4.2 16.2v-4.7h4.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 20 20"><path d="M3.5 8v4h3l4 3.5v-11l-4 3.5h-3ZM14 7.5a3.5 3.5 0 0 1 0 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16.75" cy="10" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-retry" viewBox="0 0 20 20"><path d="M4.5 10a5.5 5.5 0 1 0 1.8-4.1M6 3v3.5H2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-image" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 13l2.6-3 2 2 1.4-1.5L14 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-dig" viewBox="0 0 20 20"><path d="M4 16 11 9M10.5 4.5l5 5M9 6l5 5c1.5-1.5 2-3.5 1.2-5.2C13.5 5 11 4.5 9 6Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="3.5" cy="12" r="1.25" fill="currentColor"/></symbol>
+  <symbol id="i-speed" viewBox="0 0 20 20"><path d="M3.5 5.5 9 10l-5.5 4.5ZM10.5 5.5 16 10l-5.5 4.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="i-play" viewBox="0 0 20 20"><path d="M6 4.5v11l9-5.5Z" fill="currentColor"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M9 12V5a1.6 1.6 0 0 1 3.2 0v6M12.2 10.5V9.2a1.6 1.6 0 0 1 3.2 0V11M15.4 11a1.6 1.6 0 0 1 3.2 0v3c0 3.6-2.4 6.5-6 6.5h-1.2c-2.2 0-3.6-1-4.8-2.8L4.3 14a1.5 1.5 0 0 1 2.4-1.8L9 14.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-x" viewBox="0 0 20 20"><path d="M5 5l10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 20 20"><path d="M8 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16h9a1.5 1.5 0 0 0 1.5-1.5V12M11 4h5v5M16 4l-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 20 20"><rect x="7" y="7" width="9" height="9" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M13 4.5V4a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-gem" viewBox="0 0 20 20"><path d="M6 4h8l3 4-7 8-7-8Z M3 8h14M8 4l2 12 2-12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 20 20"><rect x="4.5" y="9" width="11" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 9V6.5a3 3 0 0 1 6 0V9" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="13" r="1.25" fill="currentColor"/></symbol>
+ </defs>
+</svg>
+
+<div class="board" id="board">
+
+<!-- =============== ROW 1 · 홈 A vs B =============== -->
+<div class="row">
+ <div class="art"><div class="art-label"><b>A · Home 390 · 라이트 정리판</b><span>v2 그대로 Bone 한 면 · 빼기 9개 반영 · 캔버스 390×195 풀블리드</span></div>
+  <div class="frame" id="m-home-A"></div></div>
+ <div class="art"><div class="art-label"><b>B · Home 390 · 하이브리드 “Kiln 계기 구역”</b><span>캔버스+랙+도크 = 한 장의 Kiln 판 · 나머지 Bone · 스포트 비네트 + 이름판 1개</span></div>
+  <div class="frame" id="m-home-B"></div></div>
+ <div class="notes"><h4>A vs B — 같은 조건 비교</h4><ol>
+  <li><b>같은 조건</b>: 같은 엔진 캡처(hero.png), 같은 헤드라인 한 줄, 같은 18개 재료·도크·Today·지층·벽. 다른 건 “계기 구역의 바닥색” 하나뿐.</li>
+  <li><b>A 장점</b>: 한 면이라 조용하고 콘텐츠 페이지(/materials·/learn)와 이어짐. <b>약점</b>: salt·steam·ice·metal 같은 옅은 재료가 Bone 위에서 흐려 윤곽(.58)에 기대야 함.</li>
+  <li><b>B 장점</b>: 재료가 빛나 보임(어두운 판 위 유리관), 캔버스·랙·도크가 ‘한 기계’로 읽혀 터치 영역이 명확. <b>약점</b>: 어두운 면이 첫 화면의 60%라 ‘두 세계’ 문제(진단 #2)가 다시 생길 수 있음 → 헤더·헤드라인·콘텐츠는 반드시 Bone으로 고정.</li>
+  <li><b>S2에서 가져온 것 딱 2개</b>: 랙 뒤 따뜻한 스포트(radial-gradient, 주황 14%→0) · 캔버스 아래 이름판 캡션 1개(“Sand · powder”). 황동·세리프 없음.</li>
+  <li><b>첫 화면 모노 라벨</b>: 두 안 모두 헤더 칩 “No.42 06:12” 1개뿐(탭·관 이름·상태는 Bricolage).</li>
+ </ol></div>
+</div>
+
+<!-- =============== ROW 2 · 빠진 화면 5종 (B 기준) =============== -->
+<div class="row">
+ <div class="art"><div class="art-label"><b>① Spill 플레이 HUD · 390×844</b><span>160×240 보드(2:3) · 목표·버튼은 보드 밖 · 보드 위 0개</span></div>
+  <div class="frame" id="m-spill-hud" style="height:844px"></div></div>
+ <div class="art"><div class="art-label"><b>② 데일리 시작 · 390</b><span>실루엣 미리보기 · Solve today 1개</span></div>
+  <div class="frame" id="m-daily-start" style="height:844px"></div></div>
+ <div class="art"><div class="art-label"><b>③ WebGPU 미지원 홈 · 390</b><span>인앱 브라우저 · 주 CTA = Solve today · 이유 한 줄 + Open in browser</span></div>
+  <div class="frame" id="m-no-webgpu"></div></div>
+ <div class="art"><div class="art-label"><b>④ 남의 장면으로 들어온 홈 (#s=) · 390</b><span>헤드라인 = 장면 제목 · 작성자 · Remix this</span></div>
+  <div class="frame" id="m-remix-entry"></div></div>
+ <div class="art"><div class="art-label"><b>⑤ /play 전시실 + 광고 안내판 · 390</b><span>월드 1 10칸 · 광고는 다른 면 · 월드 2 = 1레벨 + 곧 공개</span></div>
+  <div class="frame" id="m-play-gallery"></div></div>
+</div>
+
+<!-- =============== ROW 3 · 결과 + 1440 + 패널 =============== -->
+<div class="row">
+ <div class="art"><div class="art-label"><b>Daily 결과 390 · 보정판</b><span>Share image · id 제거 · Practice for 3★ · 상위 N% 한 줄</span></div>
+  <div class="frame" id="m-result" style="height:844px"></div></div>
+ <div class="art"><div class="art-label"><b>B · Home 1440×900 · 하이브리드</b><span>Kiln 판(캔버스 840×420 + 랙 18관 + 도구) · 우측 Bone 안내판</span></div>
+  <div class="frame" id="d-home-B" style="width:1440px;height:900px"></div></div>
+</div>
+
+<div class="row">
+ <div class="panel" id="p-contrast"><h3>대비 계산표 (WCAG 2.x, 페이지 JS가 실제 값으로 계산)</h3><table id="ct"></table></div>
+ <div class="panel" id="p-qa" style="width:760px"><h3>자동 검사 결과 (390 프레임)</h3><table id="qa"><tr><th>프레임</th><th>scrollWidth</th><th>가로 넘침</th><th>텍스트 잘림·겹침</th><th>히트 &lt;44</th><th>모노 &lt;11/12</th><th>첫 화면 모노</th></tr><tr><td class="mono" style="font-size:12px">m-home-A</td><td class="mono" style="font-size:12px">390/390</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">3 (칩·Today·Daily No.42)</td></tr><tr><td class="mono" style="font-size:12px">m-home-B</td><td class="mono" style="font-size:12px">390/390</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">3</td></tr><tr><td class="mono" style="font-size:12px">m-spill-hud</td><td class="mono" style="font-size:12px">390/390</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">—</td></tr><tr><td class="mono" style="font-size:12px">m-daily-start</td><td class="mono" style="font-size:12px">390/390</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">—</td></tr><tr><td class="mono" style="font-size:12px">m-no-webgpu</td><td class="mono" style="font-size:12px">390/390</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">—</td></tr><tr><td class="mono" style="font-size:12px">m-remix-entry</td><td class="mono" style="font-size:12px">390/390</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">—</td></tr><tr><td class="mono" style="font-size:12px">m-play-gallery</td><td class="mono" style="font-size:12px">390/390</td><td class="mono" style="font-size:12px">0 (1차 1건 수정)</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">—</td></tr><tr><td class="mono" style="font-size:12px">m-result</td><td class="mono" style="font-size:12px">390/390</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">—</td></tr><tr><td class="mono" style="font-size:12px">d-home-B</td><td class="mono" style="font-size:12px">1440/1440</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">0</td><td class="mono" style="font-size:12px">—</td></tr></table><p style="font:400 12px/1.5 'Bricolage Grotesque';color:var(--ink-2);margin-top:10px">Playwright(Chromium) 자동 검사, ?only=ID 단독 렌더로 scrollWidth 측정. 시험관 랙의 의도된 내부 가로 스크롤(data-xscroll)은 제외.</p></div>
+ <div class="panel" id="p-strata" style="width:520px"><h3>지층 띠 색 규칙</h3>
+  <p style="font:400 13px/1.55 'Bricolage Grotesque'">띠 색 = <b class="mono">CYCLE[(dayNumber − 1) % 10]</b>. 퍼즐의 재료와 무관한 <b>달력 색</b>이다(“이날 물 퍼즐이었다” 같은 가짜 매핑 금지). 재료 팔레트(materials.ts)에서 Bone 위 대비가 나쁜 옅은 색(salt·steam·ice·metal)은 빼고, 이웃끼리 색상·명도가 크게 달라지도록 순서를 고정했다. 순서 변경 금지(과거 띠 색이 바뀜), 추가만 허용 — daily.ts의 DAILY_POOL_IDS와 같은 규칙.</p>
+  <div id="cycle" style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap"></div>
+ </div>
+</div>
+
+</div>
+
+<script>
+/* ===================== 데이터 (실제 코드 정합) ===================== */
+// daily.ts: LAUNCH_UTC = 2026-10-09 → 2026-11-19 = No.42. dailyIdFor(42) = POOL[(41*2)%9] = '1-3' Two Pots.
+const DAY = 42, LEVEL = {name:'Two Pots', hint:'Fill both pots with water.', par:{moves:2,secs:5.3}, gems:1};
+// materials.ts 순서·색 그대로 (오른쪽은 엔진 캡처 결 텍스처)
+const MATS = [
+ ['Sand','sand_tall','#E8C87A','powder'],['Water','water_tall','#2E6FD9','liquid'],['Lava','lava','#FF5A0A','liquid'],
+ ['Salt','salt_tall','#F2F4F7','powder'],['Gunpowder','gunpowder_tall','#2E3033','powder'],['Stone','stone','#79808C','solid'],
+ ['Plant','plant','#43B04A','solid'],['Oil',null,'#4A3520','liquid'],['Acid','acid','#8CFF2E','liquid'],['Wood','wood','#6B4423','solid'],
+ ['Ash','ash','#5E5A57','powder'],['Seed','seed','#B4D96A','powder'],['Wall','wall','#525A6B','solid'],['Metal','metal','#B9C2CE','solid'],
+ ['Ice','ice','#A8E4EC','solid'],['Fire',null,'#FF7A18','gas'],['Steam','steam','#D6E2EA','gas'],['Smoke','smoke','#4C5058','gas'],
+];
+/* 지층 띠: dayNumber → 큐레이션 순환표(대비 좋은 10종). 퍼즐 재료와 무관한 '달력 색'.
+   옅은 재료(salt·steam·ice·metal)는 Bone 위 대비가 낮아 제외. 순서 변경 금지·추가만 허용. */
+const CYCLE = [['sand','#E8C87A'],['water','#2E6FD9'],['lava','#FF5A0A'],['gunpowder','#2E3033'],['acid','#8CFF2E'],
+               ['wood','#6B4423'],['stone','#79808C'],['fire','#FF7A18'],['plant','#43B04A'],['ash','#5E5A57']];
+const dayColor = n => CYCLE[(n-1)%CYCLE.length];
+// 최근 5일: 38..42, 39는 놓침
+const STRATA = [38,39,40,41,42].map(n=>({n, miss:n===39, c:dayColor(n)}));
+
+const T = n => `tex/${n}.png`;
+const use = (id,cls='ic',st='') => `<svg class="${cls}" style="${st}" aria-hidden="true"><use href="#${id}"/></svg>`;
+
+/* ===================== 조각 ===================== */
+function header(opts={}){
+  if(opts.title) return `<header class="hdr">
+    <div class="hdr-title"><a class="hit" data-tap aria-label="Back">${use('i-back')}</a>${opts.title}</div>
+    <div style="display:flex"><button class="hit" data-tap aria-label="Sound">${use('i-sound')}</button><button class="hit" data-tap aria-label="Menu">${use('i-menu')}</button></div></header>`;
+  return `<header class="hdr"><a class="wordmark" data-tap>SANDLAB</a>
+    <div style="display:flex;align-items:center">
+     <a class="hit" data-tap aria-label="Daily No.42, 6 hours 12 minutes left"><span class="chip-daily">${use('i-glass')}No.42<span>06:12</span></span></a>
+     <button class="hit" data-tap aria-label="Menu">${use('i-menu')}</button></div></header>`;
+}
+function tube(m,on,small){
+  const [name,tex,color] = m;
+  const fill = tex ? `background-image:url(${T(tex)})` : `background:${name==='Fire'?'linear-gradient(#FFD27A,#FF7A18 55%,#C4380A)':color}`;
+  const h = small ? 34 : [56,52,58,48,54,60,52,56,50,58,46,54,60,50,56,48,44,50][MATS.indexOf(m)%18];
+  return `<button class="tube${on?' on':''}" data-tap aria-pressed="${on}" aria-label="${name}"><span class="tv"><span class="cork"></span><span class="lip"></span><span class="body"><span class="fill" style="height:${h}px;${fill}"></span></span></span><span class="name">${name.toLowerCase()}</span></button>`;
+}
+function rack(list=MATS){ return `<div class="rack-wrap"><div class="rack" data-xscroll role="listbox" aria-label="Materials">${list.map((m,i)=>tube(m,i===0)).join('')}</div><div class="rack-fade"></div></div>`; }
+function tabs(){ return `<nav class="tabs" aria-label="Material groups">${['All','Powder','Liquid','Solid','Gas'].map((t,i)=>`<button class="tab${i?'':' on'}" data-tap>${t}</button>`).join('')}</nav>`; }
+function dock(shareOff=true){
+  return `<div class="dock">
+   <button class="tool" data-tap>${use('i-erase')}Erase</button>
+   <div class="grains" role="radiogroup" aria-label="Brush size">
+    <button class="grain" data-tap aria-label="Small brush"><i style="width:4px;height:4px"></i></button>
+    <button class="grain on" data-tap aria-label="Medium brush"><i style="width:8px;height:8px"></i></button>
+    <button class="grain" data-tap aria-label="Large brush"><i style="width:14px;height:14px"></i></button>
+   </div>
+   <button class="tool ink${shareOff?' off':''}" data-tap ${shareOff?'aria-disabled="true"':''}>${use('i-share')}Share</button>
+  </div>`;
+}
+function hint(){
+  return `<svg class="ghost" width="120" height="40" viewBox="0 0 120 40" style="left:50%;top:50%;transform:translate(-112px,8px)"><g fill="#EFE6D6"><circle cx="6" cy="30" r="1.6" opacity=".3"/><circle cx="18" cy="26" r="1.8" opacity=".45"/><circle cx="30" cy="23" r="2" opacity=".6"/></g></svg>
+   <div class="hint">${use('i-hand')}Drag to pour</div>`;
+}
+function canvas(src='hero.png',withHint=true,extra=''){ return `<div class="cv" role="img" aria-label="Sand canvas"><img src="${src}" alt="">${withHint?hint():''}${extra}</div>`; }
+function todayCard(cta=true){
+  return `<div class="vitrine" style="padding:16px;display:flex;gap:16px;align-items:center">
+    <div class="mini-glass" style="width:76px;flex:none"><div class="g" style="height:114px"><img class="sil" src="lv/1-3.png" alt="Silhouette of today's board"></div></div>
+    <div style="min-width:0">
+     <div class="lbl">Daily No.${DAY}</div>
+     <div style="font:700 28px/30px 'Bricolage Grotesque';letter-spacing:-.03em;margin-top:6px">${LEVEL.name}</div>
+     <div style="font:400 15px/21px 'Bricolage Grotesque';color:var(--ink-2);margin-top:6px">${LEVEL.hint}</div>
+    </div></div>
+   ${cta?`<div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+    <a class="btn-ember" data-tap>Solve today${use('i-pour')}</a>
+    <div style="text-align:right"><div class="lbl">New puzzle in</div><div class="mono" style="font:700 15px/1 'JetBrains Mono';margin-top:5px">06:12:40</div></div></div>`:''}`;
+}
+function strataBand(){
+  return `<div class="strata" role="img" aria-label="5 days of strata, 4 solved">${STRATA.map(s=>s.miss?`<i class="gap"></i>`:`<i style="background:${s.c[1]}"></i>`).join('')}</div>`;
+}
+function sectionToday(){ return `<section class="sec"><div class="sec-h"><span class="lbl"><b>Today</b></span><span class="rule"></span></div><div style="margin-top:14px">${todayCard()}</div></section>`; }
+function sectionStrata(){ return `<section class="sec"><div class="sec-h"><span class="lbl"><b>Your strata</b></span><span class="rule"></span><span class="lbl">5 days</span></div><div style="margin-top:14px">${strataBand()}</div></section>`; }
+function wallCard(img,title,meta){
+  return `<a class="lvl" data-tap><div class="mini-glass"><div class="g" style="height:77px"><img src="${img}" alt=""></div></div>
+   <div style="font:600 14px/18px 'Bricolage Grotesque';margin-top:10px">${title}</div>
+   <div class="lbl" style="margin-top:4px;display:flex;align-items:center;gap:4px;text-transform:none;letter-spacing:.02em">${meta}</div></a>`;
+}
+function sectionWall(){
+  return `<section class="sec"><div class="sec-h"><span class="lbl"><b>On the wall</b></span><span class="rule"></span><a class="lbl-t link-t" data-tap style="color:var(--ink)">Browse${use('i-next','ic','width:14px;height:14px')}</a></div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px">
+    ${wallCard('gal_s2.png','Shelf, slipping',`${use('i-remix','ic','width:12px;height:12px')}3 remixes`)}
+    ${wallCard('gal_s3.png','Three peaks, one fire',`${use('i-remix','ic','width:12px;height:12px')}1 remix`)}
+   </div></section>`;
+}
+function footer(){
+  const cols=MATS.map(m=>m[2]);
+  return `<footer class="foot"><div class="foot-strata">${cols.map(c=>`<i style="background:${c}"></i>`).join('')}</div>
+   <div class="foot-body"><nav class="foot-links">${['Notes','Materials','About','Privacy'].map(t=>`<a data-tap>${t}</a>`).join('')}</nav>
+   <div class="lbl" style="margin:8px 8px 0;text-transform:none;letter-spacing:.02em">Made by Piousangel · no install, no sign-up</div></div></footer>`;
+}
+function kilnZone(inner,style=''){ return `<section class="kz" style="${style}">${inner}</section>`; }
+function beaker(frac,color){
+  const top = 5 + 17*(1-frac);
+  return `<svg width="20" height="24" viewBox="0 0 20 24" aria-hidden="true"><defs><clipPath id="bk${Math.round(frac*100)}"><path d="M4 3v15a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3Z"/></clipPath></defs>
+   <rect x="0" y="${top}" width="20" height="24" fill="${color}" clip-path="url(#bk${Math.round(frac*100)})"/>
+   <path d="M2.5 3H17.5M4 3v15a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V3" fill="none" stroke="#EFE6D6" stroke-width="1.6" stroke-linecap="round"/>
+   <path d="M7 9h2M7 13h2" stroke="#EFE6D6" stroke-width="1.2" opacity=".6"/></svg>`;
+}
+function beads(n,tex,cls=''){ return [0,1,2].map(i=>`<span class="bead${cls}${i<n?' full':''}" style="${i<n?`background-image:url(${T(tex)})`:''}"></span>`).join(''); }
+
+/* ===================== ① 홈 A (라이트) ===================== */
+document.getElementById('m-home-A').innerHTML = `
+ ${header()}
+ <h1 class="h1">Pour something. <span>It reacts.</span></h1>
+ ${canvas()}
+ <div class="status"><i style="background:#E8C87A"></i>Sand <span>· powder</span></div>
+ <div style="margin-top:8px">${tabs()}</div>
+ ${rack()}
+ <div style="padding:14px 12px 0">${dock()}</div>
+ ${sectionToday()}${sectionStrata()}${sectionWall()}${footer()}`;
+
+/* ===================== ② 홈 B (하이브리드) ===================== */
+const kzHome = (cv=canvas(), plate=`<span class="plate"><i style="background:#E8C87A"></i>Sand<span>· powder</span></span>`, shareOff=true) => kilnZone(`
+ ${cv}
+ <div style="padding:12px 16px 0">${plate}</div>
+ <div style="margin-top:4px">${tabs()}</div>
+ ${rack()}
+ <div style="padding:14px 12px 20px">${dock(shareOff)}</div>`);
+document.getElementById('m-home-B').innerHTML = `
+ ${header()}
+ <h1 class="h1">Pour something. <span>It reacts.</span></h1>
+ ${kzHome()}
+ ${sectionToday()}${sectionStrata()}${sectionWall()}${footer()}`;
+
+/* ===================== ③ Spill HUD ===================== */
+(()=>{
+ const tp=9; // 360px / 40 tiles
+ const rect=(r,st)=>`<div style="position:absolute;left:${r[0]*tp}px;top:${r[1]*tp}px;width:${r[2]*tp}px;height:${r[3]*tp}px;${st}"></div>`;
+ document.getElementById('m-spill-hud').innerHTML = `
+ ${header({title:`<b>${LEVEL.name}</b><span class="lbl">No.${DAY}</span>`})}
+ ${kilnZone(`
+  <div class="goals" aria-label="Goals">
+   <div class="goal">${beaker(0,'#2E6FD9')}<span class="t">Left pot</span><span class="v">0/300</span></div>
+   <div class="goal">${beaker(0,'#2E6FD9')}<span class="t">Right pot</span><span class="v">0/300</span></div>
+   <div class="goal" style="padding:0 10px">${use('i-gem','ic','width:18px;height:18px;color:#7FD6E8')}<span class="v">0/1</span></div>
+  </div>
+  <div style="padding:0 15px">
+   <div style="position:relative;width:360px;height:540px;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 24px -12px #000">
+    <img src="lv/1-3.png" style="display:block;width:100%;height:100%;image-rendering:pixelated" alt="Two Pots board">
+    ${rect([3,54,10,4],'border:1.5px dashed rgba(127,170,240,.85);border-radius:2px')}
+    ${rect([27,54,10,4],'border:1.5px dashed rgba(127,170,240,.85);border-radius:2px')}
+    ${rect([9,11,1,2],'background:#07090D')}
+    <svg style="position:absolute;left:${9*tp-4}px;top:${9*tp}px" width="17" height="40" viewBox="0 0 17 40"><path d="M8.5 2V36" stroke="#EFE6D6" stroke-width="2" stroke-dasharray="3 3" stroke-linecap="round"/><circle cx="8.5" cy="36" r="3" fill="#EFE6D6"/></svg>
+    <svg style="position:absolute;left:${19*tp}px;top:${14*tp}px" width="18" height="18" aria-hidden="true"><use href="#i-gem" style="color:#7FD6E8"/></svg>
+   </div>
+  </div>
+  <div class="tray" style="margin-top:12px">
+   <div style="display:flex;justify-content:space-between;align-items:center;height:24px;padding:0 4px">
+    <span class="lbl"><b>1 move</b> · par 2 / 5.3s</span><span class="lbl">Drag across dirt to dig</span></div>
+   <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+    <button class="tool verb on" data-tap style="min-width:76px">${use('i-dig')}Dig</button>
+    <button class="tool icon" data-tap aria-label="Undo">${use('i-undo')}</button>
+    <button class="tool icon" data-tap aria-label="Retry">${use('i-retry')}</button>
+    <button class="tool" data-tap aria-label="Speed 1x" style="min-width:52px;padding:0 10px"><span class="mono" style="font:700 13px/1 'JetBrains Mono'">1×</span></button>
+    <button class="run" data-tap style="flex:1">${use('i-play')}RUN</button>
+   </div>
+  </div>`,'height:788px')}`;
+})();
+
+/* ===================== ④ 데일리 시작 ===================== */
+document.getElementById('m-daily-start').innerHTML = `
+ ${header({title:`<b>Daily</b>`})}
+ <div style="padding:4px 16px 18px">
+  <div class="lbl"><b>No.${DAY}</b> · Thu 19 Nov</div>
+  <h1 style="font:700 40px/42px 'Bricolage Grotesque';letter-spacing:-.035em;margin-top:8px">${LEVEL.name}</h1>
+  <p style="font:400 17px/24px 'Bricolage Grotesque';color:var(--ink-2);margin-top:6px">${LEVEL.hint}</p>
+ </div>
+ ${kilnZone(`<div style="display:flex;flex-direction:column;align-items:center;padding:24px 0 20px">
+   <div style="width:232px;height:348px;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 16px 30px -14px #000">
+    <img class="sil" src="lv/1-3.png" style="display:block;width:100%;height:100%;image-rendering:pixelated" alt="Silhouette of today's board"></div>
+   <span class="plate" style="margin-top:16px"><i style="background:#2E6FD9"></i>Two pots<span>· 1 gem</span></span>
+  </div>`)}
+ <div style="padding:20px 16px 0">
+  <a class="btn-ember" data-tap style="width:100%;height:52px;font-size:18px">Solve today${use('i-pour')}</a>
+  <p style="font:400 14px/20px 'Bricolage Grotesque';color:var(--ink-2);margin-top:12px;text-align:center">Your first clear is today’s official record.</p>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;border-top:1px solid var(--bone-line);padding-top:4px">
+   <span class="lbl">New puzzle in <b>06:12:40</b></span>
+   <a class="lbl-t link-t" data-tap>Past puzzles${use('i-next','ic','width:14px;height:14px')}</a>
+  </div>
+ </div>`;
+
+/* ===================== ⑤ WebGPU 미지원 ===================== */
+document.getElementById('m-no-webgpu').innerHTML = `
+ ${header()}
+ <h1 class="h1">Today’s puzzle works here.</h1>
+ <div style="padding:0 16px">${todayCard()}</div>
+ <div style="height:28px"></div>
+ ${kilnZone(`
+  ${canvas('hero.png',false,`<span class="plate" style="position:absolute;left:12px;top:12px;z-index:2">Still frame</span>`)}
+  <div style="padding:16px 16px 22px">
+   <p style="font:500 15px/22px 'Bricolage Grotesque';color:var(--on-kiln)">The sandbox needs WebGPU, and this in-app browser doesn’t have it.</p>
+   <div style="display:flex;gap:8px;margin-top:14px;align-items:center">
+    <a class="btn-ghost" data-tap style="color:var(--on-kiln)">Open in browser${use('i-ext','ic','width:18px;height:18px')}</a>
+    <button class="btn-text" data-tap style="color:var(--on-kiln-2)">${use('i-copy','ic','width:18px;height:18px')}Copy link</button>
+   </div>
+  </div>`)}
+ ${sectionWall()}${footer()}`;
+
+/* ===================== ⑥ 리믹스 진입 (#s=) ===================== */
+document.getElementById('m-remix-entry').innerHTML = `
+ ${header()}
+ <div style="padding:4px 16px 14px">
+  <h1 style="font:650 28px/34px 'Bricolage Grotesque';letter-spacing:-.03em;white-space:nowrap">Shelf, slipping</h1>
+  <div style="font:400 15px/20px 'Bricolage Grotesque';color:var(--ink-2);margin-top:2px">by <b style="color:var(--ink);font-weight:600">sora</b> · 3 remixes</div>
+ </div>
+ ${kilnZone(`
+  ${canvas('gal_s2.png',false)}
+  <div style="margin:12px 12px 0;padding:12px 4px 12px 14px;border-radius:14px;background:var(--kiln-2);box-shadow:inset 0 0 0 1px var(--kiln-line);display:flex;align-items:center;gap:8px">
+   <p style="flex:1;min-width:0;font:400 14px/19px 'Bricolage Grotesque';color:var(--on-kiln)">Pour on it to make your own version.</p>
+   <a class="btn-ember" data-tap style="height:44px;font-size:15px;padding:0 14px">${use('i-remix','ic','width:18px;height:18px')}Remix this</a>
+   <button class="hit" data-tap aria-label="Dismiss" style="color:var(--on-kiln-2)">${use('i-x','ic','width:18px;height:18px')}</button>
+  </div>
+  <div style="padding:6px 16px 0;display:flex;justify-content:space-between;align-items:center">
+   <span class="plate"><i style="background:#E8C87A"></i>Sand<span>· powder</span></span>
+   <a class="lbl-t link-t" data-tap style="color:var(--on-kiln)">Original${use('i-ext','ic','width:14px;height:14px')}</a>
+  </div>
+  ${tabs()}${rack()}
+  <div style="padding:14px 12px 20px">${dock(true)}</div>`)}
+ ${sectionToday()}${footer()}`;
+
+/* ===================== ⑦ /play 전시실 + 광고 ===================== */
+(()=>{
+ const W1=[['1-1','First Drop',3],['1-2','Detour',3],['1-3','Two Pots',2],['1-4','Hourglass',1],['1-5','Gatekeeper',0],['1-6','Displacement',0],['1-7','Two Taps',0],['1-8','Cascade',0],['1-9','Overflow',0],['1-10','Twin Cups',0]];
+ const card=([id,name,st],i)=>`<a class="lvl" data-tap aria-label="${name}, ${st} of 3 stars"><div class="mini-glass"><div class="g" style="aspect-ratio:2/3"><img src="lv/${id}.png" alt=""></div></div>
+   <div class="nm"><span class="mono" style="font:500 11px/1 'JetBrains Mono';color:var(--ink-2);margin-right:5px">${String(i+1).padStart(2,'0')}</span>${name}</div>
+   <div class="st">${beads(st,'water_tall',' s')}</div></a>`;
+ document.getElementById('m-play-gallery').innerHTML = `
+ ${header()}
+ <div style="padding:4px 16px 0">
+  <h1 style="font:700 34px/38px 'Bricolage Grotesque';letter-spacing:-.035em">Puzzles</h1>
+  <p style="font:400 16px/23px 'Bricolage Grotesque';color:var(--ink-2);margin-top:6px">Dig, then pour. Each room is one idea about how things fall.</p>
+ </div>
+ <section class="sec" style="padding-top:28px"><div class="sec-h"><span class="lbl"><b>World 1</b></span><span class="rule"></span><span class="lbl">9 / 30 stars</span></div>
+  <div class="lvl-grid">${W1.map(card).join('')}</div></section>
+ <aside class="ad-slot" aria-label="Advertisement">
+  <div class="lbl" style="height:24px;display:flex;align-items:center;color:#6B665C">Advertisement</div>
+  <div class="ad-face"><span class="lbl" style="color:#8A8478">300 × 250</span></div>
+ </aside>
+ <section class="sec" style="padding-top:32px"><div class="sec-h"><span class="lbl"><b>World 2</b></span><span class="rule"></span><span class="lbl">1 room</span></div>
+  <div class="lvl-grid">${card(['2-1','Wooden Door',0],0)}
+   <div class="soon" style="aspect-ratio:2/3">${use('i-lock','ic','width:18px;height:18px')}<span class="lbl">Soon</span></div>
+   <div class="soon" style="aspect-ratio:2/3">${use('i-lock','ic','width:18px;height:18px')}<span class="lbl">Soon</span></div>
+  </div></section>
+ <section class="sec"><div class="vitrine" style="padding:16px">
+  <div class="lbl"><b>How Spill works</b></div>
+  <p style="font:400 15px/23px 'Bricolage Grotesque';margin-top:8px">Every room is a sealed box of real falling sand. You get a few moves — dig a channel, open a gate — then press Run and watch physics decide. Three stars: clear it, collect every gem, and beat par.</p>
+  <a class="lbl-t link-t" data-tap style="margin-top:4px">Read the guide${use('i-next','ic','width:14px;height:14px')}</a>
+ </div></section>
+ ${footer()}`;
+})();
+
+/* ===================== ⑧ 결과 ===================== */
+document.getElementById('m-result').innerHTML = `
+ ${header({title:`<b>Daily</b><span class="lbl">No.${DAY}</span>`})}
+ ${kilnZone(`<div style="display:flex;flex-direction:column;align-items:center;padding:20px 0 16px">
+   <div style="width:236px;border-radius:16px;background:#0D0B09;padding:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 20px 30px -16px #000">
+    <div style="height:330px;border-radius:9px;overflow:hidden"><img src="daily_solved.png" style="display:block;width:100%;height:100%;object-fit:cover;image-rendering:pixelated" alt="Solved board"></div></div>
+   <span class="plate" style="margin-top:14px"><i style="background:#2E6FD9"></i>Two Pots<span>· cleared</span></span>
+  </div>`)}
+ <div style="padding:16px 16px 0">
+  <div style="display:flex;align-items:center;gap:14px">
+   <div style="display:flex;gap:6px">${beads(2,'water_tall')}</div>
+   <div><div style="font:700 20px/24px 'Bricolage Grotesque'">2 of 3 stars</div>
+    <div class="lbl" style="margin-top:2px">Clear · Gem · <span style="text-decoration:line-through">Par</span> +0.8s</div></div>
+  </div>
+  <div style="font:400 15px/21px 'Bricolage Grotesque';color:var(--ink-2);margin-top:10px">2 moves · 6.1s · <b style="color:var(--ink);font-weight:600">Top 18% of today’s clears</b></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px">
+   <a class="btn-ember" data-tap>${use('i-image')}Share image</a>
+   <button class="btn-text" data-tap>${use('i-retry')}Practice for 3★</button>
+  </div>
+  <p style="font:400 13px/18px 'Bricolage Grotesque';color:var(--ink-2);margin-top:6px;text-align:right">Your first clear stays the official record.</p>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:6px;border-top:1px solid var(--bone-line)">
+   <div style="width:72px">${`<div class="strata" style="height:16px;border-radius:5px">${STRATA.slice(1).map(s=>s.miss?`<i class="gap"></i>`:`<i style="background:${s.c[1]}"></i>`).join('')}</div>`}</div>
+   <span class="lbl" style="flex:1"><b>+1 stratum</b></span>
+   <a class="lbl-t link-t" data-tap>World 2${use('i-next','ic','width:14px;height:14px')}</a>
+  </div>
+  <div class="lbl" style="margin-top:6px">Next puzzle in <b>06:12:40</b></div>
+ </div>`;
+
+/* ===================== ⑨ 1440 하이브리드 ===================== */
+(()=>{
+ const dRack = `<div style="display:flex;gap:0;align-items:flex-end;justify-content:space-between">${MATS.map((m,i)=>tube(m,i===0,false)).join('')}</div>`;
+ document.getElementById('d-home-B').innerHTML = `
+ <header style="height:72px;display:flex;align-items:center;padding:0 32px;position:relative">
+  <a class="wordmark" data-tap style="font-size:24px">SANDLAB</a>
+  <nav style="position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:4px;font:600 15px/1 'Bricolage Grotesque'">
+   ${['Pour','Solve','Browse','Notes'].map((t,i)=>`<a data-tap style="height:44px;display:flex;align-items:center;padding:0 14px;${i?'color:var(--ink-2)':'box-shadow:inset 0 -2px 0 var(--ink)'}">${t}</a>`).join('')}
+  </nav>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:4px">
+   <a class="hit" data-tap><span class="chip-daily" style="height:36px">${use('i-glass')}No.42<span>06:12:40</span></span></a>
+   <button class="hit" data-tap aria-label="Sound">${use('i-sound')}</button></div>
+ </header>
+ <div style="display:flex;gap:32px;padding:0 40px">
+  <div style="width:888px;flex:none">
+   <h1 style="font:650 40px/48px 'Bricolage Grotesque';letter-spacing:-.035em;white-space:nowrap;margin:4px 0 16px">Pour something. <span style="color:var(--ink-2)">It reacts.</span></h1>
+   ${kilnZone(`<div style="padding:24px 24px 18px">
+     <div class="cv" style="width:840px;height:420px;aspect-ratio:auto;border-radius:10px;box-shadow:0 0 0 1px rgba(255,255,255,.07)"><img src="hero.png" alt="">${hint()}</div>
+     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">
+      <span class="plate"><i style="background:#E8C87A"></i>Sand<span>· powder</span></span>
+      <div style="display:flex;gap:8px;align-items:center">
+       <button class="tool" data-tap>${use('i-erase')}Erase</button>
+       <div class="grains" style="background:var(--kiln-2);border-radius:12px"><button class="grain" data-tap aria-label="Small brush"><i style="width:4px;height:4px"></i></button><button class="grain on" data-tap aria-label="Medium brush"><i style="width:8px;height:8px"></i></button><button class="grain" data-tap aria-label="Large brush"><i style="width:14px;height:14px"></i></button></div>
+       <button class="tool ink off" data-tap aria-disabled="true">${use('i-share')}Share</button>
+      </div>
+     </div>
+     <div style="margin-top:6px">${dRack}</div>
+   </div>`,'border-radius:24px')}
+  </div>
+  <div style="flex:1;min-width:0;padding-top:68px">
+   <div class="sec-h"><span class="lbl"><b>Today</b></span><span class="rule"></span></div>
+   <div style="margin-top:14px">${todayCard()}</div>
+   <div class="sec-h" style="margin-top:32px"><span class="lbl"><b>Your strata</b></span><span class="rule"></span><span class="lbl">5 days</span></div>
+   <div style="margin-top:14px">${strataBand()}</div>
+   <div class="sec-h" style="margin-top:32px"><span class="lbl"><b>On the wall</b></span><span class="rule"></span><a class="lbl-t link-t" data-tap style="color:var(--ink)">Browse${use('i-next','ic','width:14px;height:14px')}</a></div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px">
+    ${wallCard('gal_s2.png','Shelf, slipping',`${use('i-remix','ic','width:12px;height:12px')}3 remixes`)}
+    ${wallCard('gal_s3.png','Three peaks, one fire',`${use('i-remix','ic','width:12px;height:12px')}1 remix`)}
+   </div>
+  </div>
+ </div>`;
+})();
+
+/* ===================== 대비 계산 ===================== */
+function hex2rgb(h){h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16))}
+function lum([r,g,b]){const f=c=>{c/=255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4)};return .2126*f(r)+.7152*f(g)+.0722*f(b)}
+function ratio(a,b){const A=lum(a),B=lum(b);return (Math.max(A,B)+.05)/(Math.min(A,B)+.05)}
+function over(rgba,bg){const [r,g,b,a]=rgba;return [0,1,2].map(i=>Math.round([r,g,b][i]*a+bg[i]*(1-a)))}
+const W=[255,255,255];
+const pairs=[
+ ['Ember 버튼 · 흰 글자 (v3)','#FFFFFF','#C4520F',4.5,'본문 기준'],
+ ['Ember 버튼 · 흰 글자 (v2 #E0661B)','#FFFFFF','#E0661B',4.5,'v2 — 탈락'],
+ ['ink / bone (본문)','#2A2118','#F4ECDD',4.5,''],
+ ['ink-2 / bone (보조)','#5E5040','#F4ECDD',4.5,''],
+ ['ink-2 / bone-2 (카드 안 보조)','#5E5040','#EADFCB',4.5,''],
+ ['ember-text / bone (Cleared 등)','#A9470A','#F4ECDD',4.5,''],
+ ['on-kiln-2 라벨 / kiln','#B3A58F','#14110E',4.5,'Kiln 위 모노 라벨'],
+ ['on-kiln-2 라벨 / kiln-2 (도크·트레이)','#B3A58F','#1E1A16',4.5,''],
+ ['on-kiln / kiln (Kiln 본문)','#EFE6D6','#14110E',4.5,''],
+ ['광고 라벨 #6B665C / bone','#6B665C','#F4ECDD',4.5,'Advertisement'],
+ ['라이트 시험관 윤곽 .58 / bone','rgba:42,33,24,.58','#F4ECDD',3,'비텍스트 3:1'],
+ ['Kiln 시험관 윤곽 .42 / kiln','rgba:239,230,214,.42','#14110E',3,'비텍스트 3:1'],
+ ['salt 재료색 / bone (라이트)','#F2F4F7','#F4ECDD',3,'→ Kiln 전용 근거'],
+ ['salt 재료색 / kiln','#F2F4F7','#14110E',3,''],
+];
+document.getElementById('ct').innerHTML = `<tr><th>쌍</th><th>전경</th><th>배경</th><th>비율</th><th>기준</th><th></th></tr>` + pairs.map(([n,f,b,need,memo])=>{
+  const bg=hex2rgb(b); let fg, fl=f;
+  if(f.startsWith('rgba:')){const v=f.slice(5).split(',').map(Number);fg=over(v,bg);fl=`rgba(${v.join(',')})`} else fg=hex2rgb(f);
+  const r=ratio(fg,bg);
+  return `<tr><td>${n}<div style="color:var(--ink-2);font-size:12px">${memo}</div></td><td><span class="sw" style="background:${fl}"></span><span class="mono" style="font-size:11px">${f.startsWith('rgba')?fl:f}</span></td><td><span class="sw" style="background:${b}"></span><span class="mono" style="font-size:11px">${b}</span></td><td class="mono"><b>${r.toFixed(2)}:1</b></td><td class="mono">${need}:1</td><td class="${r>=need?'pass':'fail'}">${r>=need?'PASS':'FAIL'}</td></tr>`}).join('');
+document.getElementById('cycle').innerHTML = CYCLE.map(([n,c],i)=>`<div style="text-align:center"><div style="width:44px;height:28px;border-radius:6px;background:${c};box-shadow:inset 0 0 0 1px rgba(42,33,24,.3)"></div><div class="mono" style="font-size:11px;margin-top:4px">${i}·${n}</div></div>`).join('') +
+ `<div class="lbl" style="width:100%;margin-top:8px">No.38 fire · No.39 missed · No.40 ash · No.41 sand · No.42 water</div>`;
+
+/* ===================== ?only= ===================== */
+const only = new URLSearchParams(location.search).get('only');
+if(only){ document.body.classList.add('only'); const el=document.getElementById(only); el.closest('.art').classList.add('keep'); }
+</script>
+</body></html>
