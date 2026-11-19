@@ -29,3 +29,8 @@
 - 맥락: 9-21 반려(콘텐츠 없는 화면의 광고, 가치 낮은 콘텐츠). 점검 결과 광고 로더가 31개 페이지에 실리고, 그중 /learn 목록이 216단어로 가장 얇았다. Terms·Contact 페이지가 없었다.
 - 선택: /learn 목록 광고 끔(verify-ads 허용 목록 제외), /terms·/contact 신설(정책 페이지라 광고 없음). 상세 docs/adsense/2026-11-16-readiness.md
 - 버린 안: 얇은 레벨 화면(약 200단어) noindex — 실제 플레이 화면이고 광고도 없어 색인 유지, 본문 보강은 backlog로.
+
+## 2026-11-19 참고 오픈소스 라이선스 규칙(참고 레포 조사)
+- 코드 재사용 가능(MIT·Apache 등): react-spring, Motion, screen-shake, ZzFX, canvas-confetti, matter-js, planck.js, sandspiel(MIT) 등 — 라이선스 고지 유지.
+- **코드 금지·아이디어만**: Sandboxels(R74n, 광고 포함 상업 이용 금지), Sand Game JS(README에 "법적으로 오픈소스 아님"), GPL·AGPL 계열(Powder Toy, lichess, Hextris). AdSense 사이트이므로 한 줄도 가져오지 않는다.
+- 근거: docs/team/research/2026-11-19/reference-repos-uiux.md(46개 레포·별 수·라이선스 11-19 GitHub API 확인).
