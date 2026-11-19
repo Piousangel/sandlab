@@ -19,8 +19,8 @@ interface Props {
 export const LONG_PRESS_MS = 600
 
 const btn = (enabled: boolean): React.CSSProperties => ({
-  width: FLOAT_BTN, height: FLOAT_BTN, borderRadius: FLOAT_BTN / 2, border: '1px solid rgba(255,255,255,0.18)',
-  background: 'rgba(14,19,27,0.62)', color: '#eef1f6', fontSize: 18, fontWeight: 700, cursor: enabled ? 'pointer' : 'default',
+  width: FLOAT_BTN, height: FLOAT_BTN, borderRadius: FLOAT_BTN / 2, border: '2px solid #EAD9B8',
+  background: 'rgba(255,246,227,0.92)', color: '#3B2A1A', boxShadow: '0 3px 0 rgba(59,42,26,0.3)', fontSize: 18, fontWeight: 700, cursor: enabled ? 'pointer' : 'default',
   opacity: enabled ? 1 : 0.35, backdropFilter: 'blur(4px)', touchAction: 'manipulation', padding: 0, userSelect: 'none', WebkitTouchCallout: 'none',
 })
 

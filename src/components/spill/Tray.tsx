@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import type { Verb } from '@/lib/spill/level/define'
 import type { TrayVerb, RunAction } from '@/lib/spill/client/view'
-import { C, pill } from './ui'
+import { K, pill } from './ui'
 
 interface Props {
   height: number
@@ -25,7 +25,7 @@ export default function Tray({ height, safeBottom, verbs, selected, run, runHigh
     <div
       style={{
         height, boxSizing: 'border-box', display: 'flex', flexDirection: 'column',
-        padding: `0 0 ${safeBottom}px`, borderTop: `1px solid ${C.line}`, background: C.bg,
+        padding: `0 0 ${safeBottom}px`, borderTop: `2px solid ${K.line}`, background: K.bg, color: K.ink,
       }}
     >
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '7px 10px 0', flexShrink: 0 }}>
@@ -53,9 +53,9 @@ export default function Tray({ height, safeBottom, verbs, selected, run, runHigh
         data-spill-run
         onClick={() => onRun(run.action)}
         style={{
-          minHeight: 48, minWidth: 108, padding: '0 18px', borderRadius: 14, border: 0, fontSize: 16, fontWeight: 800, letterSpacing: 0.5,
-          background: run.action === 'run' || run.action === 'next' ? C.accent : '#1d2533', color: run.action === 'run' || run.action === 'next' ? C.bg : C.text,
-          cursor: 'pointer', boxShadow: runHighlight ? `0 0 0 3px rgba(245,166,35,0.45)` : 'none', touchAction: 'manipulation', whiteSpace: 'nowrap',
+          minHeight: 48, minWidth: 108, padding: '0 18px', borderRadius: 999, border: 0, fontSize: 17, fontWeight: 800, letterSpacing: 0.5,
+          background: run.action === 'run' || run.action === 'next' ? K.accent : K.panel, color: run.action === 'run' || run.action === 'next' ? '#fff' : K.ink,
+          cursor: 'pointer', boxShadow: `${run.action === 'run' || run.action === 'next' ? '0 4px 0 ' + K.accentDeep : K.lift}${runHighlight ? ', 0 0 0 4px rgba(242,138,27,0.4)' : ''}`, touchAction: 'manipulation', whiteSpace: 'nowrap',
         }}
       >
         {run.label}
