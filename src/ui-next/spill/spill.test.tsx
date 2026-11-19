@@ -17,6 +17,7 @@ vi.mock('@ui-shell', async () => ({
   SpillHud: (await import('./SpillHud')).SpillHud,
   DailyStart: (await import('./DailyStart')).DailyStart,
   SpillResult: (await import('../result/SpillResult')).SpillResult,
+  DailyAside: (await import('../daily/DailyAside')).DailyAside,
 }))
 
 const { default: SpillPlayer } = await import('@/components/spill/SpillPlayer')

@@ -14,7 +14,7 @@ import { describeLevel } from '@/lib/spill/client/describe'
 import { dailyIdFor, dayNumber, loadDaily, saveDaily, type DailyRec } from '@/lib/spill/client/daily'
 import { shareTextV2 } from '@/lib/spill/client/share'
 import type { DailyClear } from '@/ui-next/shell/spillTypes'
-import { DailyStart } from '@ui-shell'
+import { DailyAside, DailyStart } from '@ui-shell'
 import { trackEvent } from '@/lib/sand/gallery'
 import type { LevelDef } from '@/lib/spill/level/define'
 
@@ -82,6 +82,12 @@ export default function DailySpill({ children }: { children?: ReactNode }) {
 
   return (
     <SpillPlayer level={level} nextId={null} onCleared={onCleared} badge={DailyStart ? `No.${n}` : undefined} back={DailyStart ? { href: '/daily', label: 'Daily start' } : undefined} share={text ? { text, onClick: () => trackEvent('share_click', 'daily') } : undefined}>
+      {/* 새 셸(P7): 레벨 id·옛 Share 버튼 없는 패널. classic은 null → 아래 지금 패널 그대로 */}
+      {DailyAside ? (
+        <DailyAside n={n} level={level} mine={mine}>
+          {children}
+        </DailyAside>
+      ) : (
       <section style={{ marginTop: 18 }}>
         {/* 플레이 화면 헤더(Hud)가 이미 h1 — 페이지 제목 중복을 피해 h2(겉모습은 인라인 스타일 그대로) */}
         <h2 style={{ fontSize: 20, margin: '0 0 4px' }}>
@@ -118,6 +124,7 @@ export default function DailySpill({ children }: { children?: ReactNode }) {
         </p>
         {children}
       </section>
+      )}
     </SpillPlayer>
   )
 }

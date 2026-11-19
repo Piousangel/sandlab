@@ -64,6 +64,16 @@ export interface DailyStartProps {
   children?: ReactNode
 }
 
+/** 새 셸 /daily 플레이 화면의 설명 패널(P7) — classic(prod)은 null이라 DailySpill이 지금 패널을 그대로 그린다. */
+export interface DailyAsideProps {
+  n: number
+  level: LevelDef
+  /** 오늘 공식 기록(없으면 null). */
+  mine: DailyRec | null
+  /** 정적 설명(SEO "How the daily works"). */
+  children?: ReactNode
+}
+
 /**
  * "오늘 클리어한 사람 중 상위 N%" 한 줄의 데이터(P5는 자리와 인터페이스만 — 서버 집계 엔드포인트가 아직 없다).
  * 값이 없거나(null) 표본이 작으면 결과 화면은 그 줄을 아예 그리지 않는다(가짜 수치 금지). 설계 제안은 계획서 P5 메모.

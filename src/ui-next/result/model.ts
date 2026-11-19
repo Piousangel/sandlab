@@ -4,6 +4,7 @@
  */
 import { computeScale, type Scale } from '@/lib/spill/render/canvas'
 import { formatMoves, formatSecs } from '@/lib/spill/play/score'
+import { dayNumber } from '@/lib/spill/client/daily'
 import type { DailyStanding } from '../shell/spillTypes'
 
 /** 공유 PNG 한 장의 상한(계획서 P5 기준). 넘으면 보드 배율을 한 단계씩 낮춰 다시 그린다. */
@@ -90,7 +91,7 @@ export interface ShareLayout {
   /** 걸이줄이 액자에 닿는 두 점. */
   wire: [{ x: number; y: number }, { x: number; y: number }]
   /** 오른쪽 글 칸. */
-  text: { x: number; w: number; kickerY: number; titleY: number; beadsY: number; statY: number; siteY: number; kicker: number; title: number; bead: number; stat: number; site: number }
+  text: { x: number; w: number; kickerY: number; titleY: number; beadsY: number; statY: number; noteY: number; siteY: number; kicker: number; title: number; bead: number; stat: number; note: number; site: number }
 }
 
 const BOARD_W = 160
@@ -133,11 +134,13 @@ export function shareLayout(format: ShareFormat, k = defaultScale(format)): Shar
       titleY: Math.round(h * (sq ? 0.42 : 0.46)),
       beadsY: Math.round(h * (sq ? 0.5 : 0.58)),
       statY: Math.round(h * (sq ? 0.58 : 0.7)),
+      noteY: Math.round(h * (sq ? 0.58 : 0.7)) + Math.round(sq ? 56 : 44),
       siteY: fy + fh - 6,
       kicker: Math.round(26 * s),
       title: Math.round(96 * s),
       bead: Math.round(26 * s),
       stat: Math.round(34 * s),
+      note: Math.round(22 * s),
       site: Math.round(30 * s),
     },
   }
@@ -146,6 +149,74 @@ export function shareLayout(format: ShareFormat, k = defaultScale(format)): Shar
 export function defaultScale(format: ShareFormat): number {
   return format === 'square' ? 3 : 2
 }
+
+/*
+ * 공유 이미지 스포일러 가림(리디자인 P7, 팀 결정 — DECISIONS 2026-11-20 P7).
+ * 데일리는 전 세계가 같은 날 같은 퍼즐이라 종료 보드(파낸 자리·물줄기)가 그날의 정답 힌트가 된다.
+ * → 데일리 공유 이미지는 그 퍼즐의 UTC 날짜 안에서는 보드를 모자이크(VEIL_BLOCK 셀 평균)로 가리고, 목표(항아리) 칸만 선명하게 둔다
+ *   (채운 결과는 보이되 동선은 안 보이게). 다음 UTC 날부터는 원본. 유리알·No.N·수·시간은 언제나 선명.
+ * → 레벨 모드(/play)는 늘 원본 — 레벨은 고정 공략이라 같은 날 경쟁이 없고 공략 글(/play/:id/guide)도 이미 공개돼 있다.
+ */
+
+/**
+ * 모자이크 한 칸(셀). 160×240 보드 → 10×15칸. 8셀(20×30칸)은 실측(1-3 Two Pots)에서 파낸 두 자리·물줄기 두 기둥이 칸 색으로 여전히 읽혀 16으로 키웠다.
+ * 칸 평균은 다시 보드 전체 평균 쪽으로 VEIL_FLATTEN만큼 당긴다 — 칸끼리 대비를 줄여 '어디를 팠나'가 덜 읽히게.
+ */
+export const VEIL_BLOCK = 16
+export const VEIL_FLATTEN = 0.5
+/** 보드 셀 = 타일 × 4(레벨 rect는 타일 단위, 40×60). */
+const CELLS_PER_TILE = 4
+
+export type CellRect = { x: number; y: number; w: number; h: number }
+
+/** 이 데일리 이미지를 가려야 하는가 — 데일리이고, 지금(UTC)이 그 퍼즐의 날짜(또는 그 전)일 때. */
+export function veilBoard(daily: { n: number } | null, nowMs: number): boolean {
+  return !!daily && dayNumber(nowMs) <= daily.n
+}
+
+/** 선명하게 남길 칸 = 목표(fill·reach·ignite·protect) 칸. 'bad'(닿으면 안 되는 곳)는 동선 힌트라 가린다. */
+export function keepRects(targets: { kind: string; rect: readonly number[] }[]): CellRect[] {
+  return targets
+    .filter((t) => t.kind !== 'bad')
+    .map(({ rect: [x, y, w, h] }) => ({ x: x * CELLS_PER_TILE, y: y * CELLS_PER_TILE, w: w * CELLS_PER_TILE, h: h * CELLS_PER_TILE }))
+}
+
+/**
+ * RGBA 픽셀(보드 w×h)을 block 칸 평균으로 모자이크한다(제자리 수정). keep 칸 안 픽셀은 원본 그대로.
+ * 순수 함수 — 캔버스 없이 테스트한다(shareImage가 getImageData/putImageData로 감싼다).
+ */
+export function mosaicPixels(px: Uint8ClampedArray, w: number, h: number, block: number, keep: CellRect[], flatten = 0): Uint8ClampedArray {
+  const src = px.slice()
+  const all = [0, 0, 0, 0]
+  for (let i = 0; i < src.length; i++) all[i % 4] += src[i]
+  const px4 = Math.max(1, src.length / 4)
+  const mean = all.map((s) => s / px4)
+  const inKeep = (x: number, y: number) => keep.some((r) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h)
+  for (let by = 0; by < h; by += block) {
+    for (let bx = 0; bx < w; bx += block) {
+      const ye = Math.min(h, by + block)
+      const xe = Math.min(w, bx + block)
+      const sum = [0, 0, 0, 0]
+      let n = 0
+      for (let y = by; y < ye; y++)
+        for (let x = bx; x < xe; x++) {
+          const i = (y * w + x) * 4
+          for (let c = 0; c < 4; c++) sum[c] += src[i + c]
+          n++
+        }
+      for (let y = by; y < ye; y++)
+        for (let x = bx; x < xe; x++) {
+          if (inKeep(x, y)) continue
+          const i = (y * w + x) * 4
+          for (let c = 0; c < 4; c++) px[i + c] = Math.round((sum[c] / n) * (1 - flatten) + mean[c] * flatten)
+        }
+    }
+  }
+  return px
+}
+
+/** 이미지 안 한 줄 설명(가렸을 때만). */
+export const VEIL_NOTE = 'Board hidden until tomorrow (UTC)'
 
 export type ShareRoute = 'share-file' | 'download' | 'copy-text'
 

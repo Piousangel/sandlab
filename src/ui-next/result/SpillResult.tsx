@@ -20,7 +20,7 @@ import { Icon } from '../icons/Icon'
 import { msUntilUtcMidnight } from '../shell/dailyPill'
 import type { SpillResultProps } from '../shell/spillTypes'
 import {
-  SHARE_FORMATS, caption, officialNote, practiceLabel, resultBoardScale, shareFileName, shareRoute, standingLine, type ShareFormat,
+  SHARE_FORMATS, caption, keepRects, officialNote, veilBoard, practiceLabel, resultBoardScale, shareFileName, shareRoute, standingLine, type ShareFormat,
 } from './model'
 import { loadShareFonts, renderSharePng, type ShareCard } from './shareImage'
 
@@ -117,8 +117,10 @@ export function SpillResult(p: SpillResultProps) {
   }, [daily])
 
   // 공유 PNG는 미리 만들어 둔다 — 누른 순간 바로 navigator.share를 불러야 사용자 활성화(iOS)가 살아 있다. 크기는 data 속성으로 남긴다(QA 실측).
+  // P7 스포일러 가림: 데일리는 그 퍼즐의 UTC 날짜 안이면 보드 모자이크(목표 칸만 선명), 다음 날부터 원본. 레벨 모드는 늘 원본
+  const veil = veilBoard(daily, Date.now()) ? { keep: keepRects(level.targets) } : null
   const card: ShareCard = daily
-    ? { kicker: 'Sandlab Daily', title: `No.${daily.n}`, beads: daily.record.stars, stat: recordStat(daily.record) }
+    ? { kicker: 'Sandlab Daily', title: `No.${daily.n}`, beads: daily.record.stars, stat: recordStat(daily.record), veil }
     : { kicker: `Sandlab Spill · World ${level.world}`, title: level.name, beads: p.stars.count, stat: cap.stat }
   const png = (f: ShareFormat): Promise<Blob> | null => {
     const c = canvasRef.current
@@ -128,6 +130,7 @@ export function SpillResult(p: SpillResultProps) {
       void pngs.current[f]!.then((b) => {
         ready.current[f] = b
         rootRef.current?.setAttribute(`data-png-${f}`, String(b.size))
+        rootRef.current?.setAttribute('data-png-veil', card.veil ? '1' : '0')
       }).catch(() => {})
     }
     return pngs.current[f]!

@@ -60,9 +60,13 @@
   margin: 0;
 }
 .sl-sp-aside a {
-  /* 페이지 본문이 지금 화면용 인라인 색(#A04F00, 크림 위 기준)을 달고 온다 — Bone 위에서는 4.5:1 미달이라 덮는다 */
-  color: var(--sl-ember-text) !important;
+  color: var(--sl-ember-text);
   font-weight: 700;
+}
+/* 남은 덮어쓰기는 인라인 style을 단 옛 본문(/play/[id] 페이지)에만 — 지금 화면용 색(#A04F00, 크림 위 기준)이 Bone 위에서 4.5:1 미달.
+   /daily는 P7부터 새 셸 패널(DailyAside, 인라인 색 없음)이라 해당 없음. /play 본문을 새 셸로 옮기는 P8·P10에서 이 규칙을 지운다 */
+.sl-sp-aside a[style] {
+  color: var(--sl-ember-text) !important;
 }
 @media (min-width: 900px) {
   .sl-spill {
@@ -621,8 +625,8 @@
 .sl-ds-head > span {
   display: block;
 }
-/* 페이지 본문 문단이 지금 화면용 인라인 opacity(.75)를 달고 온다 — 그 안 링크가 Bone 위에서 3.2:1로 떨어진다(axe 실측).
-   새 셸에서는 투명도 대신 ink-2로 흐리게 한다 */
+/* /play/[id] 페이지 본문 문단이 지금 화면용 인라인 opacity(.75)를 달고 온다 — 그 안 링크가 Bone 위에서 3.2:1로 떨어진다(axe 실측).
+   새 셸에서는 투명도 대신 ink-2로 흐리게 한다. /daily는 P7부터 해당 없음(DailyAside), /play 본문 이전(P8·P10) 때 지운다 */
 .sl-sp-aside p[style*='opacity'] {
   opacity: 1 !important;
   color: var(--sl-ink-2);
