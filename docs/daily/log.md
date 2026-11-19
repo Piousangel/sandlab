@@ -13,3 +13,4 @@
 | 2026-11-18 | Spill 2-1 Wooden Door + 공략 + 판정기(연소 중 정체 안 걸림) + 불 전용 실패 문구 + 월드 첫 레벨 맛보기 개방 | /play/2-1, /play/2-1/guide | typecheck·test·spill:verify·build·verify-ads (결과는 PR) | 독립 리뷰 반영(문구 spark만, 2-1 잠금 예외). 봇 2종은 미구현 — 다음 세션 |
 | 2026-11-19 | Spill UI 개편 1단계(크림 토큰·SVG HUD·목표 링 칩·입체 RUN) — 혹평 5.5 수정 후 재리뷰 대기 | /play/*, /daily | typecheck·test 통과, 나머지 PR 참조 | 390/360 실캡처 못 함 |
 | 2026-11-20 | 03시 QA: /daily 결과 카드 Share가 레벨 링크를 공유하던 버그 수정(데일리 문구·계측) + /daily·/gallery h1 정리 + scripts/qa 상시화, docs/team/bugs.md 신설 | /daily, /gallery | typecheck·test·spill:verify·build·verify-ads·margolus·gallery (PR) | 라이브 프록시 403 → 로컬 prod로 점검 |
+| 2026-11-20 (06시) | 회의·P5 리서치 1·기획 v1, '일일 출시 vs prod diff 0' 조정(DECISIONS) | docs | 문서만(출시는 16시 P5 — prod 조각: 데일리 공유 문구 v2) | 라이브 프록시 000으로 미확인 |

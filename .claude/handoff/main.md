@@ -1,3 +1,13 @@
+# 인계 (2026-11-20 06시 회의): 오늘 = 리디자인 P5(결과 액자 + 공유 이미지) — 리서치 1·기획 v1 완료, 13시가 반증부터
+
+- 회의록 docs/team/meetings/2026-11-20.md, 기획 docs/team/specs/2026-11-20-p5-result-share.md(4장 '13시 반증 과제' 5개를 먼저).
+- **새 규칙(DECISIONS 11-20)**: 각 P PR에 prod에 바로 내도 안전한 조각 1개(데이터·문구·버그·접근성, 장식 무변경)를 싣고 그걸 그날 출시로 친다. P5의 prod 조각 = DailySpill 공유 문구 `shareText(n,stars,moves,levelId)` → `shareTextV2(mine, n)`(레벨 id 제거). 옛 shareText는 호출처 정리 후 제거.
+- 이미 있는 것(새로 만들지 말 것): 레벨별 히스토그램 API `/api/spill/level/<id>/hist` + `hist.ts histBars`(MIN_SAMPLE 50) → "Faster than N% of clears"는 이걸로, 표본 < 50이면 줄을 그리지 않는다. 보드는 Canvas2D(render/canvas.ts + glow 캔버스) → 종료 프레임 캡처는 drawImage.
+- 13시 최우선 반증: 종료 프레임 이미지가 **정답 배치를 드러내는지**(스포일러). 드러내면 액자 이미지 방식을 바꾼다.
+- 라이브: 이 컨테이너에서 sandlab.app curl 000(프록시). 배포 run 75(#73) 성공은 Actions로 확인.
+
+---
+
 # 인계 (2026-11-20 03시 야간 QA): 데일리 결과 카드 Share 버그 수정 + 헤딩 a11y + QA 스크립트 상시화
 
 - **라이브 접근 불가**: 이 컨테이너 프록시가 sandlab.app CONNECT 403 → 로컬 prod 빌드(`NEXT_PUBLIC_UI= pnpm build`) + `npx wrangler dev --port 8799 --local`(D1 로컬: `wrangler d1 execute sandlab-gallery --local --file=schema.sql` + migrations/0001)로 점검. 배포 run 74(#72) 성공. 11-19 23시가 맡긴 `/ui-next/posters/atlas.json`·`/ui-next/icons.svg` 200은 **로컬에서만** 확인 — 라이브는 다음 교대가 접근되면 확인.
