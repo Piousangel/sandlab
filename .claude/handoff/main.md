@@ -1,6 +1,6 @@
 # 인계 (2026-11-19 밤): 리디자인 v2 P1 「기반」 머지 — P2(#66)·아이콘(#68)도 머지됨, 다음은 P3(앱 셸)
 
-- 계획서 docs/plans/2026-11-19-redesign-v2.md 6장 진행표가 기준. P1 = 이 PR(브랜치 shift/redesign-p1-foundation).
+- 계획서 docs/plans/2026-11-19-redesign-v2.md 6장 진행표가 기준. P1 = #69(브랜치 shift/redesign-p1-foundation).
 - **새 UI는 전부 `src/ui-next/`**. 토큰 `tokens.css`(`--sl-*`, 기존 K/C는 P12까지 그대로), 서체 `fonts.ts`(next/font/local, preload false, 재현 `scripts/fonts/build-fonts.py`), 플래그 `flag.ts`(`UI_NEXT`). 아이콘은 이 PR에서 빼고 동시 진행된 #68(`src/ui-next/icons/`, 27종, 머지됨)을 쓴다.
 - **셸 전환 구조(S6)**: layout.tsx가 `@ui-shell`을 import → 기본은 `shell/classic.ts`(빈 객체), `NEXT_PUBLIC_UI=next` 빌드에서만 next.config.ts의 NormalModuleReplacementPlugin이 `shell/next.ts`로 바꾼다. 새 셸 코드는 **shell/next.ts에서부터 import 그래프로만** 들어오게 한다 — layout·기존 페이지가 ui-next 모듈(fonts·tokens.css)을 직접 import하면 prod HTML에 CSS 링크가 붙는다.
 - **prod HTML diff 0 확인법**: 같은 절대 경로 폴더에서 base → 브랜치 순으로 `pnpm build`하고 out/을 buildId만 치환해 비교(경로가 다르면 webpack 모듈 id가 달라져 전 청크가 달라 보인다). P1 결과 156파일 전부 동일.
