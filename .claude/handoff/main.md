@@ -1,6 +1,6 @@
 # 인계 (2026-11-20 아침): 리디자인 v2 P5 「결과 화면 + 공유 이미지」 머지 — 다음은 P6(홈 Pour)
 
-- 계획서 6장 진행표가 기준. P5 = 브랜치 shift/redesign-p5-result. 결정은 DECISIONS 2026-11-20 P5, 상위 N% 서버 집계 제안은 계획서 "P5 메모".
+- 계획서 6장 진행표가 기준. P5 = #75(브랜치 shift/redesign-p5-result). 결정은 DECISIONS 2026-11-20 P5, 상위 N% 서버 집계 제안은 계획서 "P5 메모".
 - **새 결과 화면은 `@ui-shell`의 `SpillResult`**(classic = null → prod는 옛 ResultCard). 파일 `src/ui-next/result/`(SpillResult.tsx·model.ts 순수 계산·shareImage.ts 캔버스·result.css·result.test.tsx). SpillPlayer가 카드 때 SpillResult가 있으면 그린다(헤더 아래를 덮는 Bone 면, 헤더는 그대로).
 - 액자 = 결과 화면 첫 레이아웃 때 엔진 캔버스(재료+발광) 복사. 오버레이(목표 테두리)는 안 넣음. 공유 PNG(1:1 1080·OG 1200×630)는 뜬 뒤 300ms에 미리 렌더 → `data-png-square/wide` 속성에 바이트 수(QA 실측용). 실측 80~86KB / 66~69KB.
 - **prod에 들어간 것: 데일리 공유 텍스트 = shareTextV2**(결과 카드 Share — 지금까지 데일리에서도 `Sandlab Spill 1-3 … /play/1-3`를 내보냈다 — 와 본문 Share result). 옛 daily.ts shareText 삭제. shareTextV2·beadText·levelShareText는 `src/lib/spill/client/share.ts`(daily.ts는 홈 번들 공용 모듈이라 분리 — 거기 두면 score.ts가 홈 청크로 끌려온다, 첫 빌드에서 실측).
