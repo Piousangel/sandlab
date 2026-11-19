@@ -57,7 +57,7 @@ export const NO_BRUSH = 0xffffffff
 export function demoBrush(elapsedMs: number, W: number, H: number): { x: number; y: number; r: number } | null {
   if (elapsedMs < 0 || elapsedMs >= DEMO_MS) return null
   const f = elapsedMs / DEMO_MS
-  return { x: Math.round(W * (0.5 + 0.06 * Math.sin(f * Math.PI * 2))), y: Math.round(H * 0.06), r: 7 }
+  return { x: Math.round(W * (0.5 + 0.06 * Math.sin(f * Math.PI * 2))), y: Math.round(H * 0.06), r: 9 }
 }
 
 /** 데모를 돌릴까: 첫 방문(키 없음) + reduced-motion 아님 + 빈 캔버스(링크로 연 장면이 아님). */
@@ -80,7 +80,8 @@ export const NO_GPU_HEADLINE = 'Today’s puzzle works here.'
 /** 헤드라인 두 줄(제목·부제). 높이는 항상 두 줄로 예약한다(CLS). */
 export function entryHeadline(e: Entry): { title: string; sub: string } {
   if (e.kind === 'scene') {
-    const by = e.creatorName ? `by ${e.creatorName}` : 'by an anonymous maker'
+    // 단건 조회 API는 아직 작성자 이름을 싣지 않는다(목록만) — 없을 때 '익명'이라고 단정하지 않는다
+    const by = e.creatorName ? `by ${e.creatorName}` : 'From the gallery'
     const rx = e.remixCount === 1 ? '1 remix' : `${e.remixCount} remixes`
     return { title: e.title || 'Untitled', sub: `${by} · ${rx}` }
   }

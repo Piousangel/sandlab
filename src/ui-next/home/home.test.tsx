@@ -76,7 +76,7 @@ describe('진입 상태 헤드라인(B4 ④)', () => {
     expect(s).toEqual({ title: 'Shelf, slipping', sub: 'by sora · 3 remixes' })
     expect(entryHeadline({ kind: 'scene', id: 'AbC123', title: '', creatorName: null, remixCount: 1 })).toEqual({
       title: 'Untitled',
-      sub: 'by an anonymous maker · 1 remix',
+      sub: 'From the gallery · 1 remix',
     })
     expect(entryHeadline({ kind: 'link' }).title).toBe('A scene someone shared')
   })

@@ -177,6 +177,7 @@
 }
 .sl-rack-tab {
   flex: none;
+  min-width: var(--sl-hit);
   min-height: var(--sl-hit);
   padding: 0 12px;
   font: inherit;
@@ -417,6 +418,10 @@
 }
 .sl-home-sec {
   padding-top: var(--sl-s-6);
+}
+.sl-home-row,
+.sl-home-sec > h2.sl-home-label {
+  min-height: var(--sl-hit);
 }
 .sl-home-row {
   display: flex;
@@ -733,6 +738,35 @@ h2.sl-home-label::after {
   color: var(--sl-ink-2);
 }
 
+/* ---------- 낮은 화면(360×640 등): 도크까지 첫 화면에 들어오게 세로를 줄인다(누르는 건 44 유지) ---------- */
+@media (max-height: 700px) and (max-width: 899px) {
+  .sl-home-head {
+    height: 68px;
+    padding-top: 2px;
+  }
+  .sl-home-h1 {
+    font-size: 24px;
+    line-height: 34px;
+  }
+  .sl-home-sub {
+    font-size: 14px;
+    line-height: 22px;
+  }
+  .sl-matline,
+  .sl-remix {
+    height: 48px;
+  }
+  .sl-rack-panel {
+    height: 112px;
+  }
+  .sl-rack-row {
+    padding-top: 2px;
+  }
+  .sl-dock {
+    height: 56px;
+  }
+}
+
 /* ---------- 데스크톱 ---------- */
 @media (min-width: 900px) {
   .sl-home-main {
@@ -750,7 +784,7 @@ h2.sl-home-label::after {
   }
   .sl-well,
   .sl-home-tools {
-    width: min(calc(100% - 48px), max(640px, calc((100dvh - 470px) * 2)));
+    width: min(calc(100% - 48px), max(640px, calc((100dvh - 510px) * 2)));
     margin: 0 auto;
   }
   .sl-home-tools {
