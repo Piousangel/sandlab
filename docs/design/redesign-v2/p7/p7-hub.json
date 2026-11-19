@@ -1,0 +1,1466 @@
+{
+  "hub": [
+    {
+      "view": "390",
+      "tag": "empty",
+      "layers": "1",
+      "solved": "0",
+      "today": "pending",
+      "kinds": "pending",
+      "distinctFills": 0,
+      "edges": [],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "Each daily you solve pours one layer.",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 156,
+          "y": 1010,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 734,
+        "w": 390,
+        "h": 377
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "390",
+      "tag": "five",
+      "layers": "5",
+      "solved": "5",
+      "today": "solved",
+      "kinds": "solved,solved,solved,solved,solved",
+      "distinctFills": 5,
+      "edges": [
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "5-day run · vein at 7 days, 2 to go",
+      "notes": [
+        {
+          "text": "today · gunpowder",
+          "x": 156,
+          "y": 956,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 156,
+          "y": 974,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 156,
+          "y": 992,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 156,
+          "y": 1010,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-15 · plant",
+          "x": 156,
+          "y": 1028,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 752,
+        "w": 390,
+        "h": 377
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "390",
+      "tag": "five-pending",
+      "layers": "6",
+      "solved": "5",
+      "today": "pending",
+      "kinds": "solved,solved,solved,solved,solved,pending",
+      "distinctFills": 5,
+      "edges": [
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "5-day run · vein at 7 days, 2 to go",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 156,
+          "y": 938,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 156,
+          "y": 956,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 156,
+          "y": 974,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 156,
+          "y": 992,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-14 · stone",
+          "x": 156,
+          "y": 1010,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 734,
+        "w": 390,
+        "h": 377
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "390",
+      "tag": "missed",
+      "layers": "10",
+      "solved": "4",
+      "today": "pending",
+      "kinds": "solved,missed,missed,solved,solved,missed,missed,solved,missed,pending",
+      "distinctFills": 4,
+      "edges": [
+        "seed",
+        "acid"
+      ],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "Solve today to start a new run.",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 156,
+          "y": 923,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · missed",
+          "x": 156,
+          "y": 941,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 156,
+          "y": 959,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-15 to 11-16 · 2 missed",
+          "x": 156,
+          "y": 977,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-10 · seed",
+          "x": 156,
+          "y": 1010,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 734,
+        "w": 390,
+        "h": 377
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "390",
+      "tag": "thirty",
+      "layers": "30",
+      "solved": "30",
+      "today": "solved",
+      "kinds": "solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved",
+      "distinctFills": 10,
+      "edges": [
+        "seed",
+        "lava",
+        "acid",
+        "plant",
+        "sand",
+        "seed",
+        "lava",
+        "acid",
+        "plant",
+        "sand",
+        "seed",
+        "lava",
+        "acid",
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [
+        "14",
+        "30"
+      ],
+      "run": "42-day run · vein at 60 days, 18 to go",
+      "notes": [
+        {
+          "text": "today · gunpowder",
+          "x": 156,
+          "y": 826,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 156,
+          "y": 844,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 156,
+          "y": 862,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 156,
+          "y": 880,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "10-21 · seed",
+          "x": 156,
+          "y": 1028,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 752,
+        "w": 390,
+        "h": 395
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "390",
+      "tag": "vein-today",
+      "layers": "7",
+      "solved": "7",
+      "today": "solved",
+      "kinds": "solved,solved,solved,solved,solved,solved,solved",
+      "distinctFills": 7,
+      "edges": [
+        "acid",
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [
+        "7"
+      ],
+      "run": "7-day run · vein at 14 days, 7 to go",
+      "notes": [
+        {
+          "text": "today · 7-day vein",
+          "x": 156,
+          "y": 938,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 156,
+          "y": 956,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 156,
+          "y": 974,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 156,
+          "y": 992,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-13 · acid",
+          "x": 156,
+          "y": 1028,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 752,
+        "w": 390,
+        "h": 395
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "390",
+      "tag": "absent",
+      "layers": "30",
+      "solved": "0",
+      "today": "pending",
+      "kinds": "missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,pending",
+      "distinctFills": 0,
+      "edges": [],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "Solve today to start a new run.",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 156,
+          "y": 898,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "10-21 to 11-18 · 29 missed",
+          "x": 156,
+          "y": 961,
+          "w": 218,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 734,
+        "w": 390,
+        "h": 377
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "360",
+      "tag": "empty",
+      "layers": "1",
+      "solved": "0",
+      "today": "pending",
+      "kinds": "pending",
+      "distinctFills": 0,
+      "edges": [],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "Each daily you solve pours one layer.",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 156,
+          "y": 949,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 673,
+        "w": 360,
+        "h": 377
+      },
+      "jarInView": false,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "360",
+      "tag": "five",
+      "layers": "5",
+      "solved": "5",
+      "today": "solved",
+      "kinds": "solved,solved,solved,solved,solved",
+      "distinctFills": 5,
+      "edges": [
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "5-day run · vein at 7 days, 2 to go",
+      "notes": [
+        {
+          "text": "today · gunpowder",
+          "x": 156,
+          "y": 895,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 156,
+          "y": 913,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 156,
+          "y": 931,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 156,
+          "y": 949,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-15 · plant",
+          "x": 156,
+          "y": 967,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 691,
+        "w": 360,
+        "h": 377
+      },
+      "jarInView": false,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "360",
+      "tag": "five-pending",
+      "layers": "6",
+      "solved": "5",
+      "today": "pending",
+      "kinds": "solved,solved,solved,solved,solved,pending",
+      "distinctFills": 5,
+      "edges": [
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "5-day run · vein at 7 days, 2 to go",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 156,
+          "y": 877,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 156,
+          "y": 895,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 156,
+          "y": 913,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 156,
+          "y": 931,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-14 · stone",
+          "x": 156,
+          "y": 949,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 673,
+        "w": 360,
+        "h": 377
+      },
+      "jarInView": false,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "360",
+      "tag": "missed",
+      "layers": "10",
+      "solved": "4",
+      "today": "pending",
+      "kinds": "solved,missed,missed,solved,solved,missed,missed,solved,missed,pending",
+      "distinctFills": 4,
+      "edges": [
+        "seed",
+        "acid"
+      ],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "Solve today to start a new run.",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 156,
+          "y": 862,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · missed",
+          "x": 156,
+          "y": 880,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 156,
+          "y": 898,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-15 to 11-16 · 2 missed",
+          "x": 156,
+          "y": 916,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-10 · seed",
+          "x": 156,
+          "y": 949,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 673,
+        "w": 360,
+        "h": 377
+      },
+      "jarInView": false,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "360",
+      "tag": "thirty",
+      "layers": "30",
+      "solved": "30",
+      "today": "solved",
+      "kinds": "solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved",
+      "distinctFills": 10,
+      "edges": [
+        "seed",
+        "lava",
+        "acid",
+        "plant",
+        "sand",
+        "seed",
+        "lava",
+        "acid",
+        "plant",
+        "sand",
+        "seed",
+        "lava",
+        "acid",
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [
+        "14",
+        "30"
+      ],
+      "run": "42-day run · vein at 60 days, 18 to go",
+      "notes": [
+        {
+          "text": "today · gunpowder",
+          "x": 156,
+          "y": 765,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 156,
+          "y": 783,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 156,
+          "y": 801,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 156,
+          "y": 819,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "10-21 · seed",
+          "x": 156,
+          "y": 967,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 691,
+        "w": 360,
+        "h": 395
+      },
+      "jarInView": false,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "360",
+      "tag": "vein-today",
+      "layers": "7",
+      "solved": "7",
+      "today": "solved",
+      "kinds": "solved,solved,solved,solved,solved,solved,solved",
+      "distinctFills": 7,
+      "edges": [
+        "acid",
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [
+        "7"
+      ],
+      "run": "7-day run · vein at 14 days, 7 to go",
+      "notes": [
+        {
+          "text": "today · 7-day vein",
+          "x": 156,
+          "y": 877,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 156,
+          "y": 895,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 156,
+          "y": 913,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 156,
+          "y": 931,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-13 · acid",
+          "x": 156,
+          "y": 967,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 691,
+        "w": 360,
+        "h": 395
+      },
+      "jarInView": false,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "360",
+      "tag": "absent",
+      "layers": "30",
+      "solved": "0",
+      "today": "pending",
+      "kinds": "missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,pending",
+      "distinctFills": 0,
+      "edges": [],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "Solve today to start a new run.",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 156,
+          "y": 837,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "10-21 to 11-18 · 29 missed",
+          "x": 156,
+          "y": 900,
+          "w": 188,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 0,
+        "y": 673,
+        "w": 360,
+        "h": 377
+      },
+      "jarInView": false,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0,
+      "errors": []
+    },
+    {
+      "view": "1440",
+      "tag": "empty",
+      "layers": "1",
+      "solved": "0",
+      "today": "pending",
+      "kinds": "pending",
+      "distinctFills": 0,
+      "edges": [],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "Each daily you solve pours one layer.",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 998,
+          "y": 334,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 858,
+        "y": 64,
+        "w": 340,
+        "h": 339
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0.025,
+      "errors": []
+    },
+    {
+      "view": "1440",
+      "tag": "five",
+      "layers": "5",
+      "solved": "5",
+      "today": "solved",
+      "kinds": "solved,solved,solved,solved,solved",
+      "distinctFills": 5,
+      "edges": [
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "5-day run · vein at 7 days, 2 to go",
+      "notes": [
+        {
+          "text": "today · gunpowder",
+          "x": 998,
+          "y": 262,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 998,
+          "y": 280,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 998,
+          "y": 298,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 998,
+          "y": 316,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-15 · plant",
+          "x": 998,
+          "y": 334,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 858,
+        "y": 64,
+        "w": 340,
+        "h": 339
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0.025,
+      "errors": []
+    },
+    {
+      "view": "1440",
+      "tag": "five-pending",
+      "layers": "6",
+      "solved": "5",
+      "today": "pending",
+      "kinds": "solved,solved,solved,solved,solved,pending",
+      "distinctFills": 5,
+      "edges": [
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "5-day run · vein at 7 days, 2 to go",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 998,
+          "y": 262,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 998,
+          "y": 280,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 998,
+          "y": 298,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 998,
+          "y": 316,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-14 · stone",
+          "x": 998,
+          "y": 334,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 858,
+        "y": 64,
+        "w": 340,
+        "h": 339
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0.025,
+      "errors": []
+    },
+    {
+      "view": "1440",
+      "tag": "missed",
+      "layers": "10",
+      "solved": "4",
+      "today": "pending",
+      "kinds": "solved,missed,missed,solved,solved,missed,missed,solved,missed,pending",
+      "distinctFills": 4,
+      "edges": [
+        "seed",
+        "acid"
+      ],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "Solve today to start a new run.",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 998,
+          "y": 247,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · missed",
+          "x": 998,
+          "y": 265,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 998,
+          "y": 283,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-15 to 11-16 · 2 missed",
+          "x": 998,
+          "y": 301,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-10 · seed",
+          "x": 998,
+          "y": 334,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 858,
+        "y": 64,
+        "w": 340,
+        "h": 339
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0.025,
+      "errors": []
+    },
+    {
+      "view": "1440",
+      "tag": "thirty",
+      "layers": "30",
+      "solved": "30",
+      "today": "solved",
+      "kinds": "solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved,solved",
+      "distinctFills": 10,
+      "edges": [
+        "seed",
+        "lava",
+        "acid",
+        "plant",
+        "sand",
+        "seed",
+        "lava",
+        "acid",
+        "plant",
+        "sand",
+        "seed",
+        "lava",
+        "acid",
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [
+        "14",
+        "30"
+      ],
+      "run": "42-day run · vein at 60 days, 18 to go",
+      "notes": [
+        {
+          "text": "today · gunpowder",
+          "x": 998,
+          "y": 132,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 998,
+          "y": 150,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 998,
+          "y": 168,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 998,
+          "y": 186,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "10-21 · seed",
+          "x": 998,
+          "y": 334,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 858,
+        "y": 64,
+        "w": 340,
+        "h": 357
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0.025,
+      "errors": []
+    },
+    {
+      "view": "1440",
+      "tag": "vein-today",
+      "layers": "7",
+      "solved": "7",
+      "today": "solved",
+      "kinds": "solved,solved,solved,solved,solved,solved,solved",
+      "distinctFills": 7,
+      "edges": [
+        "acid",
+        "plant",
+        "sand"
+      ],
+      "adjacentSame": false,
+      "veins": [
+        "7"
+      ],
+      "run": "7-day run · vein at 14 days, 7 to go",
+      "notes": [
+        {
+          "text": "today · 7-day vein",
+          "x": 998,
+          "y": 244,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-18 · sand",
+          "x": 998,
+          "y": 262,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-17 · water",
+          "x": 998,
+          "y": 280,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-16 · wood",
+          "x": 998,
+          "y": 298,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "11-13 · acid",
+          "x": 998,
+          "y": 334,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 858,
+        "y": 64,
+        "w": 340,
+        "h": 357
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0.026,
+      "errors": []
+    },
+    {
+      "view": "1440",
+      "tag": "absent",
+      "layers": "30",
+      "solved": "0",
+      "today": "pending",
+      "kinds": "missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,missed,pending",
+      "distinctFills": 0,
+      "edges": [],
+      "adjacentSame": false,
+      "veins": [],
+      "run": "Solve today to start a new run.",
+      "notes": [
+        {
+          "text": "today · not yet",
+          "x": 998,
+          "y": 222,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        },
+        {
+          "text": "10-21 to 11-18 · 29 missed",
+          "x": 998,
+          "y": 285,
+          "w": 200,
+          "h": 16,
+          "clipped": false
+        }
+      ],
+      "overlap": false,
+      "st": {
+        "x": 858,
+        "y": 64,
+        "w": 340,
+        "h": 339
+      },
+      "jarInView": true,
+      "small": [],
+      "hscroll": 0,
+      "axe": [],
+      "cls": 0.025,
+      "errors": []
+    }
+  ],
+  "midnight": [
+    {
+      "tag": "before",
+      "kicker": "NO.42 · THU 19 NOV",
+      "today": "solved",
+      "kinds": "solved,solved",
+      "notes": [
+        "today · gunpowder",
+        "11-18 · sand"
+      ]
+    },
+    {
+      "tag": "after",
+      "kicker": "NO.43 · FRI 20 NOV",
+      "today": "pending",
+      "kinds": "solved,solved,pending",
+      "notes": [
+        "today · not yet",
+        "11-19 · gunpowder",
+        "11-18 · sand"
+      ]
+    }
+  ],
+  "aside": [
+    {
+      "hasId": false,
+      "hasShareResult": false,
+      "hasOpen": false,
+      "hits": [
+        {
+          "t": "Show a hint",
+          "w": 279,
+          "h": 44
+        },
+        {
+          "t": "Daily start and strata",
+          "w": 148,
+          "h": 44
+        },
+        {
+          "t": "All levels",
+          "w": 61,
+          "h": 44
+        }
+      ],
+      "linkColor": "rgb(169, 71, 10)",
+      "axe": [],
+      "text": "GOAL\nPot 1 · water\n0/300\nPot 2 · water\n0/300\nGems\n0/1\nHow to win\nFill the pot with 300 cells of water\nFill the pot with 300 cells of water\nStars\nClear the level\nCollect the gem\nPar: 2 moves in 5.3s\nDaily No.42: Two Pots\n\nSolved today in 2 moves, 2 of 3 stars. Replays are practice; your first clear is the one you share.\n\nHow to play\nDig: drag a straight line through dirt, up to 4 tiles long\nPress R"
+    }
+  ],
+  "share": [
+    {
+      "tag": "daily-sameday",
+      "square": 63842,
+      "wide": 48919,
+      "veil": "1",
+      "files": {
+        "Square": {
+          "name": "sandlab-daily-42-square.png",
+          "bytes": 63842
+        },
+        "Wide": {
+          "name": "sandlab-daily-42-wide.png",
+          "bytes": 48919
+        }
+      }
+    },
+    {
+      "tag": "daily-nextday",
+      "square": 86353,
+      "wide": 68601,
+      "veil": "0",
+      "files": {
+        "Square": {
+          "name": "sandlab-daily-42-square.png",
+          "bytes": 86353
+        },
+        "Wide": {
+          "name": "sandlab-daily-42-wide.png",
+          "bytes": 68601
+        }
+      }
+    },
+    {
+      "tag": "level",
+      "square": 80241,
+      "wide": 65850,
+      "veil": "0",
+      "files": {
+        "Square": {
+          "name": "sandlab-spill-first-drop-square.png",
+          "bytes": 80241
+        },
+        "Wide": {
+          "name": "sandlab-spill-first-drop-wide.png",
+          "bytes": 65850
+        }
+      }
+    }
+  ]
+}

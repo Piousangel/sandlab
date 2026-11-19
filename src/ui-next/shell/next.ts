@@ -12,6 +12,7 @@ import './shell.css'
 import '../spill/spill.css'
 import '../home/home.css'
 import '../result/result.css'
+import '../daily/daily.css'
 import { bricolage, jetbrainsMono } from '../fonts'
 
 export const shellHtmlProps: { className?: string } = { className: `${bricolage.variable} ${jetbrainsMono.variable}` }
@@ -21,4 +22,6 @@ export { ShellFooter } from './ShellFooter'
 export { SpillHud } from '../spill/SpillHud'
 export { DailyStart } from '../spill/DailyStart'
 export { SpillResult } from '../result/SpillResult'
+// P7: /daily 지층 허브(DailyStart 안 StrataJar)·플레이 화면 설명 패널
+export { DailyAside } from '../daily/DailyAside'
 export { HomePour } from '../home/HomePour'

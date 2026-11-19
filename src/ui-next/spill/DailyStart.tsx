@@ -16,6 +16,7 @@ import { Icon, IconSprite } from '../icons/Icon'
 import { msUntilUtcMidnight } from '../shell/dailyPill'
 import type { DailyStartProps } from '../shell/spillTypes'
 import { SpillHeader } from './SpillHud'
+import { StrataJar } from '../daily/StrataJar'
 
 const fmtDate = (ms: number) => new Date(ms).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
 
@@ -90,6 +91,7 @@ export function DailyStart({ dayNumber, level, solved, onStart, children }: Dail
       <IconSprite />
       <div className="sl-ds-main">
         <SpillHeader badge={null} name="Daily" backHref="/play" backLabel="All levels" sound={sound} onSound={toggleSound} heading={false} />
+        <div className="sl-ds-hub">
         <div className="sl-ds-body">
           <div>
             <h1 className="sl-ds-head">
@@ -128,6 +130,9 @@ export function DailyStart({ dayNumber, level, solved, onStart, children }: Dail
               <Icon name="next" size={16} />
             </a>
           </div>
+        </div>
+        {/* P7: 지층 병(최근 30일) — 오늘 카드 아래(모바일)·오른쪽(데스크톱) */}
+        <StrataJar today={dayNumber} />
         </div>
       </div>
       {children && <div className="sl-sp-aside">{children}</div>}
