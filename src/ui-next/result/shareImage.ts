@@ -4,7 +4,7 @@
  * 색은 tokens.css 값(캔버스는 CSS 변수를 못 읽으니 같은 hex를 쓴다 — 바꾸면 둘 다).
  * PNG가 PNG_BUDGET(250KB)을 넘으면 보드 배율을 한 단계 낮춰 다시 그린다(평면 Bone·정수 배율 픽셀이라 보통 첫 판에 들어간다).
  */
-import { PNG_BUDGET, defaultScale, shareLayout, type ShareFormat } from './model'
+import { PNG_BUDGET, VEIL_BLOCK, VEIL_FLATTEN, VEIL_NOTE, defaultScale, mosaicPixels, shareLayout, type CellRect, type ShareFormat } from './model'
 
 const BONE = '#F4ECDD'
 const INK = '#2A2118'
@@ -18,6 +18,22 @@ export interface ShareCard {
   title: string
   beads: number
   stat: string
+  /** P7 스포일러 가림 — 있으면 보드를 모자이크(keep 칸만 선명)하고 VEIL_NOTE 한 줄을 넣는다. 데일리 그날만(model.veilBoard). */
+  veil?: { keep: CellRect[] } | null
+}
+
+/** 보드 캔버스 → 모자이크한 사본(원본 캔버스는 건드리지 않는다). 2d 컨텍스트가 없으면 null(호출자가 보드를 아예 안 그린다 — 원본 노출 금지). */
+export function veiledBoard(board: HTMLCanvasElement, keep: CellRect[]): HTMLCanvasElement | null {
+  const c = document.createElement('canvas')
+  c.width = board.width
+  c.height = board.height
+  const ctx = c.getContext('2d')
+  if (!ctx) return null
+  ctx.drawImage(board, 0, 0)
+  const img = ctx.getImageData(0, 0, c.width, c.height)
+  mosaicPixels(img.data, c.width, c.height, VEIL_BLOCK, keep, VEIL_FLATTEN)
+  ctx.putImageData(img, 0, 0)
+  return c
 }
 
 function fonts(): { display: string; mono: string } {
@@ -108,7 +124,9 @@ export function drawShareCard(board: HTMLCanvasElement, card: ShareCard, format:
   roundRect(ctx, F.x, F.y, F.w, F.h, F.r)
   ctx.fill()
   ctx.imageSmoothingEnabled = false
-  ctx.drawImage(board, 0, 0, board.width, board.height, F.x + F.mat, F.y + F.mat, board.width * L.k, board.height * L.k)
+  // 데일리 그날(P7): 모자이크 사본만 그린다. 사본을 못 만들면 보드 자리를 kiln 매트로 비운다(원본 노출 금지)
+  const art = card.veil ? veiledBoard(board, card.veil.keep) : board
+  if (art) ctx.drawImage(art, 0, 0, art.width, art.height, F.x + F.mat, F.y + F.mat, board.width * L.k, board.height * L.k)
 
   ctx.beginPath()
   ctx.arc(N.x, N.y, N.r, 0, Math.PI * 2)
@@ -137,6 +155,12 @@ export function drawShareCard(board: HTMLCanvasElement, card: ShareCard, format:
   ctx.fillStyle = INK_2
   ctx.font = `400 ${T.stat}px ${f.display}`
   ctx.fillText(card.stat, T.x, T.statY, T.w)
+
+  // 가렸다는 한 줄 — 기본 배율에선 stat과 sandlab.app 사이에 자리가 있다(테스트). 예산 초과로 배율을 낮춰 자리가 없으면 생략
+  if (card.veil && T.noteY < T.siteY - T.site - 8) {
+    ctx.font = `500 ${T.note}px ${f.mono}`
+    ctx.fillText(VEIL_NOTE, T.x, T.noteY, T.w)
+  }
 
   ctx.fillStyle = INK
   ctx.font = `500 ${T.site}px ${f.mono}`

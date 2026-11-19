@@ -7,7 +7,7 @@
  * SpillResult = null → SpillPlayer가 지금 결과 카드(ResultCard)를 그대로 그린다(P5).
  * 아래 `import type`은 컴파일 때 지워진다(런타임 import 0개 유지 — 번들 그래프에 아무것도 더하지 않는다).
  */
-import type { DailyStartProps, SpillHudKit, SpillResultProps } from './spillTypes'
+import type { DailyAsideProps, DailyStartProps, SpillHudKit, SpillResultProps } from './spillTypes'
 
 export const shellHtmlProps: { className?: string } = {}
 
@@ -17,3 +17,5 @@ export const ShellFooter: null | (() => React.JSX.Element) = null
 export const SpillHud: null | SpillHudKit = null
 export const DailyStart: null | ((p: DailyStartProps) => React.JSX.Element) = null
 export const SpillResult: null | ((p: SpillResultProps) => React.JSX.Element) = null
+/** P7: null → DailySpill이 지금 설명 패널(레벨 요약·주황 Share result)을 그대로 그린다. */
+export const DailyAside: null | ((p: DailyAsideProps) => React.JSX.Element) = null

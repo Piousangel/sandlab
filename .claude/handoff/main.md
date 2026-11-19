@@ -1,4 +1,15 @@
-<<<<<<< HEAD
+# 인계 (2026-11-20 오전): 리디자인 v2 P7 「/daily 지층 허브」 머지 — P6(홈)은 별도 교대 진행 중, 다음은 P8(/play 전시실)
+
+- 계획서 6장 진행표가 기준. P7 = #77(브랜치 shift/redesign-p7-daily-strata). 결정은 DECISIONS 2026-11-20 P7. (이 파일 맨 위에 있던 머지 충돌 표식 `<<<<<<<`·`=======`·`>>>>>>>`은 양쪽 절을 다 살려 지웠다.)
+- **지층 병 = `src/ui-next/daily/`**: strataModel.ts(순수 — buildJar·runs·pickLabels·needsEdge·waveAmp), StrataJar.tsx(SVG, 첫 렌더에서 localStorage 읽음 — DailySpill이 클라이언트에서만 그리므로 CLS 0), daily.css, daily.test.tsx. DailyStart(P4)가 `.sl-ds-hub` 안에 오늘 카드 + StrataJar를 그린다. 전 기간을 읽어 연속·광맥을 세고 최근 30일만 그린다.
+- 상태 규칙: 오늘 미해결 = 'pending'(점선 윤곽·"today · not yet"), 결측 = 빗금 공백층(4px), 첫 기록 이전 결측은 안 그림(전 기간 기준), 광맥 = 실제 연속 7·14·30…의 그 날. 3:1 미만 재료는 계산으로 ink 경계(sand·seed·acid·lava·plant).
+- **새 셸 플레이 패널 = `@ui-shell` DailyAside**(classic null → prod 패널 그대로). 레벨 id·"Open 1-3"·옛 주황 Share result 없음. `.sl-sp-aside a`의 `!important`는 `a[style]`로 좁힘 — /play/[id] 본문이 새 셸로 가면(P8·P10) `a[style]`·`p[style*=opacity]` 두 규칙 삭제.
+- **공유 PNG 스포일러**: `model.ts veilBoard(daily, now)` — 데일리 그날(UTC)이면 `shareImage.veiledBoard`가 16셀 모자이크 + 평탄화 50%, 목표 칸(keepRects, 'bad' 제외)만 선명, "Board hidden until tomorrow (UTC)" 한 줄. 다음 날·레벨 모드는 원본. 결과 화면 루트에 `data-png-veil`(QA 실측용). 실측(1-3, 390): 같은 날 1:1 63.8KB·OG 48.9KB, 다음 날 86.4/68.6KB, 레벨 80.2/65.9KB.
+- **P8이 알아야 할 것**: ① /play 본문(/play/[id] page.tsx)을 새 셸로 옮길 때 DailyAside처럼 `@ui-shell` 컴포넌트로 빼고 spill.css의 `a[style]`·`p[style*='opacity']` 덮어쓰기 2개를 지운다. ② 공용 모듈 export 규칙 그대로 — 이번에도 classic.ts에 null 1개가 늘어 webpack 모듈 id 4109↔6490 맞바꿈이 홈·bench 청크에 다시 생겼다(내용 동일, /daily 청크만 실제 변화). ③ 스포일러 한계: 같은 날 /play/<같은 레벨>은 원본 이미지라 우회 가능, 풀 9개 순환 — 데일리 전용 레벨이 필요해지면 별도 판단(DECISIONS). ④ 검사 스크립트: 스크래치 p7-hub.mjs(픽스처 7종 × 390·360·1440, 자정 경계, aside, 공유 PNG 같은 날/다음 날/레벨 — 시계는 window.__off). 상시화하려면 scripts/qa/로.
+- 함정: 머신 load 30+ 지속. `verify.test.ts` beforeAll 10s 훅 타임아웃은 main(530523a)에서도 재현(기준선, diff 무관).
+
+---
+
 # 인계 (2026-11-20 아침): 리디자인 v2 P5 「결과 화면 + 공유 이미지」 머지 — 다음은 P6(홈 Pour)
 
 - 계획서 6장 진행표가 기준. P5 = #75(브랜치 shift/redesign-p5-result). 결정은 DECISIONS 2026-11-20 P5, 상위 N% 서버 집계 제안은 계획서 "P5 메모".
@@ -10,7 +21,9 @@
 - 연습 판(공식 기록 있음)은 이미지 공유 없음 — 주 행동 "Copy today's result"(공식 기록 텍스트). 보드는 연습 판, 숫자는 공식 기록이라 섞이지 않게(리뷰 차단 반영).
 - **P6이 알아야 할 것**: ① 공용 모듈(daily.ts·score.ts·hist.ts)에 export를 더해 prod 컴포넌트가 쓰면 홈 청크까지 바뀐다 — 새 파일로 분리. prod diff 비교 스크립트(스크래치 p5-compare.py — buildId가 HTML 주석에선 `-`가 `_`로 찍혀 둘 다 치환, p5-jsdiff.py — 모듈 단위)를 쓰면 원인을 바로 본다. ② 모바일 결과 세로 예산 `MOBILE_STACK=397`(model.ts) — 캡션 문구를 늘리면 360×640에서 Share image가 첫 화면 밖으로 나간다(테스트가 잡는다). ③ 데스크톱 aside(DailySpill 본문)에 아직 "1-3 Two Pots is…"(describeLevel 요약, 레벨 id)와 옛 주황 Share result 버튼이 남아 있다 — 새 셸에서 숨길지 P7(/daily 허브)·P10에서 결정. ④ 플레이 검사 스크립트 스크래치 p5-play.mjs(Date.now 고정 No.42 = 1-3, canShare/share 가로채 PNG 실측, 360은 파일 공유 없음 폴백, 1440 다운로드, reduced-motion) — 상시화하려면 scripts/로.
 - 함정: 이번 세션 머신 load 200~300(다른 에뮬레이터·세션)이라 `next build` 한 번이 수 시간 걸린 적이 있다(컴퓨터 절전 포함 추정). 빌드·spill:verify는 순서대로, 같은 폴더 체크아웃을 바꾸기 전에 그 폴더를 읽는 작업이 끝났는지 확인. 기준선: verify.test.ts 30s 타임아웃·sweep.test.ts는 main에서도 재현(PR 표).
-=======
+
+---
+
 # 인계 (2026-11-20 프리뷰 읽기 전용): 프리뷰 Worker = prod와 같은 D1 + 쓰기 차단(오너 11-20)
 
 - wrangler `env.preview.vars.READ_ONLY="1"` → 워커가 `/api/*`의 GET·HEAD 외 전부 403 `{"error":"preview is read-only"}`(worker/preview.ts `readOnlyBlock`, 진입점 default export에서 app.fetch 전에). 메서드 기준이라 새 쓰기 라우트도 자동 차단. prod는 변수 없음 → 불변. 테스트 worker/read-only.test.ts(가짜 D1로 '차단 요청은 D1 호출 0' 확인).
@@ -18,7 +31,6 @@
 - **다음 P가 할 일**: 새 셸에 업로드·투표·데일리 기록 버튼을 그리면 `PREVIEW_READ_ONLY`로 disabled + `READ_ONLY_NOTE`. DailyStart의 "Your first clear is today's official record."는 프리뷰에서 거짓 — P5에서 PREVIEW_READ_ONLY 분기.
 - 프리뷰 QA 참고: classic 화면(홈 업로드·갤러리 투표)은 프리뷰에서도 버튼이 눌리고, 실패 토스트에 `{"error":"preview is read-only"}` 원문이 뜬다 — 기존 오류 표시 방식 그대로라 **정상**(버그로 올리지 말 것). 데일리·Spill 클리어 기록은 조용히 실패(postClear false).
 - 프리뷰 배포는 여전히 수동·미실행. 첫 배포 뒤 `curl -X POST <프리뷰>/api/daily` → 403, `curl <프리뷰>/api/scenes` → 200 확인.
->>>>>>> origin/main
 
 ---
 
