@@ -34,13 +34,17 @@ import FloatButtons from './FloatButtons'
 import ResultCard from './ResultCard'
 import Onboarding from './Onboarding'
 import { C, K, starRow } from './ui'
+import { SpillHud } from '@ui-shell'
 
 interface Props {
   level: LevelDef
   nextId: string | null
-  /** 직접 플레이로 클리어했을 때(자동재생·해답 보기 제외) 한 번 호출 — 데일리가 기록·공유에 쓴다. */
-  onCleared?: (info: { stars: number; moves: number }) => void
+  /** 직접 플레이로 클리어했을 때(자동재생·해답 보기 제외) 한 번 호출 — 데일리가 기록·공유에 쓴다(ticks·mask는 리디자인 P4부터). */
+  onCleared?: (info: { stars: number; moves: number; ticks: number; mask: number }) => void
   children?: ReactNode
+  /** 새 HUD(프리뷰) 전용: 제목 옆 표식(기본 레벨 id — 데일리는 No.N)과 뒤로 가기 링크. */
+  badge?: string
+  back?: { href: string; label: string }
 }
 
 interface Card {
@@ -57,7 +61,8 @@ interface Toast {
   until: number
 }
 
-const SSR_LAYOUT = computeLayout({ vw: 390, vh: 844, dpr: 1 })
+// 새 HUD(프리뷰 빌드의 @ui-shell)가 있으면 보드 위·아래 예약 높이를 그쪽 값으로(classic = null → 지금 값 그대로)
+const SSR_LAYOUT = computeLayout({ vw: 390, vh: 844, dpr: 1, chrome: SpillHud?.chrome(390) })
 const TOAST_MS = 1600
 const AFTERGLOW_TICKS = 600
 
@@ -106,12 +111,12 @@ function measure(probe: HTMLElement | null): Layout {
   const vw = document.documentElement.clientWidth || window.innerWidth
   const vh = window.innerHeight
   const safeBottom = probe ? parseFloat(getComputedStyle(probe).paddingBottom) || 0 : 0
-  return computeLayout({ vw, vh, dpr: window.devicePixelRatio || 1, safeBottom })
+  return computeLayout({ vw, vh, dpr: window.devicePixelRatio || 1, safeBottom, chrome: SpillHud?.chrome(vw) })
 }
 
 const cellCenter = (r: { x: number; y: number; w: number; h: number }) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
 
-export default function SpillPlayer({ level, nextId, onCleared, children }: Props) {
+export default function SpillPlayer({ level, nextId, onCleared, children, badge, back }: Props) {
   const [ctl] = useState(() => new SpillController(level))
   const [audio] = useState(() => new SpillAudio())
   const fx = useRef(new Fx(level.salt || 1))
@@ -144,6 +149,8 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
   const cardTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastLatchRef = useRef<{ x: number; y: number } | null>(null)
   const [best, setBest] = useState(0)
+  // 새 HUD 전용: 온보딩 손이 가리킬 RUN 버튼 중심(트레이 배치가 지금 HUD와 달라 실제 위치를 잰다)
+  const [runPt, setRunPt] = useState<{ x: number; y: number } | null>(null)
   modeRef.current = mode
   selectedRef.current = selected
   layoutRef.current = layout
@@ -172,6 +179,16 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
       mq?.removeEventListener?.('change', onMq)
     }
   }, [])
+
+  useLayoutEffect(() => {
+    if (!SpillHud || !onboard) return
+    const btn = document.querySelector('[data-spill-run]')
+    const main = btn?.closest('.sl-sp-main')
+    if (!btn || !main) return
+    const r = btn.getBoundingClientRect()
+    const m = main.getBoundingClientRect()
+    setRunPt({ x: r.left - m.left + r.width / 2, y: r.top - m.top + r.height / 2 })
+  }, [layout, onboard])
 
   useEffect(() => {
     const on = loadSoundPref()
@@ -224,7 +241,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
             prevBest = o.newBest && !o.firstClear
             void postClear(level.id, { pid: getPid(), moves: r.moves, ticks: r.ticks, lh: ctl.lh })
             trackEvent('challenge_clear', level.id, r.ticks)
-            if (modeRef.current === 'play') onCleared?.({ stars: starCount(starMask(st)), moves: r.moves })
+            if (modeRef.current === 'play') onCleared?.({ stars: starCount(starMask(st)), moves: r.moves, ticks: r.ticks, mask: starMask(st) })
             void fetchHist(level.id).then((h) => setHist(h ? histBars(h, r.moves, r.ticks) : null))
           }
           if (modeRef.current === 'autoplay') document.body.dataset.autoplay = autoplayMark(r, level)
@@ -490,7 +507,8 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
   const retry = () => {
     if (modeRef.current === 'autoplay') return
     if (ctl.phase === 'setup') {
-      say('Hold ↺ to clear everything')
+      // 새 HUD는 기호 글리프 0(R8) — 지금 HUD(prod) 문구는 그대로
+      say(SpillHud ? 'Hold Retry to clear everything' : 'Hold ↺ to clear everything')
       return
     }
     if (modeRef.current === 'play') trackEvent('challenge_reset', level.id)
@@ -541,6 +559,117 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
   const showHand = onboard && mode === 'play' && s.phase === 'setup' && !!firstDig
   const chrome = chromeBoxes(l)
 
+  // 보드 캔버스 2장(엔진·오버레이) — 지금 HUD와 새 HUD가 같은 것을 쓴다
+  const stack = (
+    <div ref={wrapRef} style={{ position: 'absolute', inset: 0 }}>
+      <canvas
+        ref={canvasRef}
+        width={160}
+        height={240}
+        aria-label={`${level.id} ${level.name} puzzle canvas`}
+        style={{ position: 'absolute', inset: 0, width: l.cssW, height: l.cssH, imageRendering: 'pixelated', background: C.bg }}
+      />
+      <canvas
+        ref={overlayRef}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerCancel={onCancel}
+        style={{ position: 'absolute', inset: 0, width: l.cssW, height: l.cssH, touchAction: 'none', cursor: 'crosshair' }}
+      />
+    </div>
+  )
+  const resultCard = card && s.phase === 'cleared' && (
+    <ResultCard
+      key={card.key}
+      def={level}
+      result={card.result}
+      stars={card.stars}
+      newBest={card.newBest}
+      starGapMs={card.starGapMs}
+      nextId={nextId}
+      hist={hist}
+      onStar={(i) => audio.star(i)}
+      onRetry={retry}
+      onSkip={() => fx.current.skip()}
+      solution={card.solution}
+      bottom={l.safeBottom + 8}
+    />
+  )
+
+  if (SpillHud) {
+    // 새 HUD(리디자인 P4, 프리뷰 빌드만): 보드 위에 아무것도 얹지 않는다 — 메시지·보석·도구는 보드 밖으로
+    const Frame = SpillHud.Frame
+    const runAt = runPt ?? { x: l.stageW - 64, y: l.vh - 40 }
+    return (
+      <>
+        <style>{CSS}</style>
+        <Frame
+          layout={l}
+          title={{ badge: badge ?? level.id, name: level.name, backHref: back?.href ?? '/play', backLabel: back?.label ?? 'All levels' }}
+          board={stack}
+          goals={dockRows(s, level)}
+          gems={{ got: gemGot, total: gemTotal }}
+          progress={showMovesFor(level.id) ? { moves: s.moves, par: s.par, over: parts.movesOver || parts.timeOver } : null}
+          message={message ? { text: message, tone: failText && message === failText ? 'fail' : 'info' } : null}
+          onWatch={canWatch && message === hintText ? watch : null}
+          verbs={verbs}
+          selected={selected}
+          onVerb={onVerb}
+          run={{ action: run.action, watching: s.watching }}
+          runHighlight={showHand && s.moves > 0}
+          onRun={onRun}
+          canUndo={s.canUndo && mode === 'play'}
+          onUndo={() => ctl.undo()}
+          onRetry={retry}
+          onClearAll={clearAll}
+          speed={s.speed}
+          speedOn={(s.phase === 'run' || s.phase === 'paused') && s.speedCap > 1}
+          onSpeed={speedUp}
+          sound={sound}
+          onSound={toggleSound}
+          onPointer={() => audio.unlock()}
+          toolsHidden={!!card && s.phase === 'cleared'}
+          overlay={
+            <>
+              <div ref={probeRef} aria-hidden style={{ position: 'absolute', visibility: 'hidden', paddingBottom: 'env(safe-area-inset-bottom)' }} />
+              {resultCard}
+              {showHand && firstDig && (
+                <Onboarding
+                  step={s.moves === 0 ? 'drag' : 'run'}
+                  from={{ x: l.canvasLeft + (firstDig[2] + 0.5) * tilePx, y: l.headerH + (firstDig[3] + 0.5) * tilePx }}
+                  to={{ x: l.canvasLeft + (firstDig[4] + 0.5) * tilePx, y: l.headerH + (firstDig[5] + 0.5) * tilePx }}
+                  run={runAt}
+                />
+              )}
+            </>
+          }
+          aside={
+            <>
+              <h2 style={{ marginTop: 0 }}>How to win</h2>
+              <ul>
+                {desc.goals.map((g, k) => (
+                  <li key={k}>{g}</li>
+                ))}
+                {desc.warnings.map((w, k) => (
+                  <li key={`w${k}`}>{w}</li>
+                ))}
+              </ul>
+              <h2>Stars</h2>
+              <ul>
+                <li>Clear the level</li>
+                <li>{gemTotal ? `Collect ${gemTotal === 1 ? 'the gem' : `all ${gemTotal} gems`}` : 'Gems (none in this level)'}</li>
+                <li>{desc.par ?? 'No par for this level'}</li>
+              </ul>
+              {best > 0 && <p style={{ margin: '10px 0 0' }}>Your best: {best} of 3 stars</p>}
+              {children}
+            </>
+          }
+        />
+      </>
+    )
+  }
+
   return (
     <div className="spill-root">
       <style>{CSS}</style>
@@ -559,23 +688,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
         />
         <div style={{ position: 'relative', height: l.cssH, width: '100%', flexShrink: 0 }}>
           <div style={{ position: 'absolute', left: l.canvasLeft, top: 0, width: l.cssW, height: l.cssH, overflow: 'hidden' }}>
-            <div ref={wrapRef} style={{ position: 'absolute', inset: 0 }}>
-              <canvas
-                ref={canvasRef}
-                width={160}
-                height={240}
-                aria-label={`${level.id} ${level.name} puzzle canvas`}
-                style={{ position: 'absolute', inset: 0, width: l.cssW, height: l.cssH, imageRendering: 'pixelated', background: C.bg }}
-              />
-              <canvas
-                ref={overlayRef}
-                onPointerDown={onDown}
-                onPointerMove={onMove}
-                onPointerUp={onUp}
-                onPointerCancel={onCancel}
-                style={{ position: 'absolute', inset: 0, width: l.cssW, height: l.cssH, touchAction: 'none', cursor: 'crosshair' }}
-              />
-            </div>
+            {stack}
             {message && (
               <div
                 role="status"
@@ -634,23 +747,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
             />
           ) : null}
         />
-        {card && s.phase === 'cleared' && (
-          <ResultCard
-            key={card.key}
-            def={level}
-            result={card.result}
-            stars={card.stars}
-            newBest={card.newBest}
-            starGapMs={card.starGapMs}
-            nextId={nextId}
-            hist={hist}
-            onStar={(i) => audio.star(i)}
-            onRetry={retry}
-            onSkip={() => fx.current.skip()}
-            solution={card.solution}
-            bottom={l.safeBottom + 8}
-          />
-        )}
+        {resultCard}
         {showHand && firstDig && (
           <Onboarding
             step={s.moves === 0 ? 'drag' : 'run'}

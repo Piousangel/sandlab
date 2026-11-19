@@ -1,0 +1,62 @@
+[
+ {
+  "view": "360",
+  "retryMsg": {
+   "overlap": 0,
+   "outside": 0,
+   "text": "Hold Retry to clear everything",
+   "clipped": false,
+   "lines": 1,
+   "lineBottom": 580,
+   "toolsTop": 580
+  },
+  "failMsg": {
+   "overlap": 0,
+   "outside": 0,
+   "text": "Everything settled · open the gates sooner",
+   "clipped": false,
+   "lines": 1,
+   "lineBottom": 580,
+   "toolsTop": 580
+  },
+  "hintMsg": {
+   "overlap": 0,
+   "outside": 0,
+   "text": "Plug the pit, then let it all flow.",
+   "clipped": false,
+   "lines": 1,
+   "lineBottom": 580,
+   "toolsTop": 580
+  }
+ },
+ {
+  "view": "390",
+  "retryMsg": {
+   "overlap": 0,
+   "outside": 0,
+   "text": "Hold Retry to clear everything",
+   "clipped": false,
+   "lines": 1,
+   "lineBottom": 784,
+   "toolsTop": 784
+  },
+  "failMsg": {
+   "overlap": 0,
+   "outside": 0,
+   "text": "Everything settled · open the gates sooner",
+   "clipped": false,
+   "lines": 1,
+   "lineBottom": 784,
+   "toolsTop": 784
+  },
+  "hintMsg": {
+   "overlap": 0,
+   "outside": 0,
+   "text": "Plug the pit, then let it all flow.",
+   "clipped": false,
+   "lines": 1,
+   "lineBottom": 784,
+   "toolsTop": 784
+  }
+ }
+]
