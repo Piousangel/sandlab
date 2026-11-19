@@ -1,3 +1,16 @@
+# 인계 (2026-11-19 23시 야간): 리디자인 v2 제작물 — 실엔진 포스터 캡처 + 아이콘 v1
+
+- **판을 바꾸는 발견: 헤드리스 WebGPU 된다.** 크로미움 `--enable-unsafe-webgpu --enable-features=Vulkan --use-angle=swiftshader --use-vulkan=swiftshader` + **localhost 출처**(about:blank·file://은 navigator.gpu 없음)면 SwiftShader 어댑터가 잡힌다. 단 **캔버스 표시(스왑체인)는 못 한다** — DOM·OffscreenCanvas 모두 첫 프레임에 "Device was destroyed". 우회: `getContext('webgpu')`를 자체 텍스처로 받는 가짜 컨텍스트(scripts/capture/posters.ts `FakeSurface`) → copyTextureToBuffer. 엔진 무수정. 위 "390 실캡처 불가"류 메모는 이걸로 풀 수 있다(03시 QA·P6 골든셋 e2e에 재사용).
+- 함정 2: SwiftShader가 느려 엔진 적응형 품질이 lite로 떨어져 **블룸을 건너뛰고 이전 장면 발광이 남는다** → 하네스에서 매 틱 `lite=false` 고정.
+- 함정 3: Vite 개발 서버로 띄울 때 `optimizeDeps.noDiscovery` + `hmr:false` 안 하면 자동 새로고침이 캡처를 끊는다. vite는 vitest 하위 의존성이라 vitest 기준 resolve.
+- 산출: `node scripts/capture-posters.mjs --strips`(약 140초) → `public/ui-next/posters/atlas.webp`(18관 6×3, 96×192px/관=1셀 1px, 32KB) + `atlas.json`(좌표·census) + `strips/<slug>.webp`(12프레임, 붓는 과정 1회 재생, 마지막=포스터). 장면 정의는 순수 함수 `src/lib/capture/posterScenes.ts`(테스트 6).
+- 아이콘 v1(서브에이전트, 별도 PR): `src/ui-next/icons/`(27종, 알갱이 점, currentColor), `public/ui-next/icons.svg`, `npx tsx scripts/gen-icons.mts --check`, 시트 docs/design/redesign-v2/icons-sheet.png. 약한 것: pour·star-full·star-empty·strata·gallery(20px에서 모호) — P1/P3에서 손볼 후보.
+- 둘 다 아무 페이지도 import 안 함 → prod HTML diff 0(정적 파일만 out/ui-next/에 추가).
+- 실물 관찰(P6 설계자에게): 기체(증기·연기)는 실엔진에서도 1px 주기 가로 줄무늬(Margolus)가 보인다, 산·용암은 블룸으로 연노랑에 가깝게 하얗게 탄다. 가루는 45° 원뿔. 시안 텍스처보다 덜 예쁘지만 '진짜'다 — 시험관 CSS 마스크·크롭으로 다듬을 것.
+- 다음 교대: P1(토큰·폰트·프리뷰 Worker)·P2(데이터) — 10시 몫. 23시 다음 몫: 히어로 장면 고정 스크립트(4장, 같은 하네스로 1200×600), 데일리 최종 프레임 캡처(P5). `pnpm test` 실행 시 `.claude/worktrees/`가 남아 있으면 중복 테스트가 실패로 섞인다 → `--exclude ".claude/**"` 또는 worktree 정리.
+
+---
+
 # 인계 (2026-11-19 13시): UI 개편 1단계 머지(#55)
 
 - 머지: #55(3a32249). 크림 K 토큰·SVG HUD·목표 링 칩·입체 RUN. 독립 혹평 5.5→6.3→6.9. spill:verify 11/11, test 1069, build·verify-ads OK.
