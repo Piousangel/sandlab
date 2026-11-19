@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 인계 (2026-11-20 아침): 리디자인 v2 P5 「결과 화면 + 공유 이미지」 머지 — 다음은 P6(홈 Pour)
 
 - 계획서 6장 진행표가 기준. P5 = #75(브랜치 shift/redesign-p5-result). 결정은 DECISIONS 2026-11-20 P5, 상위 N% 서버 집계 제안은 계획서 "P5 메모".
@@ -9,6 +10,15 @@
 - 연습 판(공식 기록 있음)은 이미지 공유 없음 — 주 행동 "Copy today's result"(공식 기록 텍스트). 보드는 연습 판, 숫자는 공식 기록이라 섞이지 않게(리뷰 차단 반영).
 - **P6이 알아야 할 것**: ① 공용 모듈(daily.ts·score.ts·hist.ts)에 export를 더해 prod 컴포넌트가 쓰면 홈 청크까지 바뀐다 — 새 파일로 분리. prod diff 비교 스크립트(스크래치 p5-compare.py — buildId가 HTML 주석에선 `-`가 `_`로 찍혀 둘 다 치환, p5-jsdiff.py — 모듈 단위)를 쓰면 원인을 바로 본다. ② 모바일 결과 세로 예산 `MOBILE_STACK=397`(model.ts) — 캡션 문구를 늘리면 360×640에서 Share image가 첫 화면 밖으로 나간다(테스트가 잡는다). ③ 데스크톱 aside(DailySpill 본문)에 아직 "1-3 Two Pots is…"(describeLevel 요약, 레벨 id)와 옛 주황 Share result 버튼이 남아 있다 — 새 셸에서 숨길지 P7(/daily 허브)·P10에서 결정. ④ 플레이 검사 스크립트 스크래치 p5-play.mjs(Date.now 고정 No.42 = 1-3, canShare/share 가로채 PNG 실측, 360은 파일 공유 없음 폴백, 1440 다운로드, reduced-motion) — 상시화하려면 scripts/로.
 - 함정: 이번 세션 머신 load 200~300(다른 에뮬레이터·세션)이라 `next build` 한 번이 수 시간 걸린 적이 있다(컴퓨터 절전 포함 추정). 빌드·spill:verify는 순서대로, 같은 폴더 체크아웃을 바꾸기 전에 그 폴더를 읽는 작업이 끝났는지 확인. 기준선: verify.test.ts 30s 타임아웃·sweep.test.ts는 main에서도 재현(PR 표).
+=======
+# 인계 (2026-11-20 프리뷰 읽기 전용): 프리뷰 Worker = prod와 같은 D1 + 쓰기 차단(오너 11-20)
+
+- wrangler `env.preview.vars.READ_ONLY="1"` → 워커가 `/api/*`의 GET·HEAD 외 전부 403 `{"error":"preview is read-only"}`(worker/preview.ts `readOnlyBlock`, 진입점 default export에서 app.fetch 전에). 메서드 기준이라 새 쓰기 라우트도 자동 차단. prod는 변수 없음 → 불변. 테스트 worker/read-only.test.ts(가짜 D1로 '차단 요청은 D1 호출 0' 확인).
+- 화면: build:preview에만 `NEXT_PUBLIC_READ_ONLY=1` → 새 셸 헤더 아래·메뉴 시트에 안내 한 줄(`src/ui-next/shell/ReadOnlyNote.tsx`, `PREVIEW_READ_ONLY`). UI 플래그와 분리(컷오버 뒤에도 prod에 안 뜸). verify-ads prod 모드가 변수·`data-sl-read-only`를 잡는다.
+- **다음 P가 할 일**: 새 셸에 업로드·투표·데일리 기록 버튼을 그리면 `PREVIEW_READ_ONLY`로 disabled + `READ_ONLY_NOTE`. DailyStart의 "Your first clear is today's official record."는 프리뷰에서 거짓 — P5에서 PREVIEW_READ_ONLY 분기.
+- 프리뷰 QA 참고: classic 화면(홈 업로드·갤러리 투표)은 프리뷰에서도 버튼이 눌리고, 실패 토스트에 `{"error":"preview is read-only"}` 원문이 뜬다 — 기존 오류 표시 방식 그대로라 **정상**(버그로 올리지 말 것). 데일리·Spill 클리어 기록은 조용히 실패(postClear false).
+- 프리뷰 배포는 여전히 수동·미실행. 첫 배포 뒤 `curl -X POST <프리뷰>/api/daily` → 403, `curl <프리뷰>/api/scenes` → 200 확인.
+>>>>>>> origin/main
 
 ---
 
@@ -53,7 +63,7 @@
 - 셸 파일: `shell/ShellHeader.tsx`(client: wordmark 첫 방문 낙하·DailyPill·MenuSheet), `ShellFooter.tsx`, `nav.ts`(링크 표 단일 출처, 테스트가 sitemap과 대조), `dailyPill.ts`(순수), `shell.css`(전역 규칙 없음, `sl-` 접두). 메뉴 시트·소리 토글(키 `spill.v1.sound`, Spill과 공유)은 P4 Spill 헤더에서 재사용 가능. 내비는 840px 이상만 헤더에.
 - 광고 안내판 `src/ui-next/ads/AdPlate.tsx`: `ads`+`slot` 둘 다 있어야 렌더, AD_SLOTS 비어 있음(P8·P10에서 오너가 AdSense 고정 크기 단위 만든 뒤 채움). 바탕 Bone 위에만, 24px+ 간격·높이 예약은 컴포넌트가 강제.
 - `pnpm lint:ui` 규칙 2(회색 패널 중첩): CSS 조상 선택자·같은 파일 JSX 중첩. 시안의 도크 `.grains`(bone-2 도크 안 잉크 틴트)는 이 규칙에 걸린다 — P4에서 도크를 만들 때 틴트를 빼거나 이유를 `lint-ui-allow`로 단다.
-- **프리뷰 배포 워크플로 `.github/workflows/deploy-preview.yml`은 수동 실행만(confirm=preview), 한 번도 실행 안 함.** ⚠ 같은 D1이라 프리뷰에서 올린 씬·투표·기록이 prod에 섞인다 — 오너 결정(프리뷰 전용 D1 vs 프리뷰 쓰기 차단) 전에는 실행하지 않는다. workers.dev 하위 도메인 활성 여부도 오너 확인 대기.
+- **프리뷰 배포 워크플로 `.github/workflows/deploy-preview.yml`은 수동 실행만(confirm=preview), 한 번도 실행 안 함.** D1 공유는 11-20 오너 결정으로 **같은 D1 + 프리뷰 쓰기 차단**(READ_ONLY=1, 아래 11-20 프리뷰 읽기 전용 절). workers.dev 하위 도메인 활성 여부는 여전히 오너 확인 대기.
 - 측정(로컬 Lighthouse 모바일, load 24~26이라 절대값 부풀려짐): /learn LCP prod 4.3s vs 프리뷰 4.4s, CLS 0/0, FCP 0.8→1.1~1.4s. 폰트 preload false 유지(LCP 요소가 본문 시스템 폰트). 홈 CLS 0.17은 prod에도 있는 기존 값. 실제 프리뷰 Worker에서 03시 QA가 다시 잴 것.
 - 함정: 검사용 스크립트(정적 서버·Playwright 셸 검사·prod/프리뷰 h1·단어 수 대조)는 세션 스크래치패드에만 있다(p3-serve.mjs·p3-browser.mjs·p3-parity.mjs) — 03시 QA가 상시화하려면 scripts/로 옮길 것. 로컬 정적 서버에서는 `/api/track` 404가 콘솔에 뜬다(워커 없음, 무해). `verify.test.ts`는 부하 25에서 30s 타임아웃 4건(기준선, CI도 제외).
 - 남은 사소(리뷰): ShellHeader가 client 컴포넌트 안에서 인라인 `<script>`를 그린다 — 클라이언트 이동 때 실행 안 되는 게 의도지만 `next dev`에서 콘솔 경고가 날 수 있다(prod 무관). 거슬리면 서버 래퍼로 옮긴다.

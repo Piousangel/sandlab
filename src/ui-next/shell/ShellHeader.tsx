@@ -7,6 +7,7 @@
  * - 좁은 화면(< 840px — 720에서는 가운데 내비와 pill 사이 여유가 8px 안팎이라 올림, 독립 리뷰)에서는 내비가 숨고 메뉴 시트 안에 같은 링크가 있다(SSR HTML에는 둘 다 있다).
  * - 누르는 것은 전부 44×44 이상(S9), 포커스 링은 --sl-focus.
  * - 아이콘은 <Icon>만(R8, pnpm lint:ui).
+ * - 프리뷰 읽기 전용 안내(ReadOnlyNote): 헤더 아래 한 줄 + 메뉴 시트 안 한 줄(Spill 화면은 헤더 없이 메뉴 시트만 쓴다).
  */
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -15,6 +16,7 @@ import { loadSoundPref, saveSoundPref } from '@/lib/spill/render/audio'
 import { Icon, IconSprite } from '../icons/Icon'
 import { DAILY_HREF, MENU_LINKS, NAV, isActive, type ShellLink } from './nav'
 import { SSR_PILL, pillText, type PillText } from './dailyPill'
+import { ReadOnlyNote } from './ReadOnlyNote'
 
 /** 첫 방문 wordmark 낙하: 이 키가 없을 때만 한 번. reduced-motion이면 아예 시작하지 않는다(CSS도 한 번 더 막는다). */
 const WM_KEY = 'sl.wordmark.v1'
@@ -184,6 +186,7 @@ export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: s
             <span>Sound</span>
             <span className="sl-sound-state">{sound ? 'On' : 'Off'}</span>
           </button>
+          <ReadOnlyNote className="sl-ro-sheet" />
           <ul className="sl-sheet-links">
             {MENU_LINKS.map((l) => (
               <li key={l.href}>
@@ -200,18 +203,22 @@ export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: s
 export function ShellHeader() {
   const pathname = usePathname()
   return (
-    <header className="sl-shell sl-hdr" data-sl-shell="header">
-      <IconSprite />
-      <Wordmark />
-      <nav className="sl-nav" aria-label="Main">
-        {NAV.map((l) => (
-          <NavLink key={l.href} link={l} className="sl-nav-link" current={isActive(pathname, l.href)} />
-        ))}
-      </nav>
-      <div className="sl-hdr-end">
-        <DailyPill />
-        <MenuSheet pathname={pathname} />
-      </div>
-    </header>
+    <>
+      <header className="sl-shell sl-hdr" data-sl-shell="header">
+        <IconSprite />
+        <Wordmark />
+        <nav className="sl-nav" aria-label="Main">
+          {NAV.map((l) => (
+            <NavLink key={l.href} link={l} className="sl-nav-link" current={isActive(pathname, l.href)} />
+          ))}
+        </nav>
+        <div className="sl-hdr-end">
+          <DailyPill />
+          <MenuSheet pathname={pathname} />
+        </div>
+      </header>
+      {/* 프리뷰 빌드(NEXT_PUBLIC_READ_ONLY=1)만 — 워커가 쓰기를 403으로 막는다는 안내. prod·로컬 기본은 null */}
+      <ReadOnlyNote />
+    </>
   )
 }
