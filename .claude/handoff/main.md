@@ -9,7 +9,17 @@
 - 아이콘 v1(서브에이전트, 별도 PR): `src/ui-next/icons/`(27종, 알갱이 점, currentColor), `public/ui-next/icons.svg`, `npx tsx scripts/gen-icons.mts --check`, 시트 docs/design/redesign-v2/icons-sheet.png. 약한 것: pour·star-full·star-empty·strata·gallery(20px에서 모호) — P1/P3에서 손볼 후보.
 - 둘 다 아무 페이지도 import 안 함 → prod HTML diff 0(정적 파일만 out/ui-next/에 추가).
 - 실물 관찰(P6 설계자에게): 기체(증기·연기)는 실엔진에서도 1px 주기 가로 줄무늬(Margolus)가 보인다, 산·용암은 블룸으로 연노랑에 가깝게 하얗게 탄다. 가루는 45° 원뿔. 시안 텍스처보다 덜 예쁘지만 '진짜'다 — 시험관 CSS 마스크·크롭으로 다듬을 것.
-- 다음 교대: P1(토큰·폰트·프리뷰 Worker)·P2(데이터) — 10시 몫. 23시 다음 몫: 히어로 장면 고정 스크립트(4장, 같은 하네스로 1200×600), 데일리 최종 프레임 캡처(P5). `pnpm test` 실행 시 `.claude/worktrees/`가 남아 있으면 중복 테스트가 실패로 섞인다 → `--exclude ".claude/**"` 또는 worktree 정리.
+- 다음 교대: P1(토큰·폰트·프리뷰 Worker, 아이콘은 #68 것을 연결)이 다음 미완료 — P2는 같은 밤 다른 교대가 #66으로 완료(아래 절). 23시 다음 몫: 히어로 장면 고정 스크립트(4장, 같은 하네스로 1200×600), 데일리 최종 프레임 캡처(P5). `pnpm test` 실행 시 `.claude/worktrees/`가 남아 있으면 중복 테스트가 실패로 섞인다 → `--exclude ".claude/**"` 또는 worktree 정리.
+
+---
+
+# 인계 (2026-11-19 23시): 리디자인 v2 P2 데이터 계층(UI 없음)
+
+- 추가: `src/lib/strata.ts`(STRATA_CYCLE 10종 순서 고정·readStrata — 옛 키 `sandlab.daily.v1` + 새 키 병합, 새 키 우선, 결측일 missed), `daily.ts` DailyRec `ticks?`·`mask?`·`DAILY_MASK_*`·`parseDailyRec`·`shareTextV2`(●○ 유리알, 레벨 id 없음). 공유 링크 골든셋 `src/lib/sand/shareLinks.golden.test.ts`(#s=·#g=·/s/:id·업로드 parent). 컴포넌트 변경 0. 규칙은 DECISIONS 2026-11-19 P2.
+- **P5가 할 일**: SpillPlayer onCleared에 `ticks`·`mask: starMask(st)`를 더해 DailySpill이 saveDaily로 넘기기(지금은 기록에 없음), 공유를 shareTextV2로 교체 후 옛 shareText 제거.
+- **P6 착수 조건**: SandCanvas의 #s= 파싱·parent 결정을 순수 함수로 빼고 골든셋의 '소스 트립와이어' describe를 함수 테스트로 교체. 골든셋 표는 그대로 통과해야 한다.
+- **P7**: readStrata의 마지막 층(오늘)은 안 풀었으면 missed=true — '아직'으로 보여줄지 결정. sand·seed·acid는 Bone 위 대비 1.1~1.4:1이라 테두리·결 필요.
+- 함정: 머신 부하(load 30+)일 때 `pnpm test`의 무거운 시뮬 테스트(sim·replay·verify·sweep·transform)가 5s 타임아웃으로 떨어진다 — 부하 낮을 때 해당 파일만 다시 돌려 확인.
 
 ---
 
