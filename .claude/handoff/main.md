@@ -1,3 +1,17 @@
+# 인계 (2026-11-20 새벽): 리디자인 v2 P4 「Spill 플레이 HUD + 데일리 시작」 머지 — 다음은 P5(결과 화면 + 공유 이미지)
+
+- 계획서 6장 진행표가 기준. P4 = 브랜치 shift/redesign-p4-spill. 결정은 DECISIONS 2026-11-20 P4.
+- **새 HUD는 `@ui-shell`의 `SpillHud`(chrome(vw)·Frame)와 `DailyStart`.** classic.ts는 둘 다 null(+ `import type` 계약 `shell/spillTypes.ts`), SpillPlayer·DailySpill은 null이면 지금 화면 그대로. 파일: `src/ui-next/spill/`(SpillHud.tsx·DailyStart.tsx·chrome.ts·spill.css·spill.test.tsx). 세로 예산은 chrome.ts(HUD 상수)와 CSS가 같은 값이어야 한다 — 하나만 바꾸면 보드가 트레이와 겹친다(spill.test가 vh 안에 들어가는지만 잰다).
+- 보드 위에는 캔버스 2장뿐(FloatButtons·메시지 알약·보석 알약 없음). 메시지·Watch는 진행 줄, 목표·보석은 목표 줄(데스크톱은 오른쪽 카드). `MenuSheet`를 ShellHeader에서 export(제어 모드 sound·onSound — SpillAudio와 맞추려고).
+- **prod에 들어간 것: 데일리 첫 클리어에 ticks·mask 저장**(`{"42":{"stars":2,"moves":2,"ticks":276,"mask":5}}` 실측). P5는 이걸로 shareTextV2로 교체하고 옛 shareText 제거.
+- **P5가 알아야 할 것**: ResultCard는 아직 옛 크림 카드(★·↺·▶ 글리프, 보드·트레이 위에 bottom 고정) — 새 HUD에서는 결과 카드가 뜨면 도구 줄만 visibility:hidden. P5는 결과 카드도 `@ui-shell` 방식(SpillHud.Frame의 overlay 자리)으로 바꾸면 된다. 데일리 플레이 화면 제목 표식은 No.N(레벨 id 숨김), 뒤로 = /daily(시작 화면). 시작 화면은 이미 풀었으면 "Practice".
+- prod 번들 diff 확인법: 같은 폴더·깨끗한 캐시로 base/브랜치 빌드 → buildId와 **청크 파일명 해시**를 정규화해 비교(스크래치 p4-compare.py). 클라이언트 컴포넌트가 새로 import하는 모듈이 생기면 webpack deterministic 모듈 id가 맞바뀌어 무관한 청크까지 달라질 수 있다(이번 중간 빌드에서 4109↔6490 실제로 봄 — 공용 모듈에 export를 늘리지 않으니 사라짐). 공용 모듈(daily.ts·score.ts)에서 새 export를 prod 컴포넌트가 import하면 홈·/play 청크까지 바뀐다 → 새 셸 전용 계산은 ui-next 안에서.
+- 함정: 페이지 본문(/play/[id]·DailySpill)이 옛 화면용 인라인 색·opacity를 달고 와 Bone 위에서 대비 미달 → spill.css가 `.sl-sp-aside`에서 덮는다(!important). P10에서 본문을 새 셸로 옮기면 지운다. 플레이 검사 스크립트는 스크래치패드 p4-play.mjs(정답 동작을 포인터 드래그로 재생 → 결과·localStorage) — 03시 QA가 상시화하려면 scripts/로.
+- 독립 리뷰 7.3/10(차단 0). 반영: 진행 줄 메시지 2줄(44→52), setup Retry 안내 글리프 제거(새 HUD만), 진행·도구 줄 트레이 아래 붙임, 오디오 unlock 캡처, 소리 버튼 aria, 동사 접근 이름, 데스크톱 Gems 라벨, 이름판 = World·재료. 360에서 동사 2개 레벨(1-8)에 Gate 칩이 Undo와 겹치던 것도 반영 중 발견·수정(도구 버튼 겹침 검사 추가). 미반영: 길게 누르기 단위 테스트(vitest가 node 환경 — DOM 없음), 완료 아이콘 star-full(체크 아이콘 없음, 아이콘 PR에서), RUN의 play 아이콘(아이콘 세트에 없음 → pour).
+- 기준선: `verify.test.ts` 30s 타임아웃 3~4건·`sweep.test.ts` Steam vs vent 120s 타임아웃(둘 다 main에서도 재현, diff 무관 파일) — CI 제외 대상 그대로.
+
+---
+
 # 인계 (2026-11-20 새벽): 리디자인 v2 P3 「앱 셸·내비·푸터」 머지 — 다음은 P4(Spill 플레이 + 데일리 시작)
 
 - 계획서 6장 진행표가 기준. P3 = #71(브랜치 shift/redesign-p3-shell). prod 화면 변화 0(prod out/ 171파일 main과 동일, buildId 제외).

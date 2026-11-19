@@ -1,0 +1,399 @@
+[
+  {
+    "view": "390",
+    "path": "/play/1-1",
+    "errors": [],
+    "initial": {
+      "board": {
+        "x": 8.328125,
+        "y": 95,
+        "w": 373.328125,
+        "h": 560
+      },
+      "devicePerCell": 6.99990234375,
+      "run": {
+        "x": 289.609375,
+        "y": 786,
+        "w": 90.390625,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "axe": [],
+    "movesAfterDig": null,
+    "running": {
+      "board": {
+        "x": 8.328125,
+        "y": 95,
+        "w": 373.328125,
+        "h": 560
+      },
+      "devicePerCell": 6.99990234375,
+      "run": {
+        "x": 283.203125,
+        "y": 786,
+        "w": 96.796875,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "result": "CLEARED!\n★Clear\n★Gems\n★Par\n\n1 move · 4.1s\n\n↺ Retry\nShare\nNext ▶"
+  },
+  {
+    "view": "390",
+    "path": "/daily",
+    "errors": [],
+    "start": {
+      "board": null,
+      "devicePerCell": null,
+      "run": null,
+      "runInView": null,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": null,
+      "htmlClass": true
+    },
+    "startGo": {
+      "y": 559,
+      "h": 56,
+      "w": 358,
+      "inView": true
+    },
+    "startText": "Daily\n\nNO.42 · THU 19 NOV\nTwo Pots\n\nFill each of the 2 pots with 300 cells of water.\n\nWorld 1 · dirt, water\nSolve today\n\nYour first clear is today's official record.\n\nNEW PUZZLE IN 06:34\nALL LEVELS",
+    "startAxe": [],
+    "initial": {
+      "board": {
+        "x": 8.328125,
+        "y": 95,
+        "w": 373.328125,
+        "h": 560
+      },
+      "devicePerCell": 6.99990234375,
+      "run": {
+        "x": 289.609375,
+        "y": 786,
+        "w": 90.390625,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "axe": [],
+    "movesAfterDig": "2 moves · par 2 / 5.3s",
+    "running": {
+      "board": {
+        "x": 8.328125,
+        "y": 95,
+        "w": 373.328125,
+        "h": 560
+      },
+      "devicePerCell": 6.99990234375,
+      "run": {
+        "x": 272.6875,
+        "y": 786,
+        "w": 107.3125,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "result": "CLEARED!\n★Clear\n☆Gems\n★Par\n\n2 moves · 4.6s\n\nMissed a gem\n\n↺ Retry\nShare\nAll levels",
+    "storage": "{\"42\":{\"stars\":2,\"moves\":2,\"ticks\":276,\"mask\":5}}"
+  },
+  {
+    "view": "360",
+    "path": "/play/1-1",
+    "errors": [],
+    "initial": {
+      "board": {
+        "x": 46.671875,
+        "y": 95,
+        "w": 266.65625,
+        "h": 400
+      },
+      "devicePerCell": 4.9998046875,
+      "run": {
+        "x": 259.609375,
+        "y": 582,
+        "w": 90.390625,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "axe": [],
+    "movesAfterDig": null,
+    "running": {
+      "board": {
+        "x": 46.671875,
+        "y": 95,
+        "w": 266.65625,
+        "h": 400
+      },
+      "devicePerCell": 4.9998046875,
+      "run": {
+        "x": 253.203125,
+        "y": 582,
+        "w": 96.796875,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "result": "CLEARED!\n★Clear\n★Gems\n★Par\n\n1 move · 4.1s\n\n↺ Retry\nShare\nNext ▶"
+  },
+  {
+    "view": "360",
+    "path": "/daily",
+    "errors": [],
+    "start": {
+      "board": null,
+      "devicePerCell": null,
+      "run": null,
+      "runInView": null,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": null,
+      "htmlClass": true
+    },
+    "startGo": {
+      "y": 498,
+      "h": 56,
+      "w": 328,
+      "inView": true
+    },
+    "startText": "Daily\n\nNO.42 · THU 19 NOV\nTwo Pots\n\nFill each of the 2 pots with 300 cells of water.\n\nWorld 1 · dirt, water\nSolve today\n\nYour first clear is today's official record.\n\nNEW PUZZLE IN 06:33\nALL LEVELS",
+    "startAxe": [],
+    "initial": {
+      "board": {
+        "x": 46.671875,
+        "y": 95,
+        "w": 266.65625,
+        "h": 400
+      },
+      "devicePerCell": 4.9998046875,
+      "run": {
+        "x": 259.609375,
+        "y": 582,
+        "w": 90.390625,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "axe": [],
+    "movesAfterDig": "2 moves · par 2 / 5.3s",
+    "running": {
+      "board": {
+        "x": 46.671875,
+        "y": 95,
+        "w": 266.65625,
+        "h": 400
+      },
+      "devicePerCell": 4.9998046875,
+      "run": {
+        "x": 244.5,
+        "y": 582,
+        "w": 107.3125,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "result": "CLEARED!\n★Clear\n☆Gems\n★Par\n\n2 moves · 4.6s\n\nMissed a gem\n\n↺ Retry\nShare\nAll levels",
+    "storage": "{\"42\":{\"stars\":2,\"moves\":2,\"ticks\":276,\"mask\":5}}"
+  },
+  {
+    "view": "1440",
+    "path": "/play/1-1",
+    "errors": [],
+    "initial": {
+      "board": {
+        "x": 320,
+        "y": 60,
+        "w": 480,
+        "h": 720
+      },
+      "devicePerCell": 3,
+      "run": {
+        "x": 739.609375,
+        "y": 842,
+        "w": 90.390625,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "axe": [],
+    "movesAfterDig": null,
+    "running": {
+      "board": {
+        "x": 320,
+        "y": 60,
+        "w": 480,
+        "h": 720
+      },
+      "devicePerCell": 3,
+      "run": {
+        "x": 733.203125,
+        "y": 842,
+        "w": 96.796875,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "result": "CLEARED!\n★Clear\n★Gems\n★Par\n\n1 move · 4.1s\n\n↺ Retry\nShare\nNext ▶"
+  },
+  {
+    "view": "1440",
+    "path": "/daily",
+    "errors": [],
+    "start": {
+      "board": null,
+      "devicePerCell": null,
+      "run": null,
+      "runInView": null,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": null,
+      "htmlClass": true
+    },
+    "startGo": {
+      "y": 508.59375,
+      "h": 56,
+      "w": 528,
+      "inView": true
+    },
+    "startText": "Daily\n\nNO.42 · THU 19 NOV\nTwo Pots\n\nFill each of the 2 pots with 300 cells of water.\n\nWorld 1 · dirt, water\nSolve today\n\nYour first clear is today's official record.\n\nNEW PUZZLE IN 06:33\nALL LEVELS",
+    "startAxe": [],
+    "initial": {
+      "board": {
+        "x": 320,
+        "y": 60,
+        "w": 480,
+        "h": 720
+      },
+      "devicePerCell": 3,
+      "run": {
+        "x": 739.609375,
+        "y": 842,
+        "w": 90.390625,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "axe": [],
+    "movesAfterDig": "2 moves · par 2 / 5.3s",
+    "running": {
+      "board": {
+        "x": 320,
+        "y": 60,
+        "w": 480,
+        "h": 720
+      },
+      "devicePerCell": 3,
+      "run": {
+        "x": 722.6875,
+        "y": 842,
+        "w": 107.3125,
+        "h": 48
+      },
+      "runInView": true,
+      "small": [],
+      "overlap": [],
+      "covered": [],
+      "btnOverlap": 0,
+      "hscroll": 0,
+      "vscrollMain": 0,
+      "htmlClass": true
+    },
+    "result": "CLEARED!\n★Clear\n☆Gems\n★Par\n\n2 moves · 4.6s\n\nMissed a gem\n\n↺ Retry\nShare\nAll levels",
+    "storage": "{\"42\":{\"stars\":2,\"moves\":2,\"ticks\":276,\"mask\":5}}"
+  },
+  {
+    "path": "/spill/bench",
+    "status": 200,
+    "title": "Spill bench — Sandlab",
+    "errors": [],
+    "h1": "Spill engine bench (S0)"
+  }
+]

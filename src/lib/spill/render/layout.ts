@@ -13,6 +13,17 @@ export interface LayoutInput {
   vh: number
   dpr: number
   safeBottom?: number
+  /** 새 HUD(리디자인 P4)가 보드 위·아래·옆에 예약하는 높이·폭. 없으면 지금 HUD(HEADER_H·TRAY_MIN) 그대로. */
+  chrome?: LayoutChrome
+}
+
+export interface LayoutChrome {
+  /** 보드(캔버스) 위쪽 y — 헤더·목표 줄·보드 테두리 합. */
+  top: number
+  /** 보드 아래 최소 높이(safe-area 제외) — 보드 테두리·진행 줄·도구 줄 합. */
+  bottom: number
+  /** 보드 좌우 테두리 합(가로에서 캔버스가 쓸 수 없는 폭). */
+  side: number
 }
 
 export interface Layout {
@@ -43,16 +54,19 @@ export function computeLayout(input: LayoutInput): Layout {
   const desktop = vw >= DESKTOP_MIN
   const panelW = desktop ? PANEL_W : 0
   const stageW = vw - panelW
-  const availH = vh - HEADER_H - TRAY_MIN - safeBottom
-  const s = computeScale(Math.max(0, stageW), Math.max(0, availH), dpr)
-  const trayH = Math.max(TRAY_MIN, vh - HEADER_H - s.cssH - safeBottom)
+  const top = input.chrome ? input.chrome.top : HEADER_H
+  const trayMin = input.chrome ? input.chrome.bottom : TRAY_MIN
+  const side = input.chrome ? input.chrome.side : 0
+  const availH = vh - top - trayMin - safeBottom
+  const s = computeScale(Math.max(0, stageW - side), Math.max(0, availH), dpr)
+  const trayH = Math.max(trayMin, vh - top - s.cssH - safeBottom)
   return {
     vw,
     vh,
     desktop,
     navCollapsed: vw < NAV_COLLAPSE,
     compactHud: stageW < COMPACT_HUD,
-    headerH: HEADER_H,
+    headerH: top,
     trayH,
     safeBottom,
     stageW,

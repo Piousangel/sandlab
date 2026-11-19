@@ -76,3 +76,14 @@
 - **광고 안내판 AdPlate(S11)**: 회백(--sl-ad)+빗금+점선, 'Advertisement' 라벨(11px ink-2, aria-labelledby), 바깥 여백 `max(24px, clearance)`, 고정 높이 예약(rect 250·banner 100 + 라벨 24). `ads`(그 페이지가 로더를 싣는가)와 `slot`이 둘 다 있어야 렌더 — 지금은 광고 단위가 없어(AD_SLOTS 빈 객체) 어디서도 렌더되지 않는다. 단위는 고정 크기로 만든다(반응형은 잘림 = 정책 위험).
 - **회색 패널 중첩 린트(R3)**: `pnpm lint:ui` 규칙 2. 무채 면 = bone-2·ad·bone-line·kiln-2(+같은 hex, 잉크 rgba 틴트). CSS 선택자 조상·같은 파일 JSX 중첩을 잡는다. 컴포넌트 경계를 넘는 중첩은 못 잡음(리뷰·캡처로).
 - **폰트 preload는 계속 false.** 로컬 Lighthouse 모바일(시뮬 스로틀, 머신 load 24~26, 압축 없는 로컬 정적 서버라 절대값은 부풀려짐)에서 prod vs 프리뷰: /learn LCP 4.3 vs 4.4s, /about 3.5 vs 3.4s, CLS 둘 다 0, FCP 0.8 → 1.1~1.4s. LCP 요소는 본문 `<p>`(시스템 폰트)라 Display 서체가 LCP를 정하지 않는다 → preload하면 본문 요청과 대역폭만 다툰다. 홈은 셸이 없고 CLS 0.17은 prod에도 있는 기존 값(P6 과제). 실제 프리뷰 Worker 배포 뒤(03시 QA) 다시 재고 LCP가 prod보다 0.3s 넘게 나쁘면 700만 남기기를 검토.
+
+## 2026-11-20 리디자인 P4 Spill 플레이 HUD·데일리 시작 — 보드 가림 0, ticks·mask 수집
+- **셸 치환**: `@ui-shell`에 `SpillHud`(chrome(vw)·Frame)·`DailyStart`를 더했다. classic.ts는 둘 다 null(런타임 import 0 — 계약 타입은 `import type`이라 지워짐), SpillPlayer·DailySpill이 null이면 지금 HUD·화면을 그대로 그린다. 레이아웃은 `computeLayout`에 선택 입력 `chrome {top,bottom,side}`를 더했고, 없으면 지금 값(HEADER_H·TRAY_MIN) 그대로.
+- **보드를 가리는 것 0**: 리트라이·Undo·속도 원형 버튼(FloatButtons), 보드 위 메시지 알약·보석 알약을 새 HUD에서 뺐다. 목표·보석 = 보드 위 목표 줄(데스크톱은 오른쪽 목표 카드), 도구 = 보드 아래 트레이 맨 아래 줄(엄지 쪽), 메시지·Watch = 진행 줄(hudLine 형식 왼쪽, 메시지 오른쪽). Undo는 실제 canUndo(Spill 컨트롤러)에 연결 — S5 "Undo 빼기"는 엔진 비용 Undo(홈 샌드박스) 얘기라 해당 없음.
+- **세로 예산**(src/ui-next/spill/chrome.ts, 테스트 고정): 모바일 헤더 48·목표 44·유리 테두리 3 | 보드 | 3·진행 52·도구 52·여백 8, 데스크톱(≥900) 헤더 56·테두리 4 | 보드 | 4·진행 52·도구 52·8. 진행 줄 52 = 진행(모노 1줄) + 힌트·실패 문장(본문 서체 2줄까지) — 독립 리뷰가 한 줄 말줄임이면 360에서 힌트 앞 18자만 보인다고 지적해 44→52. 진행·도구 줄은 트레이 맨 아래에 붙이고 남는 세로는 보드와 진행 줄 사이 Bone. 보드는 2:3 정수 장치 픽셀 배율 그대로 — 390×844(3x) 373×560(지금 HUD와 같음), 360×640(3x) 267×400(지금 HUD 320×480보다 한 단계 작음: 목표 줄·진행 줄 몫), 1440×900 480×720.
+- **보드 좌우 여백**: 390에서 보드 유리가 화면 끝에서 약 5px — 시안(약 28px)보다 좁다. 지금 HUD와 같은 보드 폭(373px = 7 장치 픽셀/셀)을 지키려는 선택(여백 28px면 6/셀 = 320px로 한 단계 작아진다).
+- **S9 '모노 라벨 ≤ 4'의 해석**: 라벨 = 이름표(배지 No.N·진행 줄·목표 카드 제목). 목표 칩 안 숫자 값(0/300)·속도 값(1x)은 값이라 세지 않는다.
+- **Ember는 RUN 하나**(실행 중엔 Pause가 bone-2로 바뀌어 Ember 0). 동사 2개 이상 + 폭 < 420이면 동사 라벨을 접는다(아이콘 + 남은 수, 접근 이름 유지).
+- **데일리 시작 화면**: 실루엣 = 틱 0 판을 `saturate(.25) brightness(.8)`로. 목표 문장 한 줄(같은 문장은 묶음)만, par·별·보석·레벨 요약(d.summary는 보석·par 별을 말함)은 싣지 않는다(S5). 이미 풀었으면 버튼이 "Practice"(연습)로. 플레이 화면 제목 옆 표식은 레벨 id 대신 No.N(풀 9개라 id가 주기를 드러냄 — P2 공유 규칙과 같은 이유).
+- **ticks·mask 수집(prod 포함)**: SpillPlayer onCleared가 `{stars, moves, ticks, mask: starMask}`를 넘기고 DailySpill이 첫 클리어 때만 saveDaily로 저장. 재도전은 loadDaily 검사 + saveDaily 자체 가드로 덮지 않는다. P2의 "P5부터"를 P4로 당김(오너 지시).
+- **prod 번들 변화의 성격**: 클라이언트 컴포넌트가 `@ui-shell`(classic.ts)을 처음 import해 클라이언트 그래프에 모듈이 하나 늘어나면서 webpack deterministic 모듈 id 두 개(4109↔6490)가 맞바뀌었다 — 그래서 무관한 청크(홈·에디터·벤치)도 바이트가 달라진다(내용 동일). /spill/bench HTML은 RSC 페이로드의 그 id만 다르다.

@@ -91,13 +91,18 @@ function DailyPill() {
   )
 }
 
-function MenuSheet({ pathname }: { pathname: string | null }) {
+/**
+ * 메뉴 시트. Spill 화면(P4)도 재사용한다 — 그때는 소리 상태를 화면이 가진 SpillAudio와 맞추려고
+ * `sound`·`onSound`를 넘긴다(제어 모드). 안 넘기면 저장된 설정(spill.v1.sound)을 직접 읽고 쓴다.
+ */
+export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: string | null; sound?: boolean; onSound?: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
   // 소리 설정은 Spill 화면과 같은 키(spill.v1.sound). SSR에는 기본값(켜짐)을 그리고 마운트 뒤 실제 값을 읽는다.
-  const [sound, setSound] = useState(true)
+  const [soundOwn, setSound] = useState(true)
   useEffect(() => setSound(loadSoundPref()), [])
+  const sound = soundProp ?? soundOwn
 
   const close = useCallback(() => ref.current?.close(), [])
   const show = () => {
@@ -124,6 +129,7 @@ function MenuSheet({ pathname }: { pathname: string | null }) {
   }, [])
 
   const toggleSound = () => {
+    if (onSound) return onSound()
     const next = !sound
     saveSoundPref(next)
     setSound(next)
