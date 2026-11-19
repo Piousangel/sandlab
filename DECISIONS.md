@@ -67,3 +67,12 @@
 - 근거: ① 브랜드 고유성 — 디스플레이 서체+모노 라벨 2서체 체계가 '유리와 모래' 정체성의 절반(스크린샷 한 장으로 샌드랩임을 알게). ② 비용이 작다 — 외부 요청 0(self-host), 46KB, swap이라 글자가 막히지 않음. ③ 리뷰 권고(폰트 swap·size-adjust) 그대로.
 - 조건: P1은 `preload: false`이고 새 셸(NEXT_PUBLIC_UI=next 프리뷰)에서만 실린다 — prod 빌드 out/ 전 파일이 base와 같다(buildId 제외). **LCP 영향은 P3(새 셸이 첫 화면에 서체를 쓰기 시작할 때) 프리뷰 Worker에서 Lighthouse 모바일로 실측**하고, Display만 preload로 바꿀지 그때 정한다. LCP가 2.5s를 넘기면 700만 남기거나 서브셋을 더 줄인다.
 - 버린 안: Google Fonts CDN(외부 요청·개인정보·캐시 분리로 이점 없음), 가변 폰트 그대로(opsz·wdth·wght 3축 ≈ 라틴만 해도 2배 이상), 시스템 폰트 유지(R9 그대로).
+
+## 2026-11-20 리디자인 P3 앱 셸 — 붙는 곳·내비 라우트·광고 안내판·폰트 preload
+- **셸이 붙는 곳 = 글 콘텐츠 셸(ContentShell) 35페이지만.** 홈(`position:fixed` 캔버스)·/daily·/play/[id]·/gallery·/spill은 화면 전체를 쓰는 캔버스라 레이아웃에 헤더를 얹으면 겹치거나 100dvh가 넘친다 → 각 화면 PR(P4 Spill HUD·P6 홈·P9 갤러리)이 자기 헤더를 새 셸로 바꾼다. ContentShell은 `@ui-shell`에서 `ShellHeader`·`ShellFooter`를 받고, classic(prod)에서는 둘이 null이라 지금 헤더·푸터를 그대로 그린다(classic.ts import 0개 유지, prod out/ 171파일 main과 동일). 버린 안: layout에 전역 헤더(캔버스 화면과 겹침), ContentShell 통째 치환 별칭(별칭만 늘고 이득 없음 — 독립 리뷰 동의).
+- **내비 = Pour(/)·Solve(/play)·Browse(/gallery)·Learn(/learn)**, 데일리는 헤더 pill(/daily). 라벨과 h1이 아직 다른 곳(/play h1 "Sandlab Spill", /gallery)은 h1·본문 diff 0 원칙 때문에 이번엔 안 바꾸고 P8·P9에서 맞춘다. 콘텐츠 셸 밖으로 나가는 링크는 일반 `<a>`(광고 로더가 캔버스로 따라가지 않게), 글끼리만 next/link.
+- **내비는 840px 이상에서만 헤더에**, 그 아래는 메뉴 시트(`<dialog>` showModal — 바깥 inert, Esc, 포커스 복귀). 720px에서는 가운데 내비와 pill 사이 여유가 8px 안팎이라 올렸다(840에서 실측 73px).
+- **데일리 pill**: SSR은 "Daily"(빌드 시각을 HTML에 굽지 않음), 마운트 뒤 `No.N hh:mm`(UTC 자정까지, 분 올림, 12ch 칸 예약 = CLS 0). 접근 이름은 보이는 글자로 시작(WCAG 2.5.3, axe 실측으로 고침).
+- **광고 안내판 AdPlate(S11)**: 회백(--sl-ad)+빗금+점선, 'Advertisement' 라벨(11px ink-2, aria-labelledby), 바깥 여백 `max(24px, clearance)`, 고정 높이 예약(rect 250·banner 100 + 라벨 24). `ads`(그 페이지가 로더를 싣는가)와 `slot`이 둘 다 있어야 렌더 — 지금은 광고 단위가 없어(AD_SLOTS 빈 객체) 어디서도 렌더되지 않는다. 단위는 고정 크기로 만든다(반응형은 잘림 = 정책 위험).
+- **회색 패널 중첩 린트(R3)**: `pnpm lint:ui` 규칙 2. 무채 면 = bone-2·ad·bone-line·kiln-2(+같은 hex, 잉크 rgba 틴트). CSS 선택자 조상·같은 파일 JSX 중첩을 잡는다. 컴포넌트 경계를 넘는 중첩은 못 잡음(리뷰·캡처로).
+- **폰트 preload는 계속 false.** 로컬 Lighthouse 모바일(시뮬 스로틀, 머신 load 24~26, 압축 없는 로컬 정적 서버라 절대값은 부풀려짐)에서 prod vs 프리뷰: /learn LCP 4.3 vs 4.4s, /about 3.5 vs 3.4s, CLS 둘 다 0, FCP 0.8 → 1.1~1.4s. LCP 요소는 본문 `<p>`(시스템 폰트)라 Display 서체가 LCP를 정하지 않는다 → preload하면 본문 요청과 대역폭만 다툰다. 홈은 셸이 없고 CLS 0.17은 prod에도 있는 기존 값(P6 과제). 실제 프리뷰 Worker 배포 뒤(03시 QA) 다시 재고 LCP가 prod보다 0.3s 넘게 나쁘면 700만 남기기를 검토.

@@ -1,0 +1,379 @@
+/*
+ * 새 셸 헤더·메뉴 시트·푸터·광고 안내판 스타일(P3). shell/next.ts만 불러온다 → prod 빌드에는 없다.
+ * 전역 규칙(body·html 등)은 두지 않는다 — 아직 바뀌지 않은 페이지 본문(옛 다크 화면)을 건드리지 않게.
+ * 예외: html.sl-lock(시트가 열린 동안 뒤 스크롤 잠금)과 html[data-sl-wm](첫 방문 wordmark 낙하 표시).
+ * 면 규칙(R3): 면은 bone(헤더·시트)과 bone-2(푸터·pill) 두 단계만, 회색 면 위에 회색 면을 쌓지 않는다.
+ */
+.sl-shell,
+.sl-shell *,
+.sl-sheet,
+.sl-sheet *,
+.sl-ad,
+.sl-ad * {
+  box-sizing: border-box;
+}
+.sl-shell,
+.sl-sheet {
+  font-family: var(--sl-font-display);
+  color: var(--sl-ink);
+  -webkit-font-smoothing: antialiased;
+}
+.sl-shell a,
+.sl-sheet a {
+  color: inherit;
+  text-decoration: none;
+}
+/* 포커스 링: 모서리는 요소 자신의 것을 쓴다(pill은 둥글게, 현재 내비는 각지게) */
+.sl-shell :focus-visible,
+.sl-sheet :focus-visible {
+  outline: none;
+  box-shadow: var(--sl-focus);
+}
+
+/* ---------- 헤더 ---------- */
+.sl-hdr {
+  position: relative;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 0 8px;
+  padding-left: max(8px, env(safe-area-inset-left));
+  padding-right: max(4px, env(safe-area-inset-right));
+  background: var(--sl-bone);
+}
+.sl-hit {
+  min-width: var(--sl-hit);
+  height: var(--sl-hit);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.sl-icon-btn,
+.sl-text-btn {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: var(--sl-r-sm);
+}
+.sl-text-btn {
+  padding: 0 12px;
+  font-weight: 700;
+  font-size: 15px;
+}
+.sl-icon-btn:active,
+.sl-text-btn:active {
+  transform: translateY(1px);
+}
+
+/* wordmark — 모래 알갱이: 글자 7개가 하나씩 떨어져 쌓이고 마지막에 알갱이 점 하나가 내려앉는다 */
+.sl-wm {
+  height: var(--sl-hit);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: var(--sl-r-sm);
+}
+.sl-wm-word {
+  position: relative;
+  display: inline-flex;
+  align-items: flex-end;
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.sl-wm-l {
+  display: inline-block;
+}
+.sl-wm-grain {
+  width: 5px;
+  height: 5px;
+  margin-left: 3px;
+  margin-bottom: 2px;
+  border-radius: 50%;
+  background: var(--sl-ember);
+}
+html[data-sl-wm='drop'] .sl-wm-l {
+  animation: sl-grain-drop var(--sl-t-settle) var(--sl-ease-drop) both;
+}
+html[data-sl-wm='drop'] .sl-wm-grain {
+  animation: sl-grain-drop var(--sl-t-settle) var(--sl-ease-drop) 360ms both;
+}
+@keyframes sl-grain-drop {
+  0% {
+    transform: translateY(-18px);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(1px);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-sl-wm] .sl-wm-l,
+  html[data-sl-wm] .sl-wm-grain {
+    animation: none;
+  }
+}
+
+/* 내비(넓은 화면만, 좁으면 메뉴 시트 안) */
+.sl-nav {
+  display: none;
+}
+.sl-nav-link {
+  height: var(--sl-hit);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 14px;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--sl-ink-2);
+  border-radius: var(--sl-r-sm);
+}
+.sl-nav-link:hover {
+  color: var(--sl-ink);
+}
+.sl-nav-link[aria-current='page'] {
+  color: var(--sl-ink);
+  box-shadow: inset 0 -2px 0 var(--sl-ink);
+  border-radius: 0;
+}
+.sl-hdr-end {
+  display: flex;
+  align-items: center;
+}
+
+/* 데일리 모래시계 pill — 숫자는 고정폭(tabular), 칸은 미리 잡아 둔다(시간이 채워져도 폭이 안 변함 → CLS 0) */
+.sl-pill-hit {
+  padding: 0 2px;
+  border-radius: var(--sl-r-pill);
+}
+.sl-pill {
+  height: 32px;
+  padding: 0 12px 0 10px;
+  border-radius: var(--sl-r-pill);
+  background: var(--sl-bone-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--sl-font-mono);
+  font-weight: 500;
+  font-size: var(--sl-fs-label-tap);
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  white-space: nowrap;
+}
+.sl-pill-t {
+  display: inline-block;
+  min-width: 12ch; /* "No.100 23:59" */
+}
+.sl-pill-left {
+  color: var(--sl-ink-2);
+}
+
+@media (min-width: 840px) {
+  .sl-hdr {
+    height: 72px;
+    padding: 0 24px;
+  }
+  .sl-wm-word {
+    font-size: 24px;
+  }
+  .sl-nav {
+    display: flex;
+    gap: 4px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* ---------- 메뉴 시트(<dialog> 모달) ---------- */
+html.sl-lock {
+  overflow: hidden;
+}
+.sl-sheet {
+  margin: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--sl-r-glass) var(--sl-r-glass) 0 0;
+  background: var(--sl-bone);
+  box-shadow: var(--sl-glass);
+  overflow-y: auto;
+}
+.sl-sheet::backdrop {
+  background: rgba(20, 17, 14, 0.5);
+}
+.sl-sheet[open] {
+  animation: sl-sheet-up var(--sl-t-move) var(--sl-ease-pour);
+}
+@keyframes sl-sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+.sl-sheet-in {
+  padding: 8px 16px max(24px, env(safe-area-inset-bottom));
+}
+.sl-sheet-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+.sl-sheet-title {
+  font-family: var(--sl-font-mono);
+  font-weight: 500;
+  font-size: var(--sl-fs-label);
+  letter-spacing: var(--sl-ls-label);
+  text-transform: uppercase;
+  color: var(--sl-ink-2);
+}
+.sl-sheet ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sl-sheet-link {
+  min-height: var(--sl-hit);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 16px;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: var(--sl-r-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.sl-sheet-link-big {
+  min-height: 52px;
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+.sl-sheet-link[aria-current='page'] {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+.sl-sheet-rule {
+  height: 1px;
+  margin: 12px 8px;
+  background: var(--sl-bone-line);
+}
+.sl-sound-state {
+  margin-left: auto;
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-fs-label-tap);
+  letter-spacing: var(--sl-ls-label);
+  text-transform: uppercase;
+  color: var(--sl-ink-2);
+}
+@media (min-width: 840px) {
+  .sl-sheet {
+    margin: 72px 24px auto auto; /* 헤더는 폭 제한 없이 좌우 24px — 메뉴 버튼(오른쪽 끝) 바로 아래에 붙는다 */
+    width: 340px;
+    border-radius: var(--sl-r-md);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-sheet[open] {
+    animation: none;
+  }
+}
+
+/* ---------- 푸터: bone-2 면 1개 ---------- */
+.sl-foot {
+  margin-top: var(--sl-s-7);
+  background: var(--sl-bone-2);
+}
+.sl-foot-in {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 8px 8px max(24px, env(safe-area-inset-bottom));
+}
+.sl-foot-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+.sl-foot-link {
+  height: var(--sl-hit);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: var(--sl-r-sm);
+}
+.sl-foot-link:hover {
+  text-decoration: underline;
+}
+.sl-foot-copy {
+  margin: 8px 8px 0;
+  font-family: var(--sl-font-mono);
+  font-weight: 500;
+  font-size: var(--sl-fs-label);
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--sl-ink-2);
+}
+@media (min-width: 720px) {
+  .sl-foot-in {
+    padding: 16px 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .sl-foot-copy {
+    margin: 0;
+  }
+}
+
+/* ---------- 광고 안내판(S11): 콘텐츠 카드와 다른 면 — 회백 + 빗금 + 점선, 라벨 필수 ---------- */
+.sl-ad {
+  display: block;
+  width: 100%;
+  font-family: var(--sl-font-display);
+}
+.sl-ad-label {
+  display: block;
+  height: 24px;
+  padding-top: 4px;
+  font-family: var(--sl-font-mono);
+  font-weight: 500;
+  font-size: var(--sl-fs-label);
+  line-height: 14px;
+  letter-spacing: var(--sl-ls-label);
+  text-transform: uppercase;
+  color: var(--sl-ink-2);
+}
+.sl-ad-face {
+  border-radius: var(--sl-r-xs);
+  background-color: var(--sl-ad);
+  background-image: repeating-linear-gradient(45deg, rgba(42, 33, 24, 0.05) 0 8px, transparent 8px 16px);
+  outline: 1.5px dashed var(--sl-ad-line);
+  outline-offset: -1.5px;
+  overflow: hidden;
+}

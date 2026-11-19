@@ -1,5 +1,8 @@
 import Link from 'next/link'
 import AdLoader from './AdLoader'
+// 리디자인 셸(S6·P3): prod는 classic(ShellHeader·ShellFooter = null → 아래 지금 헤더·푸터 그대로),
+// NEXT_PUBLIC_UI=next 프리뷰 빌드만 새 셸 헤더·푸터로 바뀐다. 본문(main)은 두 빌드가 같다.
+import { ShellHeader, ShellFooter } from '@ui-shell'
 
 /**
  * 글 콘텐츠 페이지 공용 셸(가이드·소개·개인정보·레벨 목록).
@@ -12,7 +15,7 @@ export default function ContentShell({ children, ads = true }: { children: React
   return (
     <div style={{ minHeight: '100vh', overflowY: 'auto' }}>
       {ads && <AdLoader />}
-      <header
+      {ShellHeader ? <ShellHeader /> : <header
         style={{
           maxWidth: 760,
           margin: '0 auto',
@@ -33,11 +36,11 @@ export default function ContentShell({ children, ads = true }: { children: React
         <Link href="/materials" style={link}>Materials</Link>
         <a href="/gallery" style={link}>Gallery</a>
         <Link href="/about" style={link}>About</Link>
-      </header>
+      </header>}
       <main style={{ maxWidth: 760, margin: '0 auto', padding: '24px 18px 48px', lineHeight: 1.65, fontSize: 16 }}>
         {children}
       </main>
-      <footer
+      {ShellFooter ? <ShellFooter /> : <footer
         style={{
           maxWidth: 760,
           margin: '0 auto',
@@ -57,7 +60,7 @@ export default function ContentShell({ children, ads = true }: { children: React
         <Link href="/terms" style={link}>Terms</Link>
         <Link href="/contact" style={link}>Contact</Link>
         <span style={{ ...link, marginLeft: 'auto', opacity: 0.45 }}>Made by Piousangel</span>
-      </footer>
+      </footer>}
     </div>
   )
 }

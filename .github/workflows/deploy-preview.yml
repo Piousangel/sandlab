@@ -1,0 +1,45 @@
+# 리디자인 프리뷰 Worker(S6, docs/plans/2026-11-19-redesign-v2.md) 배포 — NEXT_PUBLIC_UI=next 빌드를 sandlab-preview.<계정>.workers.dev 로.
+# prod(deploy.yml·sandlab.app)는 건드리지 않는다: 이름이 다른 Worker(wrangler.jsonc env.preview), 도메인 없음, noindex.
+#
+# 지금은 **수동 실행(workflow_dispatch)만**. main push 자동 배포는 아래 두 가지를 오너가 정한 뒤 켠다(P3, 2026-11-20):
+#  1. workers.dev 하위 도메인이 계정에서 켜져 있는지(인계서 옛 기록: 꺼져 있었을 수 있음) — 꺼져 있으면 배포는 성공해도 URL이 안 열린다.
+#  2. ⚠ 같은 D1(sandlab-gallery)을 쓴다 — 프리뷰에서 올린 갤러리 씬·투표·기록이 prod 데이터에 그대로 섞인다.
+#     프리뷰 전용 D1을 둘지, 같은 D1 + 프리뷰 쓰기 차단(NOINDEX=1일 때 POST 거부)을 할지 오너 결정 대기.
+# 실행하려면 Actions > deploy-preview > Run workflow 에서 confirm 칸에 `preview`를 적는다(실수 실행 방지).
+# 시크릿: deploy.yml과 같은 CLOUDFLARE_API_TOKEN(Workers Scripts:Edit면 새 Worker 생성 가능)·CLOUDFLARE_ACCOUNT_ID.
+# 첫 배포 뒤: curl -I 로 정적 파일·404·/s/x·/api/scenes 네 종류에 `x-robots-tag: noindex, nofollow`, <html>에 class가 있는지 확인.
+name: deploy-preview
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: '같은 D1(prod 데이터)을 쓰는 프리뷰를 올린다 — 알고 있으면 preview 라고 적는다'
+        required: true
+        default: ''
+concurrency:
+  group: deploy-preview
+  cancel-in-progress: true
+jobs:
+  deploy-preview:
+    if: ${{ inputs.confirm == 'preview' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test --exclude src/lib/spill/verify/verify.test.ts
+      - run: pnpm lint:ui
+      - run: pnpm check:contrast
+      # deploy:preview = build:preview(NEXT_PUBLIC_UI=next + out/_headers noindex) → verify-ads --preview → wrangler deploy --env preview
+      - run: pnpm run deploy:preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
