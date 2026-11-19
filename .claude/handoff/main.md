@@ -1,6 +1,6 @@
 # 인계 (2026-11-20 새벽): 리디자인 v2 P3 「앱 셸·내비·푸터」 머지 — 다음은 P4(Spill 플레이 + 데일리 시작)
 
-- 계획서 6장 진행표가 기준. P3 = 브랜치 shift/redesign-p3-shell. prod 화면 변화 0(prod out/ 171파일 main과 동일, buildId 제외).
+- 계획서 6장 진행표가 기준. P3 = #71(브랜치 shift/redesign-p3-shell). prod 화면 변화 0(prod out/ 171파일 main과 동일, buildId 제외).
 - **새 셸이 붙는 곳 = ContentShell(글 페이지 35개)뿐.** `ContentShell`이 `@ui-shell`의 `ShellHeader`·`ShellFooter`를 받고, classic에서는 null이라 옛 헤더·푸터를 그린다. 홈·/daily·/play/[id]·/gallery·/spill은 아직 옛 화면 — **P4는 SpillPlayer 헤더(Hud)를 새 셸 모양(시안 header({title}) = 뒤로·제목·소리·메뉴)으로 바꾼다.** 같은 방식으로 `@ui-shell`에 새 export를 더하고 classic.ts에는 null(import 0개)을 둔다. `src/ui-next/shell/contract.ts`가 classic·next의 export 이름·타입을 typecheck로 맞춘다 — 하나만 바꾸면 typecheck가 깨진다.
 - 셸 파일: `shell/ShellHeader.tsx`(client: wordmark 첫 방문 낙하·DailyPill·MenuSheet), `ShellFooter.tsx`, `nav.ts`(링크 표 단일 출처, 테스트가 sitemap과 대조), `dailyPill.ts`(순수), `shell.css`(전역 규칙 없음, `sl-` 접두). 메뉴 시트·소리 토글(키 `spill.v1.sound`, Spill과 공유)은 P4 Spill 헤더에서 재사용 가능. 내비는 840px 이상만 헤더에.
 - 광고 안내판 `src/ui-next/ads/AdPlate.tsx`: `ads`+`slot` 둘 다 있어야 렌더, AD_SLOTS 비어 있음(P8·P10에서 오너가 AdSense 고정 크기 단위 만든 뒤 채움). 바탕 Bone 위에만, 24px+ 간격·높이 예약은 컴포넌트가 강제.
