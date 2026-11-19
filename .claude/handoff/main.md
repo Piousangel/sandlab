@@ -1,3 +1,13 @@
+# 인계 (2026-11-19 23시): 리디자인 v2 P2 데이터 계층(UI 없음)
+
+- 추가: `src/lib/strata.ts`(STRATA_CYCLE 10종 순서 고정·readStrata — 옛 키 `sandlab.daily.v1` + 새 키 병합, 새 키 우선, 결측일 missed), `daily.ts` DailyRec `ticks?`·`mask?`·`DAILY_MASK_*`·`parseDailyRec`·`shareTextV2`(●○ 유리알, 레벨 id 없음). 공유 링크 골든셋 `src/lib/sand/shareLinks.golden.test.ts`(#s=·#g=·/s/:id·업로드 parent). 컴포넌트 변경 0. 규칙은 DECISIONS 2026-11-19 P2.
+- **P5가 할 일**: SpillPlayer onCleared에 `ticks`·`mask: starMask(st)`를 더해 DailySpill이 saveDaily로 넘기기(지금은 기록에 없음), 공유를 shareTextV2로 교체 후 옛 shareText 제거.
+- **P6 착수 조건**: SandCanvas의 #s= 파싱·parent 결정을 순수 함수로 빼고 골든셋의 '소스 트립와이어' describe를 함수 테스트로 교체. 골든셋 표는 그대로 통과해야 한다.
+- **P7**: readStrata의 마지막 층(오늘)은 안 풀었으면 missed=true — '아직'으로 보여줄지 결정. sand·seed·acid는 Bone 위 대비 1.1~1.4:1이라 테두리·결 필요.
+- 함정: 머신 부하(load 30+)일 때 `pnpm test`의 무거운 시뮬 테스트(sim·replay·verify·sweep·transform)가 5s 타임아웃으로 떨어진다 — 부하 낮을 때 해당 파일만 다시 돌려 확인.
+
+---
+
 # 인계 (2026-11-19 13시): UI 개편 1단계 머지(#55)
 
 - 머지: #55(3a32249). 크림 K 토큰·SVG HUD·목표 링 칩·입체 RUN. 독립 혹평 5.5→6.3→6.9. spill:verify 11/11, test 1069, build·verify-ads OK.

@@ -48,6 +48,14 @@
 - 비교: v3 390 홈 A 라이트 vs B 하이브리드(Kiln 계기 구역), docs/design/redesign-v2/v3/. 오너: "라이트가 나은 것 같다".
 - 보완: 시험관 윤곽 ≥ .58, 옅은 재료는 결 패턴 + 이름 라벨. 캔버스 우물·Spill 보드 안쪽만 어두운 유리.
 
+## 2026-11-19 리디자인 P2 데이터 계층 — 지층 순환표·유리알 공유 규칙·DailyRec 확장
+- **STRATA_CYCLE(순서 고정, 바꾸면 지난 지층 색이 전부 바뀜)**: `sand, gunpowder, seed, lava, ash, acid, stone, plant, wood, water`. 층 색 = `STRATA_CYCLE[(dayNumber-1) % 10]`, 그날 레벨 재료와 무관(리뷰 B1). 풀 9개와 서로소라 레벨이 같은 날(9일 간격)끼리도 색이 다르다.
+  - 고른 방법: 18종(empty 제외)에서 옅은 salt·steam·ice·metal을 뺀 14종 중 sand(브랜드 재료)를 포함하는 10종 조합 가운데 CIELAB ΔE76 최소 쌍 거리가 가장 큰 것(최소 17.8, stone–ash), sand를 #1로 두고 이웃한 날(순환 포함) ΔE 최소가 가장 큰 배열(72.7). 빠진 fire·smoke·wall·oil은 lava·ash·stone·wood와 거의 같은 색이다.
+  - 주의(P7): sand·seed·acid는 Bone(#F4ECDD) 위 대비가 1.1~1.4:1이라 층 테두리(ink 1px)나 결 패턴이 필요하다. 재료색은 텍스트에 쓰지 않는다.
+- **공유 텍스트 v2(유리알 규칙)**: `Sandlab Daily #<n> <알3개> <N move(s)>[ · <초>s]\nhttps://sandlab.app/daily`. 알 3개, 별 수만큼 앞에서부터 `●`(U+25CF), 나머지 `○`(U+25CB) — 기하 도형 블록이라 이모지로 바뀌지 않는다(Extended_Pictographic 아님). 칸 위치에는 뜻이 없다: 처음엔 CLEAR·GEM·PAR 칸 고정을 검토했으나 mask 없는 기록(당분간 전부)과 뜻이 엇갈려 거짓 정보가 된다는 독립 리뷰로 버림. 별 수 = mask가 있으면 비트 수, 없으면 stars. 시간은 ticks가 있을 때만. 레벨 id는 넣지 않는다(풀 9개라 id로 9일 주기가 드러남). 기존 `shareText`는 지금 /daily가 쓰므로 P5까지 유지.
+- **DailyRec**: `ticks?`·`mask?`(CLEAR=1·GEM=2·PAR=4, score.ts 별 비트와 같음) 선택 필드. 키 `sandlab.spill-daily.v1` 불변, stars·moves만 넘기면 예전과 바이트 단위로 같은 JSON. 공식 기록 = 그날 첫 유효 클리어(덮지 않음). 읽을 때 잘못된 선택 필드는 생략, 그날 항목만 깨졌으면 다음 첫 클리어가 채움, 저장소 값이 통째로 손상됐으면 원본을 지우지 않고 저장을 건너뜀(예전과 같음).
+- **재도전(연습) 기록은 저장하지 않는다.** 필요해지면 제안: 같은 키에 넣지 말고 별도 키 `sandlab.spill-daily-best.v1`에 {day: 최고 기록}만(공식 기록·지층·공유와 분리).
+- **ticks·mask 실제 수집은 P5부터**: P2는 UI 변경 0 조건이라 컴포넌트를 건드리지 않았다. 지금 화면(DailySpill)은 onCleared가 {stars, moves}만 넘겨 그때까지의 기록엔 ticks·mask가 없다(읽기·지층·공유는 없을 때를 처리). P5에서 SpillPlayer onCleared에 `ticks: r.ticks, mask: starMask(st)`를 더해 saveDaily로 넘긴다. 더 일찍 모으고 싶으면 이 두 줄만 별도 PR로(화면 변화 없음).
 ## 2026-11-19 아이콘 v1 알갱이 점 규칙(23시 교대, 독립 리뷰 지적 반영)
 - 콘셉트 3.4의 "1.5px 점"을 **반지름 1.25(지름 2.5px)**로 바꾼다. 2px 스트로크 옆에서 1.5px 점은 20px 크기에서 사라진다(시트 실측).
 - "아이콘마다 점 1개"에서 **7종 예외**: pause·sound-off·link·next·back(점이 의미를 바꾸거나 가독성 저하), remix(두 화살촉이 중앙에서 만나 충돌), star-full(채운 원에 하이라이트를 구멍으로 뚫어 점 대신). 목록과 이유는 src/ui-next/icons/icons.ts `GRAIN_EXCEPTIONS`가 단일 출처이고 테스트가 강제한다.
