@@ -1,5 +1,8 @@
 # 세션 가이드 (샌드랩 팀)
 
+> **상시 안건(오너 11-19)**: [사이트 전체 UI·UX 고품질·독창성](specs/2026-11-19-uiux-north-star.md) — 모든 교대가 계속 진다. 오너 지시로 팀은 밤낮없이 교대(06·10·13·16·20·23·03시).
+
+
 > **⚠ 최우선(오너 11-18 밤): 챌린지(Spill·데일리) UI 전면 개편** — `docs/team/specs/2026-11-18-spill-ui-overhaul-direction.md`를 먼저 읽는다. 지금 화면이 "딱딱하고 옛날 느낌"이라는 오너 지적. 이 세션들의 우선 작업은 (1) 라운드 1 리서치·기획·Gemini 시안 → (2) 단계 출시. 새 레벨 제작(2-2 등)보다 앞선다(단, 하루 1개 이상 눈에 보이는 출시 원칙은 유지).
 
 루틴은 하루 3번(06·13·20시 KST) 돈다. 각 세션은 **자기 시간 절**을 따른다. 규칙의 근거는 CLAUDE.md·[OPERATING.md](./OPERATING.md)·[DESIGN-PROCESS.md](./DESIGN-PROCESS.md)·.claude/team/charter.md·.claude/skills/sandlab-daily/SKILL.md·docs/ops/playbook.md.
