@@ -1,3 +1,12 @@
+# 인계 (2026-11-19 13시): UI 개편 1단계 머지(#55)
+
+- 머지: #55(3a32249). 크림 K 토큰·SVG HUD·목표 링 칩·입체 RUN. 독립 혹평 5.5→6.3→6.9. spill:verify 11/11, test 1069, build·verify-ads OK.
+- **미확인**: 390/360px 실캡처(WebGPU 헤드리스 불가) — 라이브에서 사람/실브라우저로 확인 필요. 배포 run 57 결과는 20시 세션이 확인.
+- 다음: 2단계(ResultCard·LevelList 크림화+클리어 연출+공략·데일리 링크). 보류 항목은 specs/2026-11-18-spill-ui-overhaul-round1.md 부록 R3. 1주 뒤 전환·reset 비교로 라이트/다크 사후 판정.
+- 함정: `pnpm spill:verify`는 ~65초+, 파이프(tail)로 받으면 출력이 늦으니 파일로 리다이렉트. 크림 위 텍스트는 K.*Text 토큰만(장식색은 대비 미달).
+
+---
+
 # 인계: Sandlab — 챌린지 모드 Phase 2–4 배포 완료(레벨 20 · 데일리 · 계측) / AdSense 재심사 대기
 - 갱신: 2026-10-09 / 브랜치: main / 커밋 상태: committed, prod Version b4e273df
 - 라이브: https://sandlab.app (/play 20레벨, /daily, /learn, /materials)
