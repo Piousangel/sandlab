@@ -3,6 +3,7 @@
 - wrangler `env.preview.vars.READ_ONLY="1"` → 워커가 `/api/*`의 GET·HEAD 외 전부 403 `{"error":"preview is read-only"}`(worker/preview.ts `readOnlyBlock`, 진입점 default export에서 app.fetch 전에). 메서드 기준이라 새 쓰기 라우트도 자동 차단. prod는 변수 없음 → 불변. 테스트 worker/read-only.test.ts(가짜 D1로 '차단 요청은 D1 호출 0' 확인).
 - 화면: build:preview에만 `NEXT_PUBLIC_READ_ONLY=1` → 새 셸 헤더 아래·메뉴 시트에 안내 한 줄(`src/ui-next/shell/ReadOnlyNote.tsx`, `PREVIEW_READ_ONLY`). UI 플래그와 분리(컷오버 뒤에도 prod에 안 뜸). verify-ads prod 모드가 변수·`data-sl-read-only`를 잡는다.
 - **다음 P가 할 일**: 새 셸에 업로드·투표·데일리 기록 버튼을 그리면 `PREVIEW_READ_ONLY`로 disabled + `READ_ONLY_NOTE`. DailyStart의 "Your first clear is today's official record."는 프리뷰에서 거짓 — P5에서 PREVIEW_READ_ONLY 분기.
+- 프리뷰 QA 참고: classic 화면(홈 업로드·갤러리 투표)은 프리뷰에서도 버튼이 눌리고, 실패 토스트에 `{"error":"preview is read-only"}` 원문이 뜬다 — 기존 오류 표시 방식 그대로라 **정상**(버그로 올리지 말 것). 데일리·Spill 클리어 기록은 조용히 실패(postClear false).
 - 프리뷰 배포는 여전히 수동·미실행. 첫 배포 뒤 `curl -X POST <프리뷰>/api/daily` → 403, `curl <프리뷰>/api/scenes` → 200 확인.
 
 ---

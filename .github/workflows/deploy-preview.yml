@@ -40,7 +40,7 @@ jobs:
       - run: pnpm test --exclude src/lib/spill/verify/verify.test.ts
       - run: pnpm lint:ui
       - run: pnpm check:contrast
-      # deploy:preview = build:preview(NEXT_PUBLIC_UI=next + out/_headers noindex) → verify-ads --preview → wrangler deploy --env preview
+      # deploy:preview = build:preview(NEXT_PUBLIC_UI=next + NEXT_PUBLIC_READ_ONLY=1 + out/_headers noindex) → verify-ads --preview → wrangler deploy --env preview
       - run: pnpm run deploy:preview
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

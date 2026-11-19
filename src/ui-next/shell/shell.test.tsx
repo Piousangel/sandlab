@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import sitemap from '@/app/sitemap'
 import { SITE } from '@/lib/site'
@@ -132,6 +132,21 @@ describe('프리뷰 읽기 전용 안내(오너 11-20)', () => {
     expect(html).toContain('data-sl-read-only')
     expect(html).toContain('Preview is read-only.')
     expect(findViolations(html, 'x.html')).toEqual([])
+  })
+
+  it('NEXT_PUBLIC_READ_ONLY=1 빌드에서는 헤더 아래 + 메뉴 시트 안 두 곳에 안내가 붙는다(연결 확인)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_READ_ONLY', '1')
+    vi.resetModules()
+    try {
+      const { ShellHeader: H } = await import('./ShellHeader')
+      const html = renderToStaticMarkup(<H />)
+      expect(html.match(/data-sl-read-only/g)?.length).toBe(2)
+      expect(html).toContain('class="sl-ro"')
+      expect(html).toContain('class="sl-ro-sheet"')
+    } finally {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    }
   })
 
   it('변수 없는 빌드(테스트·prod 기본)에서는 헤더·메뉴 시트에 안내가 없다', () => {

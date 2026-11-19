@@ -100,4 +100,5 @@
 - 화면: `NEXT_PUBLIC_READ_ONLY=1`(build:preview에만) → 새 셸 헤더 아래·메뉴 시트에 "Preview is read-only..." 한 줄(`src/ui-next/shell/ReadOnlyNote.tsx`). **UI 플래그(NEXT_PUBLIC_UI)와 분리** — 컷오버(P12)에서 prod가 next 셸로 빌드돼도 안내가 prod에 안 뜬다. prod 배포 스크립트는 이 변수를 비우고, verify-ads(prod 모드)는 변수·`data-sl-read-only`가 있으면 실패.
 - 이유: (1) 리디자인 검수는 실제 갤러리·데일리 통계가 보여야 의미가 있다 — 빈 D1이면 갤러리·히스토그램이 비어 화면 판단이 틀어진다. (2) 프리뷰 쓰기가 prod 랭킹·데일리 통계·IP 레이트리밋 표에 섞이는 사고를 원천 차단. (3) D1 하나·마이그레이션 하나로 운영 부담 0.
 - 한계: 쓰기 버튼(갤러리 업로드·투표, 데일리 기록 자동 전송)은 아직 classic 컴포넌트에 있어 프리뷰에서도 눌린다 — 서버가 403으로 막고 기존 오류 처리대로 실패한다(prod 화면 변화 0을 지키려 classic은 안 건드림). 새 셸이 그 버튼을 그리게 되는 P(갤러리·결과 화면)가 `PREVIEW_READ_ONLY`로 disabled + 안내를 붙인다. 데일리 시작 화면의 "Your first clear is today's official record." 문구도 프리뷰에서는 사실이 아니다 — P5(src/ui-next/spill) 쪽에서 처리.
+- 알려진 한계 2: 차단은 메서드 기준이다. 앞으로 GET에서 D1에 쓰는 라우트(예: 조회수 증가)를 만들면 프리뷰에서 뚫린다 — 그런 라우트를 만들지 않거나, 만들 때 READ_ONLY에서 DB를 쓰기 거부 래퍼로 감싼다.
 - 버린 안: 프리뷰 전용 D1 — 빈 데이터로 검수가 무의미, 스키마·마이그레이션 이중 관리. NOINDEX=1에 쓰기 차단을 묶기 — 뜻이 다른 두 스위치를 하나로 묶으면 나중에 한쪽만 바꿀 수 없다.

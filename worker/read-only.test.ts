@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 import worker from './index'
 import { READ_ONLY_ERROR, readOnlyBlock } from './preview'
@@ -104,5 +105,23 @@ describe('워커 READ_ONLY 없음(prod) — 기존 동작 그대로', () => {
     const res = await call(env, '/api/scenes')
     expect(res.status).toBe(200)
     expect(res.headers.get('x-robots-tag')).toBeNull()
+  })
+})
+
+// 실제 설정이 이 보장을 지키는지(독립 리뷰): env를 직접 주입하는 위 테스트만으로는 wrangler.jsonc에서
+// READ_ONLY가 빠지거나('1'이 아니면 조용히 차단 꺼짐) 최상위(prod)로 새는 걸 못 잡는다.
+describe('wrangler.jsonc', () => {
+  // 줄 전체 주석만 있는 JSONC(줄 끝 주석·끝 쉼표 없음) — 깨지면 JSON.parse가 던져서 이 테스트가 실패한다
+  const cfg = JSON.parse(readFileSync(new URL('../wrangler.jsonc', import.meta.url), 'utf8').replace(/^\s*\/\/.*$/gm, ''))
+
+  it('prod(최상위)에는 READ_ONLY가 없다 → 쓰기 동작 불변', () => {
+    expect(cfg.vars?.READ_ONLY).toBeUndefined()
+  })
+
+  it('env.preview는 READ_ONLY="1"(정확히) + NOINDEX="1", prod와 같은 D1', () => {
+    const p = cfg.env.preview
+    expect(p.vars.READ_ONLY).toBe('1')
+    expect(p.vars.NOINDEX).toBe('1')
+    expect(p.d1_databases[0].database_id).toBe(cfg.d1_databases[0].database_id)
   })
 })
