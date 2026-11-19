@@ -8,6 +8,8 @@
  *
  * 함정: WebGPU는 보안 컨텍스트에서만 — about:blank·file://에선 navigator.gpu가 없다. 그래서 Vite 개발 서버(localhost)로 연다.
  * vite는 vitest의 의존성이라 최상위에 없다 → vitest 기준으로 resolve.
+ * playwright는 package.json에 없다 — 클라우드 컨테이너에 전역 설치된 것을 쓴다(로컬이면 `npm i -g playwright` 후 `npx playwright install chromium`).
+ * --strips 없이 돌리면 기존 strips/는 그대로 남는다(장면을 바꿨으면 --strips로 함께 다시 찍을 것). 고체 6종은 스트립 없음.
  */
 import { createRequire } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'

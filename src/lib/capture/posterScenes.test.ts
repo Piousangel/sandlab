@@ -48,13 +48,16 @@ describe('posterScenes', () => {
     }
   })
 
-  it('strip ticks are increasing and end on the poster frame', () => {
+  it('strip ticks are strictly increasing and end on the poster frame (every non-block scene)', () => {
+    // 하네스는 틱을 Set으로 찾으므로 중복 틱 = 빈 프레임(리뷰 11-19: 고체 6종 스트립이 비어 있던 원인).
     for (const slug of POSTER_SLUGS) {
       const s = sceneFor(slug)
+      if (s.kind === 'block') continue
       const t = stripTicks(s)
       expect(t).toHaveLength(STRIP_FRAMES)
+      expect(new Set(t).size).toBe(STRIP_FRAMES)
       expect(t[t.length - 1]).toBe(s.ticks)
-      for (let i = 1; i < t.length; i++) expect(t[i]).toBeGreaterThanOrEqual(t[i - 1])
+      for (let i = 1; i < t.length; i++) expect(t[i]).toBeGreaterThan(t[i - 1])
     }
   })
 

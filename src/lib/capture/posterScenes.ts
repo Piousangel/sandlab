@@ -7,7 +7,9 @@
  *
  * 관 하나 = 96×192 셀 격자, 1셀 = 1px(@2x 기준 CSS 48×96). 홈 1200×600 화면에서 1셀≈1px인 실제 입자 크기와 같다.
  * (2px/셀로 키우면 기체의 2칸 주기 Margolus 줄무늬가 보여 실제와 달라 보인다 — 11-19 실측.) 엔진은 격자 밖을 벽으로 취급하므로 관 벽을 따로 두지 않는다.
- * 결정성: 엔진 난수는 (셀 좌표, 틱) 해시라 같은 장면·같은 틱 수면 같은 결과다(GPU 부동소수 차이는 렌더 색에만).
+ * 결정성: 엔진 난수는 (셀 좌표, 틱) 해시라 재료 배치(census)는 재실행해도 같다. 단 렌더 픽셀은 바이트 단위로
+ * 같지 않을 수 있다 — 11-19 독립 리뷰 실측: 같은 명령 두 번에 용암 관만 265px(최대 채널차 75)가 달랐고 나머지는 동일.
+ * 그래서 재캡처하면 바이너리가 바뀔 수 있다. 장면을 바꿨을 때만 다시 찍는다.
  */
 import { PRESETS, buildIndex, EMPTY_ID } from '../sand/materials'
 
@@ -100,7 +102,7 @@ export function brushAt(scene: PosterScene, t: number): BrushState {
   return { x, y: TUBE_H - 2 - r, r, mat }
 }
 
-/** 스트립 프레임을 찍을 틱(오름차순, 마지막 = 포스터 틱). 선택된 관에 '부어지는' 1회 재생용(S7). */
+/** 스트립 프레임을 찍을 틱(엄격 오름차순, 마지막 = 포스터 틱). 선택된 관에 '부어지는' 1회 재생용(S7). block 장면은 스트립 없음. */
 export function stripTicks(scene: PosterScene, frames = STRIP_FRAMES): number[] {
   const out: number[] = []
   for (let i = 1; i <= frames; i++) out.push(Math.max(1, Math.round((scene.ticks * i) / frames)))

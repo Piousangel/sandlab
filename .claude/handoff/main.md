@@ -3,7 +3,9 @@
 - **판을 바꾸는 발견: 헤드리스 WebGPU 된다.** 크로미움 `--enable-unsafe-webgpu --enable-features=Vulkan --use-angle=swiftshader --use-vulkan=swiftshader` + **localhost 출처**(about:blank·file://은 navigator.gpu 없음)면 SwiftShader 어댑터가 잡힌다. 단 **캔버스 표시(스왑체인)는 못 한다** — DOM·OffscreenCanvas 모두 첫 프레임에 "Device was destroyed". 우회: `getContext('webgpu')`를 자체 텍스처로 받는 가짜 컨텍스트(scripts/capture/posters.ts `FakeSurface`) → copyTextureToBuffer. 엔진 무수정. 위 "390 실캡처 불가"류 메모는 이걸로 풀 수 있다(03시 QA·P6 골든셋 e2e에 재사용).
 - 함정 2: SwiftShader가 느려 엔진 적응형 품질이 lite로 떨어져 **블룸을 건너뛰고 이전 장면 발광이 남는다** → 하네스에서 매 틱 `lite=false` 고정.
 - 함정 3: Vite 개발 서버로 띄울 때 `optimizeDeps.noDiscovery` + `hmr:false` 안 하면 자동 새로고침이 캡처를 끊는다. vite는 vitest 하위 의존성이라 vitest 기준 resolve.
-- 산출: `node scripts/capture-posters.mjs --strips`(약 140초) → `public/ui-next/posters/atlas.webp`(18관 6×3, 96×192px/관=1셀 1px, 32KB) + `atlas.json`(좌표·census) + `strips/<slug>.webp`(12프레임, 붓는 과정 1회 재생, 마지막=포스터). 장면 정의는 순수 함수 `src/lib/capture/posterScenes.ts`(테스트 6).
+- 산출: `node scripts/capture-posters.mjs --strips`(약 150초) → `public/ui-next/posters/atlas.webp`(18관 6×3, 96×192px/관=1셀 1px) + `atlas.json`(좌표·census) + `strips/<slug>.webp`(가루·액체·기체 12종만, 12프레임, 붓는 과정 1회 재생, 마지막=포스터; 고체 6종은 스트립 없음). **빈칸은 투명**(S1 = A 라이트: Bone 유리관 안에 얹는 용도), 발광 후광은 색을 펴고 밝기만큼 알파.
+- 결정성: census(재료 배치)는 재실행해도 같지만 렌더 픽셀은 용암 관만 조금 달라질 수 있음(리뷰 실측) → 장면을 바꿀 때만 다시 찍기.
+- 라이트 바탕에서 보이는 것: 떨어지는 줄기·기체는 엔진이 움직이는 셀을 줄마다 어둡게 칠해서 Bone 위에선 검은 줄무늬처럼 보인다(엔진 셰이딩 그대로, 스트립 앞 프레임에만 해당). P6에서 거슬리면 스트립 대신 정지 포스터만 쓰기. 장면 정의는 순수 함수 `src/lib/capture/posterScenes.ts`(테스트 6).
 - 아이콘 v1(서브에이전트, 별도 PR): `src/ui-next/icons/`(27종, 알갱이 점, currentColor), `public/ui-next/icons.svg`, `npx tsx scripts/gen-icons.mts --check`, 시트 docs/design/redesign-v2/icons-sheet.png. 약한 것: pour·star-full·star-empty·strata·gallery(20px에서 모호) — P1/P3에서 손볼 후보.
 - 둘 다 아무 페이지도 import 안 함 → prod HTML diff 0(정적 파일만 out/ui-next/에 추가).
 - 실물 관찰(P6 설계자에게): 기체(증기·연기)는 실엔진에서도 1px 주기 가로 줄무늬(Margolus)가 보인다, 산·용암은 블룸으로 연노랑에 가깝게 하얗게 탄다. 가루는 45° 원뿔. 시안 텍스처보다 덜 예쁘지만 '진짜'다 — 시험관 CSS 마스크·크롭으로 다듬을 것.
