@@ -33,7 +33,7 @@ import { dockMode, dockRows } from '@/lib/spill/client/dock'
 import FloatButtons from './FloatButtons'
 import ResultCard from './ResultCard'
 import Onboarding from './Onboarding'
-import { C, starRow } from './ui'
+import { C, K, starRow } from './ui'
 
 interface Props {
   level: LevelDef
@@ -62,15 +62,18 @@ const TOAST_MS = 1600
 const AFTERGLOW_TICKS = 600
 
 const CSS = `
-.spill-root{background:${C.bg};color:${C.text}}
+.spill-root{background:${K.bg};color:${K.ink}}
 .spill-main{position:relative;height:100dvh;overflow:hidden;display:flex;flex-direction:column;user-select:none;-webkit-user-select:none}
 .spill-panel{box-sizing:border-box;padding:24px 16px 48px;max-width:720px;margin:0 auto;line-height:1.6;font-size:15px}
 .spill-panel h2{font-size:17px;margin:20px 0 8px}
 .spill-panel ul{padding-left:20px;margin:0}
 @media (min-width:900px){
   .spill-root{display:grid;grid-template-columns:minmax(0,1fr) 320px;height:100dvh;overflow:hidden}
-  .spill-panel{height:100dvh;overflow-y:auto;border-left:1px solid ${C.line};max-width:none;margin:0;padding:20px 20px 40px}
+  .spill-panel{height:100dvh;overflow-y:auto;border-left:1px solid ${K.line};max-width:none;margin:0;padding:20px 20px 40px}
 }
+[aria-label=Goals]::-webkit-scrollbar{display:none}
+@keyframes spill-pop{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.spill-pop{animation:none!important}}
 @keyframes spill-up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 @keyframes spill-msg{from{opacity:0}to{opacity:1}}
 @keyframes spill-hand-drag{0%{transform:translate(var(--fx),var(--fy));opacity:0}12%{transform:translate(var(--fx),var(--fy));opacity:1}70%{transform:translate(var(--tx),var(--ty));opacity:1}86%,100%{transform:translate(var(--tx),var(--ty));opacity:0}}
@@ -663,14 +666,14 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
           {desc.goals.map((g, k) => {
             const t = s.targets.filter((x) => x.kind !== 'bad')[k]
             return (
-              <li key={k} style={{ color: t?.latched ? C.green : undefined }}>
+              <li key={k} style={{ color: t?.latched ? K.greenText : undefined }}>
                 {g}
                 {t?.latched ? ' ✓' : ''}
               </li>
             )
           })}
           {desc.warnings.map((w) => (
-            <li key={w} style={{ color: '#ffb3ad' }}>{w}</li>
+            <li key={w} style={{ color: K.coralText }}>{w}</li>
           ))}
         </ul>
         <h2>Stars</h2>
@@ -680,7 +683,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children }: Prop
           <li>★ {desc.par ?? 'No par for this level'}</li>
         </ul>
         {best > 0 && (
-          <p style={{ margin: '10px 0 0', color: '#ffd54a' }}>Your best: {starRow(best)}</p>
+          <p style={{ margin: '10px 0 0', color: K.accentText }}>Your best: {starRow(best)}</p>
         )}
         {children}
       </aside>

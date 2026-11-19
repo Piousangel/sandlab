@@ -4,6 +4,9 @@ import type { PlayState } from '../play/controller'
 export const DOCK_ROW_H = 21
 export const DOCK_PAD = 20
 export const DOCK_COMPACT_MIN = 30
+/** 목표 칩 한 줄 실제 높이(GoalDock: 링 28 + padding 4 + border 4). 이 값 + 여유 8이면 full. */
+export const DOCK_CHIP_H = 36
+export const DOCK_FULL_MIN = DOCK_CHIP_H + 8
 
 export type DockMode = 'full' | 'compact' | null
 
@@ -16,7 +19,8 @@ export interface DockRow {
 }
 
 export function dockMode(space: number, rows: number): DockMode {
-  if (space >= (rows + 1) * DOCK_ROW_H + DOCK_PAD) return 'full'
+  void rows // 칩은 한 줄(가로 스크롤)이라 목표 수와 무관하게 높이는 일정
+  if (space >= DOCK_FULL_MIN) return 'full'
   return space >= DOCK_COMPACT_MIN ? 'compact' : null
 }
 

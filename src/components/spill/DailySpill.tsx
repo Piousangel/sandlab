@@ -13,7 +13,7 @@ import { dailyIdFor, dayNumber, loadDaily, saveDaily, shareText, type DailyRec }
 import { trackEvent } from '@/lib/sand/gallery'
 import type { LevelDef } from '@/lib/spill/level/define'
 
-const a = { color: '#eef1f6' } as const
+const a = { color: '#A04F00', fontWeight: 700 } as const
 
 export default function DailySpill({ children }: { children?: ReactNode }) {
   const [today, setToday] = useState<{ n: number; level: LevelDef } | null>(null)
@@ -71,12 +71,12 @@ export default function DailySpill({ children }: { children?: ReactNode }) {
           <>
             <button
               onClick={doShare}
-              style={{ background: '#f5a623', color: '#07090D', border: 0, borderRadius: 8, padding: '8px 14px', fontWeight: 700, cursor: 'pointer' }}
+              style={{ background: '#F28A1B', color: '#3B2A1A', border: 0, borderRadius: 999, boxShadow: '0 3px 0 #C96A08', padding: '8px 14px', fontWeight: 700, cursor: 'pointer' }}
             >
               {share === 'copied' ? 'Copied ✓' : share === 'shared' ? 'Shared ✓' : 'Share result'}
             </button>
             {share === 'manual' && (
-              <textarea readOnly value={text} onFocus={(e) => e.currentTarget.select()} rows={3} style={{ display: 'block', marginTop: 8, width: '100%', background: '#111', color: '#eef1f6', border: '1px solid #333', borderRadius: 6, fontSize: 12.5 }} />
+              <textarea readOnly value={text} onFocus={(e) => e.currentTarget.select()} rows={3} style={{ display: 'block', marginTop: 8, width: '100%', background: '#FFFDF6', color: '#3B2A1A', border: '2px solid #EAD9B8', borderRadius: 6, fontSize: 12.5 }} />
             )}
           </>
         )}

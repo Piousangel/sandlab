@@ -11,4 +11,4 @@
 | 2026-11-17 | /daily를 Spill 엔진으로 교체(폰·CPU, 날짜별 레벨, 공유 문구) + daily_start/daily_clear 계측 | /daily | typecheck·test 1062·spill:verify 10/10·build·verify-ads·로컬 빌드 /daily 렌더 확인 | 옛 challenge 코드·/api/daily는 롤백용으로 유지(후속 정리). 기대: 7일 daily_start ≥ 20 |
 | 2026-11-17 (20시) | 출시 확인: #28 머지·deploy success, 마케팅 보강·portfolio.md 신설 | docs | 문서만(출시 아님) | 라이브 /daily는 프록시로 미확인 |
 | 2026-11-18 | Spill 2-1 Wooden Door + 공략 + 판정기(연소 중 정체 안 걸림) + 불 전용 실패 문구 + 월드 첫 레벨 맛보기 개방 | /play/2-1, /play/2-1/guide | typecheck·test·spill:verify·build·verify-ads (결과는 PR) | 독립 리뷰 반영(문구 spark만, 2-1 잠금 예외). 봇 2종은 미구현 — 다음 세션 |
-| 2026-11-19 | (예정) Spill UI 개편 1단계: 크림 토큰·슬림 HUD·목표 칩·하단 컨트롤 | /play/*, /daily | 13시 세션 | 오늘 06시는 회의·R2 기획만 |
+| 2026-11-19 | Spill UI 개편 1단계(크림 토큰·SVG HUD·목표 링 칩·입체 RUN) — 혹평 5.5 수정 후 재리뷰 대기 | /play/*, /daily | typecheck·test 통과, 나머지 PR 참조 | 390/360 실캡처 못 함 |
