@@ -50,7 +50,7 @@ describe('상위 N% 한 줄(standingLine) — 자리와 인터페이스만, 가�
     expect(standingLine({ topPercent: Number.NaN, sample: 100 })).toBeNull()
   })
   it('값이 있으면 반올림한 정수 퍼센트(최소 1)', () => {
-    expect(standingLine({ topPercent: 17.6, sample: 40 })).toBe('Top 18% of today’s clears')
+    expect(standingLine({ topPercent: 17.6, sample: 60 })).toBe('Top 18% of today’s clears')
     expect(standingLine({ topPercent: 0.2, sample: 400 })).toBe('Top 1% of today’s clears')
   })
 })
@@ -181,7 +181,7 @@ describe('SpillResult 렌더(SSR)', () => {
   })
   it('상위 N%: 데이터 없으면 줄이 없다, 있으면 한 줄', () => {
     expect(renderToStaticMarkup(<SpillResult {...dailyProps(true)} />)).not.toContain('sl-rs-standing')
-    expect(renderToStaticMarkup(<SpillResult {...dailyProps(true, { topPercent: 18, sample: 50 })} />)).toContain('Top 18% of today')
+    expect(renderToStaticMarkup(<SpillResult {...dailyProps(true, { topPercent: 18, sample: 80 })} />)).toContain('Top 18% of today')
   })
   it('연습 판: +1 stratum 없음, 연습 문구, 이미지 공유 없음(보드는 연습 판·기록은 공식 — 섞지 않는다), 주 행동 = 공식 기록 텍스트', () => {
     const html = renderToStaticMarkup(<SpillResult {...dailyProps(false)} />)

@@ -49,6 +49,8 @@ interface Props {
   /** 새 HUD(프리뷰) 전용: 제목 옆 표식(기본 레벨 id — 데일리는 No.N)과 뒤로 가기 링크. */
   badge?: string
   back?: { href: string; label: string }
+  /** 결과 카드 Share가 쓸 문구(데일리: 데일리 공유 문구·/daily 링크). 없으면 레벨 공유 문구(/play/<id>). */
+  share?: { text: string; onClick?(): void }
 }
 
 interface Card {
@@ -122,7 +124,7 @@ function measure(probe: HTMLElement | null): Layout {
 
 const cellCenter = (r: { x: number; y: number; w: number; h: number }) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
 
-export default function SpillPlayer({ level, nextId, onCleared, children, badge, back }: Props) {
+export default function SpillPlayer({ level, nextId, onCleared, children, badge, back, share }: Props) {
   const [ctl] = useState(() => new SpillController(level))
   const [audio] = useState(() => new SpillAudio())
   const fx = useRef(new Fx(level.salt || 1))
@@ -619,7 +621,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
       onSkip={() => fx.current.skip()}
       solution={card.solution}
       bottom={l.safeBottom + 8}
-      shareText={card.daily?.text}
+      share={share}
     />
   ))
 

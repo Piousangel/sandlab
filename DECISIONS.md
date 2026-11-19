@@ -88,11 +88,19 @@
 - **ticks·mask 수집(prod 포함)**: SpillPlayer onCleared가 `{stars, moves, ticks, mask: starMask}`를 넘기고 DailySpill이 첫 클리어 때만 saveDaily로 저장. 재도전은 loadDaily 검사 + saveDaily 자체 가드로 덮지 않는다. P2의 "P5부터"를 P4로 당김(오너 지시).
 - **prod 번들 변화의 성격**: 클라이언트 컴포넌트가 `@ui-shell`(classic.ts)을 처음 import해 클라이언트 그래프에 모듈이 하나 늘어나면서 webpack deterministic 모듈 id 두 개(4109↔6490)가 맞바뀌었다 — 그래서 무관한 청크(홈·에디터·벤치)도 바이트가 달라진다(내용 동일). /spill/bench HTML은 RSC 페이로드의 그 id만 다르다.
 
+## 2026-11-20 '일일 출시'와 '리디자인 prod diff 0'의 상충 조정 (06시 회의)
+- 상충: 오너 원칙 "하루 1개 이상 사용자에게 보이는 출시"(OPERATING) vs 리디자인 계획 "P1~P11은 프리뷰에서만, prod HTML diff 0". 11-19 P1~P4는 prod 체감 변화가 거의 0이었다.
+- 결정: 리디자인 순서·prod diff 0 원칙은 그대로 두고, **각 P PR에 prod에 바로 내도 안전한 조각(데이터·문구·버그·접근성, 장식 변경 없음) 1개 이상을 싣는다.** 그 조각이 그날의 '출시'다. 조각이 없는 날은 버그 장부(docs/team/bugs.md) 항목 1개를 같은 날 고쳐 출시한다.
+- P5의 prod 조각 = /daily 공유 문구를 shareTextV2로(레벨 id 제거). 근거·기획: docs/team/specs/2026-11-20-p5-result-share.md.
+- 버린 안: (a) 프리뷰 출시를 출시로 친다 — 사용자가 못 보니 원칙 위반. (b) 리디자인을 멈추고 레벨을 낸다 — 오너 최최우선 지시 위반.
+
 ## 2026-11-20 리디자인 P5 결과 화면·공유 이미지 — 공유 텍스트 prod 교체, 연습 판은 이미지 공유 없음, 상위 N%는 자리만
 - **셸 치환**: `@ui-shell`에 `SpillResult`를 더했다(classic = null → prod는 지금 ResultCard 그대로). SpillPlayer는 카드가 뜰 때 SpillResult가 있으면 그것을, 없으면 ResultCard를 그린다. 결과 화면은 플레이 헤더(48/56) 아래를 덮는 Bone 면 — 헤더(뒤로·소리·메뉴)는 그대로.
 - **액자 = 실제 종료 프레임**: 결과 화면이 처음 그려질 때(useLayoutEffect) 엔진 캔버스(재료 + 발광 합성)를 160×240 캔버스로 한 번 복사한다. 오버레이(목표 테두리·연출 입자)는 넣지 않는다(작품만 건다). 이후 잔광 시뮬이 돌아도 액자는 멈춘 그림.
-- **공유 텍스트(prod 포함)**: 데일리 공유는 전부 `shareTextV2`(레벨 id 없음). prod 결과 카드의 Share는 지금까지 데일리에서도 레벨 텍스트(`Sandlab Spill 1-3 ★★☆ … sandlab.app/play/1-3`)를 내보내 9일 주기가 드러났다 — DailySpill.onCleared가 돌려주는 `DailyClear.text`를 쓰게 했다. 옛 `daily.ts shareText`·테스트 삭제. shareTextV2·레벨 모드 v2 텍스트는 새 파일 `src/lib/spill/client/share.ts`로 옮겼다 — daily.ts는 홈 번들에도 들어가는 공용 모듈이라 거기 두면 score.ts 포맷터까지 홈 청크로 끌려간다(첫 빌드에서 실제로 봄).
+- **공유 텍스트(prod 포함)**: 데일리 공유는 전부 `shareTextV2`(레벨 id 없음). 결과 카드 Share는 #73(03시 QA)이 단 `share` prop으로 DailySpill 문구를 쓰는데, 그 문구가 옛 `shareText`(`Sandlab Daily #42 (1-3) ⭐⭐ …` — 레벨 id)였다 → 이 PR에서 그 문구를 shareTextV2로 바꿔 결과 카드·본문 버튼이 함께 바뀐다(ResultCard 코드 변경 없음). 옛 `daily.ts shareText`·테스트 삭제. shareTextV2·레벨 모드 v2 텍스트는 새 파일 `src/lib/spill/client/share.ts`로 옮겼다 — daily.ts는 홈 번들에도 들어가는 공용 모듈이라 거기 두면 score.ts 포맷터까지 홈 청크로 끌려간다(첫 빌드에서 실제로 봄).
 - **공식 기록 vs 연습(S4)**: 공유 텍스트·이미지 숫자는 항상 공식 기록(그날 첫 클리어). **연습 판에서는 이미지 공유를 뺀다** — 액자 보드는 연습 판인데 숫자는 공식 기록이라 두 판이 섞인다(독립 리뷰 차단). 주 행동이 "Copy today's result"(공식 기록 텍스트)로 바뀌고 문구로 "Practice run…" 명시. 저장이 막힌 기기는 세션 안 두 번째 클리어부터 연습(ref).
 - **공유 이미지**: 1:1 1080 · OG 1200×630 두 포맷만, 왼쪽 못·걸이줄·액자(보드 정수 배율 3/2), 오른쪽 Daily No.N(레벨 모드는 이름)·유리알·수·시간·sandlab.app. Bone 평면·블러 없음 → PNG가 작다(실측은 PR). 250KB를 넘으면 배율을 낮춰 다시 그린다. 결과 화면이 뜬 뒤 300ms에 두 포맷을 미리 렌더 — 누른 순간 navigator.share를 불러야 iOS 사용자 활성화가 살아 있다. 경로: Web Share Level 2(files) → 파일 공유, 실패(Abort 제외) 시 터치 기기는 텍스트 복사, 데스크톱(pointer: fine)은 다운로드, 파일 공유 없는 폰은 텍스트 복사.
-- **상위 N%**: 서버 집계가 없어 `DailyStanding` 인터페이스와 `standingLine()`(값 없음·표본 < 20이면 null → 줄 미렌더)만. DailySpill은 늘 null. 집계 설계 제안은 계획서 "P5 메모"(D1 `spill_daily`, 첫 클리어만 제출, 퍼센트·표본만 응답, 개인정보·위조 방어 단계). 프리뷰가 같은 D1을 쓰는 문제와 함께 오너 결정 대기.
+- **상위 N%**: 서버 집계가 없어 `DailyStanding` 인터페이스와 `standingLine()`(값 없음·표본 < 50이면 null → 줄 미렌더)만. 06시 기획 v1의 '레벨 hist로 Faster than N%'는 쓰지 않았다 — /play 클리어와 섞인 전 기간 표본이라 '오늘 클리어한 사람 중'이 아니다(기획 반증 5와 같은 우려). DailySpill은 늘 null. 집계 설계 제안은 계획서 "P5 메모"(D1 `spill_daily`, 첫 클리어만 제출, 퍼센트·표본만 응답, 개인정보·위조 방어 단계). 프리뷰가 같은 D1을 쓰는 문제와 함께 오너 결정 대기.
 - **모바일 세로 예산**: 보드 높이 = 화면 높이 − 397(헤더·못·줄·매트·캡션 ≤170·stratum·Share image·간격) → 360×640에서도 Share image가 첫 화면 안(테스트 고정). 데스크톱(≥900)은 액자 왼쪽·캡션 오른쪽 2열, 1440×900에서 보드 320×480.
+- **열린 문제 — 공유 이미지 스포일러(06시 기획 반증 1, 이 PR은 프리뷰 전용이라 prod 노출 0)**: 종료 프레임은 판 위치(파낸 자리·물줄기)를 그대로 보여 준다 — 같은 날 모두 같은 퍼즐이라 데일리 이미지는 정답 힌트가 된다. 컷오버(P12) 전에 정한다: ① 그날 데일리 이미지만 보드를 흐리게/모자이크(8셀) ② 다음 날부터 원본 ③ 결과 영역(목표 항아리 아래)만 크롭. 지금 구현은 요구대로 원본 프레임.
+- **공유 시트에는 files + title만**(text 없음): files와 text를 같이 주면 일부 앱(WhatsApp)이 이미지를 버린다(06시 리서치 2). 텍스트는 Copy text.

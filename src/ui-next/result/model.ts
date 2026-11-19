@@ -9,8 +9,8 @@ import type { DailyStanding } from '../shell/spillTypes'
 /** 공유 PNG 한 장의 상한(계획서 P5 기준). 넘으면 보드 배율을 한 단계씩 낮춰 다시 그린다. */
 export const PNG_BUDGET = 250 * 1024
 
-/** "상위 N%" 줄을 보여 줄 최소 표본 — 이보다 적으면 퍼센트가 흔들려 거짓말이 된다(줄을 그리지 않는다). */
-export const MIN_STANDING_SAMPLE = 20
+/** "상위 N%" 줄을 보여 줄 최소 표본 — 이보다 적으면 퍼센트가 흔들려 거짓말이 된다(줄을 그리지 않는다). hist.ts MIN_SAMPLE과 같은 50(06시 기획 v1). */
+export const MIN_STANDING_SAMPLE = 50
 
 export type StarParts = { clear: boolean; gems: boolean; par: boolean; count: number }
 

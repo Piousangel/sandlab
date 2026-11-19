@@ -156,7 +156,7 @@ export function SpillResult(p: SpillResultProps) {
     const finePointer = !!window.matchMedia?.('(pointer: fine)').matches
     const route = shareRoute({
       canShareFiles:
-        typeof navigator.canShare === 'function' && typeof File === 'function' && navigator.canShare({ files: [new File([new Uint8Array(1)], 'probe.png', { type: 'image/png' })], text }),
+        typeof navigator.canShare === 'function' && typeof File === 'function' && navigator.canShare({ files: [new File([new Uint8Array(1)], 'probe.png', { type: 'image/png' })], title: 'Sandlab' }),
       finePointer,
     })
     const pending = png(fmt)
@@ -173,7 +173,8 @@ export function SpillResult(p: SpillResultProps) {
     const name = shareFileName(daily, level.name, fmt)
     if (route === 'share-file') {
       try {
-        await navigator.share({ files: [new File([blob], name, { type: 'image/png' })], text })
+        // files + title만 — files와 text를 같이 주면 일부 앱(WhatsApp)이 이미지를 버린다(06시 리서치 2). 텍스트는 Copy text로 따로
+        await navigator.share({ files: [new File([blob], name, { type: 'image/png' })], title: card.kicker + ' ' + card.title })
         setStatus({ text: 'Shared.' })
         return
       } catch (e) {
