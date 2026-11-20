@@ -12,7 +12,7 @@
  */
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useCallback, useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { loadSoundPref, saveSoundPref } from '@/lib/spill/render/audio'
 import { Icon, IconSprite } from '../icons/Icon'
 import { DAILY_HREF, MENU_LINKS, NAV, isActive, type ShellLink } from './nav'
@@ -25,6 +25,15 @@ const WM_KEY = 'sl.wordmark.v1'
 // 파싱 중에 동기 실행 — wordmark가 그려지기 전에 html에 표시를 단다(마운트 뒤에 달면 글자가 보였다가 다시 떨어진다).
 const WM_SCRIPT = `try{if(!localStorage.getItem('${WM_KEY}')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.setAttribute('data-sl-wm','drop')}catch(e){}`
 const LETTERS = 'SANDLAB'.split('')
+
+/** 시트 안 링크: 늘 닫은 뒤 전체 이동이라 next/link가 필요 없다(열 때 prefetch만 생긴다 — 독립 리뷰). */
+function SheetLink({ link, className, current, onClick }: { link: ShellLink; className: string; current: boolean; onClick: (e: ReactMouseEvent<HTMLAnchorElement>) => void }) {
+  return (
+    <a href={link.href} className={className} aria-current={current ? 'page' : undefined} onClick={onClick}>
+      {link.label}
+    </a>
+  )
+}
 
 function NavLink({ link, className, current, onClick }: { link: ShellLink; className: string; current: boolean; onClick?: (e: ReactMouseEvent<HTMLAnchorElement>) => void }) {
   const props = { className, 'aria-current': current ? ('page' as const) : undefined, onClick }
@@ -103,6 +112,7 @@ function DailyPill() {
  */
 export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: string | null; sound?: boolean; onSound?: () => void }) {
   const [open, setOpen] = useState(false)
+  const btnRef = useRef<HTMLButtonElement>(null)
   // 소리 설정은 Spill 화면과 같은 키(spill.v1.sound). SSR에는 기본값(켜짐)을 그리고 마운트 뒤 실제 값을 읽는다.
   const [soundOwn, setSound] = useState(true)
   useEffect(() => setSound(loadSoundPref()), [])
@@ -135,6 +145,7 @@ export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: s
   return (
     <>
       <button
+        ref={btnRef}
         type="button"
         className="sl-hit sl-icon-btn"
         aria-label="Menu"
@@ -145,7 +156,7 @@ export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: s
       >
         <Icon name="menu" />
       </button>
-      <BottomSheet open={open} onClose={onClose} id="sl-menu" label="Menu" historyMark="__slMenu" placement="menu" keepMounted>
+      <BottomSheet open={open} onClose={onClose} id="sl-menu" label="Menu" historyMark="__slMenu" placement="menu" keepMounted returnFocus={btnRef}>
         {(api) => (
           <div className="sl-sheet-in">
             <div className="sl-sheet-top">
@@ -158,7 +169,7 @@ export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: s
               <ul className="sl-sheet-nav">
                 {NAV.map((l) => (
                   <li key={l.href}>
-                    <NavLink link={l} className="sl-sheet-link sl-sheet-link-big" current={isActive(pathname, l.href)} onClick={go(api)} />
+                    <SheetLink link={l} className="sl-sheet-link sl-sheet-link-big" current={isActive(pathname, l.href)} onClick={go(api)} />
                   </li>
                 ))}
                 <li>
@@ -183,7 +194,7 @@ export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: s
             <ul className="sl-sheet-links">
               {MENU_LINKS.map((l) => (
                 <li key={l.href}>
-                  <NavLink link={l} className="sl-sheet-link" current={isActive(pathname, l.href)} onClick={go(api)} />
+                  <SheetLink link={l} className="sl-sheet-link" current={isActive(pathname, l.href)} onClick={go(api)} />
                 </li>
               ))}
             </ul>

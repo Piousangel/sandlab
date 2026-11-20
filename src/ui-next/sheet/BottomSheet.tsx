@@ -16,7 +16,7 @@
  * touchmove 첫 1~2px 흔들림(4px 누적), 열리는 애니메이션 중 닫기·끌기(애니메이션 취소), 한글 조합 중 Esc(isComposing).
  * 시트 안에서 URL을 바꾸는 화면(홈 공유)은 열린 동안 바꾸지 말고 onClose에서 바꾼다 — 시트 칸의 URL을 바꾸면 닫을 때 history.back이 옛 URL로 되돌린다.
  */
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { CLOSE_MS, DRAG_SLOP, SPRING_MS, dimOpacity, dragOffset, keyboardInset, releaseVelocity, shouldDismiss, type Sample } from './sheetGesture'
 
@@ -50,6 +50,7 @@ export function BottomSheet({
   placement = 'center',
   className = '',
   keepMounted = false,
+  returnFocus,
   children,
 }: {
   open: boolean
@@ -66,6 +67,8 @@ export function BottomSheet({
   className?: string
   /** 닫혀 있을 때도 내용을 hidden으로 그린다(SSR HTML에 메뉴 링크를 남기려고 — 예전 닫힌 <dialog>와 같은 효과). */
   keepMounted?: boolean
+  /** 닫힌 뒤 포커스를 돌려줄 곳(여는 버튼). Safari는 버튼을 눌러도 포커스를 주지 않아 열 때의 activeElement가 body다(독립 리뷰). */
+  returnFocus?: RefObject<HTMLElement | null>
   children: ReactNode | ((api: SheetApi) => ReactNode)
 }) {
   const [mounted, setMounted] = useState(false)
@@ -145,7 +148,8 @@ export function BottomSheet({
     const root = rootRef.current
     const panel = panelRef.current
     if (root) delete root.dataset.state
-    const returnTo = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const active = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null
+    const returnTo = active ?? returnFocus?.current ?? null
     panel?.focus({ preventScroll: true })
     try {
       window.history.pushState({ ...(window.history.state ?? {}), [historyMark]: 1 }, '')
@@ -268,7 +272,7 @@ export function BottomSheet({
       afterRef.current = undefined
       if (after) window.setTimeout(after, 0)
     }
-  }, [open, mounted, historyMark, close, startExit, ours])
+  }, [open, mounted, historyMark, close, startExit, ours, returnFocus])
 
   // 끌어 닫기(Pointer Events)
   useEffect(() => {

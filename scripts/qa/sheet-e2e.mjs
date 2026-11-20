@@ -6,6 +6,7 @@
  *   pnpm build:preview && node scripts/qa/sheet-e2e.mjs                 # sheet + ux
  *   node scripts/qa/sheet-e2e.mjs --only sheet --repeat 3 --out <dir>
  *   node scripts/qa/sheet-e2e.mjs --only sheet --capture docs/design/bottom-sheet   # + 끌기 녹화 webm·390/1440 캡처
+ *   --require-gpu: 홈 공유 시트 흐름(WebGPU 필요)을 건너뛰면 실패. 없으면 건너뜀을 따로 센다(통과로 세지 않는다).
  *
  * 떨어뜨리는 오답: '손잡이가 그려져 있지만 끌어도 안 닫힘', '스크롤하다 시트가 닫힘', '닫혔는데 배경이 스크롤돼 있음',
  * '닫은 뒤 뒤로 가기가 한 번 먹지 않음(history 빈칸)', '닫기 연타로 이전 페이지까지 빠짐', '시트 링크로 이동한 뒤 뒤로 가기 두 번',
@@ -25,6 +26,8 @@ const OUT = resolve(ROOT, opt('--out', 'out'))
 const ONLY = opt('--only', 'sheet,ux').split(',')
 const REPEAT = Number(opt('--repeat', '1'))
 const CAPTURE = opt('--capture', '') ? resolve(ROOT, opt('--capture')) : null
+const REQUIRE_GPU = argv.includes('--require-gpu') // 공유 시트 흐름을 건너뛰면 실패로(WebGPU 어댑터가 있는 기계에서)
+const skipped = []
 
 if (!existsSync(join(OUT, 'index.html')) || !/<html[^>]*\sclass="[^"]+"/.test(readFileSync(join(OUT, 'index.html'), 'utf8'))) {
   console.error(`${OUT}는 프리뷰 빌드가 아니다(<html class> 없음) — pnpm build:preview 먼저`)
@@ -226,6 +229,33 @@ async function sheetSuite(round) {
     expect(await page.evaluate(() => window.__alive === 1), '페이지가 새로 로드됨')
   })
 
+  await check('클릭으로 연 경우(Safari처럼 버튼에 포커스 없음)에도 닫히면 메뉴 버튼으로 포커스', async () => {
+    await page.evaluate(() => {
+      document.activeElement?.blur?.()
+      document.querySelector('header button[aria-label="Menu"]').click()
+    })
+    await page.locator(SHEET).waitFor()
+    await wait(page, 380)
+    await page.keyboard.press('Escape')
+    await closedBy(page)
+    expect(await page.locator('header button[aria-label="Menu"]').first().evaluate((el) => el === document.activeElement), '포커스가 body로 샘')
+  })
+
+  await check('Spill 플레이 화면(HUD) 메뉴: 뒤로 가기로 닫힘, 페이지 그대로', async () => {
+    await page.goto(srv.base + '/play', { waitUntil: 'load' })
+    await page.goto(srv.base + '/play/1-1', { waitUntil: 'load' })
+    await page.evaluate(() => (window.__alive = 1))
+    await page.locator('button[aria-label="Menu"]').first().click()
+    await page.locator(SHEET).waitFor()
+    await wait(page, 380)
+    await page.goBack()
+    await closedBy(page)
+    expect(page.url().endsWith('/play/1-1'), `URL ${page.url()}`)
+    expect(await page.evaluate(() => window.__alive === 1), '새로 로드됨')
+    await page.goBack()
+    await page.waitForURL(/\/play$/, { timeout: 3000 })
+  })
+
   await check('한글 조합 중 Esc는 닫지 않는다', async () => {
     await openMenu(page, { fresh: false })
     await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', isComposing: true, bubbles: true })))
@@ -289,7 +319,10 @@ async function sheetSuite(round) {
 
   await check('홈 공유 시트: 열린 동안 주소 그대로 → 닫으면 #g= 주소, 새로고침 없음, 뒤로 가기 한 번에 이전 페이지', async () => {
     const r = await shareFlow(page)
-    if (r === 'skip') return console.log('       (WebGPU 어댑터 없음 — 공유 시트 흐름 건너뜀)')
+    if (r === 'skip') {
+      if (REQUIRE_GPU) throw new Error('WebGPU 어댑터 없음(--require-gpu)')
+      skipped.push('홈 공유 시트(WebGPU 어댑터 없음)')
+    }
   })
 
   await ctx.close()
@@ -509,7 +542,7 @@ if (CAPTURE) await capture(CAPTURE)
 
 await browser.close()
 srv.close?.()
-console.log(`\n${passed} 통과, ${fails.length} 실패`)
+console.log(`\n${passed} 통과, ${fails.length} 실패${skipped.length ? `, 건너뜀 ${skipped.length}: ${skipped.join(' · ')}` : ''}`)
 if (fails.length) {
   for (const f of fails) console.log('  - ' + f)
   process.exit(1)

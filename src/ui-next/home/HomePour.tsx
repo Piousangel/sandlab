@@ -307,6 +307,7 @@ export function HomePour() {
   // 공통 BottomSheet. 공유·발행이 만든 주소는 시트가 닫힌 뒤(onCloseShare) 주소창에 넣는다 — 열린 동안 바꾸면 시트의 history 칸
   // 주소가 바뀌어, 닫을 때 history.back이 옛 주소로 되돌리고(#g= 링크로 들어온 경우 hashchange → 새로고침으로 작업이 날아간다) 주소창에 남지도 않는다.
   const [shareOpen, setShareOpen] = useState(false)
+  const shareBtnRef = useRef<HTMLButtonElement>(null)
   const shareOpenRef = useRef(false)
   const pendingUrl = useRef<string | null>(null)
   /** 주소창에 넣을 주소: 시트가 열려 있으면 닫힌 뒤로 미룬다. */
@@ -605,6 +606,7 @@ export function HomePour() {
                   ))}
                 </div>
                 <button
+                  ref={shareBtnRef}
                   type="button"
                   className="sl-btn sl-dock-share"
                   aria-disabled={!hasDrawn || undefined}
@@ -631,7 +633,7 @@ export function HomePour() {
       </main>
       <ShellFooter />
 
-      <BottomSheet open={shareOpen} onClose={onCloseShare} labelledBy="sl-share-h" historyMark="__slShare" className="sl-share">
+      <BottomSheet open={shareOpen} onClose={onCloseShare} labelledBy="sl-share-h" historyMark="__slShare" className="sl-share" returnFocus={shareBtnRef}>
         {(api) => (
         <div className="sl-sheet-in">
           <div className="sl-sheet-top">
