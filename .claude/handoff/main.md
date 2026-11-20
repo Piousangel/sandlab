@@ -1,6 +1,6 @@
 # 인계 (2026-11-20 오전): 리디자인 v2 P8 「/play 전시실」 머지 — P6(#78)도 머지됨, 다음은 P9(갤러리 The Wall)
 
-- 계획서 6장 진행표가 기준. P8 = #PRNUM(브랜치 shift/redesign-p8-play). 결정은 DECISIONS 2026-11-20 P8.
+- 계획서 6장 진행표가 기준. P8 = #79(브랜치 shift/redesign-p8-play). 결정은 DECISIONS 2026-11-20 P8.
 - **전시실 = `src/ui-next/play/`**: PlayGallery.tsx(서버 — 광고 로더·새 셸 헤더·푸터를 직접 그림, ContentShell의 main이 옛 다크 인라인이라), PlayWorlds.tsx(클라이언트 — localStorage 별을 마운트 뒤 읽음, 칸 크기 고정이라 CLS 0), galleryModel.ts(순수 — 잠금은 catalog.ts 그대로, '곧 공개' = 마지막 월드가 10칸 미만일 때 최대 2칸, 주 행동 하나), LevelAside.tsx(/play/[id] 패널), play.css, play.test.tsx. 계약 타입 `shell/playTypes.ts`, classic.ts에 null 2개(PlayGallery·LevelAside).
 - **본문 문장 단일 출처**: /play 소개 2문단은 `src/app/play/page.tsx`의 `INTRO` 상수 — prod 화면과 전시실이 같이 쓴다(prod HTML 동일 확인). 문장을 고치면 두 빌드가 함께 바뀐다.
 - **레벨 썸네일**: `npx tsx scripts/gen-level-thumbs.mts`(→ public/ui-next/levels/<id>.png + levels.json). 레벨을 더하거나 맵을 고치면 다시 돌린다 — play.test가 레벨 해시 불일치·파일 누락·15KB 초과를 잡는다(일일 레벨 출시 교대가 잊기 쉬움). `--check`도 있음.
