@@ -5,6 +5,9 @@ import JsonLd, { breadcrumbs } from '@/components/JsonLd'
 import { chanceLabel, materialBySlug, materialStaticParams, reactionsOf, type ReactionLine } from '@/lib/guide/reactions'
 import { COPY } from '@/lib/guide/copy'
 import { SITE } from '@/lib/site'
+import { PRESETS } from '@/lib/sand/materials'
+// 리디자인 P10: 새 셸(프리뷰)은 Bone 재료 화면(MaterialPage), classic(prod)은 null → 아래 지금 화면 그대로
+import { MaterialPage } from '@ui-shell'
 
 export const dynamicParams = false
 
@@ -35,6 +38,12 @@ const MOVES: Record<string, string> = {
   gas: 'Gas — rises, then fades',
 }
 
+// 두 화면(prod·새 셸)이 같이 쓰는 문장 — 단어 수 diff 0
+const ODDS_NOTE =
+  'Odds are per contact check: each tick, touching cells inside the same two-by-two block are checked against the reaction table, so even a small chance happens soon after contact.'
+const NO_REACTIONS =
+  'has no reactions in Sandlab: nothing it touches changes it, and it changes nothing. What it does depends only on its weight and how it moves.'
+
 const pageSlugs = new Set(materialStaticParams().map((p) => p.slug))
 const hrefOf = (slug: string) => (pageSlugs.has(slug) ? `/materials/${slug}` : `/materials#${slug}`)
 
@@ -45,6 +54,41 @@ export default async function Page({ params }: Props) {
   if (!m || !copy?.page) notFound()
   const { causes, undergoes } = reactionsOf(slug)
   const lower = m.name.toLowerCase()
+  const crumbsLd = breadcrumbs(SITE, [{ name: 'Materials', path: '/materials' }, { name: m.name, path: `/materials/${slug}` }])
+  if (MaterialPage) {
+    // 이전/다음 = 전용 페이지가 있는 재료끼리, 재료 표(PRESETS) 순서
+    const order = PRESETS.filter((p) => pageSlugs.has(p.slug))
+    const i = order.findIndex((p) => p.slug === slug)
+    const link = (p: (typeof order)[number] | undefined) => (p ? { href: `/materials/${p.slug}`, label: p.name } : null)
+    const rows = (list: ReactionLine[]) =>
+      list.map((r) => ({ text: r.text, chance: chanceLabel(r.chance), percent: Math.round(r.chance * 100), partner: r.partner, href: hrefOf(r.partner) }))
+    return (
+      <MaterialPage
+        material={{ slug: m.slug, name: m.name, color: m.color }}
+        summary={copy.summary}
+        facts={[
+          { label: 'Movement', value: MOVES[m.movement] },
+          { label: 'Weight', value: `${m.density} / 9 (heavier sinks through lighter)` },
+          { label: 'Lifetime', value: m.lifetime === null ? 'Permanent' : 'Short-lived — fades into empty space' },
+          { label: 'Glow', value: m.emissive === 0 ? 'None' : m.emissive >= 2 ? 'Bright' : 'Faint' },
+        ]}
+        body={copy.body}
+        experiments={copy.experiments ?? []}
+        undergoesTitle={`When ${lower} touches something`}
+        causesTitle={`When something touches ${lower}`}
+        undergoes={rows(undergoes)}
+        causes={rows(causes)}
+        noReactions={`${m.name} ${NO_REACTIONS}`}
+        oddsNote={ODDS_NOTE}
+        tip={copy.tip}
+        cta={`Try ${lower} in the sandbox`}
+        prev={link(order[i - 1])}
+        next={link(order[i + 1])}
+      >
+        <JsonLd data={crumbsLd} />
+      </MaterialPage>
+    )
+  }
   const row = (r: ReactionLine) => (
     <li key={r.partner + r.text} style={{ marginBottom: 6 }}>
       {r.text}{' '}
@@ -58,7 +102,7 @@ export default async function Page({ params }: Props) {
   )
   return (
     <ContentShell>
-      <JsonLd data={breadcrumbs(SITE, [{ name: 'Materials', path: '/materials' }, { name: m.name, path: `/materials/${slug}` }])} />
+      <JsonLd data={crumbsLd} />
       <p style={{ margin: '0 0 8px', fontSize: 14 }}>
         <Link href="/materials" style={{ color: '#eef1f6', opacity: 0.6 }}>← All materials</Link>
       </p>
