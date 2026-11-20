@@ -1,0 +1,347 @@
+/*
+ * /play 전시실(리디자인 P8) + /play/[id] 설명 패널. 접두 sl-pg-(전시실)·sl-la-(레벨 패널). 전역 규칙 없음.
+ * S1 = A 라이트: 화면 전체 Bone 한 면, 어두운 면은 레벨 보드 썸네일의 유리 액자뿐.
+ * 면 규칙(R3): 면은 bone(바탕)·bone-2("How Spill works" 카드) 두 단계, 회색 면 위 회색 면 없음. 광고 안내판은 바탕 위에만(카드 밖).
+ */
+.sl-pg-page {
+  min-height: 100vh;
+  overflow-y: auto;
+  background: var(--sl-bone);
+  color: var(--sl-ink);
+}
+.sl-pg,
+.sl-pg * {
+  box-sizing: border-box;
+}
+.sl-pg {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 8px 16px 48px;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  font-family: var(--sl-font-display);
+  font-size: var(--sl-fs-body);
+  line-height: var(--sl-lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+.sl-pg :focus-visible {
+  outline: none;
+  box-shadow: var(--sl-focus);
+}
+
+/* 모노 라벨(S9: 11px, uppercase) */
+.sl-pg-lbl {
+  margin: 0;
+  font-family: var(--sl-font-mono);
+  font-weight: 500;
+  font-size: var(--sl-fs-label);
+  line-height: 14px;
+  letter-spacing: var(--sl-ls-label);
+  text-transform: uppercase;
+  color: var(--sl-ink-2);
+}
+
+/* ---------- 머리 ---------- */
+.sl-pg-head {
+  padding-top: 8px;
+}
+.sl-pg-head h1 {
+  margin: 4px 0 0;
+  font-size: 34px;
+  line-height: 38px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.sl-pg-lead {
+  margin: 6px 0 0;
+  max-width: 36em;
+  color: var(--sl-ink-2);
+}
+
+/* 주 행동 하나(Ember) — 문구만 진행에 따라 바뀌고 높이는 고정 */
+.sl-pg-cta {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  max-width: 480px;
+  padding: 0 16px;
+  border-radius: var(--sl-r-sm);
+  background: var(--sl-ember);
+  color: var(--sl-on-ember);
+  box-shadow: 0 2px 0 var(--sl-ember-edge);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.2;
+  text-decoration: none;
+}
+.sl-pg-cta > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sl-pg-cta:active {
+  transform: translateY(var(--sl-press-y));
+  box-shadow: none;
+}
+.sl-pg-msg {
+  margin: 6px 0 0;
+  min-height: 20px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--sl-ink-2);
+}
+
+/* ---------- 월드 ---------- */
+.sl-pg-world {
+  margin-top: 32px;
+}
+.sl-pg-world + .sl-pg-world {
+  margin-top: 16px;
+}
+/* 화면 밖 텍스트(스크린리더용) */
+.sl-pg-vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.sl-pg-soon {
+  position: relative;
+}
+.sl-pg-wh {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.sl-pg-wh h2 {
+  color: var(--sl-ink);
+  font-weight: 700;
+}
+.sl-pg-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--sl-bone-line);
+}
+.sl-pg-count {
+  white-space: nowrap;
+}
+.sl-pg-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px 12px;
+}
+@media (min-width: 720px) {
+  .sl-pg-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 28px 20px;
+  }
+}
+.sl-pg-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--sl-ink);
+  text-decoration: none;
+  border-radius: var(--sl-r-sm);
+  cursor: pointer;
+}
+/* 유리 액자 — 보드(엔진 empty 색)를 감싸는 어두운 유리 */
+.sl-pg-glass {
+  position: relative;
+  display: block;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--sl-kiln);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 14px -10px rgba(42, 33, 24, 0.6);
+  transition: transform var(--sl-t-quick) var(--sl-ease-pour);
+}
+.sl-pg-glass img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  image-rendering: pixelated;
+  background: var(--sl-empty);
+}
+@media (hover: hover) {
+  .sl-pg-card:hover .sl-pg-glass {
+    transform: translateY(-2px);
+  }
+}
+.sl-pg-card:active .sl-pg-glass {
+  transform: translateY(var(--sl-press-y));
+}
+.sl-pg-card.is-locked img {
+  opacity: 0.45;
+}
+.sl-pg-lock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--sl-r-pill);
+  background: var(--sl-bone);
+  color: var(--sl-ink);
+}
+.sl-pg-name {
+  /* 두 줄까지(긴 이름이 잘리지 않게) — 높이는 두 줄로 고정해 칸마다 별 줄 높이가 같다 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  min-height: 36px;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 720px) {
+  .sl-pg-name {
+    min-height: 18px;
+  }
+}
+.sl-pg-n {
+  font-family: var(--sl-font-mono);
+  font-weight: 500;
+  font-size: var(--sl-fs-label);
+  color: var(--sl-ink-2);
+}
+.sl-pg-beads {
+  display: flex;
+  gap: 2px;
+  height: 20px;
+  color: var(--sl-ink);
+}
+/* '곧 공개' 칸 — 실제 레벨 아님: 썸네일·이름·별 없이 점선 윤곽 + lock + Soon */
+.sl-pg-soon-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  aspect-ratio: 2 / 3;
+  border-radius: 12px;
+  border: 1.5px dashed var(--sl-tube-line);
+  color: var(--sl-ink-2);
+}
+
+/* ---------- How Spill works (bone-2 카드 — 링크는 ink + 밑줄: ember-text는 bone-2 위 4.43:1 미달) ---------- */
+.sl-pg-how {
+  margin-top: 8px;
+  padding: 16px;
+  border-radius: var(--sl-r-md);
+  background: var(--sl-bone-2);
+  max-width: 720px;
+}
+.sl-pg-how h2 {
+  color: var(--sl-ink);
+  font-weight: 700;
+}
+.sl-pg-how p {
+  margin: 10px 0 0;
+  font-size: 15px;
+}
+.sl-pg-how-links {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 20px;
+}
+.sl-pg-how-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--sl-hit);
+  color: var(--sl-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- All levels(prod 목록과 같은 문장) ---------- */
+.sl-pg-index {
+  margin-top: 32px;
+  max-width: 720px;
+}
+.sl-pg-index h2 {
+  margin: 0 0 8px;
+  font-size: var(--sl-fs-h2);
+}
+.sl-pg-index ol {
+  margin: 0;
+  padding-left: 22px;
+}
+.sl-pg-index li {
+  margin-bottom: 0;
+  color: var(--sl-ink-2);
+}
+.sl-pg-index a,
+.sl-pg-daily a {
+  /* 줄 안 링크(S9 44px): 인라인 패딩만 주면 위아래 줄 링크와 히트 영역이 겹친다(리뷰) → 실제 높이 44px인 inline-block */
+  display: inline-block;
+  padding-block: 12px;
+  line-height: 20px;
+  color: var(--sl-ember-text);
+  font-weight: 700;
+}
+.sl-pg-index .sl-pg-guide {
+  padding-inline: 4px;
+}
+.sl-pg-index a:first-child {
+  color: var(--sl-ink);
+}
+.sl-pg-daily {
+  margin: 24px 0 0;
+  color: var(--sl-ink-2);
+}
+
+/* ---------- /play/[id] 설명 패널(LevelAside) — .sl-sp-aside(spill.css) 안, 인라인 색 없음 ---------- */
+.sl-la p {
+  margin: 0 0 10px;
+}
+.sl-la .sl-la-note {
+  margin: 8px 0 10px;
+  color: var(--sl-ink-2);
+  font-size: 14px;
+}
+.sl-la-hint {
+  margin-top: 8px;
+}
+.sl-la-hint summary {
+  min-height: var(--sl-hit);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 700;
+}
+.sl-la-links {
+  margin-top: 16px;
+  color: var(--sl-ink-2);
+}
+.sl-la ul a,
+.sl-la-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--sl-hit);
+  min-width: var(--sl-hit);
+}
