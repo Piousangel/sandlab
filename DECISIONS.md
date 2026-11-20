@@ -193,6 +193,6 @@
 ## 2026-11-20 PR 단계 CI 도입, 만성 실패 테스트 0 (오너 승인 제안 C)
 - 맥락: `verify.test.ts`가 늘 타임아웃이라 배포·검증 관문에서 `--exclude`로 빠져 있었고, spill:verify는 CI에서 22분 걸려 배포에서 빠져 머지 전 검사가 루틴 손에만 있었다. 허브 docs/team/mentor/lydia-hallie.md 7장 통합 목록 C를 오너가 11-20 승인.
 - 원인 분류(11-20 main, Node 22): 7건(로컬 load 45) / 3건(CI) 전부 **부하 타임아웃** — 결정적 시뮬을 끝까지 도는 테스트(sweep Steam vs vent 16 salt: CI 49초·로컬 236초, verify.test beforeAll 훅 10초, sim fuse·dig candidates·replay·transform·cases 결정성 5초). 진짜 버그·시간 의존·낡은 기대값 0.
-- 선택: vitest를 **unit(기본 한도)·sim(결정적 시뮬 파일, 5분 한도)** 두 프로젝트로 나눴다(vitest.config.ts SIM_TESTS). `pnpm test`는 둘 다(제외 없음), CI는 두 job 병렬. sweep.test의 개별 120초 한도는 프로젝트 한도 하나로 합쳤다. `scripts/spill-verify.ts`에 `--exclude`를 넣어 CI에서 1-8 Cascade(전체 시뮬의 절반 이상)와 나머지를 두 job으로, `--workers 4`(러너 vCPU 전부, 기본은 cpus-2=2라 예전 22분). 갤러리 API는 `wrangler dev --local`(로컬 D1, 계정 불필요)로 CI에서 verify-gallery.py까지 돈다.
+- 선택: vitest를 **unit(기본 한도)·sim(결정적 시뮬 파일, 한도 CI 3분·로컬 15분)** 두 프로젝트로 나눴다(vitest.config.ts SIM_TESTS). `pnpm test`는 둘 다(제외 없음), CI는 두 job 병렬. sweep.test는 케이스×salt마다 테스트 하나로 쪼갰다(7×16 조합 그대로, 한 테스트가 수 분 걸리던 구조 해소). `scripts/spill-verify.ts`에 `--exclude`를 넣어 CI에서 1-8 Cascade(전체 시뮬의 절반 이상)와 나머지를 두 job으로, `--workers 4`(러너 vCPU 전부, 기본은 cpus-2=2라 예전 22분). 갤러리 API는 `wrangler dev --local`(로컬 D1, 계정 불필요)로 CI에서 verify-gallery.py까지 돈다.
 - 버린 안: 무거운 테스트 skip·salt 수 축소(검증 범위 축소), 전역 testTimeout 상향(가벼운 테스트의 느려짐까지 숨김), spill:verify를 1 job(벽시계 15분 초과).
 - 남은 것: 브랜치 보호에 CI 필수 체크를 켜는 것은 오너 할 일.

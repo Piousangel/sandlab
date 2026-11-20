@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # unit = 일반 테스트(기본 5초 한도), sim = 결정적 시뮬 테스트(vitest.config.ts SIM_TESTS, 5분 한도). 합치면 전체.
+        # unit = 일반 테스트(기본 5초 한도), sim = 결정적 시뮬 테스트(vitest.config.ts SIM_TESTS, CI 3분 한도). 합치면 전체.
         project: [unit, sim]
     steps:
       - uses: actions/checkout@v4

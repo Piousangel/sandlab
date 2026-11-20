@@ -26,7 +26,7 @@
 
 ## ▶ 2026-11-20 PR 단계 CI + 만성 실패 테스트 0 (브랜치 `chore/ci-test-debt`)
 - PR마다 `.github/workflows/ci.yml`: typecheck·lint:ui·contrast·margolus / vitest unit·sim / spill:verify(1-8 | 나머지) / prod 빌드·verify-ads·**갤러리 API(wrangler dev --local + verify-gallery.py)** / build:preview·verify-ads --preview. 초록이 머지 조건(SESSION-GUIDE 검증).
-- **이제 `pnpm test`에 제외 없음**(verify.test 포함). 무거운 시뮬 테스트는 vitest.config.ts `SIM_TESTS`(sim 프로젝트, 5분 한도) — 새 시뮬 테스트를 다른 폴더에 만들면 SIM_TESTS에 넣을 것. 아래 옛 인계의 "verify·sweep 타임아웃 기준선"은 이 PR로 끝남.
+- **이제 `pnpm test`에 제외 없음**(verify.test 포함). 무거운 시뮬 테스트는 vitest.config.ts `SIM_TESTS`(sim 프로젝트, 한도 CI 3분·로컬 15분) — 새 시뮬 테스트를 다른 폴더에 만들면 SIM_TESTS에 넣을 것. 아래 옛 인계의 "verify·sweep 타임아웃 기준선"은 이 PR로 끝남.
 - 새 무거운 레벨이 생겨 spill:verify job이 15분을 넘으면 ci.yml matrix에 `--exclude`/id로 job을 하나 더 나눈다.
 - 오너 할 일: GitHub 브랜치 보호(main)에 CI 필수 체크 켜기.
 

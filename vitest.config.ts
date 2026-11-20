@@ -10,7 +10,9 @@ const SIM_TESTS = [
   'src/lib/spill/{sim,bench,verify,play,levels}/**/*.test.ts',
   'src/lib/challenge/daily/transform.test.ts',
 ]
-const SIM_TIMEOUT = 300_000 // 멈춘(무한 루프) 테스트는 여전히 5분에 실패한다
+// CI(조용한 4코어): 가장 느린 테스트 약 42초(verify.test 솔버) → 3분(약 4배)으로 느려짐 퇴행을 잡는다.
+// 로컬: 다른 세션과 머신을 나눠 써 같은 테스트가 377초·스윕 469초까지 걸렸다(load 45) → 15분.
+const SIM_TIMEOUT = process.env.CI ? 180_000 : 900_000
 
 // tsconfig의 `@/*` → `./src/*` 별칭을 테스트에서도 쓴다(Next 페이지·sitemap이 @/ 경로로 import).
 export default defineConfig({
