@@ -5,6 +5,7 @@
  * P6: 홈 「Pour」(유리 우물·시험관 랙·엄지 도크·오늘 카드·지층 띠·벽 미리보기).
  * P5: 결과 화면(벽에 건 액자·박물관 캡션·공유 이미지).
  * P8: /play 전시실(월드 카드·정적 레벨 썸네일·광고 안내판 자리)과 /play/[id] 설명 패널.
+ * P10: 글 페이지(Learn 글·레벨 공략·재료·About·Privacy·Terms·Contact·Learn 허브·404) + 본문 중간·글 끝 광고 자리.
  * 새 셸 코드는 전부 이 파일에서부터 import 그래프로 들어온다 — 기존 페이지·layout이 ui-next 모듈을 직접 import하지 않는다.
  * 내보내는 모양은 classic.ts와 같아야 한다(shell/contract.ts가 타입으로 검사).
  */
@@ -15,6 +16,7 @@ import '../home/home.css'
 import '../result/result.css'
 import '../daily/daily.css'
 import '../play/play.css'
+import '../content/content.css'
 import { bricolage, jetbrainsMono } from '../fonts'
 
 export const shellHtmlProps: { className?: string } = { className: `${bricolage.variable} ${jetbrainsMono.variable}` }
@@ -30,3 +32,7 @@ export { DailyAside } from '../daily/DailyAside'
 export { PlayGallery } from '../play/PlayGallery'
 export { LevelAside } from '../play/LevelAside'
 export { HomePour } from '../home/HomePour'
+// P10: 글 페이지
+export { ContentFrame } from '../content/ContentFrame'
+export { LearnArticle, GuideArticle } from '../content/Articles'
+export { MaterialPage, MaterialsIndex } from '../content/Materials'

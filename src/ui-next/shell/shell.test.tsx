@@ -98,8 +98,8 @@ describe('광고 안내판 AdPlate(S11)', () => {
   it('광고 비활성(로더 없는 페이지)이거나 광고 단위가 없으면 DOM에 아무것도 없다', () => {
     expect(renderToStaticMarkup(<AdPlate ads={false} slot="123" />)).toBe('')
     expect(renderToStaticMarkup(<AdPlate ads slot={undefined} />)).toBe('')
-    // P3 시점: 광고 단위가 아직 없다 → 어디서도 렌더되지 않는다
-    expect(Object.values(AD_SLOTS).filter(Boolean)).toEqual([])
+    // P10(11-20): 오너가 3자리 중 2자리 단위를 만들었다 — 글 끝(contentEnd)은 아직 없어 렌더 0
+    expect(AD_SLOTS.contentEnd).toBeNull()
   })
 
   it('활성: Advertisement 라벨, 높이 예약(라벨 포함), 24px 이상 간격, 콘텐츠 카드와 다른 면', () => {

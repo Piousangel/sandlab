@@ -378,6 +378,40 @@ html.sl-lock {
   overflow: hidden;
 }
 
+/* 고정 크기 2단계(strip, P10): 단위 2개를 갈아 끼운다 — 320×100(narrow) → 800px 이상 728×90(wide).
+   값은 ads/config.ts AD_FORMATS.strip과 같다(content.test가 대조) */
+.sl-ad--strip {
+  height: 124px;
+  /* 열이 320보다 좁은 폰(320~351px)에서는 안내판을 320까지 양옆으로 넓힌다(본문 여백 16px 안) — 가로 스크롤·광고 잘림 0 */
+  width: auto;
+  margin-inline: min(0px, calc((100% - 320px) / 2));
+}
+.sl-ad-face--narrow,
+.sl-ad-face--wide {
+  margin: 0 auto;
+}
+.sl-ad-face--narrow {
+  display: block;
+  width: 320px;
+  height: 100px;
+}
+.sl-ad-face--wide {
+  display: none;
+  width: 728px;
+  height: 90px;
+}
+@media (min-width: 800px) {
+  .sl-ad--strip {
+    height: 114px;
+  }
+  .sl-ad--strip .sl-ad-face--narrow {
+    display: none;
+  }
+  .sl-ad--strip .sl-ad-face--wide {
+    display: block;
+  }
+}
+
 /* 프리뷰 읽기 전용 안내(오너 11-20, ReadOnlyNote) — 바탕(bone) 위 보조 글자 한 줄, 면을 새로 깔지 않는다(회색 패널 중첩 0) */
 .sl-ro,
 .sl-ro-sheet {
