@@ -1,7 +1,7 @@
 /*
  * 새 셸 헤더·메뉴 시트·푸터·광고 안내판 스타일(P3). shell/next.ts만 불러온다 → prod 빌드에는 없다.
  * 전역 규칙(body·html 등)은 두지 않는다 — 아직 바뀌지 않은 페이지 본문(옛 다크 화면)을 건드리지 않게.
- * 예외: html.sl-lock(시트가 열린 동안 뒤 스크롤 잠금)과 html[data-sl-wm](첫 방문 wordmark 낙하 표시).
+ * 예외: :root --sl-ease-sheet(시트 곡선)와 html[data-sl-wm](첫 방문 wordmark 낙하 표시). 시트 스크롤 잠금은 BottomSheet가 html 인라인 style로 건다.
  * 면 규칙(R3): 면은 bone(헤더·시트)과 bone-2(푸터·pill) 두 단계만, 회색 면 위에 회색 면을 쌓지 않는다.
  */
 .sl-shell,
@@ -197,32 +197,145 @@ html[data-sl-wm='drop'] .sl-wm-grain {
   }
 }
 
-/* ---------- 메뉴 시트(<dialog> 모달) ---------- */
-html.sl-lock {
-  overflow: hidden;
+/* ---------- 공통 하단 시트(src/ui-next/sheet/BottomSheet.tsx — 메뉴·홈 공유) ----------
+   - 767 이하: 아래에서 올라오는 시트(손잡이 끌어 닫기). 768 이상: 카드(끌기 없음, 손잡이 숨김) — center = 가운데, menu = 메뉴 버튼 아래 오른쪽.
+   - 열기 280ms·닫기 240ms·복귀 300ms, iOS 시트 감속 곡선(허브와 같은 값). 열기는 animation(backwards — 끝나면 인라인 transform이 끌기를 이어받는다),
+     닫기는 data-state=closing의 transition(끌던 자리에서 그대로 이어서 내려간다). 모션 줄이기면 즉시.
+   - 키보드: BottomSheet가 --sl-sheet-kb(가린 높이)·--sl-sheet-vh(보이는 높이)를 넣는다. z 60: Spill HUD·결과 화면(8)보다 위. */
+:root {
+  --sl-ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+}
+.sl-sheet-root {
+  position: fixed;
+  inset: 0 0 var(--sl-sheet-kb, 0px) 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sl-sheet-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 17, 14, 0.5);
+  animation: sl-sheet-fade 280ms var(--sl-ease-sheet) backwards;
+  transition: opacity 240ms var(--sl-ease-sheet);
+  touch-action: none;
 }
 .sl-sheet {
-  margin: auto 0 0;
+  position: relative;
   width: 100%;
-  max-width: 100%;
-  max-height: calc(100dvh - 48px);
+  max-width: 560px;
+  max-height: min(calc(100dvh - 48px), calc(var(--sl-sheet-vh, 100dvh) - 16px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--sl-r-glass) var(--sl-r-glass) 0 0;
+  background: var(--sl-bone);
+  box-shadow: var(--sl-glass);
+  outline: none;
+  animation: sl-sheet-up 280ms var(--sl-ease-sheet) backwards;
+  will-change: transform;
+}
+.sl-sheet-root[data-state='closing'] .sl-sheet-dim {
+  opacity: 0;
+}
+.sl-sheet-root[data-state='closing'] .sl-sheet {
+  transform: translate3d(0, 100%, 0);
+  transition: transform 240ms var(--sl-ease-sheet);
+  pointer-events: none;
+}
+/* 손잡이 = 닫기 버튼(44px 높이). 끄는 동안 브라우저 스크롤·선택이 끼어들지 않게 */
+.sl-sheet-handle {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--sl-hit);
+  margin: 0;
   padding: 0;
   border: 0;
   border-radius: var(--sl-r-glass) var(--sl-r-glass) 0 0;
   background: var(--sl-bone);
-  box-shadow: var(--sl-glass);
-  overflow-y: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
-.sl-sheet::backdrop {
-  background: rgba(20, 17, 14, 0.5);
+.sl-sheet-handle + .sl-sheet-in {
+  padding-top: 0;
 }
-.sl-sheet[open] {
-  animation: sl-sheet-up var(--sl-t-move) var(--sl-ease-pour);
+.sl-sheet-handle:active {
+  cursor: grabbing;
+}
+.sl-sheet-handle:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--sl-ink);
+}
+.sl-sheet-handle-bar {
+  display: block;
+  width: 40px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--sl-ink-2);
+  opacity: 0.45;
 }
 @keyframes sl-sheet-up {
   from {
-    transform: translateY(24px);
+    transform: translate3d(0, 100%, 0);
+  }
+}
+@keyframes sl-sheet-pop {
+  from {
     opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.97);
+  }
+}
+@keyframes sl-sheet-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (min-width: 768px) {
+  .sl-sheet-root {
+    align-items: center;
+    padding: 24px;
+  }
+  .sl-sheet {
+    max-width: 480px;
+    border-radius: var(--sl-r-glass);
+    animation-name: sl-sheet-pop;
+  }
+  .sl-sheet-handle {
+    display: none;
+  }
+  .sl-sheet-handle + .sl-sheet-in {
+    padding-top: 8px;
+  }
+  .sl-sheet-root[data-place='menu'] {
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 72px 24px 24px; /* 헤더는 폭 제한 없이 좌우 24px — 메뉴 버튼(오른쪽 끝) 바로 아래에 붙는다 */
+  }
+  .sl-sheet-root[data-place='menu'] .sl-sheet {
+    width: 340px;
+    border-radius: var(--sl-r-md);
+  }
+  .sl-sheet-root[data-state='closing'] .sl-sheet {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.97);
+    transition:
+      opacity 200ms var(--sl-ease-sheet),
+      transform 240ms var(--sl-ease-sheet);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-sheet,
+  .sl-sheet-dim,
+  .sl-sheet-root[data-state='closing'] .sl-sheet,
+  .sl-sheet-root[data-state='closing'] .sl-sheet-dim {
+    animation: none !important;
+    transition: none !important;
   }
 }
 .sl-sheet-in {
@@ -286,18 +399,6 @@ html.sl-lock {
   letter-spacing: var(--sl-ls-label);
   text-transform: uppercase;
   color: var(--sl-ink-2);
-}
-@media (min-width: 840px) {
-  .sl-sheet {
-    margin: 72px 24px auto auto; /* 헤더는 폭 제한 없이 좌우 24px — 메뉴 버튼(오른쪽 끝) 바로 아래에 붙는다 */
-    width: 340px;
-    border-radius: var(--sl-r-md);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .sl-sheet[open] {
-    animation: none;
-  }
 }
 
 /* ---------- 푸터: bone-2 면 1개 ---------- */

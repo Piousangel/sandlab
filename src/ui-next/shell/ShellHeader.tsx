@@ -4,6 +4,7 @@
  * 새 셸 헤더(P3) — wordmark · 내비 4동사 · 데일리 모래시계 pill · 메뉴 시트.
  * 프리뷰 빌드(NEXT_PUBLIC_UI=next)에서만 shell/next.ts를 거쳐 들어온다. prod(classic)에는 이 모듈이 없다.
  *
+ * - 메뉴 시트 = 공통 BottomSheet(src/ui-next/sheet). 
  * - 좁은 화면(< 840px — 720에서는 가운데 내비와 pill 사이 여유가 8px 안팎이라 올림, 독립 리뷰)에서는 내비가 숨고 메뉴 시트 안에 같은 링크가 있다(SSR HTML에는 둘 다 있다).
  * - 누르는 것은 전부 44×44 이상(S9), 포커스 링은 --sl-focus.
  * - 아이콘은 <Icon>만(R8, pnpm lint:ui).
@@ -11,12 +12,13 @@
  */
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState, type MouseEvent as ReactMouseEvent } from 'react'
 import { loadSoundPref, saveSoundPref } from '@/lib/spill/render/audio'
 import { Icon, IconSprite } from '../icons/Icon'
 import { DAILY_HREF, MENU_LINKS, NAV, isActive, type ShellLink } from './nav'
 import { SSR_PILL, pillText, type PillText } from './dailyPill'
 import { ReadOnlyNote } from './ReadOnlyNote'
+import { BottomSheet, type SheetApi } from '../sheet/BottomSheet'
 
 /** 첫 방문 wordmark 낙하: 이 키가 없을 때만 한 번. reduced-motion이면 아예 시작하지 않는다(CSS도 한 번 더 막는다). */
 const WM_KEY = 'sl.wordmark.v1'
@@ -24,7 +26,7 @@ const WM_KEY = 'sl.wordmark.v1'
 const WM_SCRIPT = `try{if(!localStorage.getItem('${WM_KEY}')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.setAttribute('data-sl-wm','drop')}catch(e){}`
 const LETTERS = 'SANDLAB'.split('')
 
-function NavLink({ link, className, current, onClick }: { link: ShellLink; className: string; current: boolean; onClick?: () => void }) {
+function NavLink({ link, className, current, onClick }: { link: ShellLink; className: string; current: boolean; onClick?: (e: ReactMouseEvent<HTMLAnchorElement>) => void }) {
   const props = { className, 'aria-current': current ? ('page' as const) : undefined, onClick }
   return link.doc ? (
     <Link href={link.href} {...props}>
@@ -96,39 +98,21 @@ function DailyPill() {
 /**
  * 메뉴 시트. Spill 화면(P4)도 재사용한다 — 그때는 소리 상태를 화면이 가진 SpillAudio와 맞추려고
  * `sound`·`onSound`를 넘긴다(제어 모드). 안 넘기면 저장된 설정(spill.v1.sound)을 직접 읽고 쓴다.
+ * 공통 BottomSheet(손잡이 끌기·배경 탭·Esc·뒤로 가기). 닫혀 있어도 링크는 SSR HTML에 hidden으로 남는다(keepMounted — 예전 닫힌 <dialog>와 같다).
+ * 시트 안 링크: 시트를 닫고(history 칸을 뺀 뒤) 이동한다 — 그냥 이동하면 시트 칸이 history에 남아 다음 페이지에서 '뒤로'가 한 번 먹지 않는다.
  */
 export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: string | null; sound?: boolean; onSound?: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null)
-  const btnRef = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
   // 소리 설정은 Spill 화면과 같은 키(spill.v1.sound). SSR에는 기본값(켜짐)을 그리고 마운트 뒤 실제 값을 읽는다.
   const [soundOwn, setSound] = useState(true)
   useEffect(() => setSound(loadSoundPref()), [])
   const sound = soundProp ?? soundOwn
 
-  const close = useCallback(() => ref.current?.close(), [])
   const show = () => {
-    const d = ref.current
-    if (!d || d.open) return
     setSound(loadSoundPref())
-    d.showModal() // 모달 dialog: 바깥은 inert(포커스 가둠), Esc = cancel → close
     setOpen(true)
-    document.documentElement.classList.add('sl-lock')
   }
-  useEffect(() => {
-    const d = ref.current
-    if (!d) return
-    const onClose = () => {
-      setOpen(false)
-      document.documentElement.classList.remove('sl-lock')
-      btnRef.current?.focus()
-    }
-    d.addEventListener('close', onClose)
-    return () => {
-      d.removeEventListener('close', onClose)
-      document.documentElement.classList.remove('sl-lock')
-    }
-  }, [])
+  const onClose = useCallback(() => setOpen(false), [])
 
   const toggleSound = () => {
     if (onSound) return onSound()
@@ -137,10 +121,20 @@ export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: s
     setSound(next)
   }
 
+  /**
+   * 시트를 닫은 뒤 이동(새 탭·수정 키 클릭은 브라우저에 맡긴다). 시트 안에서는 doc 링크도 전체 이동 —
+   * useRouter는 앱 라우터 밖(renderToStaticMarkup 테스트)에서 던지고, 전체 이동은 nav.ts가 늘 안전하다고 한 길이다.
+   */
+  const go = (api: SheetApi) => (e: ReactMouseEvent<HTMLAnchorElement>) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+    e.preventDefault()
+    const href = e.currentTarget.href
+    api.close(() => window.location.assign(href))
+  }
+
   return (
     <>
       <button
-        ref={btnRef}
         type="button"
         className="sl-hit sl-icon-btn"
         aria-label="Menu"
@@ -151,51 +145,51 @@ export function MenuSheet({ pathname, sound: soundProp, onSound }: { pathname: s
       >
         <Icon name="menu" />
       </button>
-      <dialog
-        ref={ref}
-        id="sl-menu"
-        className="sl-sheet"
-        aria-label="Menu"
-        // 바깥(백드롭) 클릭으로 닫기 — 시트 안쪽 클릭은 target이 dialog가 아니다
-        onClick={(e) => e.target === e.currentTarget && close()}
-      >
-        <div className="sl-sheet-in">
-          <div className="sl-sheet-top">
-            <span className="sl-sheet-title">Menu</span>
-            <button type="button" className="sl-hit sl-text-btn" onClick={close}>
-              Close
+      <BottomSheet open={open} onClose={onClose} id="sl-menu" label="Menu" historyMark="__slMenu" placement="menu" keepMounted>
+        {(api) => (
+          <div className="sl-sheet-in">
+            <div className="sl-sheet-top">
+              <span className="sl-sheet-title">Menu</span>
+              <button type="button" className="sl-hit sl-text-btn" onClick={() => api.close()}>
+                Close
+              </button>
+            </div>
+            <nav aria-label="Sections">
+              <ul className="sl-sheet-nav">
+                {NAV.map((l) => (
+                  <li key={l.href}>
+                    <NavLink link={l} className="sl-sheet-link sl-sheet-link-big" current={isActive(pathname, l.href)} onClick={go(api)} />
+                  </li>
+                ))}
+                <li>
+                  <a
+                    href={DAILY_HREF}
+                    className="sl-sheet-link sl-sheet-link-big"
+                    aria-current={isActive(pathname, DAILY_HREF) ? 'page' : undefined}
+                    onClick={go(api)}
+                  >
+                    Daily
+                  </a>
+                </li>
+              </ul>
+            </nav>
+            <div className="sl-sheet-rule" />
+            <button type="button" className="sl-sheet-link sl-sound" aria-pressed={sound} onClick={toggleSound}>
+              <Icon name={sound ? 'sound-on' : 'sound-off'} />
+              <span>Sound</span>
+              <span className="sl-sound-state">{sound ? 'On' : 'Off'}</span>
             </button>
-          </div>
-          <nav aria-label="Sections">
-            <ul className="sl-sheet-nav">
-              {NAV.map((l) => (
+            <ReadOnlyNote className="sl-ro-sheet" />
+            <ul className="sl-sheet-links">
+              {MENU_LINKS.map((l) => (
                 <li key={l.href}>
-                  <NavLink link={l} className="sl-sheet-link sl-sheet-link-big" current={isActive(pathname, l.href)} onClick={close} />
+                  <NavLink link={l} className="sl-sheet-link" current={isActive(pathname, l.href)} onClick={go(api)} />
                 </li>
               ))}
-              <li>
-                <a href={DAILY_HREF} className="sl-sheet-link sl-sheet-link-big" aria-current={isActive(pathname, DAILY_HREF) ? 'page' : undefined}>
-                  Daily
-                </a>
-              </li>
             </ul>
-          </nav>
-          <div className="sl-sheet-rule" />
-          <button type="button" className="sl-sheet-link sl-sound" aria-pressed={sound} onClick={toggleSound}>
-            <Icon name={sound ? 'sound-on' : 'sound-off'} />
-            <span>Sound</span>
-            <span className="sl-sound-state">{sound ? 'On' : 'Off'}</span>
-          </button>
-          <ReadOnlyNote className="sl-ro-sheet" />
-          <ul className="sl-sheet-links">
-            {MENU_LINKS.map((l) => (
-              <li key={l.href}>
-                <NavLink link={l} className="sl-sheet-link" current={isActive(pathname, l.href)} onClick={close} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      </dialog>
+          </div>
+        )}
+      </BottomSheet>
     </>
   )
 }

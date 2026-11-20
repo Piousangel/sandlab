@@ -1,3 +1,14 @@
+# 인계 (2026-11-20 오후): 공통 BottomSheet 이식 「끌어 닫는 시트」 — 오너 "손잡이를 끌어 닫을 수 없다", P 순서 밖
+
+- 브랜치 feat/bottom-sheet-ux. 결정 DECISIONS 2026-11-20 '공통 BottomSheet 이식', 체크리스트 docs/team/UX-CHECKLIST.md(허브 QUALITY 5장과 같은 10항목), 캡처·녹화 docs/design/bottom-sheet/.
+- **새 모달은 `src/ui-next/sheet/BottomSheet.tsx` 하나로**(sheet.test가 손으로 만든 `<dialog>`·`showModal`·`role="dialog"`·`aria-modal`을 떨어뜨린다). 닫기·이동은 children 함수의 `api.close(after)`로 — after에서 페이지 이동(시트 history 칸을 뺀 뒤라 뒤로 가기 한 번에 이전 페이지).
+- 함정: ① 시트가 열린 동안 `history.replaceState`로 주소를 바꾸지 말 것 — 시트 칸의 주소만 바뀌어 닫을 때 옛 주소로 돌아가고, `#g=` 해시면 홈이 새로고침된다(홈 공유는 onClose에서 반영). ② 메뉴는 `keepMounted`라 닫혀도 링크가 hidden div로 SSR HTML에 있다(content-parity 유지). ③ 768px 이상은 손잡이가 숨으니 시트 내용에 Close 버튼을 둔다.
+- **검사**: `pnpm build:preview && node scripts/qa/sheet-e2e.mjs [--repeat 3] [--capture docs/design/bottom-sheet]`(= `pnpm qa:preview --only sheet`). 12항목(끌기 짧게 복귀·길게 닫힘·튕김·안쪽 스크롤·배경 탭·Esc 포커스 복귀·뒤로 가기·Space·Close 연타·IME·스크롤 잠금·시트 링크 history·44px·홈 공유 주소·reduced-motion·1440 자리) + 390 UX 감사 14쪽. 홈 공유 항목은 WebGPU 어댑터가 있어야 돈다(맥 Metal 헤드리스 OK, 없으면 건너뜀 표시).
+- **P12가 알아야 할 것**: prod `ResultCard`(결과 카드, role="dialog")와 안 쓰는 `ChallengePlayer`·`DailyPlayer`는 손대지 않았다 — 컷오버 때 지우고 sheet.test의 LEGACY 목록에서도 뺀다. 결과 화면(`SpillResult`)은 모달이 아니라 region(UX-CHECKLIST 2항 예외).
+- 남은 것: 실기기(iOS Safari) 끌기·고무줄 확인은 프리뷰 배포 뒤. 메뉴 링크가 doc 링크도 전체 이동으로 바뀌었다(useRouter가 테스트에서 던져서 — 클라이언트 이동이 필요하면 AppRouterContext를 직접 읽는 방법).
+
+---
+
 # 인계 (2026-11-20 오후): 리디자인 P11b 「성능·접근성 마감 + qa:preview」 — 다음은 P12(컷오버)
 
 - 계획서 6장 P11b 행. 결정 DECISIONS 2026-11-20 P11b. 브랜치 shift/redesign-p11-perf-a11y.

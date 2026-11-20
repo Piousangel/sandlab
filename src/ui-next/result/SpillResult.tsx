@@ -211,7 +211,8 @@ export function SpillResult(p: SpillResultProps) {
       className="sl-rs"
       data-desk={desk ? '1' : undefined}
       data-reduced={reduced ? '1' : undefined}
-      role="dialog"
+      // 모달이 아니라 화면(region): 헤더(뒤로·소리·메뉴)가 그대로 살아 있고 가둘 것도 닫을 것도 없다. 예전 role="dialog"는 Esc·포커스 가둠을
+      // 약속만 하고 지키지 않았다(11-20 UX 점검). 판 위 덮개 예외 — docs/team/UX-CHECKLIST.md 2항
       aria-label={p.solution ? 'Solution replay' : 'Level cleared'}
       style={{ top: desk ? 56 : 48 }}
       onClick={skip}

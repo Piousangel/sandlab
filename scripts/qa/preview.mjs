@@ -14,6 +14,8 @@
  *          스크롤 표 닿음, 스크린리더 이름(시험관·붓 크기·데일리 pill·데일리 시작)
  *  loop    고른 관 1개만 스트립 붓기(rack/ ≤ 20KB 파일), 첫 화면 0, reduced-motion 0
  *  ads     광고 꺼짐(ADS_ENABLED=false)이면 정적 HTML·마운트 뒤 DOM 모두 안내판 0
+ *  sheet   공통 하단 시트(끌기·튕김·배경 탭·Esc·뒤로 가기·포커스·history 빈칸·스크롤 잠금) + 390 UX 감사(44px·입력 16px·확대·가로 넘침)
+ *          = scripts/qa/sheet-e2e.mjs(따로도 돌릴 수 있다 — --repeat·--capture)
  *  lcp     Lighthouse 모바일(Slow 4G·CPU 4배 시뮬) 7쪽 × runs 중앙값: LCP ≤ 2.5s, CLS ≤ 0.05 + 상호작용 지연(INP 대용) ≤ 200ms
  *  contrast pnpm check:contrast(토큰 쌍)
  *
@@ -34,7 +36,7 @@ const argv = process.argv.slice(2)
 const opt = (k, d) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : d)
 const OUT = resolve(ROOT, opt('--out', 'out'))
 const RUNS = Number(opt('--runs', '3'))
-const ALL = ['weight', 'a11y', 'keys', 'loop', 'ads', 'lcp', 'contrast']
+const ALL = ['weight', 'a11y', 'keys', 'loop', 'ads', 'sheet', 'lcp', 'contrast']
 const only = opt('--only', '') ? opt('--only').split(',') : ALL
 const skip = opt('--skip', '').split(',')
 const want = (k) => only.includes(k) && !skip.includes(k)
@@ -459,6 +461,18 @@ if (FPS) {
 
 await browser.close()
 srv.close()
+
+/* ---------------- sheet ---------------- */
+if (want('sheet')) {
+  head('sheet — 공통 하단 시트 e2e + 390 UX 감사(scripts/qa/sheet-e2e.mjs)')
+  try {
+    execFileSync(process.execPath, [join(ROOT, 'scripts/qa/sheet-e2e.mjs'), '--out', OUT], { stdio: 'inherit' })
+    report.sheet = 'ok'
+  } catch {
+    report.sheet = 'fail'
+    fail('sheet', 'sheet-e2e 실패(위 출력)')
+  }
+}
 
 /* ---------------- contrast ---------------- */
 if (want('contrast')) {

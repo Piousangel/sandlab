@@ -32,6 +32,7 @@ import { checkPourMilestone } from '@/lib/sand/milestones'
 import { uaClass } from '@/lib/sand/ua'
 import { gpuAdvice, type GpuAdvice } from '@/lib/sand/gpuAdvice'
 import { Icon } from '../icons/Icon'
+import { BottomSheet } from '../sheet/BottomSheet'
 import { ShellHeader } from '../shell/ShellHeader'
 import { ShellFooter } from '../shell/ShellFooter'
 import { PREVIEW_READ_ONLY, READ_ONLY_NOTE } from '../shell/ReadOnlyNote'
@@ -303,8 +304,16 @@ export function HomePour() {
   }
 
   /* ---------- 공유 시트 ---------- */
-  const sheetRef = useRef<HTMLDialogElement>(null)
-  const shareBtnRef = useRef<HTMLButtonElement>(null)
+  // 공통 BottomSheet. 공유·발행이 만든 주소는 시트가 닫힌 뒤(onCloseShare) 주소창에 넣는다 — 열린 동안 바꾸면 시트의 history 칸
+  // 주소가 바뀌어, 닫을 때 history.back이 옛 주소로 되돌리고(#g= 링크로 들어온 경우 hashchange → 새로고침으로 작업이 날아간다) 주소창에 남지도 않는다.
+  const [shareOpen, setShareOpen] = useState(false)
+  const shareOpenRef = useRef(false)
+  const pendingUrl = useRef<string | null>(null)
+  /** 주소창에 넣을 주소: 시트가 열려 있으면 닫힌 뒤로 미룬다. */
+  const setAddress = (url: string) => {
+    if (shareOpenRef.current) pendingUrl.current = url
+    else history.replaceState(history.state, '', url)
+  }
   const [link, setLink] = useState<Link | null>(null)
   const [linkErr, setLinkErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -322,7 +331,9 @@ export function HomePour() {
     const req = ++linkReq.current // 시트를 닫았다 다시 열면 앞선 요청 결과는 버린다
     setLink(null)
     setLinkErr(null)
-    sheetRef.current?.showModal()
+    pendingUrl.current = null
+    shareOpenRef.current = true
+    setShareOpen(true)
     try {
       const cells = await eng.readback()
       const res = await buildShareUrl(cells, W, H)
@@ -338,7 +349,7 @@ export function HomePour() {
         setLinkErr(`Too detailed for a link (${(res.size / res.budget).toFixed(1)}x over). Publish it to the gallery instead.`)
         return
       }
-      history.replaceState(null, '', res.url)
+      pendingUrl.current = res.url
       setLink({ url: res.url, thumb, published: false })
     } catch (e) {
       if (req === linkReq.current) setLinkErr(e instanceof Error ? e.message : 'Link failed.')
@@ -390,7 +401,7 @@ export function HomePour() {
       rememberMine(id, title || 'Untitled')
       const links = publishedLinks(location.origin, id)
       loadedSceneId.current = links.nextLoadedId
-      history.replaceState(null, '', links.tabUrl)
+      setAddress(links.tabUrl)
       linkReq.current++ // 늦게 끝나는 링크 요청이 발행 결과를 덮지 않게
       setLinkErr(null)
       setLink({ url: links.shareUrl, thumb, published: true })
@@ -402,10 +413,10 @@ export function HomePour() {
     }
   }
 
+  /** 시트가 닫힌 뒤(시트 api.close의 after) 녹화 시작 — 시트가 내려가는 모습이 클립에 담기지 않게. */
   const record = async () => {
     const canvas = canvasRef.current
     if (!canvas) return
-    sheetRef.current?.close()
     try {
       if (engineRef.current) engineRef.current.recording = true
       flash('Recording 10 seconds.')
@@ -420,12 +431,14 @@ export function HomePour() {
     }
   }
 
-  useEffect(() => {
-    const d = sheetRef.current
-    if (!d) return
-    const onClose = () => shareBtnRef.current?.focus()
-    d.addEventListener('close', onClose)
-    return () => d.removeEventListener('close', onClose)
+  /** 시트가 닫힌 뒤(이미 원래 history 칸으로 돌아온 다음): 만든 주소를 주소창에. 포커스는 BottomSheet가 Share 버튼으로 돌려준다. */
+  const onCloseShare = useCallback(() => {
+    setShareOpen(false)
+    shareOpenRef.current = false
+    linkReq.current++ // 링크를 만드는 중에 닫았으면 늦게 온 결과는 버린다(주소창도 그대로)
+    const url = pendingUrl.current
+    pendingUrl.current = null
+    if (url) history.replaceState(history.state, '', url)
   }, [])
 
   /* ---------- 그리기 ---------- */
@@ -592,7 +605,6 @@ export function HomePour() {
                   ))}
                 </div>
                 <button
-                  ref={shareBtnRef}
                   type="button"
                   className="sl-btn sl-dock-share"
                   aria-disabled={!hasDrawn || undefined}
@@ -619,18 +631,14 @@ export function HomePour() {
       </main>
       <ShellFooter />
 
-      <dialog
-        ref={sheetRef}
-        className="sl-sheet sl-share"
-        aria-labelledby="sl-share-h"
-        onClick={(e) => e.target === e.currentTarget && sheetRef.current?.close()}
-      >
+      <BottomSheet open={shareOpen} onClose={onCloseShare} labelledBy="sl-share-h" historyMark="__slShare" className="sl-share">
+        {(api) => (
         <div className="sl-sheet-in">
           <div className="sl-sheet-top">
             <h2 className="sl-sheet-title" id="sl-share-h">
               {link?.published ? 'Published' : 'Share this scene'}
             </h2>
-            <button type="button" className="sl-hit sl-text-btn" onClick={() => sheetRef.current?.close()}>
+            <button type="button" className="sl-hit sl-text-btn" onClick={() => api.close()}>
               Close
             </button>
           </div>
@@ -673,7 +681,7 @@ export function HomePour() {
               <Icon name="gallery" />
               <span>{busy ? 'Publishing…' : 'Publish to the gallery'}</span>
             </button>
-            <button type="button" className="sl-btn sl-btn-quiet" onClick={record}>
+            <button type="button" className="sl-btn sl-btn-quiet" onClick={() => api.close(() => void record())}>
               <Icon name="record" />
               <span>Record 10s clip</span>
             </button>
@@ -684,7 +692,8 @@ export function HomePour() {
             </p>
           )}
         </div>
-      </dialog>
+        )}
+      </BottomSheet>
     </div>
   )
 }
