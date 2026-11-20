@@ -43,12 +43,14 @@ import {
   SORTS,
   ago,
   appendPage,
+  backLabel,
   canPlay,
   creditLine,
   deltaLine,
   emptyState,
   endLive,
   hasMore,
+  isGone,
   liveKey,
   makerStats,
   mineTotals,
@@ -144,6 +146,11 @@ export function GalleryWall() {
           const found = settled
             .filter((x): x is PromiseFulfilledResult<SceneMeta> => x.status === 'fulfilled')
             .map((x) => x.value)
+          // 하나도 못 받았고 그 이유가 '지워진 장면(404)'만이 아니면 = 망·API 장애 → 빈 상태("Nothing of yours yet")가 아니라 다시 시도(독립 리뷰 1)
+          if (found.length === 0 && settled.some((x) => x.status === 'rejected' && !isGone(x.reason))) {
+            setFailed(true)
+            return
+          }
           // 델타를 먼저 계산(기준선 갱신 전) → 그 뒤 현재값을 새 기준선으로 저장. 다른 탭으로 넘어간 뒤 늦게 온 응답은 기준선을 건드리지 않는다.
           setDelta(mineDeltas(found, entries))
           updateMineSeen(found.map((x) => ({ id: x.id, votes: x.votes || 0, remixCount: x.remixCount || 0 })))
@@ -225,7 +232,8 @@ export function GalleryWall() {
   }, [])
   const ctl: LiveCtl = { live, liveOff, request, end, fail }
 
-  const makerName = maker?.name || 'an unsigned maker'
+  // 서버 집계의 이름을 먼저(옛 작성자 화면과 같음, 리뷰 4)
+  const makerName = profile?.name || maker?.name || 'an unsigned maker'
   const hint = maker ? `Every scene by ${makerName}, newest first.` : SORTS.find((x) => x.id === sort)!.hint
   const totals = mine && scenes ? mineTotals(scenes) : null
   const grew = deltaLine(delta)
@@ -277,7 +285,7 @@ export function GalleryWall() {
               <button type="button" className="sl-gw-textbtn" onClick={() => setMaker(null)}>
                 <Icon name="back" size={16} />
                 {/* 카드의 작성자 링크로 들어왔으면 그 정렬로 돌아간다(옛 'Back to gallery') */}
-                {sort === 'top' ? 'Top makers' : 'All scenes'}
+                {backLabel(sort)}
               </button>
             )}
           </div>
@@ -288,14 +296,14 @@ export function GalleryWall() {
           )}
           {/* 창작자 귀환 줄(옛 mineDigest) — 두 줄 자리를 먼저 잡아 둔다(불러온 뒤 델타가 생겨도 아래가 밀리지 않게, CLS) */}
           {mine && !failed && (scenes === null || scenes.length > 0) && (
-            <div className="sl-gw-mine" aria-live="polite">
+            <div className="sl-gw-mine">
               {totals && (
                 <p className="sl-gw-meta">
                   {sceneLabel(totals.scenes)} · {voteLabel(totals.votes)} · {remixLabel(totals.remix)}
                 </p>
               )}
               {totals && grew && (
-                <p className="sl-gw-delta">
+                <p className="sl-gw-delta" role="status">
                   <Icon name="next" size={16} className="sl-gw-up" />
                   {grew}
                 </p>
@@ -340,7 +348,6 @@ export function GalleryWall() {
                         <button
                           type="button"
                           className="sl-gw-credit sl-gw-credit-btn"
-                          title={`See all scenes by ${s.creatorName || 'this maker'}`}
                           onClick={() => setMaker({ id: s.creatorId!, name: s.creatorName ?? '' })}
                         >
                           {creditLine(s.creatorName)}

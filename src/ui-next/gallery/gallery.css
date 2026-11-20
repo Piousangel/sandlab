@@ -459,8 +459,9 @@
 }
 .sl-gw-support-link {
   display: inline-block;
-  min-width: var(--sl-hit);
   min-height: var(--sl-hit);
+  padding: 0 6px; /* 짧은 단어도 44px 폭 — min-width + 가운데 정렬은 간격이 들쭉날쭉했다(리뷰 6) */
+  min-width: 32px;
   text-align: center;
   font-weight: 700;
   color: var(--sl-ink);

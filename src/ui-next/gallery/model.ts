@@ -57,6 +57,17 @@ export function deltaLine(d: { votes: number; remix: number }): string | null {
   return parts.length ? `${parts.join(', ')} since your last visit` : null
 }
 
+/** Yours 단건 조회 실패가 '지워진 장면'인가 — 워커 404 본문은 {"error":"not found"}(gallery.ts req가 본문을 Error 메시지로). 그 밖(망·5xx)은 장애. */
+export function isGone(reason: unknown): boolean {
+  return reason instanceof Error && /not found|HTTP 404/.test(reason.message)
+}
+
+/** 작성자 화면에서 돌아가는 버튼 — 들어온 정렬로 돌아간다(Top이면 작성자 순위, 카드 작성자 링크로 왔으면 그 정렬, 리뷰 2). */
+export function backLabel(sort: WallSort): string {
+  if (sort === 'top') return 'Top makers'
+  return `Back to ${SORTS.find((s) => s.id === sort)!.label}`
+}
+
 /** 작성자 집계 줄(옛 작성자 화면 머리와 같은 문구) — /api/creators/:id 서버 집계. */
 export function makerStats(p: { sceneCount: number; totalVotes: number; remixCount: number }): string {
   return `${sceneLabel(p.sceneCount)} · ${voteLabel(p.totalVotes)} · ${p.remixCount} remix${p.remixCount === 1 ? '' : 'es'}`

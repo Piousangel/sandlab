@@ -8,7 +8,7 @@ import * as Classic from '../shell/classic'
 import { GalleryWall } from './GalleryWall'
 import { PICKS, SANDLAB_CREATOR, isSandlabPick, pickThumb } from './picks'
 import GalleryBrowser from '@/components/GalleryBrowser'
-import { SORTS, ago, appendPage, canPlay, creditLine, deltaLine, emptyState, endLive, hasMore, liveKey, makerStats, mineTotals, nextLive, openHref, remixLabel, voteLabel } from './model'
+import { SORTS, ago, appendPage, backLabel, isGone, canPlay, creditLine, deltaLine, emptyState, endLive, hasMore, liveKey, makerStats, mineTotals, nextLive, openHref, remixLabel, voteLabel } from './model'
 
 const pub = (p: string) => fileURLToPath(new URL(`../../../public${p}`, import.meta.url))
 const meta = (id: string): SceneMeta => ({ id, title: id, votes: 0, createdAt: 0, w: 1200, h: 600 })
@@ -66,6 +66,17 @@ describe('문구·규칙', () => {
     expect(deltaLine({ votes: 1, remix: 0 })).toBe('+1 vote since your last visit')
     expect(deltaLine({ votes: 2, remix: 1 })).toBe('+2 votes, +1 remix since your last visit')
     expect(deltaLine({ votes: 0, remix: 3 })).toBe('+3 remixes since your last visit')
+  })
+  it('Yours 조회 실패 구분: 지워진 장면(404)만 빈 상태, 그 밖은 장애', () => {
+    expect(isGone(new Error('{"error":"not found"}'))).toBe(true)
+    expect(isGone(new Error('HTTP 404'))).toBe(true)
+    expect(isGone(new Error('Failed to fetch'))).toBe(false)
+    expect(isGone(new Error('HTTP 503'))).toBe(false)
+  })
+  it('작성자 화면 돌아가기 라벨 = 들어온 정렬', () => {
+    expect(backLabel('top')).toBe('Top makers')
+    expect(backLabel('hot')).toBe('Back to Hot')
+    expect(backLabel('new')).toBe('Back to New')
   })
   it('작성자 집계 줄(옛 작성자 화면 머리 문구)', () => {
     expect(makerStats({ sceneCount: 1, totalVotes: 1, remixCount: 1 })).toBe('1 scene · 1 vote · 1 remix')
