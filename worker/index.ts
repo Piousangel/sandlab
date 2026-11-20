@@ -504,7 +504,7 @@ const app = {
         return new Response(null, { status: 204 })
       }
       const t = parseTrack(body) // 화이트리스트·형식 검증(worker/track.ts)
-      if (t) track(env, t.event, request, t.ref, t.value, parseDevice(body))
+      if (t) track(env, t.event, request, t.ref, t.value, parseDevice(body, request.headers.get('user-agent')))
       return new Response(null, { status: 204 })
     }
 

@@ -7,7 +7,7 @@ describe('north-star — 지표 파일 북극성 줄', () => {
     expect(sql).toContain("(blob1 = 'first_stroke' OR blob1 = 'challenge_start' OR blob1 = 'daily_start')")
     expect(sql).toContain("blob5 != ''")
     expect(sql).toContain('GROUP BY d')
-    expect(firstPourSql()).toContain("blob1 = 'landing' AND double2 = 1")
+    expect(firstPourSql()).toContain("(blob1 = 'first_stroke' OR blob1 = 'landing') AND double2 = 1")
   })
   it('행 수 = 기기 수, 첫 붓기율은 first_stroke ÷ 홈 landing', () => {
     const lines = northStarLines({

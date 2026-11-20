@@ -4,11 +4,14 @@
  * - 기기 id: 허브 `src/lib/hit.ts`와 같은 방식. 브라우저에서 만든 무작위 UUID를 localStorage에 둔다.
  *   계정·이메일·IP와 연결되지 않고, 브라우저 데이터를 지우면 사라진다(Privacy 'Usage statistics').
  *   `/api/track` 본문의 `d`로 실려 AE blob5에 들어간다 → 주간 손댄 방문자 = 7일 distinct blob5.
- * - 첫 획: 홈 샌드박스에서 탭(세션)당 처음 모래를 부은 순간 1회 `first_stroke`. 첫 붓기율 = first_stroke ÷ 홈 landing(value 1).
+ * - 첫 획: 홈 샌드박스에서 탭(세션)당 처음 모래를 부은 순간 1회 `first_stroke`. value 1 = 이 세션이 홈 landing으로 시작.
+ *   첫 붓기율 = first_stroke(value 1) ÷ landing(value 1) — 분자·분모가 같은 세션 집합이라 100%를 넘지 않는다.
  */
 
 export const DEVICE_KEY = 'sandlab.did'
 const FIRST_STROKE_KEY = 'sl-first-stroke'
+/** 이 탭의 landing이 홈(`/`)으로 보내졌다는 표시 — first_stroke value 1(첫 붓기율 분자)은 이 세션만. */
+export const HOME_LANDING_KEY = 'sl-landing-home'
 /** 서버(worker/track.ts)와 같은 형식 — UUID 또는 폴백(base36 + '-'). */
 export const DEVICE_RE = /^[a-z0-9-]{8,40}$/
 
@@ -51,5 +54,14 @@ export function claimFirstStroke(
     return true
   } catch {
     return false
+  }
+}
+
+/** first_stroke value — 이 탭의 landing이 홈이었으면 1, 아니면 0(북극성에는 잡히되 첫 붓기율에서는 빠진다). */
+export function firstStrokeValue(session: Pick<Storage, 'getItem'> | null): 0 | 1 {
+  try {
+    return session?.getItem(HOME_LANDING_KEY) ? 1 : 0
+  } catch {
+    return 0
   }
 }

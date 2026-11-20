@@ -41,16 +41,16 @@ export default function Page() {
         being clicked. Each count records the event type, the website that linked to us, your country as
         reported by our hosting provider, Cloudflare, where relevant which scene or puzzle it was about, and
         a random device id. That id is generated in your browser, is not connected to any account, email or
-        IP address, and is used only to count how many different devices used Sandlab each week. Clearing
-        your browser data replaces it with a new one.
+        IP address. It is sent with every count above and used only to measure usage, such as how many
+        different devices played each week. Clearing your browser data replaces it with a new one.
       </p>
       <h2 style={h2}>Stored in your browser</h2>
       <p>
         Your browser keeps a few things locally so the site remembers you without an account: your display
         name and a random creator id if you set a name, the list of scenes you published, which scenes you
-        have voted for, and the random device id described above. These never leave your device except when
-        you publish or vote, and the device id, which is sent with the usage counts. Clearing your browser
-        data removes them.
+        have voted for, and the random device id described above. The device id is sent with the usage
+        counts; the rest leaves your device only when you publish or vote. Clearing your browser data
+        removes all of it.
       </p>
       <h2 style={h2}>Advertising</h2>
       <p>

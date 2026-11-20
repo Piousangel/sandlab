@@ -8,6 +8,7 @@
 import { UA_CLASSES, SHARE_SURFACES } from '../src/lib/sand/ua'
 import { LANDING_REFS } from '../src/lib/sand/landing'
 import { DEVICE_RE } from '../src/lib/sand/measure'
+import { isBotUA } from '../src/lib/visitors'
 
 const CHALLENGE = new Set(['challenge_start', 'challenge_clear', 'challenge_reset', 'daily_start', 'daily_clear'])
 const PLAIN = new Set(['kofi_click'])
@@ -17,8 +18,9 @@ const SHARE_REFS = new Set<string>(SHARE_SURFACES)
 const LANDING = new Set<string>(LANDING_REFS)
 const REF = /^[a-z0-9-]{1,40}$/
 
-/** 본문의 익명 기기 id(`d`). 형식이 틀리거나 없으면 '' — 이벤트는 그대로 받고 blob5만 비운다. */
-export function parseDevice(body: unknown): string {
+/** 본문의 익명 기기 id(`d`). 형식이 틀리거나 없거나 봇 UA면 '' — 이벤트는 그대로 받고 blob5만 비운다. */
+export function parseDevice(body: unknown, ua?: string | null): string {
+  if (ua !== undefined && isBotUA(ua)) return '' // 워커는 항상 UA(없으면 null = 봇)를 넘긴다. JS를 돌리는 크롤러는 렌더마다 새 id를 만든다 — 북극성에서 뺀다(이벤트 수는 그대로)
   const d = body && typeof body === 'object' ? (body as { d?: unknown }).d : undefined
   return typeof d === 'string' && DEVICE_RE.test(d) ? d : ''
 }
@@ -46,7 +48,7 @@ export function parseTrack(body: unknown): { event: string; ref: string; value: 
     if (ref === null || !LANDING.has(ref)) return null
     return { event: b.event, ref, value: b.value === 1 ? 1 : 0 } // 1 = 홈(/) 진입, 그 밖은 0
   }
-  if (b.event === 'first_stroke') return ref === 'home' ? { event: b.event, ref, value: 0 } : null
+  if (b.event === 'first_stroke') return ref === 'home' ? { event: b.event, ref, value: b.value === 1 ? 1 : 0 } : null // 1 = 홈 landing 세션
   if (b.event === 'share_click') return ref !== null && SHARE_REFS.has(ref) ? { event: b.event, ref, value: 0 } : null
   return null
 }

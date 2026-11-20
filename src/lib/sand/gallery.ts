@@ -16,7 +16,7 @@
  *   갤러리에 올리면 짧은 id 하나로 대체되므로, **모든 장면이 공유 가능해진다.**
  */
 
-import { claimFirstStroke, deviceId } from './measure'
+import { claimFirstStroke, deviceId, firstStrokeValue } from './measure'
 
 /** 랭킹 창 — Powder Toy FP 복제. 신선도가 재방문 이유다. */
 export const HOT_WINDOW_DAYS = 7
@@ -294,7 +294,7 @@ export function trackEvent(event: string, ref?: string, value?: number) {
 /** 홈 샌드박스 첫 획 — 탭(세션)당 1회 `first_stroke`(북극성·첫 붓기율). 지우개 획은 부르지 않는다. */
 export function trackFirstStroke() {
   try {
-    if (claimFirstStroke(sessionStorage, location.search, navigator.webdriver === true)) trackEvent('first_stroke', 'home')
+    if (claimFirstStroke(sessionStorage, location.search, navigator.webdriver === true)) trackEvent('first_stroke', 'home', firstStrokeValue(sessionStorage))
   } catch {
     /* 저장소 차단 — 계측만 빠진다 */
   }

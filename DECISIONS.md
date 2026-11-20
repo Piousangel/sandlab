@@ -251,5 +251,5 @@
 - 맥락: NORTH-STAR 2장 북극성(주간 손댄 방문자)·보조 3(첫 붓기율)이 '측정 없음'. 4장 1단계 측정 PR(11-27까지, 16시 몫).
 - 선택: 허브 `hit.ts`와 같이 브라우저 무작위 UUID(localStorage `sandlab.did`)를 `/api/track` 본문 `d`로 보내고, 워커가 형식(`/^[a-z0-9-]{8,40}$/`)만 보고 AE blob5에 싣는다(D1 쓰기 없음). 손댄 = `first_stroke`(홈 샌드박스 탭당 1회, 지우개·autoplay·webdriver 제외) ∪ `challenge_start` ∪ `daily_start`의 7일 distinct blob5. 첫 붓기율 = first_stroke ÷ landing(value 1 = `/` 진입), 둘 다 세션 단위. `?ref=threads`·threads.net/com referrer 분류 추가. Privacy 페이지에 기기 id 고지.
 - 버린 안: IP 해시로 기기 대신(모바일 IP 공유·변동으로 과소·과대, /api/visit과 중복), D1 테이블(쓰기 = 고위험, AE로 충분), 쿠키(동의 배너 필요).
-- 한계: 측정 전 이벤트는 blob5가 비어 7일 창이 차는 11-27까지 값은 '부분'. 홈 landing은 세션 첫 페이지가 `/`일 때만 1 — 다른 페이지로 들어와 홈에서 부은 세션은 분자에만 잡혀 비율이 약간 부풀 수 있다(기준값은 같은 정의로 12-04에 확정하므로 추세 판정엔 영향 없음).
-
+- 한계: 측정 전 이벤트는 blob5가 비어 7일 창이 차는 11-27까지 값은 '부분'. 첫 붓기율은 홈 landing으로 시작한 세션만(first_stroke·landing 모두 value 1) — 다른 페이지로 들어와 홈에서 부은 세션은 북극성에만 잡힌다. WebGPU 없는 기기는 분모에만 있다(gpu_unsupported 값과 나란히 볼 것). `daily_start`는 /daily 마운트 때 나가므로 '데일리 화면을 연 기기'에 가깝다(퍼즐 정의 변경은 기존 지표와 끊기므로 이번엔 유지). 봇 UA·webdriver·autoplay는 기기 id·landing·first_stroke에서 뺀다.
+- 리뷰(독립 1회): 차단 0, 수정 권고 3(분자·분모 세션 불일치 → value 1 통일, 크롤러 id 남발 → 봇 UA면 blob5 비움, landing webdriver 제외) 모두 반영, Privacy 문장 정리. 거부: AE 행 수 세기의 샘플링 과소(지금 규모에선 샘플링 없음, 하루 수천 이벤트 넘으면 재검토).

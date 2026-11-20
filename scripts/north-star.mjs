@@ -17,11 +17,11 @@ export function devicesSql(events, days = 7) {
      GROUP BY d LIMIT 100000`
 }
 
-/** 첫 붓기율 분자·분모(세션 수). */
+/** 첫 붓기율 분자·분모(세션 수). 둘 다 value(double2) 1 = 홈 landing으로 시작한 세션만 — 분자 ⊆ 분모. */
 export function firstPourSql(days = 7) {
   return `SELECT blob1 AS event, SUM(_sample_interval) AS n FROM sandlab_events
      WHERE timestamp > NOW() - INTERVAL '${days}' DAY
-       AND (blob1 = 'first_stroke' OR (blob1 = 'landing' AND double2 = 1))
+       AND (blob1 = 'first_stroke' OR blob1 = 'landing') AND double2 = 1
      GROUP BY event`
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { claimFirstStroke, DEVICE_KEY, DEVICE_RE, deviceId } from './measure'
+import { claimFirstStroke, DEVICE_KEY, DEVICE_RE, deviceId, firstStrokeValue, HOME_LANDING_KEY } from './measure'
 
 function mem(init: Record<string, string> = {}) {
   const m = new Map(Object.entries(init))
@@ -53,5 +53,14 @@ describe('claimFirstStroke — 탭당 첫 획 1회', () => {
     expect(claimFirstStroke(null, '', false)).toBe(false)
     const boom = { getItem: () => { throw new Error('blocked') }, setItem: () => {} }
     expect(claimFirstStroke(boom, '', false)).toBe(false)
+  })
+})
+
+describe('firstStrokeValue — 첫 붓기율 분자는 홈 landing 세션만', () => {
+  it('홈 landing 표시가 있으면 1, 없으면 0', () => {
+    expect(firstStrokeValue(mem({ [HOME_LANDING_KEY]: '1' }))).toBe(1)
+    expect(firstStrokeValue(mem())).toBe(0)
+    expect(firstStrokeValue(null)).toBe(0)
+    expect(firstStrokeValue({ getItem: () => { throw new Error('blocked') } })).toBe(0)
   })
 })
