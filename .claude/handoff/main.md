@@ -1,6 +1,6 @@
 # 인계 (2026-11-21): 리디자인 v2 P9 「갤러리 The Wall」 머지 — P8(#79)도 머지됨, 다음은 P10
 
-- 계획서 6장 진행표가 기준. P9 = #P9PR(브랜치 shift/redesign-p9-gallery). 결정은 DECISIONS 2026-11-20 P9.
+- 계획서 6장 진행표가 기준. P9 = #81(브랜치 shift/redesign-p9-gallery). 결정은 DECISIONS 2026-11-20 P9.
 - **새 갤러리 = `src/ui-next/gallery/`**(GalleryWall.tsx 화면, LiveCanvas.tsx 라이브 한 점, model.ts 순수 규칙, picks.ts 큐레이션, gallery.css, gallery.test.tsx). `@ui-shell`의 `GalleryWall`, classic은 null → `src/app/gallery/page.tsx`가 GalleryBrowser(+ SR h1) 그대로.
 - **prod에 들어간 것: 워커 `GET /api/scenes/:id`(풀·meta)에 `creatorName`**(목록과 같은 키·값, creatorId는 안 실음). worker/scene-one.test.ts, verify-gallery.py 단건·meta·익명 3항목 추가. P6 홈 진입 부제가 이제 "by 이름 · N remixes"(이름 없는 장면은 그대로 "From the gallery").
 - **큐레이션 12점 = 기존 공개 팀 작품 id**(아트 카운슬 2026-08 업로드, D1 creator_name 비어 있음) → 카드·아래 목록·홈 진입 부제 모두 `isSandlabPick`이면 "by Sandlab". 썸네일 `public/ui-next/wall/<id>.webp`(로컬 Metal WebGPU 실엔진 캡처, 3.4~19.1KB). 재생성 `pnpm build:preview && NODE_PATH=<playwright 있는 곳> node scripts/capture-wall.cjs`. **팀 작품이 D1에서 지워지면 picks.ts에서도 빼야 한다**(링크가 홈 빈 화면으로 떨어짐).
