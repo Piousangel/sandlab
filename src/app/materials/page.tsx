@@ -3,6 +3,8 @@ import ContentShell from '@/components/ContentShell'
 import { guideMaterials, materialStaticParams, reactionsOf } from '@/lib/guide/reactions'
 import { COPY } from '@/lib/guide/copy'
 import { PRESETS } from '@/lib/sand/materials'
+// 리디자인 P10: 새 셸(프리뷰)은 Bone 재료 목록(MaterialsIndex, 시험관 아이콘), classic(prod)은 null → 아래 지금 화면 그대로
+import { MaterialsIndex } from '@ui-shell'
 
 const COUNT = guideMaterials().length
 
@@ -19,6 +21,10 @@ const GROUPS: { label: string; movement: string }[] = [
   { label: 'Gases', movement: 'gas' },
 ]
 
+// '모든 반응' 소개 — 새 셸 화면이 쓴다(prod 문단과 같은 문장, 파리티 검사 scripts/qa/content-parity.mjs가 대조)
+const REACTIONS_INTRO =
+  'Reactions happen when two cells touch. The odds are per contact check: each tick, cells that touch inside the same two-by-two block of the grid are checked against the table, so even a small chance tends to happen soon after contact. This table is generated from the same data the simulation runs on.'
+
 const nameOf = (slug: string) => PRESETS.find((m) => m.slug === slug)?.name ?? slug
 const pageSlugs = new Set(materialStaticParams().map((p) => p.slug))
 
@@ -33,6 +39,36 @@ export default function Page() {
       text: reactionsOf(m.slug).undergoes.find((u) => u.partner === r.with)!.text,
     })),
   )
+  if (MaterialsIndex) {
+    const ref = (slug: string) => {
+      const m = PRESETS.find((x) => x.slug === slug)!
+      return { slug, name: m.name, color: m.color }
+    }
+    return (
+      <MaterialsIndex
+        intro={
+          <p>
+            Sandlab simulates 720,000 cells at once, and every cell holds one of the {COUNT} materials below or
+            nothing at all. Each material has a weight, a way of moving and a short list of reactions. Heavier
+            materials sink through lighter ones, powders pile up, liquids find their level and gases rise. When two
+            materials touch, the reaction table decides what happens next. The materials with the most going on have
+            their own page with experiments to try; the rest are described here. How the table itself works is
+            explained in <a href="/learn/materials-as-data">Materials as data</a>.
+          </p>
+        }
+        groups={GROUPS.map((g) => ({
+          label: g.label,
+          items: mats
+            .filter((m) => m.movement === g.movement)
+            .map((m) => ({ slug: m.slug, name: m.name, color: m.color, summary: COPY[m.slug].summary, page: pageSlugs.has(m.slug), body: COPY[m.slug].body, tip: COPY[m.slug].tip })),
+        }))}
+        reactionsTitle="Every reaction"
+        reactionsIntro={REACTIONS_INTRO}
+        columns={['Material', 'What happens', 'Odds per check']}
+        pairs={pairs.map((p) => ({ key: `${p.a}-${p.b}`, a: ref(p.a), text: p.text, percent: Math.round(p.chance * 100) }))}
+      />
+    )
+  }
   return (
     <ContentShell>
       <h1 style={{ fontSize: 30, lineHeight: 1.2, margin: '0 0 12px' }}>Materials guide</h1>

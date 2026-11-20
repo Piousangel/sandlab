@@ -4,6 +4,8 @@ import ContentShell from '@/components/ContentShell'
 import JsonLd, { AUTHOR, breadcrumbs } from '@/components/JsonLd'
 import { ARTICLES, articleBySlug } from '@/lib/learn/articles'
 import { SITE } from '@/lib/site'
+// 리디자인 P10: 새 셸(프리뷰)은 Bone 글 화면(LearnArticle), classic(prod)은 null → 아래 지금 화면 그대로
+import { LearnArticle } from '@ui-shell'
 
 export const dynamicParams = false
 
@@ -34,22 +36,41 @@ export default async function Page({ params }: Props) {
   const a = articleBySlug(slug)
   if (!a) notFound()
   const others = ARTICLES.filter((o) => o.slug !== a.slug)
+  // JSON-LD 두 개 — prod 화면과 새 셸이 같은 객체를 쓴다(구조화 데이터 diff 0)
+  const articleLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: a.title,
+    description: a.description,
+    datePublished: a.published,
+    dateModified: a.updated,
+    author: AUTHOR,
+    publisher: { '@type': 'Organization', name: 'Sandlab', url: SITE },
+    mainEntityOfPage: `${SITE}/learn/${a.slug}`,
+  }
+  const crumbsLd = breadcrumbs(SITE, [{ name: 'Learn', path: '/learn' }, { name: a.title, path: `/learn/${a.slug}` }])
+  if (LearnArticle) {
+    const i = ARTICLES.findIndex((o) => o.slug === a.slug)
+    const link = (o: (typeof ARTICLES)[number] | undefined) => (o ? { href: `/learn/${o.slug}`, label: o.title } : null)
+    return (
+      <LearnArticle
+        title={a.title}
+        byline={`By Piousangel · Published ${fmt(a.published)}${a.updated !== a.published ? ` · Updated ${fmt(a.updated)}` : ''}`}
+        sections={a.sections}
+        sources={a.sources}
+        others={others.map((o) => ({ slug: o.slug, title: o.title }))}
+        prev={link(ARTICLES[i - 1])}
+        next={link(ARTICLES[i + 1])}
+      >
+        <JsonLd data={articleLd} />
+        <JsonLd data={crumbsLd} />
+      </LearnArticle>
+    )
+  }
   return (
     <ContentShell>
-      <JsonLd
-        data={{
-          '@context': 'https://schema.org',
-          '@type': 'Article',
-          headline: a.title,
-          description: a.description,
-          datePublished: a.published,
-          dateModified: a.updated,
-          author: AUTHOR,
-          publisher: { '@type': 'Organization', name: 'Sandlab', url: SITE },
-          mainEntityOfPage: `${SITE}/learn/${a.slug}`,
-        }}
-      />
-      <JsonLd data={breadcrumbs(SITE, [{ name: 'Learn', path: '/learn' }, { name: a.title, path: `/learn/${a.slug}` }])} />
+      <JsonLd data={articleLd} />
+      <JsonLd data={crumbsLd} />
       <p style={{ margin: '0 0 8px', fontSize: 14 }}>
         <Link href="/learn" style={{ color: '#eef1f6', opacity: 0.6 }}>← Learn</Link>
       </p>

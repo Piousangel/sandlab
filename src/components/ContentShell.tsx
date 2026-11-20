@@ -2,7 +2,7 @@ import Link from 'next/link'
 import AdLoader from './AdLoader'
 // 리디자인 셸(S6·P3): prod는 classic(ShellHeader·ShellFooter = null → 아래 지금 헤더·푸터 그대로),
 // NEXT_PUBLIC_UI=next 프리뷰 빌드만 새 셸 헤더·푸터로 바뀐다. 본문(main)은 두 빌드가 같다.
-import { ShellHeader, ShellFooter } from '@ui-shell'
+import { ShellHeader, ShellFooter, ContentFrame } from '@ui-shell'
 
 /**
  * 글 콘텐츠 페이지 공용 셸(가이드·소개·개인정보·레벨 목록).
@@ -11,7 +11,9 @@ import { ShellHeader, ShellFooter } from '@ui-shell'
  */
 const link = { color: '#eef1f6', textDecoration: 'none', opacity: 0.75, fontSize: 14 } as const
 
-export default function ContentShell({ children, ads = true }: { children: React.ReactNode; ads?: boolean }) {
+export default function ContentShell({ children, ads = true, kind }: { children: React.ReactNode; ads?: boolean; kind?: 'index' }) {
+  // 리디자인 P10: 새 셸(프리뷰)은 Bone 글 페이지 틀(같은 본문 JSX, 옛 인라인 style만 걷어냄), classic(prod)은 null → 아래 그대로
+  if (ContentFrame) return <ContentFrame ads={ads} kind={kind}>{children}</ContentFrame>
   return (
     <div style={{ minHeight: '100vh', overflowY: 'auto' }}>
       {ads && <AdLoader />}

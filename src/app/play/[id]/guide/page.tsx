@@ -7,6 +7,8 @@ import { levelById, ordered, worldName } from '@/lib/spill/client/catalog'
 import { describeLevel } from '@/lib/spill/client/describe'
 import { GUIDES, guideFor } from '@/lib/spill/guide/guides'
 import { SITE } from '@/lib/site'
+// 리디자인 P10: 새 셸(프리뷰)은 Bone 글 화면(GuideArticle), classic(prod)은 null → 아래 지금 화면 그대로
+import { GuideArticle } from '@ui-shell'
 
 export const dynamicParams = false
 
@@ -46,28 +48,44 @@ export default async function Page({ params }: Props) {
   const prev = i > 0 ? levels[i - 1] : null
   const next = levels[i + 1] ?? null
   const path = `/play/${g.id}/guide`
+  // JSON-LD 두 개 — prod 화면과 새 셸이 같은 객체를 쓴다(구조화 데이터 diff 0)
+  const articleLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: g.title,
+    description: g.description,
+    datePublished: g.published,
+    dateModified: g.updated,
+    author: AUTHOR,
+    publisher: { '@type': 'Organization', name: 'Sandlab', url: SITE },
+    mainEntityOfPage: `${SITE}${path}`,
+  }
+  const crumbsLd = breadcrumbs(SITE, [
+    { name: 'Challenges', path: '/play' },
+    { name: `${level.id} ${level.name}`, path: `/play/${level.id}` },
+    { name: 'Guide', path },
+  ])
+  if (GuideArticle)
+    return (
+      <GuideArticle
+        title={g.title}
+        byline={`World ${level.world}: ${worldName(level.world)} · By Piousangel · Published ${fmt(g.published)}${g.updated !== g.published ? ` · Updated ${fmt(g.updated)}` : ''}`}
+        lesson={g.lesson}
+        facts={[...d.goals.map((t) => `Goal: ${t}`), ...d.warnings.map((t) => `Avoid: ${t}`), ...d.verbs, ...(d.par ? [d.par] : [])]}
+        play={{ href: `/play/${level.id}`, label: `Play ${level.id} ${level.name}` }}
+        sections={g.sections}
+        hints={g.hints}
+        prev={prev && { href: `/play/${prev.id}/guide`, label: `${prev.id} ${prev.name} guide` }}
+        next={next && { href: `/play/${next.id}/guide`, label: `${next.id} ${next.name} guide` }}
+      >
+        <JsonLd data={articleLd} />
+        <JsonLd data={crumbsLd} />
+      </GuideArticle>
+    )
   return (
     <ContentShell>
-      <JsonLd
-        data={{
-          '@context': 'https://schema.org',
-          '@type': 'Article',
-          headline: g.title,
-          description: g.description,
-          datePublished: g.published,
-          dateModified: g.updated,
-          author: AUTHOR,
-          publisher: { '@type': 'Organization', name: 'Sandlab', url: SITE },
-          mainEntityOfPage: `${SITE}${path}`,
-        }}
-      />
-      <JsonLd
-        data={breadcrumbs(SITE, [
-          { name: 'Challenges', path: '/play' },
-          { name: `${level.id} ${level.name}`, path: `/play/${level.id}` },
-          { name: 'Guide', path },
-        ])}
-      />
+      <JsonLd data={articleLd} />
+      <JsonLd data={crumbsLd} />
       <p style={{ margin: '0 0 8px', fontSize: 14 }}>
         <a href="/play" style={{ ...a, opacity: 0.6 }}>← All levels</a>
       </p>
