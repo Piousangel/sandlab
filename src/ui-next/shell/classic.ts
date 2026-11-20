@@ -16,6 +16,8 @@ export const shellHtmlProps: { className?: string } = {}
 
 export const ShellHeader: null | (() => React.JSX.Element) = null
 export const ShellFooter: null | (() => React.JSX.Element) = null
+/** P9: null → /gallery가 지금 GalleryBrowser(+ 화면에 안 보이는 h1)를 그대로 그린다. */
+export const GalleryWall: null | (() => React.JSX.Element) = null
 
 export const SpillHud: null | SpillHudKit = null
 export const DailyStart: null | ((p: DailyStartProps) => React.JSX.Element) = null

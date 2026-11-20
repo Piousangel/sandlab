@@ -80,7 +80,7 @@ export const NO_GPU_HEADLINE = 'Today’s puzzle works here.'
 /** 헤드라인 두 줄(제목·부제). 높이는 항상 두 줄로 예약한다(CLS). */
 export function entryHeadline(e: Entry): { title: string; sub: string } {
   if (e.kind === 'scene') {
-    // 단건 조회 API는 아직 작성자 이름을 싣지 않는다(목록만) — 없을 때 '익명'이라고 단정하지 않는다
+    // 단건 조회 API가 creatorName을 싣는다(P9). 이름 없이 올린 작품은 null — 그때 '익명'이라고 단정하지 않는다
     const by = e.creatorName ? `by ${e.creatorName}` : 'From the gallery'
     const rx = e.remixCount === 1 ? '1 remix' : `${e.remixCount} remixes`
     return { title: e.title || 'Untitled', sub: `${by} · ${rx}` }

@@ -621,3 +621,51 @@
 .sl-ds-head > span {
   display: block;
 }
+
+/* ---------- 데일리 시작 화면 모션(데일리 개편 D1) ----------
+ * 들어올 때 제목 묶음(번호·이름·목표) → 유리 보드 → Solve today → 안내 순으로 8px 떠오른다(60ms 간격, 합계 < 600ms).
+ * 보드 실루엣은 어두운 유리에서 '현상'되듯 채도·밝기가 올라온다(filter만 — 레이아웃 무변경, CLS 0.
+ * filter 애니메이션은 매 프레임 캔버스 한 장을 다시 칠하지만 400ms·1회뿐이라 비용이 작다).
+ * reduced-motion이면 즉시 최종 상태. */
+.sl-ds-body > * {
+  animation: sl-ds-up var(--sl-t-move) var(--sl-ease-pour) both;
+}
+.sl-ds-body > :nth-child(2) {
+  animation-delay: 60ms;
+}
+.sl-ds-body > :nth-child(3) {
+  animation-delay: 120ms;
+}
+.sl-ds-body > :nth-child(4) {
+  animation-delay: 180ms;
+}
+.sl-ds-body > :nth-child(n + 5) {
+  animation-delay: 240ms;
+}
+.sl-ds-canvas {
+  animation: sl-ds-develop var(--sl-t-settle) ease-out 60ms both;
+}
+@keyframes sl-ds-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sl-ds-develop {
+  from {
+    filter: saturate(0) brightness(0.45);
+  }
+  to {
+    filter: saturate(0.25) brightness(0.8);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-ds-body > *,
+  .sl-ds-canvas {
+    animation: none;
+  }
+}

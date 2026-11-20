@@ -39,19 +39,22 @@ describe('셸 링크 표(S10)', () => {
 describe('데일리 pill(UTC 자정 기준)', () => {
   const at = (iso: string) => Date.parse(iso)
   it('남은 시간 hh:mm(분 올림), 번호는 dayNumber와 같다', () => {
-    expect(pillText(at('2026-11-20T17:47:30Z'))).toEqual({ no: 'No.43', left: '06:13', label: 'No.43 06:13, daily puzzle, 6 hours 13 minutes left' })
+    expect(pillText(at('2026-11-20T17:47:30Z'))).toEqual({ no: 'Daily', left: '06:13', label: 'Daily · 06:13, puzzle No.43, 6 hours 13 minutes left' })
     expect(pillText(at('2026-11-20T23:59:30Z')).left).toBe('00:01')
-    expect(pillText(at('2026-11-20T22:59:00Z')).label).toBe('No.43 01:01, daily puzzle, 1 hour 1 minute left')
+    expect(pillText(at('2026-11-20T22:59:00Z')).label).toBe('Daily · 01:01, puzzle No.43, 1 hour 1 minute left')
   })
   it('접근 이름이 보이는 글자로 시작한다(WCAG 2.5.3 label-in-name)', () => {
     const t = pillText(at('2026-11-20T03:04:00Z'))
-    expect(t.label.startsWith(`${t.no} ${t.left}`)).toBe(true)
+    // 보이는 글자 = ShellHeader가 그리는 `${no} · ${left}`("Daily · 03:04") — P9: 보이는 글자에 'Daily'가 있어야 한다(3초 테스트)
+    expect(t.no).toBe('Daily')
+    expect(t.label.startsWith(`${t.no} · ${t.left}`)).toBe(true)
     expect(SSR_PILL.label.startsWith(SSR_PILL.no)).toBe(true)
   })
   it('자정 경계: 정각은 다음 날 번호 + 24:00', () => {
     expect(msUntilUtcMidnight(at('2026-11-21T00:00:00Z'))).toBe(86_400_000)
-    expect(pillText(at('2026-11-21T00:00:00Z'))).toMatchObject({ no: 'No.44', left: '24:00' })
-    expect(pillText(at('2026-11-20T23:59:59.999Z')).no).toBe('No.43')
+    expect(pillText(at('2026-11-21T00:00:00Z'))).toMatchObject({ left: '24:00' })
+    expect(pillText(at('2026-11-21T00:00:00Z')).label).toContain('puzzle No.44,')
+    expect(pillText(at('2026-11-20T23:59:59.999Z')).label).toContain('puzzle No.43,')
   })
   it('SSR 문구는 시간이 없다(정적 HTML에 빌드 시각이 굽히지 않게)', () => {
     expect(SSR_PILL.left).toBe('')

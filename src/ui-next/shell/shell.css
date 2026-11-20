@@ -174,7 +174,7 @@ html[data-sl-wm='drop'] .sl-wm-grain {
 }
 .sl-pill-t {
   display: inline-block;
-  min-width: 12ch; /* "No.100 23:59" */
+  min-width: 13ch; /* "Daily · 23:59" (P9) */
 }
 .sl-pill-left {
   color: var(--sl-ink-2);

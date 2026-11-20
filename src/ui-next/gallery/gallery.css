@@ -1,0 +1,464 @@
+/*
+ * 갤러리 「The Wall」(P9). 바탕 Bone 한 면 위에 못·1px 걸이줄·kiln 액자·어두운 유리(결과 화면 P5와 같은 문법).
+ * 면 규칙(R3): 무채 면은 버튼(bone-2) 하나 단계만 — 카드 면을 따로 깔지 않는다(액자가 카드다).
+ * CLS: 유리는 aspect-ratio 2:1로 이미지 전에 자리를 잡고, 불러오는 동안 같은 크기의 빈 액자를 그린다.
+ */
+.sl-gw {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--sl-bone);
+  color: var(--sl-ink);
+  font-family: var(--sl-font-display);
+  font-size: var(--sl-fs-body);
+  line-height: var(--sl-lh-body);
+  overflow-x: hidden;
+}
+.sl-gw h1,
+.sl-gw h2,
+.sl-gw p {
+  margin: 0;
+}
+.sl-gw-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px var(--sl-s-7);
+  box-sizing: border-box;
+}
+
+.sl-gw-head {
+  padding: 16px 0 0;
+}
+.sl-gw-h1 {
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+.sl-gw-lede {
+  margin-top: 4px;
+  color: var(--sl-ink-2);
+}
+
+.sl-gw-sec {
+  margin-top: var(--sl-s-6);
+}
+.sl-gw-row,
+.sl-gw-subrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sl-gw-subrow {
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: var(--sl-hit);
+}
+.sl-gw-h2 {
+  font-size: var(--sl-fs-h2);
+  line-height: 28px;
+  font-weight: 700;
+}
+.sl-gw-label {
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-fs-label-tap);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--sl-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.sl-gw-sub {
+  margin-top: 2px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--sl-ink-2);
+}
+.sl-gw-ro {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--sl-ink);
+}
+
+/* ---------- 정렬(Hot·New·Top) ---------- */
+.sl-gw-sorts {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  border-bottom: 1px solid var(--sl-bone-line);
+}
+.sl-gw-sort {
+  min-width: var(--sl-hit);
+  min-height: var(--sl-hit);
+  padding: 0 14px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--sl-ink-2);
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+}
+.sl-gw-sort[aria-pressed='true'] {
+  color: var(--sl-ink);
+  border-bottom-color: var(--sl-ink);
+}
+.sl-gw-textbtn {
+  min-height: var(--sl-hit);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sl-ink);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ---------- 벽(액자 그리드) ---------- */
+.sl-gw-grid {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 24px;
+}
+.sl-gw-item {
+  min-width: 0;
+  position: relative;
+}
+.sl-gw-hang {
+  display: block;
+  position: relative;
+  height: 18px;
+  margin: 0 6px;
+}
+.sl-gw-wire {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.sl-gw-wire path {
+  fill: none;
+  stroke: var(--sl-ink-2);
+  stroke-width: 1;
+}
+.sl-gw-nail {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: var(--sl-ink);
+  box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.32), 0 1px 0 rgba(42, 33, 24, 0.25);
+}
+.sl-gw-art {
+  position: relative;
+}
+.sl-gw-open {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 12px;
+}
+.sl-gw-open:focus-visible,
+.sl-gw-sort:focus-visible,
+.sl-gw-btn:focus-visible,
+.sl-gw-textbtn:focus-visible,
+.sl-gw-play:focus-visible,
+.sl-gw-vote:focus-visible,
+.sl-gw-maker:focus-visible {
+  outline: none;
+  box-shadow: var(--sl-focus);
+}
+.sl-gw-frame {
+  display: block;
+  padding: 5px;
+  background: var(--sl-kiln);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 14px 22px -16px rgba(42, 33, 24, 0.6);
+  transition: transform var(--sl-t-quick) var(--sl-ease-pour);
+}
+.sl-gw-open:hover .sl-gw-frame {
+  transform: translateY(-2px);
+}
+.sl-gw-glass {
+  display: block;
+  position: relative;
+  aspect-ratio: 2 / 1;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--sl-empty);
+}
+.sl-gw-glass img,
+.sl-gw-live {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sl-gw-live {
+  opacity: 0;
+  transition: opacity var(--sl-t-quick) linear;
+}
+.sl-gw-live[data-on] {
+  opacity: 1;
+}
+/* 유리 위 얇은 반사 한 줄(결과 화면 액자와 같은 말) */
+.sl-gw-glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+.sl-gw-title {
+  margin-top: 8px;
+  padding-right: 56px; /* 오른쪽 Play 버튼 자리 */
+  min-height: 28px;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 700;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+/* Play: 제목 줄 오른쪽, 44×44 히트(보이는 칩은 28px) — 그림을 가리지 않는다 */
+.sl-gw-play {
+  position: absolute;
+  right: -6px;
+  bottom: -10px;
+  width: 56px;
+  height: var(--sl-hit);
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--sl-r-sm);
+  color: var(--sl-ink);
+  cursor: pointer;
+  font: inherit;
+}
+.sl-gw-play-face {
+  height: 28px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--sl-r-pill);
+  border: 1px solid var(--sl-tube-line);
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-fs-label-tap);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+.sl-gw-play[aria-pressed='true'] .sl-gw-play-face {
+  background: var(--sl-ink);
+  border-color: var(--sl-ink);
+  color: var(--sl-bone);
+}
+.sl-gw-credit {
+  margin-top: 2px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--sl-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sl-gw-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-fs-label-tap);
+  line-height: 20px;
+  color: var(--sl-ink-2);
+}
+.sl-gw-votes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sl-gw-vote {
+  min-width: var(--sl-hit);
+  min-height: var(--sl-hit);
+  padding: 0 12px;
+  margin-right: -6px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sl-ink);
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.sl-gw-vote:disabled {
+  color: var(--sl-ink-2);
+  text-decoration: none;
+  cursor: default;
+}
+
+/* 불러오는 중: 같은 크기 빈 액자 */
+.sl-gw-skel .sl-gw-frame {
+  box-shadow: none;
+  opacity: 0.18;
+}
+.sl-gw-skel .sl-gw-glass {
+  /* 목록 카드 캡션 높이: 제목 8+28 · 작성자 22 · 리믹스 20 · 투표 줄 44 = 122 (제목 한 줄 기준) */
+  margin-bottom: 122px;
+}
+
+/* ---------- More · 빈 상태 · 상태 줄 ---------- */
+.sl-gw-btn {
+  min-height: var(--sl-hit);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--sl-ink);
+  background: var(--sl-bone-2);
+  border: 0;
+  border-radius: var(--sl-r-sm);
+  box-shadow: var(--sl-lift);
+  text-decoration: none;
+  cursor: pointer;
+}
+.sl-gw-btn:active {
+  transform: translateY(var(--sl-press-y));
+  box-shadow: none;
+}
+.sl-gw-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+.sl-gw-more {
+  margin-top: var(--sl-s-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.sl-gw-empty {
+  margin-top: 16px;
+  padding: 32px 16px;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+  border: 1px dashed var(--sl-tube-line);
+  border-radius: 12px;
+}
+.sl-gw-status {
+  min-height: 20px;
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  color: var(--sl-ink-2);
+}
+
+/* ---------- Top: 작성자 순위 ---------- */
+.sl-gw-makers {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  max-width: 640px;
+}
+.sl-gw-maker {
+  width: 100%;
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto 16px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  font: inherit;
+  color: var(--sl-ink);
+  text-align: left;
+  background: var(--sl-bone-2);
+  border: 0;
+  border-radius: var(--sl-r-sm);
+  box-shadow: var(--sl-lift);
+  cursor: pointer;
+}
+.sl-gw-maker-skel {
+  height: 56px;
+  border-radius: var(--sl-r-sm);
+  border: 1px dashed var(--sl-bone-line);
+}
+.sl-gw-rank {
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-fs-gauge);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.sl-gw-maker-name {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 720px) {
+  .sl-gw-main {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .sl-gw-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 32px;
+  }
+  .sl-gw-head {
+    padding-top: 40px;
+  }
+  .sl-gw-h1 {
+    font-size: var(--sl-fs-display);
+    line-height: 46px;
+  }
+}
+@media (min-width: 1100px) {
+  .sl-gw-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-gw-frame,
+  .sl-gw-live {
+    transition: none;
+  }
+  .sl-gw-open:hover .sl-gw-frame {
+    transform: none;
+  }
+}

@@ -155,6 +155,12 @@ s, r = call("/api/scenes?sort=new")
 row = {x['id']: x for x in r.get('scenes', [])}.get(csid, {})
 check(row.get('creatorId') == cid, f"목록에 creatorId 노출 → {row.get('creatorId')}")
 check(row.get('creatorName') == "TestCreator", f"목록에 creatorName 노출 → {row.get('creatorName')}")
+# P9: 단건 조회도 목록과 같은 표시 이름(creatorName)을 싣는다 — 홈 진입 부제 "by …". creatorId는 단건에 싣지 않는다.
+s, r = call(f"/api/scenes/{csid}")
+check(s == 200 and r.get('creatorName') == "TestCreator", f"단건 조회에 creatorName → {r.get('creatorName')}")
+check('creatorId' not in r, "단건 조회에 creatorId 미포함(목록보다 더 노출하지 않음)")
+s, r = call(f"/api/scenes/{csid}?meta=1")
+check(s == 200 and r.get('creatorName') == "TestCreator" and 'data' not in r, f"meta=1 단건에도 creatorName → {r.get('creatorName')}")
 
 s, r = call(f"/api/scenes?creator={cid}")
 check(s == 200 and r.get('total', 0) >= 1, f"creator 필터 total>=1 → {r.get('total')}")
@@ -183,6 +189,8 @@ check(s == 200 and 'id' in r, f"익명 업로드 → {r}")
 _, r2 = call("/api/scenes?sort=new")
 anon_row = {x['id']: x for x in r2.get('scenes', [])}.get(r.get('id'), {})
 check(anon_row.get('creatorId') is None, f"익명 업로드는 creatorId가 null → {anon_row.get('creatorId')}")
+s1, r1 = call(f"/api/scenes/{r.get('id')}")
+check(s1 == 200 and 'creatorName' in r1 and r1['creatorName'] is None, f"익명 업로드 단건 creatorName은 null(필드는 있음) → {r1.get('creatorName', 'MISSING')}")
 
 # 형식이 안 맞는 creator(6자 미만)는 400이 아니라 조용히 익명 취급되어야 한다.
 s, r = call("/api/scenes", {"title":"bad creator id","data":DATA,"thumb":THUMB,"w":960,"h":540,

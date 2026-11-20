@@ -1,4 +1,4 @@
-# 인계 (2026-11-20 오전): 리디자인 v2 P10 「글 페이지 + 광고 위치」 머지 — P9(갤러리)는 동시 진행, 다음은 P11(시험관 루프·접근성 마감)
+# 인계 (2026-11-20 오전): 리디자인 v2 P10 「글 페이지 + 광고 위치」 머지 — P9(#81 갤러리)도 머지됨, 다음은 P11(시험관 루프·접근성 마감)
 
 - 계획서 6장 진행표가 기준. P10 = 브랜치 shift/redesign-p10-content. 결정은 DECISIONS 2026-11-20 P10. AdSense 단위 표 = docs/team/adsense-units.md.
 - **글 페이지 = `src/ui-next/content/`**: parts.tsx(ContentPage 뼈대·목차·이전/다음·MidAd/EndAd·Sections), Articles.tsx(LearnArticle·GuideArticle), Materials.tsx(MaterialsIndex·MaterialPage·MiniTube), ContentFrame.tsx(산문 페이지 틀), model.ts(순수: sectionIds·midAfter·proseMidIndex·stripStyles), content.css, content.test.tsx. 계약 타입 `shell/contentTypes.ts`, classic.ts에 null 5개.
@@ -7,6 +7,30 @@
 - **본문 서체 = 시스템 산세리프**(제목 Bricolage 700). Lighthouse 실측 표는 DECISIONS P10 — LCP는 서체와 무관하게 로컬 throttling 4.5~5.2s(P3 이전 기준선과 같은 수준).
 - **P11이 알아야 할 것**: ① LCP 2.5s 게이트는 글 페이지도 미달(로컬 Lighthouse 모바일 4.5~5.2s, LCP 요소 = 첫 p/h1) — 서체가 아니라 렌더 차단 CSS·JS 쪽을 봐야 한다(next.ts가 셸 CSS 7개를 모든 페이지에 싣는다). ② 키보드 로빙·대비 마감 때 목차(`.sl-cs-toc`, 1180px 이상 sticky)·이전/다음 카드·힌트 details·반응 표(스크롤 영역 tabIndex)가 대상. ③ 컷오버(P12) 때 AdSense 승인 전이면 빈 안내판이 보인다 — AD_SLOTS를 비울지 그때 결정. ④ 검사 스크립트: 스크래치 p10/qa.mjs(10쪽 × 390·360·1440 가로 스크롤·44px·axe·CLS·인라인 style), p10/adgap.mjs(안내판 폭·ins 수·인터랙티브 간격, 320~1440), p10/lh.sh·lhsum.py(6쪽 × 3회). 파리티는 scripts/qa/content-parity.mjs로 상시화.
 - 기준선: `pnpm test --testTimeout=30000`의 verify.test(beforeAll 10s 훅 타임아웃)는 main에서도 재현, sweep.test(Steam vs vent)는 부하 30+일 때만 타임아웃(단독 실행 통과).
+
+# 인계 (2026-11-21): 리디자인 v2 P9 「갤러리 The Wall」 머지 — P8(#79)도 머지됨, 다음은 P10
+
+- 계획서 6장 진행표가 기준. P9 = #81(브랜치 shift/redesign-p9-gallery). 결정은 DECISIONS 2026-11-20 P9.
+- **새 갤러리 = `src/ui-next/gallery/`**(GalleryWall.tsx 화면, LiveCanvas.tsx 라이브 한 점, model.ts 순수 규칙, picks.ts 큐레이션, gallery.css, gallery.test.tsx). `@ui-shell`의 `GalleryWall`, classic은 null → `src/app/gallery/page.tsx`가 GalleryBrowser(+ SR h1) 그대로.
+- **prod에 들어간 것: 워커 `GET /api/scenes/:id`(풀·meta)에 `creatorName`**(목록과 같은 키·값, creatorId는 안 실음). worker/scene-one.test.ts, verify-gallery.py 단건·meta·익명 3항목 추가. P6 홈 진입 부제가 이제 "by 이름 · N remixes"(이름 없는 장면은 그대로 "From the gallery").
+- **큐레이션 12점 = 기존 공개 팀 작품 id**(아트 카운슬 2026-08 업로드, D1 creator_name 비어 있음) → 카드·아래 목록·홈 진입 부제 모두 `isSandlabPick`이면 "by Sandlab". 썸네일 `public/ui-next/wall/<id>.webp`(로컬 Metal WebGPU 실엔진 캡처, 3.4~19.1KB). 재생성 `pnpm build:preview && NODE_PATH=<playwright 있는 곳> node scripts/capture-wall.cjs`. **팀 작품이 D1에서 지워지면 picks.ts에서도 빼야 한다**(링크가 홈 빈 화면으로 떨어짐).
+- 라이브 규칙: `live = {key: 구역+id, via}` 하나만 → 동시 캔버스 ≤ 1(같은 id가 위·아래 두 구역에 있어도). hover 0.3초 재생/떠나면 정지, hover 중 Play = 고정, reduced-motion은 hover 없음, WebGPU 없음·init 실패면 Play 버튼 없음, 1200×600 아닌 옛 장면 Play 없음.
+- 헤더 데일리 pill: 보이는 글자 "Daily · hh:mm"(번호는 접근 이름 "Daily · hh:mm, puzzle No.N, …"). 13ch. **아래 D1 인계의 "헤더 pill Daily 글자" 할 일은 이 PR로 끝남.**
+- **P10·P12가 알아야 할 것**: ① 옛 갤러리의 **Yours 탭(내 작품·표/리믹스 델타)이 새 화면에 없다** — 컷오버 전 이식 필요(gallery.ts listMine·mineDeltas·updateMineSeen 그대로 쓰면 됨). ② Top = 작성자 순위(`/api/creators/top`)다. 작품 전 기간 순위를 원하면 워커 `sort=top` 추가(별도 PR, 오너 확인). ③ Ko-fi 후원 링크·About/Learn 글줄은 옛 갤러리 하단에만 있다 — 새 셸 푸터로 충분한지 P10에서 판단. ④ /gallery는 광고 허용 목록 밖 → AdPlate 없음. ⑤ `public/ui-next/wall/*.webp` 12개는 prod out/에도 복사된다(참조 없음, P6 still.webp와 같은 방식).
+- 검사 스크립트(스크래치 p9/e2e.cjs, 상시화하려면 scripts/qa/로): 3폭 레이아웃·CLS·44px·axe·pill, New·More·중복, Top → 작성자, 라이브 hover/탭/두 구역/고정, reduced-motion, WebGPU 없음, 큐레이션 → 홈 "by Sandlab", 로컬 워커(wrangler dev)에 이름 있는 1200×600 장면을 올려 홈 "by LocalTester".
+- 기준선: `pnpm test --testTimeout=30000`의 sweep·verify·replay 계열 30s 타임아웃은 main에서도 재현(머신 load 30+).
+
+---
+
+# 인계 (2026-11-20 10시 개발): 데일리 개편 D1 「지층이 쌓이는 모션」 — 브랜치 shift/1000-daily-motion
+
+- 오너 '딱딱·고전적' 지적에 대해 /daily 허브·데일리 시작 화면의 **모션 0**을 메움(프리뷰 전용, prod 화면 무변경). 기록 docs/team/specs/2026-11-20-daily-motion-d1.md(독립 리뷰 5/10 → 전부 반영).
+- 코드: `src/ui-next/daily/StrataJar.tsx`(pourDelays·grainTiming·isFreshPour·POURED_KEY `sandlab.strata.poured.v1`, IntersectionObserver로 병이 보일 때 시작), daily.css 끝 모션 절, spill.css 끝 데일리 시작 모션 절. 테스트 daily.test.tsx '모션' 묶음.
+- 함정: ① 모바일에선 병이 첫 화면 밖 — 모션을 마운트 때 틀면 아무도 못 본다(IO 게이트 필수). ② 토큰 길이는 reduced-motion에서 0.01ms가 되지만 JS 지연(animation-delay)은 남는다 → `animation: none`을 따로 써야 한다(fill both면 지연 동안 투명). ③ SVG 패턴 id `sl-st-grain1~3`이 있어 문자열 'sl-st-grain' 검사는 늘 걸린다 — `class="sl-st-grain"`으로 찾을 것.
+- 캡처 스크립트: 스크래치 cap/cap.cjs(out/ 정적 서버 + 픽스처 fresh·pending·seen·reduced, 390 시점별 프레임). 같은 날 재방문 검사는 init script가 키를 지우므로 수동 확인.
+- **다음 교대(D2)**: 390에서 병이 112px라 오늘 층 낙하가 작다 → 병 확대 또는 오늘 카드 아래 미니 병 / 결과 "+1 stratum" → 병 전환 / 헤더 pill 'Daily' 글자 / 결과 "왜 별을 놓쳤나" 한 줄. 리디자인 계획의 다음 P는 P9(갤러리) — 데일리 담당이 아니면 그쪽.
+
+---
 
 # 인계 (2026-11-20 오전): 리디자인 v2 P8 「/play 전시실」 머지 — P6(#78)도 머지됨, 다음은 P9(갤러리 The Wall)
 
@@ -17,6 +41,9 @@
 - **광고**: `AD_SLOTS.play`만 채우면 /play 월드 카드 아래에 300×250 안내판이 뜬다(format rect, 간격 32px). 오너가 AdSense에서 **고정 300×250 디스플레이 단위**를 만들 때까지 렌더 0.
 - **P9가 알아야 할 것**: ① 화면 전체를 Bone으로 까는 글/목록 페이지는 PlayGallery처럼 `AdLoader`(광고 허용 페이지면)·ShellHeader·ShellFooter를 직접 그리는 래퍼를 쓰면 된다(ContentShell은 prod 화면이라 건드리지 않았다). 갤러리는 광고 금지 페이지라 AdLoader를 넣지 않는다(verify-ads가 잡는다). ② classic.ts에 null 2개를 더하자 P6 머지 뒤 main 기준으로 webpack 모듈 id 6490↔4109 맞바꿈이 다시 생겼다(bench HTML·txt, 공용 청크 5개, 홈 page 청크 — 내용 동일, PR 표). P6 머지 전 main 기준에서는 0이었다 — 늘 같지는 않으니 매번 diff 표로 확인. ③ 썸네일은 160×240 시작 보드라 '정적 미리보기' 패턴으로 갤러리 장면에도 재사용 가능(같은 PNG 인코더 — scripts/gen-level-thumbs.mts의 encodePng, 팔레트 ≤256색). ④ 검사 스크립트: 스크래치 p8/p8-play.mjs(진행 픽스처 none·some·all × 390·360·1440, 썸네일 바이트, /play/1-1 패널), p8/parity.py(prod vs 프리뷰 /play·/play/<id> 단어·링크·h1·title). 상시화하려면 scripts/qa/로.
 - 알려진 것(이번 범위 밖): /play/<id>의 h1이 prod "1-1 First Drop" vs 프리뷰 "First Drop 1-1"(P4 SpillHud 제목 표식 순서) — 컷오버 전 SEO 판단 필요.
+
+---
+
 # 인계 (2026-11-20): 리디자인 v2 P6 「홈 Pour」 머지 — P5·P7도 머지됨, 다음은 P8(/play 전시실)
 
 - 계획서 6장 진행표가 기준. P6 = #78(브랜치 shift/redesign-p6-home). 결정은 DECISIONS 2026-11-20 P6.
