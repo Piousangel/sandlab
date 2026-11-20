@@ -30,6 +30,7 @@ const WRITES: [string, string][] = [
   ['POST', '/api/daily'], // 데일리 챌린지 제출
   ['POST', '/api/spill/level/1-1/clear'], // Spill 레벨·데일리 클리어 기록
   ['POST', '/api/track'], // 클라이언트 계측
+  ['POST', '/api/visit'], // 오늘 방문자 비콘(프리뷰 방문은 세지 않는다)
   ['PUT', '/api/scenes/abcdefghijk'],
   ['PATCH', '/api/scenes/abcdefghijk'],
   ['DELETE', '/api/scenes/abcdefghijk'],

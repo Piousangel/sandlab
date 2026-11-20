@@ -27,6 +27,14 @@ jobs:
       # verify.test.ts는 5초 타임아웃으로 6개가 늘 실패(기존 문제, 백로그)
       # spill:verify는 CI에서 22분 걸려(로컬 ~3분) 여기서 빼고, 머지 전(06시 루틴·로컬)에 돌린다
       - run: pnpm test --exclude src/lib/spill/verify/verify.test.ts
+      # 추가 전용·멱등 D1 마이그레이션(CREATE TABLE IF NOT EXISTS만). 기존 표·행은 건드리지 않는다.
+      # 실패해도 배포는 진행한다 — 워커는 visit_days·visit_seen이 없으면 방문자를 세지 않고 홈 줄을 비운다.
+      - name: D1 additive migrations
+        continue-on-error: true
+        run: pnpm exec wrangler d1 execute sandlab-gallery --remote --file migrations/0002_visitors.sql
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       # deploy = next build → verify-ads → wrangler deploy
       - run: pnpm run deploy
         env:

@@ -1,0 +1,193 @@
+/**
+ * 오늘 방문자 수(오너 11-20 "today 방문자 나왔으면 좋겠어") — 워커 + D1 일별 고유 방문자 카운터.
+ * 허브(minigames-hub src/lib/visitors.ts)와 같은 로직. 다른 점: 문구('lab'), 선택 시크릿 이름 VISIT_SALT, 비콘 경로 POST /api/visit.
+ *
+ * 왜 이 방식인가(DECISIONS 11-20 '오늘 방문자'):
+ * - 존 트래픽 uniques는 봇이 섞여 공개 숫자로 쓰면 부풀린 숫자가 된다.
+ * - AE(sandlab_events)는 일부러 per-user 식별자를 싣지 않아(워커 track 주석) 고유 방문자를 낼 수 없다.
+ * - 그래서 사람이 연 페이지의 JS 비콘(LandingBeacon → POST /api/visit, 탭 세션·UTC 날짜당 1회)을 워커가 직접 센다.
+ *   프리뷰 워커(READ_ONLY=1)는 POST를 403으로 막으므로 프리뷰 방문은 세지 않는다.
+ *
+ * 개인정보: IP 원문은 저장하지 않는다. 하루마다 새로 뽑은 무작위 솔트(+ 선택 시크릿 VISIT_SALT)로 HMAC한 값만
+ * visit_seen에 그날 하루 둔다. 날이 바뀌면 지난 날의 해시 행을 지우고 솔트를 NULL로 바꿔 숫자(visit_days.visitors)만 남긴다.
+ * IPv6는 /64 앞부분만 쓴다(한 집·한 기기가 주소를 돌려도 한 명으로 — 부풀리지 않는 쪽).
+ * 기준 시간대는 UTC(자정 리셋) — 데일리 퍼즐과 같은 기준.
+ */
+
+export const VISIT_TZ = 'UTC'
+
+/** UTC 날짜 'YYYY-MM-DD'. */
+export function utcDay(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10)
+}
+
+/** 'YYYY-MM-DD'의 하루 전(UTC). */
+export function prevDay(day: string): string {
+  return utcDay(Date.parse(`${day}T00:00:00Z`) - 86_400_000)
+}
+
+// 크롤러·미리보기 봇·헤드리스·스크립트 클라이언트. 사람 브라우저 UA에는 이 낱말들이 없다.
+const BOT_UA =
+  /bot|crawl|spider|slurp|scrape|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptime|monitor|preview|facebookexternalhit|embedly|quora link|whatsapp|curl|wget|python|go-http|java\/|okhttp|axios|node-fetch|undici|httpclient|libwww|postman|insomnia|playwright|puppeteer|phantom|selenium/i
+
+/** 봇·스크립트 UA면 true. UA가 비어 있어도 사람이 아니라고 본다. */
+export function isBotUA(ua: string | null | undefined): boolean {
+  if (!ua || ua.length < 20) return true
+  return BOT_UA.test(ua)
+}
+
+/** 셀 단위: IPv4는 주소 그대로, IPv6는 앞 4블록(/64). 빈 값은 ''. */
+export function ipBucket(ip: string | null | undefined): string {
+  const s = (ip ?? '').trim().toLowerCase()
+  if (!s) return ''
+  if (!s.includes(':')) return s
+  // '::' 축약을 펼친 뒤 앞 4블록
+  const [head, tail] = s.split('::')
+  const h = head ? head.split(':') : []
+  const t = tail !== undefined ? (tail ? tail.split(':') : []) : []
+  const full = tail !== undefined ? [...h, ...Array(Math.max(0, 8 - h.length - t.length)).fill('0'), ...t] : h
+  return full
+    .slice(0, 4)
+    .map((x) => x.replace(/^0+(?=.)/, ''))
+    .join(':') + '::/64'
+}
+
+/** HMAC-SHA256(key = secret|salt, ip 셀) 앞 16바이트 hex. 같은 날·같은 셀 → 같은 값, 다른 날 → 다른 값. */
+export async function visitorHash(bucket: string, daySalt: string, secret = ''): Promise<string> {
+  const enc = new TextEncoder()
+  const key = await crypto.subtle.importKey('raw', enc.encode(`${secret}|${daySalt}`), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(bucket)))
+  return Array.from(sig.slice(0, 16), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+function randomSalt(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+// D1 최소 타입(워커와 테스트의 node:sqlite 어댑터가 함께 맞춘다)
+export interface VisitStmt {
+  bind(...vals: unknown[]): VisitStmt
+  all<T = unknown>(): Promise<{ results: T[] }>
+  run(): Promise<{ meta?: { changes?: number } }>
+}
+export interface VisitDb {
+  prepare(query: string): VisitStmt
+}
+
+/** 지난 날 해시 행을 한 번에 지우는 상한(D1 한 문장 한도 회피). 남은 행은 다음 정리 때. */
+export const PRUNE_BATCH = 5000
+
+// isolate당 오늘 솔트 캐시 — 같은 날이면 D1을 다시 읽지 않는다.
+let saltCache: { day: string; salt: string } | null = null
+/** 테스트용: isolate 캐시 비우기 */
+export function resetVisitCache(): void {
+  saltCache = null
+}
+
+async function daySalt(db: VisitDb, day: string, defer: (p: Promise<unknown>) => void): Promise<string> {
+  if (saltCache?.day === day) return saltCache.salt
+  const created = await db
+    .prepare('INSERT OR IGNORE INTO visit_days (day, visitors, salt) VALUES (?, 0, ?)')
+    .bind(day, randomSalt())
+    .run()
+  // 오늘 행을 처음 만든 요청이 지난 날 해시를 정리한다(응답 뒤). 실패해도 다음 날 정리가 day < 오늘로 다시 잡는다.
+  if ((created.meta?.changes ?? 0) > 0) defer(pruneBefore(db, day))
+  const { results } = await db.prepare('SELECT salt FROM visit_days WHERE day = ?').bind(day).all<{ salt: string | null }>()
+  let salt = results[0]?.salt ?? null
+  if (!salt) {
+    // 오늘 행의 솔트가 비어 있으면(수동 수정 등) 새로 채운다 — 이미 센 숫자는 그대로
+    salt = randomSalt()
+    await db.prepare('UPDATE visit_days SET salt = ? WHERE day = ? AND salt IS NULL').bind(salt, day).run()
+    const again = await db.prepare('SELECT salt FROM visit_days WHERE day = ?').bind(day).all<{ salt: string | null }>()
+    salt = again.results[0]?.salt ?? salt
+  }
+  saltCache = { day, salt }
+  return salt
+}
+
+/** 오늘보다 앞선 날의 해시 행 삭제 + 솔트 NULL(숫자만 보존). */
+export async function pruneBefore(db: VisitDb, day: string): Promise<void> {
+  try {
+    await db
+      .prepare('DELETE FROM visit_seen WHERE rowid IN (SELECT rowid FROM visit_seen WHERE day < ? LIMIT ?)')
+      .bind(day, PRUNE_BATCH)
+      .run()
+    await db.prepare('UPDATE visit_days SET salt = NULL WHERE day < ? AND salt IS NOT NULL').bind(day).run()
+  } catch (e) {
+    console.warn('visit prune failed', e)
+  }
+}
+
+export type VisitResult = 'counted' | 'seen' | 'bot' | 'no-ip'
+
+/**
+ * 방문 1건 기록. 같은 날·같은 IP 셀은 한 번만 센다(visit_seen PK). 봇 UA·IP 없음은 세지 않는다.
+ * 증가는 INSERT가 실제로 들어간 경우에만 — 중간 실패는 덜 세는 쪽으로만 틀린다(부풀리지 않는다).
+ */
+export async function recordVisit(
+  db: VisitDb,
+  opts: { ip: string | null; ua: string | null; now: number; secret?: string; defer?: (p: Promise<unknown>) => void },
+): Promise<VisitResult> {
+  if (isBotUA(opts.ua)) return 'bot'
+  const bucket = ipBucket(opts.ip)
+  if (!bucket) return 'no-ip'
+  const defer = opts.defer ?? ((p) => void p)
+  const day = utcDay(opts.now)
+  const salt = await daySalt(db, day, defer)
+  const h = await visitorHash(bucket, salt, opts.secret)
+  const ins = await db.prepare('INSERT OR IGNORE INTO visit_seen (day, h) VALUES (?, ?)').bind(day, h).run()
+  if ((ins.meta?.changes ?? 0) === 0) return 'seen'
+  await db.prepare('UPDATE visit_days SET visitors = visitors + 1 WHERE day = ?').bind(day).run()
+  return 'counted'
+}
+
+export interface VisitorsPayload {
+  tz: typeof VISIT_TZ
+  day: string
+  today: number | null
+  yesterday: number | null
+}
+
+/** 오늘·어제 숫자. 표가 없거나(마이그레이션 전) 실패하면 null — 화면은 줄을 숨긴다. */
+export async function readVisitors(db: VisitDb, now: number): Promise<VisitorsPayload> {
+  const day = utcDay(now)
+  const y = prevDay(day)
+  try {
+    const { results } = await db
+      .prepare('SELECT day, visitors FROM visit_days WHERE day IN (?, ?)')
+      .bind(day, y)
+      .all<{ day: string; visitors: number }>()
+    const get = (d: string) => {
+      const r = results.find((x) => x.day === d)
+      return r ? Number(r.visitors) : 0
+    }
+    return { tz: VISIT_TZ, day, today: get(day), yesterday: get(y) }
+  } catch (e) {
+    console.warn('visitors read failed', e)
+    return { tz: VISIT_TZ, day, today: null, yesterday: null }
+  }
+}
+
+/** 이 숫자 아래로는 숫자 대신 문장으로(작은 숫자가 어색하지 않게, 거짓 없이). */
+export const SMALL_VISITORS = 10
+
+/** 홈 한 줄 문구. null이면 줄을 숨긴다. */
+export function visitorsLine(today: number | null | undefined): string | null {
+  if (today == null || !Number.isFinite(today) || today < 0) return null
+  if (today < SMALL_VISITORS) return 'First visitors of the day are here'
+  return `${today.toLocaleString('en-US')} visitors in the lab today`
+}
+
+/** 좁은 자리(세로 폰 헤더) 문구 — 기준 시간대를 괄호로 붙인다. */
+export function visitorsShort(today: number | null | undefined): string | null {
+  if (today == null || !Number.isFinite(today) || today < 0) return null
+  if (today < SMALL_VISITORS) return 'First visitors of the day (UTC)'
+  return `${today.toLocaleString('en-US')} visitors today (UTC)`
+}
+
+/** 클라이언트 비콘: 탭 세션·UTC 날짜당 1회 POST /api/visit(서버도 같은 날 같은 IP를 한 번만 센다 — 이건 요청 수 절약). */
+export const VISIT_SESSION_KEY = 'sl-visit-day'
+export function shouldSendVisit(stored: string | null, now: number, webdriver: boolean): boolean {
+  if (webdriver) return false // 자동화 브라우저(검증·크롤러)는 보내지 않는다
+  return stored !== utcDay(now)
+}

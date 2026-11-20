@@ -163,3 +163,14 @@
 - **광고 안내판 없음**: /gallery는 verify-ads 허용 목록 밖(라이브 캔버스 화면). AdPlate를 넣지 않았다.
 - **헤더 데일리 pill(P3 셸)**: 보이는 글자 `Daily · 06:12`(번호는 접근 이름으로), 접근 이름 `Daily · 06:12, puzzle No.43, 6 hours 12 minutes left` — 보이는 글자로 시작(label-in-name). P6 3초 테스트 3/5 "No.42 00:52가 뭔지 모르겠다" 반영. 칸 폭 12ch → 13ch(시간이 채워져도 폭 고정, CLS 0).
 - 버린 안: 큐레이션을 `#g=` 문자열로 저장(장면 크기 따라 URL 예산 초과·홈 진입이 'A scene someone shared'로 제목 없음), 새 업로드(지시: prod D1 쓰기 금지), 정렬 Top을 위해 `sort=top` API 추가(범위 밖 — 필요하면 별도 PR), 썸네일 위 Play 버튼(작은 2열 카드에서 그림의 1/4을 가림).
+
+## 2026-11-20 오늘 방문자: 워커 + D1 일별 고유 방문자 카운터 (오너 "today 방문자 나왔으면 좋겠어")
+- 선택(오너): 사이트에 공개 표시 + 아침 메일·20시 요약에도. 허브(minigames-hub)와 같은 방식.
+- 집계 방법 비교
+  - (a) Cloudflare 분석: 존 uniques는 지표 토큰으로 읽히지만 **봇 포함** — 공개하면 부풀린 숫자다. AE `sandlab_events`는 일부러 per-user 식별자를 싣지 않아(워커 track 주석) 고유 방문자를 낼 수 없다.
+  - (b) **채택**: 사람이 연 페이지의 JS 비콘(LandingBeacon → `POST /api/visit`, 탭 세션·UTC 날짜당 1회, `navigator.webdriver`면 안 보냄)을 워커가 D1에 센다. 같은 UTC 날 같은 IP 1회(IPv6는 /64), 봇·스크립트 UA·빈 UA 제외. 프리뷰 워커는 READ_ONLY 가드가 POST를 403으로 막아 세지 않는다(표시는 같은 D1 숫자). NAT 공유는 1명으로 덜 센다(부풀리지 않는 쪽). 비용: 새 방문자당 D1 쓰기 2, 읽기는 엣지 60초 + isolate 15초 캐시.
+- 개인정보: IP 원문 미저장. `visit_seen(day, h)`의 h = HMAC-SHA256(키 = VISIT_SALT|그날 무작위 솔트, IP 셀) 앞 16바이트. 다음 날 첫 방문 때 지난 날 해시 행 삭제 + 솔트 NULL → `visit_days(day, visitors)` 숫자만 남는다. VISIT_SALT(선택 시크릿)가 없어도 솔트가 날마다 무작위라 다음 날부터는 되돌릴 수 없다(그날 안에는 D1 접근권자가 IPv4 전수 대입 가능 — 시크릿 설정 시 불가). 기존 votes·scenes의 무솔트 IP 해시와는 별개.
+- D1: `migrations/0002_visitors.sql`(새 표 2개, 추가 전용·멱등, 기존 표 무변경, DROP 두 줄로 되돌림). deploy.yml에 배포 전 원격 적용 단계를 새로 둔다(실패해도 배포 진행 — 표가 없으면 세지 않고 홈 줄은 빈 줄). 저장 형식이 새로 생기므로 독립 리뷰 2회.
+- 공개 표시: **prod 홈(옛 SandCanvas)도 바뀐다** — 데스크톱은 캔버스 위 헤드라인("Sandlab / Pour sand…") 아래 한 줄(첫 획 전까지 보임), 세로 폰은 44px 헤더의 브랜드 옆(헤더 높이 그대로, 넘치면 말줄임). 프리뷰 새 셸은 Today 카드의 Solve today 아래 한 줄(높이 20px 예약). 문구: 10 이상 "N visitors in the lab today · since 00:00 UTC"(폰: "N visitors today (UTC)"), 0~9는 "First visitors of the day are here"(폰: "First visitors of the day (UTC)"). 홈에는 광고가 없다(verify-ads 허용 목록 밖).
+- 보고: daily-metrics에 '방문자(UTC, 사이트 집계): 어제 N / 오늘 지금까지 N' + 7일 줄. OPERATING 0-1-6·SESSION-GUIDE 06시·20시 메일 형식에 같은 줄.
+- 첫날(11-20) 숫자는 배포 시각부터라 하루치가 아니다.
