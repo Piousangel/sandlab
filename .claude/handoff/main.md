@@ -1,6 +1,6 @@
 # 인계 (2026-11-20): 리디자인 v2 P6 「홈 Pour」 머지 — P5·P7도 머지됨, 다음은 P8(/play 전시실)
 
-- 계획서 6장 진행표가 기준. P6 = 브랜치 shift/redesign-p6-home. 결정은 DECISIONS 2026-11-20 P6.
+- 계획서 6장 진행표가 기준. P6 = #78(브랜치 shift/redesign-p6-home). 결정은 DECISIONS 2026-11-20 P6.
 - **새 홈 = `src/ui-next/home/`**(HomePour.tsx 엔진·진입·공유 시트, Rack.tsx 시험관, HomeSections.tsx 오늘 카드·지층 띠·벽, model.ts 순수 규칙, home.css, home.test.tsx). `@ui-shell`의 `HomePour`, classic은 null → page.tsx가 SandCanvas 그대로. 아이콘 4개 추가(close·hand·external·copy, 31종), 정지 프레임 `public/ui-next/home/still.webp`.
 - **`#s=` 파싱·parent는 `src/lib/sand/urlState.ts`의 순수 함수**(sceneIdFromHash·publishParent·publishedLinks·hasEmbeddedScene). 새 파일로 빼면 prod 홈의 webpack 연결 모듈 id가 바뀌어 RSC 페이로드까지 달라진다(실측) — urlState에 둔 이유. 골든셋 표 그대로 통과.
 - **헤드리스 WebGPU(맥 로컬)**: 크로미움 `--enable-unsafe-webgpu --use-angle=metal` + headless면 Metal 어댑터가 잡히고 **캔버스 표시까지 된다**(SwiftShader와 달리 device lost 없음) → 실제 홈 e2e·캡처·fps 측정이 가능. Playwright 1.65(chromium-1255 캐시)를 스크래치패드에 설치해 씀(package.json에 없음).
