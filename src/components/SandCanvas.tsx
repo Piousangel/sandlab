@@ -68,7 +68,7 @@ export default function SandCanvas() {
   const [busy, setBusy] = useState(false)
   // 빈 캔버스 온보딩: 첫 방문자는 검은 상자만 보면 그릴 줄 모른다. 한 번이라도 그리면(또는 장면 복원 시) 끈다.
   const [hasDrawn, setHasDrawn] = useState(false)
-  // 오늘 방문자(오너 11-20) — 데스크톱은 헤드라인 아래, 세로 폰은 헤더 브랜드 옆. 실패하면 아무것도 안 그린다(둘 다 레이아웃 밖·고정 높이 자리).
+  // 오늘 방문자(오너 11-20) — 데스크톱은 헤드라인 아래, 세로 폰(링크가 ☰로 접힌 400 미만)은 헤더 브랜드 옆. 실패하면 아무것도 안 그린다(둘 다 레이아웃 밖·고정 높이 자리).
   const visitorsN = useTodayVisitors()
   // 남의 씬(#s=id)을 열고 착지했을 때만 뜨는 리믹스 안내 배너. 첫 붓질/× 에 소멸.
   const [remix, setRemix] = useState<{ id: string; title: string } | null>(null)
@@ -727,7 +727,7 @@ export default function SandCanvas() {
           <div style={S.heroHint}>
             <div style={S.heroHintTitle}>Sandlab</div>
             <div style={S.heroHintSub}>Pour sand, water, lava — watch them react.</div>
-            <div style={S.heroVisitors} data-testid="today-visitors">
+            <div style={S.heroVisitors} data-testid="today-visitors" aria-hidden={visitorsLine(visitorsN) ? undefined : true}>
               {visitorsLine(visitorsN) && `${visitorsLine(visitorsN)} · ${VISITORS_RESET_NOTE}`}
             </div>
           </div>
@@ -748,7 +748,7 @@ export default function SandCanvas() {
 
       <div style={narrow ? S.brandN : S.brand}>
         <span style={{ fontWeight: 650, letterSpacing: -0.2 }}>Sandlab</span>
-        {narrow && visitorsShort(visitorsN) && (
+        {narrow && compactNav && visitorsShort(visitorsN) && (
           <span style={S.brandVisitors} data-testid="today-visitors-short">
             {visitorsShort(visitorsN)}
           </span>

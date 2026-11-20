@@ -12,7 +12,7 @@ import { validateDaily, summarize } from './daily'
 import { handleSpill, levelFloors, levelHashes } from './spill'
 import { spillRedirect } from './spill-redirects'
 import { readOnlyBlock, withNoindex } from './preview'
-import { readVisitors, recordVisit, utcDay, type VisitDb, type VisitorsPayload } from '../src/lib/visitors'
+import { isSameSite, readVisitors, recordVisit, utcDay, type VisitDb, type VisitorsPayload } from '../src/lib/visitors'
 import { LEVELS as SPILL_LEVELS } from '../src/lib/spill/levels'
 import {
   HOT_WINDOW_DAYS,
@@ -143,7 +143,10 @@ interface EdgeCache {
 
 async function visitorsResponse(request: Request, env: Env): Promise<Response> {
   const cache = (globalThis as unknown as { caches?: { default?: EdgeCache } }).caches?.default
-  const key = new Request(new URL('/api/visitors?v=1', request.url).toString(), { method: 'GET' })
+  const now = Date.now()
+  const day = utcDay(now)
+  // 키에 날짜 — 자정 직후 어제 응답이 '오늘'로 나가지 않게
+  const key = new Request(new URL(`/api/visitors?v=1&d=${day}`, request.url).toString(), { method: 'GET' })
   if (cache) {
     try {
       const hit = await cache.match(key)
@@ -156,8 +159,6 @@ async function visitorsResponse(request: Request, env: Env): Promise<Response> {
       /* 캐시 장애는 무시하고 원본 조회 */
     }
   }
-  const now = Date.now()
-  const day = utcDay(now)
   let body: VisitorsPayload
   if (visitorsIsolate && visitorsIsolate.day === day && now - visitorsIsolate.at < VISITORS_ISOLATE_MS) {
     body = visitorsIsolate.body
@@ -479,6 +480,7 @@ const app = {
       try {
         await recordVisit(env.DB as unknown as VisitDb, {
           ip: request.headers.get('cf-connecting-ip'),
+          sameSite: isSameSite(request.headers, url.host),
           ua: request.headers.get('user-agent'),
           now: Date.now(),
           secret: env.VISIT_SALT,

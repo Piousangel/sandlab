@@ -3,14 +3,14 @@
 import { useEffect } from 'react'
 import { trackEvent } from '@/lib/sand/gallery'
 import { classifyLanding } from '@/lib/sand/landing'
-import { VISIT_SESSION_KEY, shouldSendVisit, utcDay } from '@/lib/visitors'
+import { VISIT_STORAGE_KEY, shouldSendVisit, utcDay } from '@/lib/visitors'
 
-/** 오늘 방문자 비콘(오너 11-20) — 탭 세션·UTC 날짜당 1회 POST /api/visit. 서버가 같은 날 같은 IP를 한 번만 센다. */
+/** 오늘 방문자 비콘(오너 11-20) — 브라우저·UTC 날짜당 1회 POST /api/visit(localStorage, 값은 날짜뿐). 서버가 같은 날 같은 IP를 한 번만 센다. */
 function sendVisit() {
   try {
     const now = Date.now()
-    if (!shouldSendVisit(sessionStorage.getItem(VISIT_SESSION_KEY), now, navigator.webdriver === true)) return
-    sessionStorage.setItem(VISIT_SESSION_KEY, utcDay(now))
+    if (!shouldSendVisit(localStorage.getItem(VISIT_STORAGE_KEY), now, navigator.webdriver === true)) return
+    localStorage.setItem(VISIT_STORAGE_KEY, utcDay(now))
     if (navigator.sendBeacon) navigator.sendBeacon('/api/visit')
     else fetch('/api/visit', { method: 'POST', keepalive: true }).catch(() => {})
   } catch {

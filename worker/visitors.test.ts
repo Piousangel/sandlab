@@ -25,8 +25,8 @@ function sqliteEnv(vars: Record<string, string> = {}) {
 }
 
 const CHROME = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-const visit = (env: unknown, ip: string, ua = CHROME) =>
-  worker.fetch(new Request('https://sandlab.app/api/visit', { method: 'POST', headers: { 'cf-connecting-ip': ip, 'user-agent': ua } }), env as never)
+const visit = (env: unknown, ip: string, ua = CHROME, extra: Record<string, string> = { 'sec-fetch-site': 'same-origin' }) =>
+  worker.fetch(new Request('https://sandlab.app/api/visit', { method: 'POST', headers: { 'cf-connecting-ip': ip, 'user-agent': ua, ...extra } }), env as never)
 // 주의: GET은 isolate 15초 캐시가 있어 이 파일에서는 한 번만 읽어 단언한다(표 없음의 null 응답은 src/lib/visitors.test.ts readVisitors가 검사).
 const read = async (env: unknown) => (await worker.fetch(new Request('https://sandlab.app/api/visitors'), env as never)).json()
 
@@ -41,6 +41,16 @@ describe('POST /api/visit → GET /api/visitors', () => {
     const body = (await read(env)) as { tz: string; today: number; yesterday: number }
     expect(body).toMatchObject({ tz: 'UTC', today: 2, yesterday: 0 })
     expect(JSON.stringify(raw.prepare('SELECT * FROM visit_seen').all())).not.toContain('203.0.113')
+  })
+
+  it('다른 사이트·헤더 없는 요청(curl)은 세지 않는다', async () => {
+    const { env, raw } = sqliteEnv()
+    await visit(env, '203.0.113.9', CHROME, { 'sec-fetch-site': 'cross-site' })
+    await visit(env, '203.0.113.10', CHROME, {})
+    await visit(env, '203.0.113.11', CHROME, { origin: 'https://evil.example' })
+    expect(raw.prepare('SELECT COALESCE(SUM(visitors), 0) n FROM visit_days').all()[0].n).toBe(0)
+    await visit(env, '203.0.113.12', CHROME, { origin: 'https://sandlab.app' })
+    expect(raw.prepare('SELECT COALESCE(SUM(visitors), 0) n FROM visit_days').all()[0].n).toBe(1)
   })
 
   it('표가 없으면(마이그레이션 전) 방문은 조용히 204 — 페이지를 깨지 않는다', async () => {
