@@ -3,9 +3,9 @@
  * 마케팅 게시 링크의 `?ref=<채널>` 태그가 우선이고, 없으면 document.referrer 호스트를 몇 개 묶음으로 분류한다.
  * 원시 호스트·쿼리는 AE로 보내지 않는다(카디널리티·개인정보): 아래 고정 값만 나간다.
  */
-export const LANDING_TAGS = ['bluesky', 'x', 'reddit', 'hn', 'discord', 'mastodon'] as const
+export const LANDING_TAGS = ['bluesky', 'x', 'reddit', 'hn', 'discord', 'mastodon', 'threads'] as const
 export const LANDING_REFERRERS = [
-  'google', 'bing', 'duckduckgo', 'naver', 'daum', 'reddit', 'x', 'bluesky', 'facebook', 'youtube', 'hn', 'other',
+  'google', 'bing', 'duckduckgo', 'naver', 'daum', 'reddit', 'x', 'bluesky', 'facebook', 'youtube', 'hn', 'threads', 'other',
 ] as const
 
 /** worker/track.ts가 받아들이는 landing ref 전체. */
@@ -28,6 +28,7 @@ const HOST_CLASSES: [RegExp, (typeof LANDING_REFERRERS)[number]][] = [
   [/(^|\.)(facebook|fb)\.com$|^l\.facebook\.com$/, 'facebook'],
   [/(^|\.)(youtube\.com|youtu\.be)$/, 'youtube'],
   [/^news\.ycombinator\.com$/, 'hn'],
+  [/(^|\.)threads\.(net|com)$/, 'threads'],
 ]
 
 /**

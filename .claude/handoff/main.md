@@ -7,6 +7,18 @@
 
 ---
 
+# 인계 (2026-11-20 16시): 북극성 측정 PR — 익명 기기 id·first_stroke·홈 landing·?ref=threads
+
+- 북극성 단계: 4장 1단계 '측정'(11-27 기한, 16시 몫) → 이 PR로 북극성·보조 3 측정 시작. **북극성 값: 측정 시작(배포 11-20 UTC), 7일 창이 차는 11-27까지는 '부분'**. 기준값 확정 12-04.
+- 브랜치 shift/1600-north-star-measure. 결정 DECISIONS 2026-11-20 '북극성 측정'.
+- **구조**: `src/lib/sand/measure.ts`(deviceId·claimFirstStroke) → `trackEvent`가 모든 이벤트에 `d` 동봉 → `worker/track.ts parseDevice` → AE blob5. 홈 첫 붓기 = `trackFirstStroke()`(SandCanvas·HomePour onDown, 지우개 제외). landing value 1 = `/` 진입(double2).
+- **지표 파일**: `scripts/daily-metrics.mjs`가 '북극성 — 주간 손댄 방문자'·'데일리 클리어 기기·첫 붓기율' 두 줄을 찍는다(쿼리·형식 scripts/north-star.mjs + 테스트). **AE SQL은 이 컨테이너에서 못 돌렸다**(CF 토큰 없음·문서 도메인 차단) — 다음 metrics 워크플로 실행 결과에서 '북극성:' 줄이 '실패'면 그 SQL부터 고친다. `IN` 대신 OR만 썼다.
+- 함정: ① 새 퍼즐 화면(프리뷰 ui-next)이 퍼즐을 시작하면 반드시 `trackEvent('challenge_start'|'daily_start')`를 불러야 북극성에 잡힌다. ② `MEASURE_SINCE`(daily-metrics.mjs)는 실제 prod 배포일 — 배포가 늦어지면 고친다. ③ Privacy에 기기 id를 고지했다 — 이벤트에 새 필드를 더하면 Privacy 'Usage statistics'도 같이 고친다.
+- 독립 리뷰 반영: 첫 붓기율은 홈 landing 세션만(sessionStorage `sl-landing-home` → first_stroke value 1), 봇 UA면 blob5 비움, landing은 webdriver 제외. 남은 관찰: `daily_start`가 /daily 마운트 때 나가 '퍼즐 시작'보다 넓다 — 북극성이 데일리로 크게 쏠리면 SpillPlayer 첫 RUN 시점으로 옮기는 안을 검토(기존 지표 끊김 주의).
+- 다음 교대: 20시 요약 첫 줄 북극성 값을 지표 파일에서 읽기(부분 표기 유지). 10시 개발은 원래 13시 결정대로 리디자인 P12 준비.
+
+---
+
 # 인계 (2026-11-20 오후): 공통 BottomSheet 이식 「끌어 닫는 시트」 — 오너 "손잡이를 끌어 닫을 수 없다", P 순서 밖
 
 - 브랜치 feat/bottom-sheet-ux. 결정 DECISIONS 2026-11-20 '공통 BottomSheet 이식', 체크리스트 docs/team/UX-CHECKLIST.md(허브 QUALITY 5장과 같은 10항목), 캡처·녹화 docs/design/bottom-sheet/.

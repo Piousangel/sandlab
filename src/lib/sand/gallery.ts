@@ -16,6 +16,8 @@
  *   갤러리에 올리면 짧은 id 하나로 대체되므로, **모든 장면이 공유 가능해진다.**
  */
 
+import { claimFirstStroke, deviceId, firstStrokeValue } from './measure'
+
 /** 랭킹 창 — Powder Toy FP 복제. 신선도가 재방문 이유다. */
 export const HOT_WINDOW_DAYS = 7
 export const PAGE_SIZE = 24
@@ -273,16 +275,27 @@ export function getCreatorProfile(id: string) {
 }
 
 /** 클릭류 이벤트 계측(예: Ko-fi 후원 링크) — 서버가 직접 못 보는 지점만 sendBeacon으로 보고한다.
- *  fire-and-forget: 실패해도 사용자 흐름(링크 새 탭 열림)엔 영향 없다. */
+ *  fire-and-forget: 실패해도 사용자 흐름(링크 새 탭 열림)엔 영향 없다.
+ *  `d` = 익명 기기 id(measure.ts, 북극성 '주간 손댄 방문자'용) — 서버가 형식만 보고 AE blob5에 싣는다. */
 export function trackEvent(event: string, ref?: string, value?: number) {
   try {
-    const body = JSON.stringify({ event, ref, value })
+    const body = JSON.stringify({ event, ref, value, d: deviceId() })
     if (navigator.sendBeacon) {
       navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))
     } else {
-      fetch('/api/track', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true })
+      // .catch 필수 — 없으면 거부가 try/catch를 우회해 unhandled rejection이 된다(허브 hit.ts 교훈).
+      fetch('/api/track', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {})
     }
   } catch {
     /* 계측 실패는 조용히 무시 — 후원 링크 자체는 target=_blank라 이미 새 탭으로 열린다 */
+  }
+}
+
+/** 홈 샌드박스 첫 획 — 탭(세션)당 1회 `first_stroke`(북극성·첫 붓기율). 지우개 획은 부르지 않는다. */
+export function trackFirstStroke() {
+  try {
+    if (claimFirstStroke(sessionStorage, location.search, navigator.webdriver === true)) trackEvent('first_stroke', 'home', firstStrokeValue(sessionStorage))
+  } catch {
+    /* 저장소 차단 — 계측만 빠진다 */
   }
 }

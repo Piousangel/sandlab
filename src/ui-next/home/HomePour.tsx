@@ -24,7 +24,7 @@ import {
   readShareUrl,
   sceneIdFromHash,
 } from '@/lib/sand/urlState'
-import { getScene, rememberMine, trackEvent, uploadScene } from '@/lib/sand/gallery'
+import { getScene, rememberMine, trackEvent, trackFirstStroke, uploadScene } from '@/lib/sand/gallery'
 import { getCreatorId, getCreatorName, setCreatorName } from '@/lib/sand/creator'
 import { isBlank, makeThumb } from '@/lib/sand/thumb'
 import { noteFirstTry } from '@/lib/sand/discovery'
@@ -244,6 +244,7 @@ export function HomePour() {
     strokeEraseRef.current.set(e.pointerId, isErase)
     if (!isErase) {
       const msg = noteFirstTry(triedRef.current, sel, BY_SLUG[sel]?.name ?? sel, PAINTABLE.length)
+      trackFirstStroke() // 북극성: 탭당 첫 붓기 1회(지우개 획 제외)
       pourPrevRef.current.set(e.pointerId, { x, y })
       pouredRef.current += Math.PI * radiusRef.current * radiusRef.current
       if (msg) flash(msg)
