@@ -24,9 +24,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
-      # verify.test.ts는 5초 타임아웃으로 6개가 늘 실패(기존 문제, 백로그)
-      # spill:verify는 CI에서 22분 걸려(로컬 ~3분) 여기서 빼고, 머지 전(06시 루틴·로컬)에 돌린다
-      - run: pnpm test --exclude src/lib/spill/verify/verify.test.ts
+      # 만성 실패 0(11-20): verify.test 포함 전체. 무거운 시뮬은 vitest.config.ts sim 프로젝트(5분 한도).
+      # spill:verify는 PR 단계 CI(ci.yml)가 두 job으로 나눠 머지 전에 돈다(각 ≤ 9분) — 배포에서는 다시 돌리지 않는다.
+      - run: pnpm test
       # 추가 전용·멱등 D1 마이그레이션(CREATE TABLE IF NOT EXISTS만). 기존 표·행은 건드리지 않는다. --file(가져오기 경로) 대신 --command(일반 쿼리).
       # 실패해도 배포는 진행한다 — 워커는 visit_days·visit_seen이 없으면 방문자를 세지 않고 홈 줄을 비운다.
       - name: D1 additive migrations

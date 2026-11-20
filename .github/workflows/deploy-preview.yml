@@ -37,7 +37,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
-      - run: pnpm test --exclude src/lib/spill/verify/verify.test.ts
+      - run: pnpm test
       - run: pnpm lint:ui
       - run: pnpm check:contrast
       # deploy:preview = build:preview(NEXT_PUBLIC_UI=next + NEXT_PUBLIC_READ_ONLY=1 + out/_headers noindex) → verify-ads --preview → wrangler deploy --env preview

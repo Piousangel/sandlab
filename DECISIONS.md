@@ -190,6 +190,13 @@
 - 독립 리뷰 8.5/10(차단 0) 반영: Yours 조회가 전부 실패하고 이유가 404(지워진 장면)만이 아니면 빈 상태 대신 "Couldn't reach the wall · Try again"(`isGone`), 작성자 화면 돌아가기 라벨 = 들어온 정렬("Back to Hot"·"Top makers"), 작성자 이름은 서버 집계 이름 우선, 하단 링크 간격(min-width 대신 padding), 합계 줄 aria-live 제거(증가분 줄만 status), 작성자 버튼 title 제거. 미반영: Yours 작성자 화면 Vote(단건 meta에 creatorId가 없어 Yours 카드엔 작성자 버튼이 없음 — 일어나지 않음), Ko-fi 새 탭 sr 문구(문구 변경 금지·옛 쪽도 없음), 지워진 장면 수만큼 빈 액자가 남는 미세 이동(실측 CLS ≤ 0.0003).
 - 버린 안: 옛 소개 문단(SEO용 정적 문단)을 새 벽에 다시 넣기 — P9가 lede + 정렬별 설명으로 바꾼 결정이라 이번 범위 밖(P12 SEO 점검 때 단어 수 비교). 카드 hover "Remix" 배지 — 새 벽은 작품을 열면 홈에서 바로 이어 붓는다(P6 진입), 같은 행동이 한 번 클릭 거리.
 
+## 2026-11-20 PR 단계 CI 도입, 만성 실패 테스트 0 (오너 승인 제안 C)
+- 맥락: `verify.test.ts`가 늘 타임아웃이라 배포·검증 관문에서 `--exclude`로 빠져 있었고, spill:verify는 CI에서 22분 걸려 배포에서 빠져 머지 전 검사가 루틴 손에만 있었다. 허브 docs/team/mentor/lydia-hallie.md 7장 통합 목록 C를 오너가 11-20 승인.
+- 원인 분류(11-20 main, Node 22): 7건(로컬 load 45) / 3건(CI) 전부 **부하 타임아웃** — 결정적 시뮬을 끝까지 도는 테스트(sweep Steam vs vent 16 salt: CI 49초·로컬 236초, verify.test beforeAll 훅 10초, sim fuse·dig candidates·replay·transform·cases 결정성 5초). 진짜 버그·시간 의존·낡은 기대값 0.
+- 선택: vitest를 **unit(기본 한도)·sim(결정적 시뮬 파일, 한도 CI 3분·로컬 15분)** 두 프로젝트로 나눴다(vitest.config.ts SIM_TESTS). `pnpm test`는 둘 다(제외 없음), CI는 두 job 병렬. sweep.test는 케이스×salt마다 테스트 하나로 쪼갰다(7×16 조합 그대로, 한 테스트가 수 분 걸리던 구조 해소). `scripts/spill-verify.ts`에 `--exclude`를 넣어 CI에서 1-8 Cascade(전체 시뮬의 절반 이상)와 나머지를 두 job으로, `--workers 4`(러너 vCPU 전부, 기본은 cpus-2=2라 예전 22분). 갤러리 API는 `wrangler dev --local`(로컬 D1, 계정 불필요)로 CI에서 verify-gallery.py까지 돈다.
+- 버린 안: 무거운 테스트 skip·salt 수 축소(검증 범위 축소), 전역 testTimeout 상향(가벼운 테스트의 느려짐까지 숨김), spill:verify를 1 job(벽시계 15분 초과).
+- 남은 것: 브랜치 보호에 CI 필수 체크를 켜는 것은 오너 할 일.
+
 ## 2026-11-20 오늘 방문자: 워커 + D1 일별 고유 방문자 카운터 (오너 "today 방문자 나왔으면 좋겠어")
 - 선택(오너): 사이트에 공개 표시 + 아침 메일·20시 요약에도. 허브(minigames-hub)와 같은 방식.
 - 집계 방법 비교

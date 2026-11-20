@@ -1,0 +1,146 @@
+# PR 단계 CI(오너 11-20 승인 제안 C — 허브 docs/team/mentor/lydia-hallie.md 7장).
+# PR마다 SESSION-GUIDE 검증 관문 전부를 돈다. 초록이 머지 조건이다. 배포는 deploy.yml(main push)이 그대로 맡는다.
+# 시크릿을 쓰지 않는다(포크 PR에서도 안전). 갤러리 API는 wrangler dev --local(로컬 D1, 계정 불필요)로 검사한다.
+# job은 병렬이라 벽시계 시간은 가장 긴 job에 맞춰진다. spill:verify는 무거운 1-8 Cascade를 따로 떼어 두 job으로 나눈다.
+name: ci
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  checks:
+    name: typecheck · lint:ui · contrast · margolus
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint:ui
+      - run: pnpm check:contrast
+      - run: node scripts/verify-margolus.mjs
+
+  test:
+    name: vitest (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # unit = 일반 테스트(기본 5초 한도), sim = 결정적 시뮬 테스트(vitest.config.ts SIM_TESTS, CI 3분 한도). 합치면 전체.
+        project: [unit, sim]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # 전체 vitest(제외 없음 — verify.test.ts 포함)를 두 프로젝트로 나눠 병렬로. 만성 실패 0 기준선(11-20).
+      - run: pnpm test --project ${{ matrix.project }}
+
+  spill-verify:
+    name: spill:verify (${{ matrix.part }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - part: 1-8 Cascade
+            args: 1-8
+          - part: 나머지 전 레벨
+            args: --exclude 1-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # 러너 vCPU 4개를 다 쓴다(기본값은 cpus-2 = 2라 예전 CI에서 22분 걸렸다).
+      - run: pnpm spill:verify ${{ matrix.args }} --workers 4
+
+  build-prod:
+    name: build · verify-ads · gallery API
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Next.js 빌드 캐시
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: next-prod-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', 'public/**', 'next.config.*') }}
+          restore-keys: next-prod-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+      # deploy 스크립트와 같은 prod 빌드(NEXT_PUBLIC_UI·READ_ONLY 비움) → 광고 검사
+      - run: NEXT_PUBLIC_UI= NEXT_PUBLIC_READ_ONLY= pnpm build
+      - run: node scripts/verify-ads.mjs
+      # 갤러리 API 종단 검사(CLAUDE.md 검증 절): 로컬 D1에 스키마를 깔고 wrangler dev --local로 워커+out/을 띄운다.
+      - name: 로컬 D1 스키마
+        run: |
+          pnpm exec wrangler d1 execute sandlab-gallery --local --file=schema.sql
+          for f in migrations/*.sql; do pnpm exec wrangler d1 execute sandlab-gallery --local --file="$f"; done
+      - name: 갤러리 API (verify-gallery.py)
+        run: |
+          pnpm exec wrangler dev --port 8799 --local > wrangler-dev.log 2>&1 &
+          pid=$!
+          ready=
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:8799/api/scenes && { ready=1; break; }
+            kill -0 $pid 2>/dev/null || { echo "wrangler dev가 종료됨"; break; }
+            sleep 2
+          done
+          [ -n "$ready" ] || { echo "::error::wrangler dev가 120초 안에 준비되지 않음"; exit 1; }
+          python3 scripts/verify-gallery.py
+      - if: failure()
+        run: tail -100 wrangler-dev.log || true
+
+  build-preview:
+    name: build:preview · verify-ads --preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Next.js 빌드 캐시
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: next-preview-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**', 'public/**', 'next.config.*') }}
+          restore-keys: next-preview-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+      - run: pnpm run build:preview
+      - run: node scripts/verify-ads.mjs --preview
