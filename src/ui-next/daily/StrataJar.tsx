@@ -5,7 +5,7 @@
  * 계산은 strataModel.ts(순수). 그림(SVG)은 aria-hidden이고 같은 내용을 화면 밖 목록(ol)으로 읽힌다.
  * 기록은 기기 localStorage(readStrata — 키 불변). DailySpill이 클라이언트에서만 이 화면을 그리므로 첫 렌더에서 바로 읽는다(빈 병 → 층 깜빡임·CLS 없음).
  */
-import { useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { readStrata } from '@/lib/strata'
 import { Icon } from '../icons/Icon'
 import { buildJar, layerSentence, waveAmp, INK, type Jar, type JarLayer } from './strataModel'
@@ -120,24 +120,121 @@ function Patterns() {
   )
 }
 
-function readJar(today: number, storage?: Pick<Storage, 'getItem'>): Jar {
-  let s = storage
-  if (!s) {
-    try {
-      s = typeof window !== 'undefined' ? window.localStorage : undefined
-    } catch {
-      s = undefined
-    }
+function pickStorage(storage?: Pick<Storage, 'getItem'>): Pick<Storage, 'getItem'> | undefined {
+  if (storage) return storage
+  try {
+    return typeof window !== 'undefined' ? window.localStorage : undefined
+  } catch {
+    return undefined
   }
+}
+
+function readJar(today: number, storage?: Pick<Storage, 'getItem'>): Jar {
+  const s = pickStorage(storage)
   const all = s ? readStrata(s, today, today) : readStrata({ getItem: () => null }, today, today)
   return buildJar(all, today, JAR.innerH)
 }
 
-export function StrataJar({ today, storage }: { today: number; storage?: Pick<Storage, 'getItem'> }) {
+/**
+ * 오늘 층을 '처음' 보는가 — 결과 화면의 "+1 stratum" 뒤 /daily로 돌아온 그 한 번만 병 입구에서 알갱이가 떨어져 층이 쌓인다.
+ * 본 날은 POURED_KEY에 dayNumber로 남긴다(기록 키와 별개 — 지워져도 애니메이션이 한 번 더 날 뿐).
+ */
+export const POURED_KEY = 'sandlab.strata.poured.v1'
+export function isFreshPour(jar: Pick<Jar, 'todayKind'>, today: number, storage?: Pick<Storage, 'getItem'>): boolean {
+  if (jar.todayKind !== 'solved') return false
+  let seen: string | null = null
+  try {
+    seen = storage?.getItem(POURED_KEY) ?? null
+  } catch {
+    seen = null
+  }
+  return seen !== String(today)
+}
+
+/**
+ * 들어올 때 붓기 순서(아래 → 위). 층 사이 간격은 층 수에 맞춰 줄여, 지시선·캡션 페이드까지 합친 전체가 보상 상한(900ms) 안에 끝난다.
+ * fresh(오늘 처음)이면 맨 위 층은 나머지가 다 쌓인 뒤 병 입구에서 떨어진다(이 한 번만 상한을 넘는다 — 오늘의 보상 순간).
+ * 길이(settle·drop·fade)는 CSS 변수로 넘긴다 — CSS에 숫자를 따로 적지 않는다.
+ */
+export const POUR = { step: 28, span: 260, freshGap: 160, settle: 400, drop: 620, land: 0.72, fade: 240 } as const
+export function pourDelays(n: number, fresh: boolean): { delays: number[]; end: number; total: number } {
+  const step = Math.min(POUR.step, POUR.span / Math.max(1, n - 1))
+  const delays = Array.from({ length: n }, (_, i) => Math.round(i * step))
+  const f = fresh && n > 0
+  if (f) delays[n - 1] = Math.round((n - 1) * step) + POUR.freshGap
+  const last = n ? delays[n - 1] : 0
+  const end = last + (f ? POUR.drop : POUR.settle)
+  return { delays, end, total: end + POUR.fade }
+}
+
+/** 알갱이 한 알의 낙하 — 거리에 맞춘 길이(자유낙하처럼 √거리)와, 오늘 층이 바닥에 닿는 순간(drop의 land 지점)에 같이 닿는 지연. */
+export function grainTiming(dropDelay: number, fall: number, jitter: number): { delay: number; dur: number } {
+  const dur = Math.round(110 + 18 * Math.sqrt(Math.max(0, fall)))
+  return { delay: Math.max(0, Math.round(dropDelay + POUR.drop * POUR.land - dur - jitter)), dur }
+}
+
+const GRAINS: { x: number; d: number }[] = [
+  { x: 0.22, d: 0 },
+  { x: 0.48, d: 60 },
+  { x: 0.7, d: 20 },
+  { x: 0.36, d: 120 },
+  { x: 0.6, d: 90 },
+  { x: 0.82, d: 150 },
+]
+
+export function StrataJar({ today, storage }: { today: number; storage?: Pick<Storage, 'getItem'> & Partial<Pick<Storage, 'setItem'>> }) {
   const [jar] = useState(() => readJar(today, storage))
+  const [fresh] = useState(() => isFreshPour(jar, today, pickStorage(storage)))
   const { layers, labels } = jar
+  const { delays, end } = pourDelays(layers.length, fresh)
+  const top = layers[layers.length - 1]
+  const fall = top ? Math.max(8, top.top + 6) : 0
+
+  // 붓기는 병이 화면에 들어올 때 시작한다 — 모바일(390)에선 병이 오늘 카드 아래(첫 화면 밖)라, 바로 틀면 오늘 층이 떨어지는 순간을 아무도 못 본다(자체 혹평).
+  // 그때까지 CSS가 애니메이션을 멈춰 둔다(data-run 없음). IntersectionObserver가 없으면 바로 튼다.
+  const ref = useRef<HTMLElement>(null)
+  const [run, setRun] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setRun(true)
+      return
+    }
+    const io = new IntersectionObserver(
+      (es) => {
+        if (es.some((e) => e.isIntersecting)) {
+          setRun(true)
+          io.disconnect()
+        }
+      },
+      { threshold: 0.4 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  useEffect(() => {
+    if (!fresh || !run) return
+    // reduced-motion이면 떨어지는 순간을 보여 주지 않았으니 '본 날'로 적지 않는다(설정을 끄면 그때 한 번 본다)
+    if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    try {
+      const w = storage?.setItem ? storage : window.localStorage
+      w.setItem?.(POURED_KEY, String(today))
+    } catch {
+      /* 저장 불가(사파리 사생활 모드)면 다음에도 한 번 더 붓는다 — 해 없음 */
+    }
+  }, [fresh, run, today, storage])
   return (
-    <section className="sl-st" aria-labelledby="sl-st-h" data-layers={layers.length} data-solved={jar.solvedDays} data-today={jar.todayKind}>
+    <section
+      ref={ref}
+      className="sl-st"
+      data-run={run ? '1' : undefined}
+      aria-labelledby="sl-st-h"
+      data-layers={layers.length}
+      data-solved={jar.solvedDays}
+      data-today={jar.todayKind}
+      data-fresh={fresh ? '1' : undefined}
+      style={{ '--sl-st-end': `${end}ms`, '--sl-st-settle': `${POUR.settle}ms`, '--sl-st-drop': `${POUR.drop}ms`, '--sl-st-fade': `${POUR.fade}ms` } as CSSProperties}
+    >
       <div className="sl-st-h">
         <h2 id="sl-st-h">Your strata</h2>
         <span className="sl-st-rule" aria-hidden="true" />
@@ -157,16 +254,47 @@ export function StrataJar({ today, storage }: { today: number; storage?: Pick<St
           <Patterns />
           <rect x={2} y={10} width={JAR.w - 4} height={H - 12} rx={16} fill="rgba(255,255,255,.38)" />
           <g clipPath="url(#sl-st-clip)">
-            {layers.map((_, i) => (
-              <Layer key={layers[i].dayNumber} layers={layers} i={i} />
+            {/* 알갱이는 층 아래에 그린다 — 떨어지는 오늘 층이 내려와 덮으며 '쌓인다' */}
+            {fresh && top?.kind === 'solved' && (
+              <g className="sl-st-grains" data-grains="">
+                {GRAINS.map((g, k) => (
+                  <rect
+                    key={k}
+                    className="sl-st-grain"
+                    x={JAR.ix + IW * g.x}
+                    y={JAR.iy - 6}
+                    width={2.5}
+                    height={2.5}
+                    fill={top.color}
+                    stroke={INK}
+                    strokeWidth={0.5}
+                    style={(() => {
+                      const t = grainTiming(delays[layers.length - 1], fall, g.d)
+                      return { animationDelay: `${t.delay}ms`, animationDuration: `${t.dur}ms`, '--sl-st-fall': `${fall}px` } as CSSProperties
+                    })()}
+                  />
+                ))}
+              </g>
+            )}
+            {layers.map((l, i) => (
+              <g
+                key={l.dayNumber}
+                className="sl-st-l"
+                data-fresh={fresh && i === layers.length - 1 ? '1' : undefined}
+                style={{ animationDelay: `${delays[i]}ms` }}
+              >
+                <Layer layers={layers} i={i} />
+              </g>
             ))}
-            <Edges layers={layers} />
+            <g className="sl-st-after">
+              <Edges layers={layers} />
+            </g>
           </g>
           <rect x={2} y={10} width={JAR.w - 4} height={H - 12} rx={16} fill="none" stroke={TUBE_LINE} strokeWidth={1.5} />
           <rect x={7} y={22} width={3} height={H - 70} rx={1.5} fill="rgba(255,255,255,.8)" />
           <rect x={0.75} y={4} width={JAR.w - 1.5} height={8} rx={4} fill="rgba(255,255,255,.6)" stroke={TUBE_LINE} strokeWidth={1.5} />
         </svg>
-        <svg className="sl-st-leaders" width={JAR.w + 30} height={H} aria-hidden="true" focusable="false">
+        <svg className="sl-st-leaders sl-st-after" width={JAR.w + 30} height={H} aria-hidden="true" focusable="false">
           {labels.map((lb, k) => {
             const ay = JAR.iy + lb.anchor
             const ly = JAR.iy + lb.y
@@ -179,7 +307,7 @@ export function StrataJar({ today, storage }: { today: number; storage?: Pick<St
             )
           })}
         </svg>
-        <div className="sl-st-notes" aria-hidden="true">
+        <div className="sl-st-notes sl-st-after" aria-hidden="true">
           {labels.map((lb, k) => (
             <div key={k} className="sl-st-note" data-kind={lb.kind} style={{ top: JAR.iy + lb.y - 8 }}>
               {lb.date && <b>{lb.date}</b>}
