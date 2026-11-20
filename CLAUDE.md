@@ -25,6 +25,8 @@ WebGPU 낙사 시뮬레이터. Next.js 15 정적 export + Cloudflare Worker(갤�
 
 ## 검증
 
+화면·공통 컴포넌트 PR은 [docs/team/UX-CHECKLIST.md](./docs/team/UX-CHECKLIST.md)(모달은 `src/ui-next/sheet/BottomSheet` 하나로, 44px·입력 16px — `pnpm qa:preview --only sheet`).
+
 ```bash
 pnpm typecheck
 node scripts/verify-margolus.mjs   # Margolus 불변식 7/7

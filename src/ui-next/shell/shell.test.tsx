@@ -78,7 +78,7 @@ describe('헤더·푸터 정적 렌더', () => {
     expect(header).toContain('data-sl-shell="header"')
     expect(header).toContain('aria-label="Sandlab home"')
     expect(header).toContain('aria-haspopup="dialog"')
-    expect(header).toMatch(/<dialog[^>]*id="sl-menu"/)
+    expect(header).toMatch(/<div id="sl-menu" hidden=""/) // 닫힌 메뉴 시트(BottomSheet keepMounted) — 링크가 SSR HTML에 남는다
     expect(header).toContain('id="i-menu"') // 스프라이트가 셸 최상단에 한 번
     expect(header).toContain('aria-pressed="true"') // 소리 토글(SSR 기본 켜짐)
     for (const l of ['About', 'Privacy', 'Terms', 'Contact', 'Daily']) expect(header).toContain(`>${l}</a>`)
