@@ -1,0 +1,859 @@
+{
+ "when": "2026-11-20T07:50:46.992Z",
+ "load": [
+  7.5,
+  10.4,
+  10.5
+ ],
+ "out": "<scratch>/lcp-out-br4",
+ "weight": [
+  {
+   "page": "/",
+   "cssGz": 9370,
+   "jsGz": 146703,
+   "css": 3,
+   "engine": true
+  },
+  {
+   "page": "/daily",
+   "cssGz": 10814,
+   "jsGz": 148191,
+   "css": 4,
+   "engine": false
+  },
+  {
+   "page": "/play",
+   "cssGz": 11031,
+   "jsGz": 123579,
+   "css": 4,
+   "engine": false
+  },
+  {
+   "page": "/play/1-1",
+   "cssGz": 11031,
+   "jsGz": 163009,
+   "css": 4,
+   "engine": false
+  },
+  {
+   "page": "/gallery",
+   "cssGz": 8056,
+   "jsGz": 128613,
+   "css": 3,
+   "engine": false
+  },
+  {
+   "page": "/learn",
+   "cssGz": 5929,
+   "jsGz": 119092,
+   "css": 2,
+   "engine": false
+  },
+  {
+   "page": "/learn/margolus-falling-sand",
+   "cssGz": 5929,
+   "jsGz": 119092,
+   "css": 2,
+   "engine": false
+  },
+  {
+   "page": "/materials",
+   "cssGz": 5929,
+   "jsGz": 119092,
+   "css": 2,
+   "engine": false
+  },
+  {
+   "page": "/materials/acid",
+   "cssGz": 5929,
+   "jsGz": 119092,
+   "css": 2,
+   "engine": false
+  },
+  {
+   "page": "/about",
+   "cssGz": 5929,
+   "jsGz": 119092,
+   "css": 2,
+   "engine": false
+  },
+  {
+   "page": "/play/1-1/guide",
+   "cssGz": 5929,
+   "jsGz": 119092,
+   "css": 2,
+   "engine": false
+  },
+  {
+   "page": "/privacy",
+   "cssGz": 5929,
+   "jsGz": 119092,
+   "css": 2,
+   "engine": false
+  },
+  {
+   "page": "/terms",
+   "cssGz": 5929,
+   "jsGz": 119092,
+   "css": 2,
+   "engine": false
+  },
+  {
+   "page": "/contact",
+   "cssGz": 5929,
+   "jsGz": 119092,
+   "css": 2,
+   "engine": false
+  },
+  {
+   "page": "/missing-page",
+   "cssGz": 5929,
+   "jsGz": 119092,
+   "css": 2,
+   "engine": false
+  }
+ ],
+ "a11y": [
+  {
+   "view": "m",
+   "page": "/",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/daily",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/play",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/play/1-1",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/gallery",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/learn",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/learn/margolus-falling-sand",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/materials",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/materials/acid",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/about",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/play/1-1/guide",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/privacy",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/terms",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/contact",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "m",
+   "page": "/missing-page",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/daily",
+   "axe": [],
+   "hs": 0,
+   "cls": 0.0111,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/play",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/play/1-1",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/gallery",
+   "axe": [],
+   "hs": 0,
+   "cls": 0.0002,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/learn",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/learn/margolus-falling-sand",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/materials",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/materials/acid",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/about",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/play/1-1/guide",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/privacy",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/terms",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/contact",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  },
+  {
+   "view": "d",
+   "page": "/missing-page",
+   "axe": [],
+   "hs": 0,
+   "cls": 0,
+   "errors": []
+  }
+ ],
+ "keys": [
+  {
+   "page": "/",
+   "stops": 21,
+   "noRing": [],
+   "hidden": [],
+   "names": {
+    "tubes": [
+     [
+      "sand",
+      "false"
+     ],
+     [
+      "salt",
+      "true"
+     ],
+     [
+      "ash",
+      "false"
+     ],
+     [
+      "gunpowder",
+      "false"
+     ],
+     [
+      "seed",
+      "false"
+     ],
+     [
+      "water",
+      "false"
+     ],
+     [
+      "oil",
+      "false"
+     ],
+     [
+      "acid",
+      "false"
+     ],
+     [
+      "lava",
+      "false"
+     ],
+     [
+      "wall",
+      "false"
+     ],
+     [
+      "stone",
+      "false"
+     ],
+     [
+      "metal",
+      "false"
+     ],
+     [
+      "wood",
+      "false"
+     ],
+     [
+      "plant",
+      "false"
+     ],
+     [
+      "ice",
+      "false"
+     ],
+     [
+      "fire",
+      "false"
+     ],
+     [
+      "steam",
+      "false"
+     ],
+     [
+      "smoke",
+      "false"
+     ]
+    ],
+    "sizes": [
+     [
+      "Small brush",
+      "false"
+     ],
+     [
+      "Medium brush",
+      "true"
+     ],
+     [
+      "Large brush",
+      "false"
+     ]
+    ],
+    "canvas": "Sandbox. Drag to pour the selected material."
+   },
+   "pill": "Daily · 16:09, puzzle No.43, 16 hours 9 minutes left"
+  },
+  {
+   "page": "/daily",
+   "stops": 5,
+   "noRing": [],
+   "hidden": [],
+   "names": {
+    "start": {
+     "h1": "No.43 · Fri 20 NovGatekeeper",
+     "cta": [
+      "Close",
+      "Pour",
+      "Solve",
+      "Browse"
+     ]
+    }
+   }
+  },
+  {
+   "page": "/play",
+   "stops": 50,
+   "noRing": [],
+   "hidden": []
+  },
+  {
+   "page": "/play/1-1",
+   "stops": 11,
+   "noRing": [],
+   "hidden": []
+  },
+  {
+   "page": "/gallery",
+   "stops": 50,
+   "noRing": [],
+   "hidden": []
+  },
+  {
+   "page": "/learn",
+   "stops": 17,
+   "noRing": [],
+   "hidden": []
+  },
+  {
+   "page": "/learn/margolus-falling-sand",
+   "stops": 30,
+   "noRing": [],
+   "hidden": [],
+   "content": {
+    "want": {
+     "toc": 8,
+     "pn": 1,
+     "details": 0,
+     "scroll": 0
+    },
+    "got": {
+     "toc": 8,
+     "pn": 1,
+     "details": 0
+    }
+   }
+  },
+  {
+   "page": "/materials",
+   "stops": 34,
+   "noRing": [],
+   "hidden": []
+  },
+  {
+   "page": "/materials/acid",
+   "stops": 21,
+   "noRing": [],
+   "hidden": [],
+   "content": {
+    "want": {
+     "toc": 0,
+     "pn": 2,
+     "details": 0,
+     "scroll": 0
+    },
+    "got": {
+     "toc": 0,
+     "pn": 2,
+     "details": 0
+    }
+   }
+  },
+  {
+   "page": "/about",
+   "stops": 21,
+   "noRing": [],
+   "hidden": []
+  },
+  {
+   "page": "/play/1-1/guide",
+   "stops": 22,
+   "noRing": [],
+   "hidden": [],
+   "content": {
+    "want": {
+     "toc": 3,
+     "pn": 1,
+     "details": 2,
+     "scroll": 0
+    },
+    "got": {
+     "toc": 3,
+     "pn": 1,
+     "details": 2
+    }
+   }
+  },
+  {
+   "page": "/privacy",
+   "stops": 16,
+   "noRing": [],
+   "hidden": []
+  },
+  {
+   "page": "/terms",
+   "stops": 18,
+   "noRing": [],
+   "hidden": []
+  },
+  {
+   "page": "/contact",
+   "stops": 19,
+   "noRing": [],
+   "hidden": []
+  },
+  {
+   "page": "/missing-page",
+   "stops": 17,
+   "noRing": [],
+   "hidden": []
+  }
+ ],
+ "loop": {
+  "on": {
+   "before": 0,
+   "n": 1,
+   "slug": "water",
+   "anim": "sl-tube-pour",
+   "src": "url(\"/ui-next/posters/rack/water.webp\")"
+  },
+  "reduced": {
+   "before": 0,
+   "n": 0,
+   "slug": null,
+   "anim": null,
+   "src": ""
+  },
+  "strips": [
+   [
+    "acid.webp",
+    18746
+   ],
+   [
+    "ash.webp",
+    12416
+   ],
+   [
+    "fire.webp",
+    14768
+   ],
+   [
+    "gunpowder.webp",
+    12748
+   ],
+   [
+    "lava.webp",
+    18938
+   ],
+   [
+    "oil.webp",
+    18408
+   ],
+   [
+    "salt.webp",
+    12284
+   ],
+   [
+    "sand.webp",
+    12972
+   ],
+   [
+    "seed.webp",
+    12994
+   ],
+   [
+    "smoke.webp",
+    14308
+   ],
+   [
+    "steam.webp",
+    17148
+   ],
+   [
+    "water.webp",
+    18570
+   ]
+  ]
+ },
+ "ads": {
+  "enabled": false,
+  "staticPages": 0,
+  "live": [
+   [
+    "/play",
+    0
+   ],
+   [
+    "/learn/margolus-falling-sand",
+    0
+   ],
+   [
+    "/materials/acid",
+    0
+   ],
+   [
+    "/about",
+    0
+   ],
+   [
+    "/play/1-1/guide",
+    0
+   ]
+  ]
+ },
+ "lcp": [
+  {
+   "page": "/",
+   "lcp": 2334,
+   "fcp": 1203,
+   "cls": 0,
+   "clsMax": 0,
+   "tbt": 16,
+   "runs": [
+    2334,
+    2331,
+    2354
+   ],
+   "el": "<p class=\"sl-ro\" role=\"note\" data-sl-read-only=\"\">",
+   "blocking": [
+    "/_next/static/css/05a694e3aa92f4b1.css",
+    "/_next/static/css/945ed66ddffc53c2.css"
+   ],
+   "inpRuns": [
+    40,
+    64,
+    64
+   ],
+   "inp": 64
+  },
+  {
+   "page": "/daily",
+   "lcp": 2403,
+   "fcp": 902,
+   "cls": 0.037,
+   "clsMax": 0.037,
+   "tbt": 43,
+   "runs": [
+    2403,
+    2405,
+    2403
+   ],
+   "el": "<p class=\"sl-st-run\">",
+   "blocking": [
+    "/_next/static/css/0d62542304a3d5de.css",
+    "/_next/static/css/5c5e1653b7d4cb70.css",
+    "/_next/static/css/945ed66ddffc53c2.css"
+   ],
+   "inpRuns": [
+    32,
+    32,
+    32
+   ],
+   "inp": 32
+  },
+  {
+   "page": "/play",
+   "lcp": 2330,
+   "fcp": 1354,
+   "cls": 0,
+   "clsMax": 0,
+   "tbt": 37,
+   "runs": [
+    2323,
+    2406,
+    2330
+   ],
+   "el": "<img src=\"/ui-next/levels/1-1.png\" width=\"160\" height=\"240\" alt=\"\" loa",
+   "blocking": [
+    "/_next/static/css/5c5e1653b7d4cb70.css",
+    "/_next/static/css/c2420a8c2a4b128c.css",
+    "/_next/static/css/1a2c6e3dfa7d38bd.css",
+    "/_next/static/css/945ed66ddffc53c2.css"
+   ],
+   "inpRuns": [
+    56,
+    40,
+    48
+   ],
+   "inp": 48
+  },
+  {
+   "page": "/gallery",
+   "lcp": 2400,
+   "fcp": 1203,
+   "cls": 0,
+   "clsMax": 0,
+   "tbt": 12,
+   "runs": [
+    2403,
+    2400,
+    2393
+   ],
+   "el": "<p class=\"sl-gw-lede\">",
+   "blocking": [
+    "/_next/static/css/945ed66ddffc53c2.css",
+    "/_next/static/css/2ead67a35c0c6c46.css"
+   ],
+   "inpRuns": [
+    48,
+    32,
+    32
+   ],
+   "inp": 32
+  },
+  {
+   "page": "/learn/margolus-falling-sand",
+   "lcp": 2033,
+   "fcp": 1205,
+   "cls": 0,
+   "clsMax": 0,
+   "tbt": 34,
+   "runs": [
+    2033,
+    2039,
+    2031
+   ],
+   "el": "<p>",
+   "blocking": [
+    "/_next/static/css/1a2c6e3dfa7d38bd.css",
+    "/_next/static/css/945ed66ddffc53c2.css"
+   ],
+   "inpRuns": [
+    48,
+    56,
+    64
+   ],
+   "inp": 56
+  },
+  {
+   "page": "/materials/acid",
+   "lcp": 2038,
+   "fcp": 1205,
+   "cls": 0,
+   "clsMax": 0,
+   "tbt": 51,
+   "runs": [
+    2038,
+    2033,
+    2046
+   ],
+   "el": "<p>",
+   "blocking": [
+    "/_next/static/css/1a2c6e3dfa7d38bd.css",
+    "/_next/static/css/945ed66ddffc53c2.css"
+   ],
+   "inpRuns": [
+    48,
+    80,
+    48
+   ],
+   "inp": 48
+  },
+  {
+   "page": "/play/1-1/guide",
+   "lcp": 2024,
+   "fcp": 1202,
+   "cls": 0,
+   "clsMax": 0,
+   "tbt": 24,
+   "runs": [
+    2041,
+    2024,
+    2022
+   ],
+   "el": "<h1>",
+   "blocking": [
+    "/_next/static/css/945ed66ddffc53c2.css",
+    "/_next/static/css/1a2c6e3dfa7d38bd.css"
+   ],
+   "inpRuns": [
+    40,
+    80,
+    88
+   ],
+   "inp": 80
+  }
+ ],
+ "sheet": "ok",
+ "fails": []
+}

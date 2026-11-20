@@ -36,3 +36,10 @@ export function isSandlabPick(id: string | null | undefined): boolean {
 }
 
 export const pickThumb = (id: string) => `/ui-next/wall/${id}.webp`
+/**
+ * 큐레이션 썸네일 두 크기(P12 LCP): 320 폭(폰 2열 카드 CSS 약 170px — DPR 2 미만)과 원본(640 폭, 한 장은 20KB 한도 때문에 560).
+ * 원본 12장 125KB가 폰 첫 방문에 다 받혔다(lazy여도 첫 화면 근처라) — 작은 쪽은 12장 36KB. `capture-wall.cjs --small-only`로 만든다.
+ */
+export const pickSrcSet = (id: string) => `/ui-next/wall/${id}-320.webp 320w, /ui-next/wall/${id}.webp 640w`
+/** 액자 유리 폭(gallery.css 그리드 — 2열 <720, 3열 <1100, 4열, 본문 최대 1200px, 액자 테두리 5px×2). */
+export const PICK_SIZES = '(min-width: 1200px) 260px, (min-width: 1100px) calc(25vw - 40px), (min-width: 720px) calc(33vw - 42px), calc(50vw - 34px)'

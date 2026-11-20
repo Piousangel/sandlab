@@ -31,6 +31,19 @@ export const SHELL_AREAS: Record<string, string> = {
   'src/app/play/[id]/guide/page.tsx': 'content',
 }
 
+/**
+ * P12(LCP): prod 파일이 import하는 prod 모듈 중 **프리뷰 화면에서는 첫 그림에 필요 없는 것**을 프리뷰 빌드에서만 바꿔 끼운다.
+ * prod 파일(page.tsx·DailySpill.tsx)을 고치면 prod 청크·HTML이 바뀌므로, 사용처(issuer) + import 문자열(request)이 둘 다 맞을 때만
+ * resolve 전에 request를 바꾼다(prod 빌드는 이 플러그인 자체가 없다). `to`는 사용처 폴더 기준으로 풀리므로 `@/` 경로로 쓴다.
+ * - 홈: `HomePour ? <HomePour/> : <SandCanvas/>`에서 프리뷰는 HomePour가 늘 있지만 import만으로 옛 홈(SandCanvas) 10KB(gzip)가 실렸다 → 빈 모듈.
+ * - 데일리: 플레이 화면(SpillPlayer·결과 카드 24KB gzip)은 "Solve today"를 누른 뒤에만 쓴다 → 지연 로드 래퍼(시작 화면이 load 뒤 미리 받는다).
+ * src/ui-next/shell/shell.test.tsx가 표의 사용처에 그 import 문자열이 있는지, 바꿀 모듈이 있는지 본다(낡은 줄이 조용히 무효가 되지 않게).
+ */
+export const PREVIEW_SWAPS: { issuer: string; request: string; to: string }[] = [
+  { issuer: 'src/app/page.tsx', request: '@/components/SandCanvas', to: '@/ui-next/home/ClassicHomeOff' },
+  { issuer: 'src/components/spill/DailySpill.tsx', request: './SpillPlayer', to: '@/ui-next/daily/LazySpillPlayer' },
+]
+
 const nextConfig: NextConfig = {
   output: 'export',
   webpack(config, { webpack, dir }) {
@@ -56,6 +69,43 @@ const nextConfig: NextConfig = {
           },
         ),
       )
+      // 사용처가 컴파일됐는데 바꿔 끼우기가 한 번도 안 걸리면(경로·따옴표·import 문자열이 바뀌어 빗나감) 빌드를 멈춘다 —
+      // 조용히 원래 모듈이 실려 LCP만 다시 나빠지는 일을 막는다(리뷰 반영, SHELL_AREAS의 '표에 없으면 멈춤'과 같은 정신).
+      type Data = { request: string; contextInfo?: { issuer?: string } }
+      type Compiler = {
+        hooks: {
+          normalModuleFactory: { tap(n: string, f: (nmf: { hooks: { beforeResolve: { tap(n: string, f: (d: Data) => void): void } } }) => void): void }
+          afterCompile: { tap(n: string, f: (c: { errors: Error[] }) => void): void }
+        }
+      }
+      config.plugins.push({
+        apply(compiler: Compiler) {
+          const seen = new Set<string>()
+          const hits = new Set<string>()
+          const relIssuer = (raw: string) => {
+            const rel = (base: string) => relative(base, raw).split('\\').join('/')
+            return PREVIEW_SWAPS.some((s) => s.issuer === rel(dir)) ? rel(dir) : rel(realpathSync(dir))
+          }
+          compiler.hooks.normalModuleFactory.tap('PreviewSwaps', (nmf) => {
+            nmf.hooks.beforeResolve.tap('PreviewSwaps', (data) => {
+              const raw = data.contextInfo?.issuer
+              if (!raw) return
+              const issuer = relIssuer(raw)
+              if (!PREVIEW_SWAPS.some((s) => s.issuer === issuer)) return
+              seen.add(issuer)
+              const hit = PREVIEW_SWAPS.find((s) => s.issuer === issuer && s.request === data.request)
+              if (!hit) return
+              hits.add(hit.issuer + ' ' + hit.request)
+              data.request = hit.to
+            })
+          })
+          compiler.hooks.afterCompile.tap('PreviewSwaps', (compilation) => {
+            for (const s of PREVIEW_SWAPS)
+              if (seen.has(s.issuer) && !hits.has(s.issuer + ' ' + s.request))
+                compilation.errors.push(new Error(`PREVIEW_SWAPS: '${s.issuer}'가 컴파일됐는데 '${s.request}' import를 못 찾았다 — next.config.ts 표를 고칠 것`))
+          })
+        },
+      })
     }
     return config
   },

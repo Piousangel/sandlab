@@ -246,3 +246,18 @@
 - **prod 무변경**: `ResultCard`(prod 결과 카드)·`ChallengePlayer`(DailyPlayer와 함께 어디서도 import 안 함)는 손대지 않았다 — prod out/ 210파일 main과 동일(빌드 id만 다름, 같은 폴더 빌드). 둘 다 P12 컷오버 때 지울 대상이라 sheet.test의 LEGACY 목록에만 있다(새 항목 금지).
 - 검사로 만들기: `src/ui-next/sheet/sheet.test.tsx`(손으로 만든 모달 표식이 생기면 실패 + 양성 대조), `scripts/qa/sheet-e2e.mjs`(= `pnpm qa:preview --only sheet`) 12항목 + 390 UX 감사(44px elementFromPoint·입력 16px·확대 막음·가로 넘침, 양성 대조). 체크리스트 `docs/team/UX-CHECKLIST.md`.
 - 버린 안: 결과 화면을 시트로(위 이유), `<dialog>` 유지 + 끌기만 덧붙이기(뒤로 가기·history·스크롤 잠금·inert를 다시 짜야 하고 허브와 두 갈래가 된다), prod ResultCard에 Esc 붙이기(prod diff·컷오버 때 사라질 코드).
+
+
+## 2026-11-20 P12 LCP — 프리뷰 LCP 미달 3쪽(홈·/daily·/gallery)을 2.5s 안으로: 측정한 원인은 "관측 LCP 전에 끝난 바이트 합" (P12 컷오버 게이트 항목)
+- **측정 먼저**: Lighthouse 12 Lantern의 LCP 그래프(optimistic·pessimistic 노드)를 덤프해 봤다. LCP 요소는 세 쪽 모두 글자(홈 `p.sl-ro` 읽기 전용 안내, /daily `p.sl-st-run` — 하이드레이션 뒤, /gallery `p.sl-gw-lede`)라 Load Delay·Load Time 0, 전부 Render Delay. Lantern은 **로컬 관측 LCP 전에 끝난 요청 전부**(낮은 우선순위 스크립트·서체·lazy 이미지·파비콘까지)를 그래프에 넣고 Slow 4G 대역을 나눠 쓰게 하므로 프레임워크 청크(a039 54KB)의 끝이 밀린다 → LCP ≈ 그래프 바이트 합(쪽마다 4~7ms/KB) + 평가 CPU. 갤러리는 pessimistic(이미지 포함 3123ms)과 optimistic(2267ms)의 평균이 2.7s였다.
+  - 반증된 후보(실험 기록): 서체 preload(관측 LCP만 당겨지고 바이트 그대로 — 2.70/2.87/2.79s), `font-display: optional`(차이 없음), 갤러리 이미지 전부 lazy(첫 화면 근처라 받는 시점만 늦고 그래프에 남음 — 2.71s 그대로), /daily 정적 골격 SSR(Bricolage 글자가 서체를 기다려 관측 LCP 103ms → 서체·스크립트가 그대로 그래프에 — 2.54s, 이득 거의 없음 → **안 함**, DailySpill prod 무변경).
+- **선택(바이트 줄이기, 전부 프리뷰 전용)**
+  1. **서체 core/ext 글자 범위 분할**: `next/font/local` 대신 `src/ui-next/fonts.css` 손 @font-face(파일마다 unicode-range를 줄 수 있어서). core = ASCII + 사이트가 쓰는 문장부호(· — … ’ © × “ ” – − •), ext = 나머지 옛 라틴 서브셋. 영어 첫 화면은 core 3개만: 47.4 → 31.2KB. 폴백 메트릭(Arial size-adjust)은 next가 계산하던 값과 같다(리뷰가 next 내부 함수로 재계산 확인). 재현 `scripts/fonts/build-fonts.py`(원본 sha256 같음, 범위 문자열을 찍는다). 대가: 사용자 제목의 악센트 글자는 ext가 따로 와 그 글자만 swap이 늦고 core↔ext 사이 커닝이 끊긴다(미미). `<html class>`는 `sl-next`(프리뷰 표식).
+  2. **`PREVIEW_SWAPS`(next.config.ts)**: prod 파일이 import하는 prod 모듈을 사용처(issuer)+import 문자열이 맞을 때만 프리뷰 빌드에서 바꿔 끼운다(beforeResolve). 홈 `page.tsx`의 `SandCanvas`(프리뷰에선 그려질 일이 없는데 import만으로 10KB gzip) → 빈 모듈, `DailySpill`의 `./SpillPlayer`(플레이 화면 24KB, Solve today 뒤에만 씀) → `LazySpillPlayer`(시작 화면이 load 뒤 유휴·버튼 누름에 미리 받음). 사용처가 컴파일됐는데 한 번도 안 걸리면 **빌드 실패**(리뷰 반영, 음성 대조로 확인). prod 파일 수정 0.
+  3. 홈 오늘 카드: `goalLine`을 순수 모듈로(DailyStart·HUD·지층 병이 딸려 오던 것), 판 실루엣 렌더러(Spill 시뮬)는 `afterLoad`(load 뒤 유휴) 동적 import. **마운트 때 import()는 오히려 LCP를 늘린다**(프레임워크 평가 뒤 줄을 서는 노드가 그래프 끝에 붙음) — 그래서 load 뒤.
+  4. 갤러리: `LiveCanvas`(WebGPU 엔진 청크) `React.lazy`(마우스 기기는 load 뒤 미리 받음), 큐레이션 썸네일 320w srcset(12장 125 → 36KB, DPR 2 미만 폰). 실제 고밀도 폰은 640을 고른다(리뷰: 실사용 이득은 작다 — 480w 단계는 다음 후보).
+  5. 프리뷰 파비콘 512px 52KB → 48px 2KB(`public/ui-next/icon-48.png`, layout.tsx `UI_NEXT` 분기). 52KB 파비콘은 load 직후 받혀 관측 LCP가 늦은 회차에 그래프에 끼어 홈 LCP를 2.35 → 2.84s로 흔들었다(덤프 실측). **컷오버 때 prod에도 같은 처리를 권한다.**
+  6. lazy 청크 실패 경계 `LazyBoundary`(리뷰 반영): 데일리는 "The puzzle didn't load. Reload", 갤러리는 썸네일로 돌아감 — 없으면 Next 기본 오류 화면.
+- **결과(Lighthouse 모바일 3회 중앙값, `pnpm qa:preview`, load 8~10)**: 홈 2631 → 2334, /daily 2556 → 2403, /gallery 2732 → 2400, /play 2410 → 2330, 글 3쪽 2.02~2.04s (보고 JSON `docs/perf/2026-11-20-p12-lcp-qa.json`). 7쪽 모두 ≤ 2.5s. CLS·a11y·keys·sheet·loop·ads·contrast 회귀 없음. 여유가 97~170ms라 부하 30+ 기계에서는 넘을 수 있다(P11b 기록: +0.2~0.4s) — 게이트는 부하를 같이 적는다.
+- **남은 후보(숫자 근거)**: /daily는 마운트 때 `/api/track` 핑 2개가 그래프 끝에 붙어 +150ms(prod 코드 trackEvent — 컷오버 뒤 load 뒤로 미루기 후보), 시작 화면 보드 렌더러(Spill 시뮬 약 15KB)는 첫 화면 주인공이라 미루지 않았다. 홈 LCP 요소는 프리뷰 읽기 전용 안내라 컷오버(prod 빌드, READ_ONLY 없음) 뒤에는 h1 등으로 바뀐다 — 컷오버 PR에서 다시 잰다.
+- prod 영향: prod out/ 210/210 main과 동일(같은 폴더 빌드, 빌드 id만 다름) + 참조 없는 정적 파일 13개(320 썸네일 12·아이콘 1, P9 webp와 같은 방식). content-parity 35쪽 0 차이.

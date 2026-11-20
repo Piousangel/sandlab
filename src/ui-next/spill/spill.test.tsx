@@ -6,7 +6,11 @@ import { LEVELS } from '@/lib/spill/levels'
 import { findViolations } from '../../../scripts/lint-ui-rules.mjs'
 import { HUD, spillChrome } from './chrome'
 import { SpillHud as Kit, runFace } from './SpillHud'
-import { DailyStart as Start, goalLine } from './DailyStart'
+import { DailyStart as Start } from './DailyStart'
+import { goalLine } from './goalLine'
+
+// DailyStart의 플레이 화면 미리 받기(P12 LCP)가 테스트가 끝난 뒤 SpillPlayer를 import하지 않게 막는다
+vi.mock('../daily/LazySpillPlayer', () => ({ preloadSpillPlayer: () => {}, default: () => null }))
 
 // SpillPlayer·DailySpill이 새 HUD로 그려지는지 보려고 @ui-shell을 프리뷰 빌드(next.ts)와 같은 모양으로 바꾼다.
 // next.ts 자체는 CSS·next/font를 불러 테스트 환경에서 못 읽으므로 같은 export만 직접 넣는다.
