@@ -33,9 +33,14 @@ jobs:
       - run: node scripts/verify-margolus.mjs
 
   test:
-    name: vitest
+    name: vitest (${{ matrix.project }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # unit = 일반 테스트(기본 5초 한도), sim = 결정적 시뮬 테스트(vitest.config.ts SIM_TESTS, 5분 한도). 합치면 전체.
+        project: [unit, sim]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -46,8 +51,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # 전체 vitest(제외 없음 — verify.test.ts 포함). 만성 실패 0 기준선(11-20).
-      - run: pnpm test
+      # 전체 vitest(제외 없음 — verify.test.ts 포함)를 두 프로젝트로 나눠 병렬로. 만성 실패 0 기준선(11-20).
+      - run: pnpm test --project ${{ matrix.project }}
 
   spill-verify:
     name: spill:verify (${{ matrix.part }})

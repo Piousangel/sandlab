@@ -14,6 +14,6 @@ describe('S0 물리 목표치 — salt 16개 스윕', () => {
         if (!r.result.pass) fails.push(`salt ${salt}: ${r.result.summary}`)
       }
       expect(fails).toEqual([])
-    }, 120_000)
+    }) // 시간 한도는 vitest.config.ts의 sim 프로젝트(SIM_TIMEOUT)
   }
 })
