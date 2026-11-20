@@ -1,6 +1,6 @@
 # 인계 (2026-11-20 오전): 리디자인 v2 P10 「글 페이지 + 광고 위치」 머지 — P9(#81 갤러리)도 머지됨, 다음은 P11(시험관 루프·접근성 마감)
 
-- 계획서 6장 진행표가 기준. P10 = 브랜치 shift/redesign-p10-content. 결정은 DECISIONS 2026-11-20 P10. AdSense 단위 표 = docs/team/adsense-units.md.
+- 계획서 6장 진행표가 기준. P10 = #87(브랜치 shift/redesign-p10-content). 결정은 DECISIONS 2026-11-20 P10. AdSense 단위 표 = docs/team/adsense-units.md.
 - **글 페이지 = `src/ui-next/content/`**: parts.tsx(ContentPage 뼈대·목차·이전/다음·MidAd/EndAd·Sections), Articles.tsx(LearnArticle·GuideArticle), Materials.tsx(MaterialsIndex·MaterialPage·MiniTube), ContentFrame.tsx(산문 페이지 틀), model.ts(순수: sectionIds·midAfter·proseMidIndex·stripStyles), content.css, content.test.tsx. 계약 타입 `shell/contentTypes.ts`, classic.ts에 null 5개.
 - **두 갈래**: 데이터로 그리는 글(learn/[slug]·play/[id]/guide·materials·materials/[slug])은 page.tsx가 `if (View) return <View …/>`로 같은 데이터를 넘긴다(JSON-LD는 객체 하나를 두 분기가 공유). 산문(About·Privacy·Terms·Contact·Learn 허브·404)은 ContentShell → ContentFrame이 **같은 JSX의 인라인 style만 걷어낸다**. 문장을 고치면 prod·프리뷰가 함께 바뀐다. 단, 전용 화면 쪽에 prod JSX와 같은 꼬리 문구("Sources", "Keep reading", "Hints", "Open one at a time…", 재료 목록 소개 문단 등)가 두 벌 있다 → 고치면 **`node scripts/qa/content-parity.mjs <prodOut> <previewOut>`**(단어 순서·href·h1·title·JSON-LD·로더, 새 셸 글자 `data-sl-chrome` 제외)로 확인.
 - **광고**: AD_SLOTS = play 9581379414(300×250), contentMid = 320×100 6955216070 / 728×90 5642134405(800px에서 교체), contentEnd = null(단위 없음 → 렌더 0). strip은 마운트 뒤 matchMedia로 맞는 단위 하나만 `ins.adsbygoogle`(push는 DOM 첫 미처리 ins를 채운다 — 숨은 ins 두면 폭 0 오류). rect ins는 300×250 고정 가운데(전엔 100% 폭). 프리뷰에서만 렌더, prod 변화 0. **재심사 신청 금지**.
