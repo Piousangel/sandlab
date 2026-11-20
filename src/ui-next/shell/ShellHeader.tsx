@@ -86,7 +86,7 @@ function DailyPill() {
         <Icon name="daily" size={16} />
         <span className="sl-pill-t">
           {t.no}
-          {t.left && <span className="sl-pill-left"> {t.left}</span>}
+          {t.left && <span className="sl-pill-left"> · {t.left}</span>}
         </span>
       </span>
     </a>

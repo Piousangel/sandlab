@@ -1,4 +1,6 @@
 import GalleryBrowser from '@/components/GalleryBrowser'
+// 리디자인 P9: 프리뷰(NEXT_PUBLIC_UI=next)만 「The Wall」. prod(classic)는 GalleryWall = null → 지금 화면 그대로.
+import { GalleryWall } from '@ui-shell'
 
 export const metadata = {
   title: 'Sandlab Gallery — scenes people made',
@@ -11,6 +13,8 @@ export const metadata = {
 const SR_ONLY = { position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0 0 0 0)', whiteSpace: 'nowrap', border: 0 } as const
 
 export default function Page() {
+  // 새 셸은 보이는 h1("The Wall")을 직접 그린다
+  if (GalleryWall) return <GalleryWall />
   // 화면에 보이는 제목이 없어 h1이 0개였다(03시 QA) — 스크린리더·검색용 제목만 둔다(겉모습 변화 0)
   return (
     <>

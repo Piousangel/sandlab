@@ -35,6 +35,7 @@ import { Icon } from '../icons/Icon'
 import { ShellHeader } from '../shell/ShellHeader'
 import { ShellFooter } from '../shell/ShellFooter'
 import { PREVIEW_READ_ONLY, READ_ONLY_NOTE } from '../shell/ReadOnlyNote'
+import { isSandlabPick, SANDLAB_CREATOR } from '../gallery/picks'
 import { Rack } from './Rack'
 import { StrataBand, TodayCard, WallPreview } from './HomeSections'
 import {
@@ -116,7 +117,9 @@ export function HomePour() {
           if (sid) {
             const sc = await getScene(sid)
             restored = await decodeScene(sc.data)
-            next = { kind: 'scene', id: sid, title: sc.title, creatorName: sc.creatorName ?? null, remixCount: sc.remixCount ?? 0 }
+            // P9: 단건 API가 creatorName을 싣는다. 팀 큐레이션(이름 없이 올린 작품)은 갤러리 목록 표기와 같게 'Sandlab'
+            const by = sc.creatorName ?? (isSandlabPick(sid) ? SANDLAB_CREATOR : null)
+            next = { kind: 'scene', id: sid, title: sc.title, creatorName: by, remixCount: sc.remixCount ?? 0 }
           } else {
             restored = await readShareUrl()
             if (restored) next = { kind: 'link' }
