@@ -66,6 +66,12 @@ async function main(): Promise<void> {
   // --exclude 1-8,2-1: CI에서 무거운 레벨(1-8 Cascade)을 다른 job으로 나눠 병렬로 돌릴 때 쓴다(.github/workflows/ci.yml).
   // 두 job을 합치면 전 레벨이다 — 새 레벨은 제외 목록에 없으니 자동으로 나머지 job에 들어간다.
   const exclude = (flag('--exclude') ?? '').split(',').filter(Boolean)
+  const unknown = exclude.filter((id) => !LEVELS.some((l) => l.id === id))
+  if (unknown.length || args.some((a) => a.startsWith('--exclude='))) {
+    // 오타·이름 바뀐 id를 조용히 넘기면 CI 분할이 레벨을 중복·누락한다.
+    console.error(`--exclude: unknown level id(s) ${unknown.join(', ') || '(use "--exclude 1-8", not "--exclude=")'}`)
+    process.exit(1)
+  }
   const levels = (ids.length ? LEVELS.filter((l) => ids.includes(l.id)) : LEVELS).filter((l) => !exclude.includes(l.id))
   if (levels.length === 0) {
     console.error(`no levels matched ${ids.join(', ') || '(LEVELS is empty)'}`)

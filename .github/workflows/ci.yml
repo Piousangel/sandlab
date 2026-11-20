@@ -110,7 +110,14 @@ jobs:
       - name: 갤러리 API (verify-gallery.py)
         run: |
           pnpm exec wrangler dev --port 8799 --local > wrangler-dev.log 2>&1 &
-          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:8799/api/scenes && break; sleep 2; done
+          pid=$!
+          ready=
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:8799/api/scenes && { ready=1; break; }
+            kill -0 $pid 2>/dev/null || { echo "wrangler dev가 종료됨"; break; }
+            sleep 2
+          done
+          [ -n "$ready" ] || { echo "::error::wrangler dev가 120초 안에 준비되지 않음"; exit 1; }
           python3 scripts/verify-gallery.py
       - if: failure()
         run: tail -100 wrangler-dev.log || true
