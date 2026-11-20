@@ -163,3 +163,10 @@
 - **광고 안내판 없음**: /gallery는 verify-ads 허용 목록 밖(라이브 캔버스 화면). AdPlate를 넣지 않았다.
 - **헤더 데일리 pill(P3 셸)**: 보이는 글자 `Daily · 06:12`(번호는 접근 이름으로), 접근 이름 `Daily · 06:12, puzzle No.43, 6 hours 12 minutes left` — 보이는 글자로 시작(label-in-name). P6 3초 테스트 3/5 "No.42 00:52가 뭔지 모르겠다" 반영. 칸 폭 12ch → 13ch(시간이 채워져도 폭 고정, CLS 0).
 - 버린 안: 큐레이션을 `#g=` 문자열로 저장(장면 크기 따라 URL 예산 초과·홈 진입이 'A scene someone shared'로 제목 없음), 새 업로드(지시: prod D1 쓰기 금지), 정렬 Top을 위해 `sort=top` API 추가(범위 밖 — 필요하면 별도 PR), 썸네일 위 Play 버튼(작은 2열 카드에서 그림의 1/4을 가림).
+
+## 2026-11-20 PR 단계 CI 도입, 만성 실패 테스트 0 (오너 승인 제안 C)
+- 맥락: `verify.test.ts`가 늘 타임아웃이라 배포·검증 관문에서 `--exclude`로 빠져 있었고, spill:verify는 CI에서 22분 걸려 배포에서 빠져 머지 전 검사가 루틴 손에만 있었다. 허브 docs/team/mentor/lydia-hallie.md 7장 통합 목록 C를 오너가 11-20 승인.
+- 원인 분류(11-20 main, Node 22): 7건(로컬 load 45) / 3건(CI) 전부 **부하 타임아웃** — 결정적 시뮬을 끝까지 도는 테스트(sweep Steam vs vent 16 salt: CI 49초·로컬 236초, verify.test beforeAll 훅 10초, sim fuse·dig candidates·replay·transform·cases 결정성 5초). 진짜 버그·시간 의존·낡은 기대값 0.
+- 선택: vitest를 **unit(기본 한도)·sim(결정적 시뮬 파일, 5분 한도)** 두 프로젝트로 나눴다(vitest.config.ts SIM_TESTS). `pnpm test`는 둘 다(제외 없음), CI는 두 job 병렬. sweep.test의 개별 120초 한도는 프로젝트 한도 하나로 합쳤다. `scripts/spill-verify.ts`에 `--exclude`를 넣어 CI에서 1-8 Cascade(전체 시뮬의 절반 이상)와 나머지를 두 job으로, `--workers 4`(러너 vCPU 전부, 기본은 cpus-2=2라 예전 22분). 갤러리 API는 `wrangler dev --local`(로컬 D1, 계정 불필요)로 CI에서 verify-gallery.py까지 돈다.
+- 버린 안: 무거운 테스트 skip·salt 수 축소(검증 범위 축소), 전역 testTimeout 상향(가벼운 테스트의 느려짐까지 숨김), spill:verify를 1 job(벽시계 15분 초과).
+- 남은 것: 브랜치 보호에 CI 필수 체크를 켜는 것은 오너 할 일.
