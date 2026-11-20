@@ -97,7 +97,7 @@ describe('ICONS registry', () => {
       'lock', 'next', 'back', 'menu', 'info', 'settings',
     ]
     for (const n of v1) expect(ICON_NAMES).toContain(n)
-    expect(ICON_NAMES).toHaveLength(27)
+    expect(ICON_NAMES).toHaveLength(31) // v1 27 + P6 홈 close·hand·external·copy
   })
 
   it('exceptions only name real icons and give a reason', () => {

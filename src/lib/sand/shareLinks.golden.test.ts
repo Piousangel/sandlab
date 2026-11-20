@@ -3,7 +3,7 @@
  * **지금 동작 그대로**인지 잠근다. 코드를 바꾸지 않고 현재 동작을 고정하는 게 목적이라,
  * 새 셸(P6)이 이 파싱을 옮기거나 다시 짤 때 이 표가 깨지면 기존 링크가 깨진다는 뜻이다.
  *
- * - `#s=` 파싱 정규식은 SandCanvas.tsx 안에 인라인이라 소스에서 그대로 뽑아 쓴다(복사본이 아니라 실물).
+ * - `#s=` 파싱·parent 결정은 P6에서 순수 함수(urlState.ts의 sceneIdFromHash·publishParent·publishedLinks)로 뺐다 — 옛 홈(SandCanvas)과 새 홈(ui-next/home)이 같은 함수를 부른다.
  * - `#g=`는 urlState.readShareUrl/buildShareUrl을 그대로 부른다.
  * - `/s/:id`와 업로드 parent는 worker/index.ts의 fetch를 가짜 D1로 직접 부른다.
  */
@@ -11,16 +11,13 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { buildShareUrl, decodeScene, readShareUrl } from './urlState'
+import { SCENE_HASH_RE, hasEmbeddedScene, publishParent, publishedLinks, sceneIdFromHash } from './urlState'
 import worker from '../../../worker/index'
 
 const src = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8')
 const SAND_CANVAS = src('../../components/SandCanvas.tsx')
 const GALLERY_BROWSER = src('../../components/GalleryBrowser.tsx')
-
-// SandCanvas가 실제로 쓰는 정규식 리터럴을 소스에서 뽑는다.
-const S_RE_SRC = SAND_CANVAS.match(/location\.hash\.match\((\/\[#&\]s=[^\n]*?\/)\)/)?.[1]
-const S_RE = S_RE_SRC ? new RegExp(S_RE_SRC.slice(1, -1)) : null
-const sceneIdFromHash = (hash: string) => hash.match(S_RE!)?.[1] ?? null
+const HOME_POUR = src('../../ui-next/home/HomePour.tsx')
 
 /** 1200×600, 바닥 10줄 sand(7) + 가운데 200×20 water(12). 11-19 현재 인코더로 만든 고정 블롭. */
 const GOLDEN_G = 'Y9zAeYOFYUuDGM8JRoYX7PQmpzwXZn8QCwA'
@@ -33,8 +30,9 @@ function stubLocation(hash: string, origin = 'https://sandlab.app', pathname = '
 afterEach(() => vi.unstubAllGlobals())
 
 describe('골든셋: 홈 해시 링크(#s= · #g=)', () => {
-  it('SandCanvas의 #s= 정규식이 11-19 그대로다', () => {
-    expect(S_RE_SRC).toBe('/[#&]s=([A-Za-z0-9_-]{6,16})/')
+  it('#s= 정규식이 11-19 그대로다(urlState.SCENE_HASH_RE)', () => {
+    expect(`/${SCENE_HASH_RE.source}/`).toBe('/[#&]s=([A-Za-z0-9_-]{6,16})/')
+    expect(SCENE_HASH_RE.flags).toBe('')
   })
   it('SandCanvas 격자는 1200×600 — 다른 크기로 복원된 씬은 버린다', () => {
     expect(SAND_CANVAS).toMatch(/^const W = 1200$/m)
@@ -90,17 +88,39 @@ describe('골든셋: 홈 해시 링크(#s= · #g=)', () => {
   })
 })
 
-// 소스 트립와이어: 이 부분은 동작이 아니라 SandCanvas·GalleryBrowser 소스 문자열을 잠근다(인라인 코드라 지금은 부를 수 없음).
-// 변수명·포매팅만 바뀌어도 깨지니, 깨지면 동작이 같은지 확인하고 갱신한다. P6에서 #s= 파싱·parent 결정을 순수 함수로 빼면
-// 이 describe를 그 함수 호출 테스트로 바꾼다(P6 착수 조건).
-describe('골든셋: 리믹스 parent 연결(클라이언트, 소스 트립와이어)', () => {
+// P6: 예전 '소스 트립와이어'(SandCanvas 소스 문자열 잠금)를 순수 함수 호출 테스트로 바꿨다(P2 인계 착수 조건).
+describe('골든셋: 리믹스 parent 연결(클라이언트, urlState 순수 함수)', () => {
   it('#s=로 연 씬 id가 계보 원본이 되고, Publish 때 parent로 간다', () => {
-    expect(SAND_CANVAS).toContain('loadedSceneId.current = sm[1]')
-    expect(SAND_CANVAS).toContain('parent: loadedSceneId.current')
-    // 발행 후: 현재 탭은 해시형, 공유는 OG가 붙는 경로형
-    expect(SAND_CANVAS).toContain('history.replaceState(null, \'\', `${location.origin}/#s=${id}`)')
-    expect(SAND_CANVAS).toContain('url: `${location.origin}/s/${id}`')
-    expect(SAND_CANVAS).toContain('loadedSceneId.current = id')
+    const loaded = sceneIdFromHash('#s=AbC123')
+    expect(publishParent(loaded)).toBe('AbC123')
+    expect(publishParent(sceneIdFromHash('#g=' + GOLDEN_G))).toBeNull() // #g= 장면은 계보 없음(원작)
+    expect(publishParent(null)).toBeNull()
+  })
+  it('발행 후: 현재 탭은 해시형 /#s=id, 공유는 OG가 붙는 경로형 /s/id, 다음 parent는 방금 올린 id', () => {
+    const l = publishedLinks('https://sandlab.app', 'NewId_01')
+    expect(l).toEqual({ tabUrl: 'https://sandlab.app/#s=NewId_01', shareUrl: 'https://sandlab.app/s/NewId_01', nextLoadedId: 'NewId_01' })
+    // 탭 URL을 다시 열면 같은 id로 읽힌다(왕복)
+    expect(sceneIdFromHash(l.tabUrl.slice(l.tabUrl.indexOf('#')))).toBe('NewId_01')
+    expect(publishParent(l.nextLoadedId)).toBe('NewId_01')
+  })
+  it('#g= 표시 판단은 s 우선 규칙을 따른다', () => {
+    expect(hasEmbeddedScene(`#g=${GOLDEN_G}`)).toBe(true)
+    expect(hasEmbeddedScene(`#x=1&g=${GOLDEN_G}`)).toBe(true)
+    expect(hasEmbeddedScene(`#s=AbC123&g=${GOLDEN_G}`)).toBe(false)
+    expect(hasEmbeddedScene('')).toBe(false)
+  })
+  it('옛 홈·새 홈 모두 같은 함수를 쓴다(인라인 재구현 금지)', () => {
+    for (const [name, code] of [['SandCanvas', SAND_CANVAS], ['HomePour', HOME_POUR]] as const) {
+      expect(code, name).toContain("from '@/lib/sand/urlState'")
+      expect(code, name).toContain('sceneIdFromHash(location.hash)')
+      expect(code, name).toContain('publishParent(loadedSceneId.current)')
+      expect(code, name).toContain('publishedLinks(location.origin, id)')
+      // 계보 연결 지점(예전 트립와이어가 잠그던 것): #s=로 연 id → 계보 원본, 발행 뒤 → 방금 올린 id
+      expect(code, name).toContain('loadedSceneId.current = sid')
+      expect(code, name).toContain('loadedSceneId.current = links.nextLoadedId')
+      expect(code, name).toContain('history.replaceState(null, \'\', links.tabUrl)')
+      expect(code, name).not.toMatch(/location\.hash\.match\(/)
+    }
   })
   it('갤러리 카드는 /#s=<id>, 원본 링크는 /#s=<parent>', () => {
     expect(GALLERY_BROWSER).toContain('href={`/#s=${s.id}`}')

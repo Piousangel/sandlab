@@ -1,4 +1,4 @@
-# 인계 (2026-11-20 오전): 리디자인 v2 P8 「/play 전시실」 머지 — P6(홈)은 별도 교대 진행 중, 다음은 P9(갤러리 The Wall)
+# 인계 (2026-11-20 오전): 리디자인 v2 P8 「/play 전시실」 머지 — P6(#78)도 머지됨, 다음은 P9(갤러리 The Wall)
 
 - 계획서 6장 진행표가 기준. P8 = #PRNUM(브랜치 shift/redesign-p8-play). 결정은 DECISIONS 2026-11-20 P8.
 - **전시실 = `src/ui-next/play/`**: PlayGallery.tsx(서버 — 광고 로더·새 셸 헤더·푸터를 직접 그림, ContentShell의 main이 옛 다크 인라인이라), PlayWorlds.tsx(클라이언트 — localStorage 별을 마운트 뒤 읽음, 칸 크기 고정이라 CLS 0), galleryModel.ts(순수 — 잠금은 catalog.ts 그대로, '곧 공개' = 마지막 월드가 10칸 미만일 때 최대 2칸, 주 행동 하나), LevelAside.tsx(/play/[id] 패널), play.css, play.test.tsx. 계약 타입 `shell/playTypes.ts`, classic.ts에 null 2개(PlayGallery·LevelAside).
@@ -7,6 +7,16 @@
 - **광고**: `AD_SLOTS.play`만 채우면 /play 월드 카드 아래에 300×250 안내판이 뜬다(format rect, 간격 32px). 오너가 AdSense에서 **고정 300×250 디스플레이 단위**를 만들 때까지 렌더 0.
 - **P9가 알아야 할 것**: ① 화면 전체를 Bone으로 까는 글/목록 페이지는 PlayGallery처럼 `AdLoader`(광고 허용 페이지면)·ShellHeader·ShellFooter를 직접 그리는 래퍼를 쓰면 된다(ContentShell은 prod 화면이라 건드리지 않았다). 갤러리는 광고 금지 페이지라 AdLoader를 넣지 않는다(verify-ads가 잡는다). ② 이번에는 classic.ts에 null 2개를 더했는데도 prod JS 모듈 id 맞바뀜이 없었다(42개 JS 전부 동일) — 늘 생기는 건 아니니 diff 표로 확인. ③ 썸네일은 160×240 시작 보드라 '정적 미리보기' 패턴으로 갤러리 장면에도 재사용 가능(같은 PNG 인코더 — scripts/gen-level-thumbs.mts의 encodePng, 팔레트 ≤256색). ④ 검사 스크립트: 스크래치 p8/p8-play.mjs(진행 픽스처 none·some·all × 390·360·1440, 썸네일 바이트, /play/1-1 패널), p8/parity.py(prod vs 프리뷰 /play·/play/<id> 단어·링크·h1·title). 상시화하려면 scripts/qa/로.
 - 알려진 것(이번 범위 밖): /play/<id>의 h1이 prod "1-1 First Drop" vs 프리뷰 "First Drop 1-1"(P4 SpillHud 제목 표식 순서) — 컷오버 전 SEO 판단 필요.
+# 인계 (2026-11-20): 리디자인 v2 P6 「홈 Pour」 머지 — P5·P7도 머지됨, 다음은 P8(/play 전시실)
+
+- 계획서 6장 진행표가 기준. P6 = #78(브랜치 shift/redesign-p6-home). 결정은 DECISIONS 2026-11-20 P6.
+- **새 홈 = `src/ui-next/home/`**(HomePour.tsx 엔진·진입·공유 시트, Rack.tsx 시험관, HomeSections.tsx 오늘 카드·지층 띠·벽, model.ts 순수 규칙, home.css, home.test.tsx). `@ui-shell`의 `HomePour`, classic은 null → page.tsx가 SandCanvas 그대로. 아이콘 4개 추가(close·hand·external·copy, 31종), 정지 프레임 `public/ui-next/home/still.webp`.
+- **`#s=` 파싱·parent는 `src/lib/sand/urlState.ts`의 순수 함수**(sceneIdFromHash·publishParent·publishedLinks·hasEmbeddedScene). 새 파일로 빼면 prod 홈의 webpack 연결 모듈 id가 바뀌어 RSC 페이로드까지 달라진다(실측) — urlState에 둔 이유. 골든셋 표 그대로 통과.
+- **헤드리스 WebGPU(맥 로컬)**: 크로미움 `--enable-unsafe-webgpu --use-angle=metal` + headless면 Metal 어댑터가 잡히고 **캔버스 표시까지 된다**(SwiftShader와 달리 device lost 없음) → 실제 홈 e2e·캡처·fps 측정이 가능. Playwright 1.65(chromium-1255 캐시)를 스크래치패드에 설치해 씀(package.json에 없음).
+- 검사 스크립트(스크래치패드, 상시화하려면 scripts/qa/로): lib.cjs(out/ 정적 서버 + `/api/*` GET을 prod로 프록시·쓰기 403), e2e.cjs(76항목: 3폭 첫 방문·데모 정지·탭 1번·Share 시트·재방문·reduced-motion·미지원·카카오·골든 링크 10·44px·axe·CLS·첫 화면 도크), prodcheck.cjs(base vs 브랜치 prod 홈 골든 10 + 가짜 Publish parent), fps.cjs(CPU 4배), compare.py(buildId — `-`가 `_`로 바뀐 HTML 주석 변형까지 — 와 청크 해시 정규화).
+- **P7(/daily)·P8이 알아야 할 것**: 홈 지층 띠는 readStrata(P2)로 '띠 + N days'만 그린다 — /daily의 StrataJar와 색 규칙(STRATA_CYCLE)은 같고 모양은 다르다. 홈 오늘 카드는 DailyStart의 `goalLine`을 import한다(이름 바꾸면 홈도 고칠 것).
+- 남은 것: 단건 장면 API에 작성자 이름 없음 → 진입 부제가 항상 "From the gallery"(P9 때 워커 단건 SELECT에 creator_name 추가 권장). 3초 테스트에서 헤더 데일리 pill "No.42 00:52"가 무엇인지 모르겠다는 응답 3/5(P3 소관) — pill 접근 이름은 있으나 보이는 글자에 'Daily'가 없다. 붓 크기 점은 보이는 라벨 없음(접근 이름만). 옛 홈의 유휴 넛지·경과 시간·녹화 진행 링은 새 홈에서 뺐다(녹화는 공유 시트, 진행은 토스트만).
+- 기준선: `pnpm test --testTimeout=30000`에서 sweep.test(Steam vs vent·Crust+steam)·verify.test(dig candidates) 타임아웃은 main에서도 재현(부하 25~38).
 
 ---
 

@@ -5,7 +5,7 @@ import { SandEngine, WebGPUUnsupported } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import { dayNumber, dailyIdFor } from '@/lib/spill/client/daily'
 import { levelById } from '@/lib/spill/client/catalog'
-import { buildShareUrl, readShareUrl, encodeScene, decodeScene } from '@/lib/sand/urlState'
+import { buildShareUrl, readShareUrl, encodeScene, decodeScene, sceneIdFromHash, publishParent, publishedLinks } from '@/lib/sand/urlState'
 import { uploadScene, getScene, rememberMine } from '@/lib/sand/gallery'
 import { getCreatorName, setCreatorName, getCreatorId } from '@/lib/sand/creator'
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
@@ -208,15 +208,16 @@ export default function SandCanvas() {
         if (disposed) return
         // #s=<id> = 갤러리 장면. #g=<blob> = URL 내장 장면.
         // 갤러리 경로가 있어야 URL 예산(6000자)을 넘는 복잡한 장면도 공유된다.
-        const sm = location.hash.match(/[#&]s=([A-Za-z0-9_-]{6,16})/)
+        // 링크 규칙(#s= 정규식·s 우선)은 순수 함수 urlState.sceneIdFromHash — 새 홈(ui-next/home)과 같은 함수를 쓴다.
+        const sid = sceneIdFromHash(location.hash)
         let restored = null
         let remixMeta: { id: string; title: string } | null = null
-        if (sm) {
+        if (sid) {
           try {
-            const sc = await getScene(sm[1])
+            const sc = await getScene(sid)
             restored = await decodeScene(sc.data)
-            loadedSceneId.current = sm[1] // 이 씬을 리믹스하면 계보 원본이 된다
-            remixMeta = { id: sm[1], title: sc.title } // 착지 배너용(제목은 서버에서 이미 정제됨)
+            loadedSceneId.current = sid // 이 씬을 리믹스하면 계보 원본이 된다
+            remixMeta = { id: sid, title: sc.title } // 착지 배너용(제목은 서버에서 이미 정제됨)
           } catch {
             /* 삭제됐거나 잘못된 id — 빈 화면으로 시작한다 */
           }
@@ -506,16 +507,17 @@ export default function SandCanvas() {
         thumb,
         w: W,
         h: H,
-        parent: loadedSceneId.current, // 공유 링크로 로드한 원본이 있으면 계보를 잇는다
+        parent: publishParent(loadedSceneId.current), // 공유 링크로 로드한 원본이 있으면 계보를 잇는다
         creator: getCreatorId(),
         creatorName: getCreatorId() ? getCreatorName() : undefined,
       })
       rememberMine(id, title || 'Untitled') // 재방문 훅: 내가 올린 씬으로 기록
-      loadedSceneId.current = id // 이후 재발행은 방금 올린 내 씬의 리믹스가 된다
+      const links = publishedLinks(location.origin, id)
+      loadedSceneId.current = links.nextLoadedId // 이후 재발행은 방금 올린 내 씬의 리믹스가 된다
       // 현재 탭 상태는 기존 해시 경로로(리로드해도 이 씬), 공유는 OG가 붙는 경로형 링크로.
-      history.replaceState(null, '', `${location.origin}/#s=${id}`)
+      history.replaceState(null, '', links.tabUrl)
       // 방금 만든 씬 썸네일을 공유 패널에 보여준다 — "내가 만든 게 이렇게 나왔다" 자부심 모먼트.
-      setShared({ url: `${location.origin}/s/${id}`, published: true, thumb })
+      setShared({ url: links.shareUrl, published: true, thumb })
       flash('Published to the gallery.')
     } catch (e) {
       flash(e instanceof Error ? e.message : 'Publish failed.')

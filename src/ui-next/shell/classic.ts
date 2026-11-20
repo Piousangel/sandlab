@@ -4,6 +4,7 @@
  * RSC 페이로드(out/*.txt, HTML 안 self.__next_f)도 그대로다(className: undefined로 두면 "$undefined"가 찍힌다).
  * ShellHeader·ShellFooter = null → ContentShell이 지금 헤더·푸터를 그대로 그린다(P3).
  * SpillHud·DailyStart = null → SpillPlayer·DailySpill이 지금 HUD·화면을 그대로 그린다(P4).
+ * HomePour = null → 홈(src/app/page.tsx)이 지금 SandCanvas를 그대로 그린다(P6).
  * SpillResult = null → SpillPlayer가 지금 결과 카드(ResultCard)를 그대로 그린다(P5).
  * 아래 `import type`은 컴파일 때 지워진다(런타임 import 0개 유지 — 번들 그래프에 아무것도 더하지 않는다).
  */
@@ -23,3 +24,4 @@ export const DailyAside: null | ((p: DailyAsideProps) => React.JSX.Element) = nu
 /** P8: null → /play가 지금 ContentShell 화면(LevelList·목록)을, /play/[id]가 지금 설명 패널을 그대로 그린다. */
 export const PlayGallery: null | ((p: PlayGalleryProps) => React.JSX.Element) = null
 export const LevelAside: null | ((p: LevelAsideProps) => React.JSX.Element) = null
+export const HomePour: null | (() => React.JSX.Element) = null
