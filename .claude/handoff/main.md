@@ -1,3 +1,15 @@
+# 인계 (2026-11-20): 리디자인 P9b 「갤러리 후속 — Yours·Ko-fi·하단 글줄」 머지 — P10(#87)도 머지됨, 다음은 P11·P12 컷오버
+
+- 계획서 6장 진행표 P9b 행. 결정은 DECISIONS 2026-11-20 P9b. 브랜치 shift/redesign-p9b-yours.
+- **P9 인계의 ①(Yours 없음)·③(Ko-fi·하단 글줄)은 끝남.** 새 벽(GalleryWall)이 옛 GalleryBrowser의 탭·정렬·카드 버튼·링크를 전부 가진다(PR 본문 대조표) → **P12 컷오버 때 `src/components/GalleryBrowser.tsx`와 gallery.test의 '옛 갤러리와 대조' 묶음을 같이 지운다.**
+- Yours 데이터: localStorage `sandlab.mine`(rememberMine은 홈 Publish 성공 때 — 프리뷰는 읽기 전용이라 실제로 늘지 않는다, 안내 한 줄). 늦게 온 응답은 기준선을 건드리지 않는다.
+- 카드 캡션 높이 = 제목 36 + 작성자 줄 44 + 리믹스·시각 20 + 투표 줄 44 = 144(빈 액자 `.sl-gw-skel` margin-bottom과 같아야 CLS 0). 캡션 줄을 더하면 둘 다 고친다.
+- **검사**: `pnpm build:preview` → `npx wrangler dev --port 8799 --local`(로컬 D1: schema.sql + migrations/0001) → `python3 scripts/verify-gallery.py` → `NODE_PATH=<playwright·axe-core 있는 node_modules> pnpm qa:gallery out <capDir> http://localhost:8799`(144항목). localBase 없이 돌리면 prod GET 프록시 모드만(쓰기 0).
+- prod 비교 함정: base·브랜치를 **다른 폴더에서** 빌드하면 페이지 진입 모듈 id가 절대 경로 때문에 달라져 JS 20개가 '변경'으로 보인다(이번에 실측). 같은 폴더에서 빌드하면 196/196 동일.
+- 기준선: `pnpm test --testTimeout=30000`의 verify.test 훅 10s·sweep Steam vs vent 120s 타임아웃은 main에서도 재현(load 30+).
+
+---
+
 # 인계 (2026-11-20 오전): 리디자인 v2 P10 「글 페이지 + 광고 위치」 머지 — P9(#81 갤러리)도 머지됨, 다음은 P11(시험관 루프·접근성 마감)
 
 - 계획서 6장 진행표가 기준. P10 = #87(브랜치 shift/redesign-p10-content). 결정은 DECISIONS 2026-11-20 P10. AdSense 단위 표 = docs/team/adsense-units.md.
@@ -7,6 +19,8 @@
 - **본문 서체 = 시스템 산세리프**(제목 Bricolage 700). Lighthouse 실측 표는 DECISIONS P10 — LCP는 서체와 무관하게 로컬 throttling 4.5~5.2s(P3 이전 기준선과 같은 수준).
 - **P11이 알아야 할 것**: ① LCP 2.5s 게이트는 글 페이지도 미달(로컬 Lighthouse 모바일 4.5~5.2s, LCP 요소 = 첫 p/h1) — 서체가 아니라 렌더 차단 CSS·JS 쪽을 봐야 한다(next.ts가 셸 CSS 7개를 모든 페이지에 싣는다). ② 키보드 로빙·대비 마감 때 목차(`.sl-cs-toc`, 1180px 이상 sticky)·이전/다음 카드·힌트 details·반응 표(스크롤 영역 tabIndex)가 대상. ③ 컷오버(P12) 때 AdSense 승인 전이면 빈 안내판이 보인다 — AD_SLOTS를 비울지 그때 결정. ④ 검사 스크립트: 스크래치 p10/qa.mjs(10쪽 × 390·360·1440 가로 스크롤·44px·axe·CLS·인라인 style), p10/adgap.mjs(안내판 폭·ins 수·인터랙티브 간격, 320~1440), p10/lh.sh·lhsum.py(6쪽 × 3회). 파리티는 scripts/qa/content-parity.mjs로 상시화.
 - 기준선: `pnpm test --testTimeout=30000`의 verify.test(beforeAll 10s 훅 타임아웃)는 main에서도 재현, sweep.test(Steam vs vent)는 부하 30+일 때만 타임아웃(단독 실행 통과).
+
+---
 
 # 인계 (2026-11-21): 리디자인 v2 P9 「갤러리 The Wall」 머지 — P8(#79)도 머지됨, 다음은 P10
 

@@ -183,7 +183,10 @@
 .sl-gw-textbtn:focus-visible,
 .sl-gw-play:focus-visible,
 .sl-gw-vote:focus-visible,
-.sl-gw-maker:focus-visible {
+.sl-gw-maker:focus-visible,
+.sl-gw-credit-btn:focus-visible,
+.sl-gw-from:focus-visible,
+.sl-gw-support-link:focus-visible {
   outline: none;
   box-shadow: var(--sl-focus);
 }
@@ -278,14 +281,53 @@
   border-color: var(--sl-ink);
   color: var(--sl-bone);
 }
+.sl-gw-by {
+  /* 작성자 줄 = 44px 한 줄(작성자 링크 버튼·원본 링크가 들어와도 카드 높이가 같다 — 빈 액자 높이와 맞춤) */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: var(--sl-hit);
+}
 .sl-gw-credit {
-  margin-top: 2px;
+  min-width: 0;
   font-size: 14px;
   line-height: 20px;
   color: var(--sl-ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.sl-gw-credit-btn {
+  min-height: var(--sl-hit);
+  min-width: var(--sl-hit);
+  padding: 0;
+  font: inherit;
+  font-size: 14px;
+  color: var(--sl-ink);
+  text-align: left;
+  background: none;
+  border: 0;
+  text-decoration: underline;
+  text-decoration-color: var(--sl-tube-line);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.sl-gw-from {
+  flex-shrink: 0;
+  min-height: var(--sl-hit);
+  min-width: var(--sl-hit);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-right: -6px;
+  padding: 0 6px;
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-fs-label-tap);
+  font-weight: 500;
+  color: var(--sl-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .sl-gw-meta {
   display: flex;
@@ -297,6 +339,7 @@
   color: var(--sl-ink-2);
 }
 .sl-gw-votes {
+  min-height: var(--sl-hit); /* Yours 카드는 투표 버튼이 없어도 같은 높이 */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -329,8 +372,8 @@
   opacity: 0.18;
 }
 .sl-gw-skel .sl-gw-glass {
-  /* 목록 카드 캡션 높이: 제목 8+28 · 작성자 22 · 리믹스 20 · 투표 줄 44 = 122 (제목 한 줄 기준) */
-  margin-bottom: 122px;
+  /* 목록 카드 캡션 높이: 제목 8+28 · 작성자 줄 44 · 리믹스 20 · 투표 줄 44 = 144 (제목 한 줄 기준) */
+  margin-bottom: 144px;
 }
 
 /* ---------- More · 빈 상태 · 상태 줄 ---------- */
@@ -384,6 +427,46 @@
   line-height: 20px;
   text-align: center;
   color: var(--sl-ink-2);
+}
+
+/* ---------- Yours: 합계·지난 방문 뒤 증가분(P9b) ---------- */
+.sl-gw-mine {
+  /* 두 줄 자리를 먼저 잡는다 — 불러온 뒤 증가분 줄이 생겨도 아래 벽이 밀리지 않는다 */
+  min-height: 48px;
+  margin-top: 8px;
+}
+.sl-gw-delta {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+  color: var(--sl-ink);
+}
+.sl-gw-up {
+  transform: rotate(-90deg);
+}
+
+/* ---------- 하단 글줄(옛 갤러리 후원 줄, P9b) ---------- */
+.sl-gw-support {
+  margin-top: var(--sl-s-6);
+  font-size: 14px;
+  line-height: var(--sl-hit);
+  text-align: center;
+  color: var(--sl-ink-2);
+}
+.sl-gw-support-link {
+  display: inline-block;
+  min-height: var(--sl-hit);
+  padding: 0 6px; /* 짧은 단어도 44px 폭 — min-width + 가운데 정렬은 간격이 들쭉날쭉했다(리뷰 6) */
+  min-width: 32px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--sl-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ---------- Top: 작성자 순위 ---------- */
