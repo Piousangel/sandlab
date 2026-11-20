@@ -1,0 +1,1641 @@
+{
+ "nolcp": {
+  "when": "2026-11-20T08:42:36.434Z",
+  "load": [
+   27.2,
+   16.5,
+   12.2
+  ],
+  "out": "/private/tmp/claude-501/-Users-hyunseok-Desktop/dece547c-04bc-4cd8-9008-90c593f6b414/scratchpad/p12-out-next",
+  "weight": [
+   {
+    "page": "/",
+    "cssGz": 9370,
+    "jsGz": 147263,
+    "css": 3,
+    "engine": true
+   },
+   {
+    "page": "/daily",
+    "cssGz": 10818,
+    "jsGz": 148745,
+    "css": 4,
+    "engine": false
+   },
+   {
+    "page": "/play",
+    "cssGz": 11035,
+    "jsGz": 124136,
+    "css": 4,
+    "engine": false
+   },
+   {
+    "page": "/play/1-1",
+    "cssGz": 11035,
+    "jsGz": 163558,
+    "css": 4,
+    "engine": false
+   },
+   {
+    "page": "/gallery",
+    "cssGz": 8056,
+    "jsGz": 129197,
+    "css": 3,
+    "engine": false
+   },
+   {
+    "page": "/learn",
+    "cssGz": 5929,
+    "jsGz": 119643,
+    "css": 2,
+    "engine": false
+   },
+   {
+    "page": "/learn/margolus-falling-sand",
+    "cssGz": 5929,
+    "jsGz": 119643,
+    "css": 2,
+    "engine": false
+   },
+   {
+    "page": "/materials",
+    "cssGz": 5929,
+    "jsGz": 119643,
+    "css": 2,
+    "engine": false
+   },
+   {
+    "page": "/materials/acid",
+    "cssGz": 5929,
+    "jsGz": 119643,
+    "css": 2,
+    "engine": false
+   },
+   {
+    "page": "/about",
+    "cssGz": 5929,
+    "jsGz": 119643,
+    "css": 2,
+    "engine": false
+   },
+   {
+    "page": "/play/1-1/guide",
+    "cssGz": 5929,
+    "jsGz": 119643,
+    "css": 2,
+    "engine": false
+   },
+   {
+    "page": "/privacy",
+    "cssGz": 5929,
+    "jsGz": 119643,
+    "css": 2,
+    "engine": false
+   },
+   {
+    "page": "/terms",
+    "cssGz": 5929,
+    "jsGz": 119643,
+    "css": 2,
+    "engine": false
+   },
+   {
+    "page": "/contact",
+    "cssGz": 5929,
+    "jsGz": 119643,
+    "css": 2,
+    "engine": false
+   },
+   {
+    "page": "/missing-page",
+    "cssGz": 5929,
+    "jsGz": 119643,
+    "css": 2,
+    "engine": false
+   }
+  ],
+  "a11y": [
+   {
+    "view": "m",
+    "page": "/",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/daily",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/play",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/play/1-1",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/gallery",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/learn",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/learn/margolus-falling-sand",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/materials",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/materials/acid",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/about",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/play/1-1/guide",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/privacy",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/terms",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/contact",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "m",
+    "page": "/missing-page",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/",
+    "axe": [],
+    "hs": 0,
+    "cls": 0.0002,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/daily",
+    "axe": [],
+    "hs": 0,
+    "cls": 0.0111,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/play",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/play/1-1",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/gallery",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/learn",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/learn/margolus-falling-sand",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/materials",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/materials/acid",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/about",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/play/1-1/guide",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/privacy",
+    "axe": [],
+    "hs": 0,
+    "cls": 0.0001,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/terms",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/contact",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   },
+   {
+    "view": "d",
+    "page": "/missing-page",
+    "axe": [],
+    "hs": 0,
+    "cls": 0,
+    "errors": []
+   }
+  ],
+  "keys": [
+   {
+    "page": "/",
+    "stops": 21,
+    "noRing": [],
+    "hidden": [],
+    "names": {
+     "tubes": [
+      [
+       "sand",
+       "false"
+      ],
+      [
+       "salt",
+       "true"
+      ],
+      [
+       "ash",
+       "false"
+      ],
+      [
+       "gunpowder",
+       "false"
+      ],
+      [
+       "seed",
+       "false"
+      ],
+      [
+       "water",
+       "false"
+      ],
+      [
+       "oil",
+       "false"
+      ],
+      [
+       "acid",
+       "false"
+      ],
+      [
+       "lava",
+       "false"
+      ],
+      [
+       "wall",
+       "false"
+      ],
+      [
+       "stone",
+       "false"
+      ],
+      [
+       "metal",
+       "false"
+      ],
+      [
+       "wood",
+       "false"
+      ],
+      [
+       "plant",
+       "false"
+      ],
+      [
+       "ice",
+       "false"
+      ],
+      [
+       "fire",
+       "false"
+      ],
+      [
+       "steam",
+       "false"
+      ],
+      [
+       "smoke",
+       "false"
+      ]
+     ],
+     "sizes": [
+      [
+       "Small brush",
+       "false"
+      ],
+      [
+       "Medium brush",
+       "true"
+      ],
+      [
+       "Large brush",
+       "false"
+      ]
+     ],
+     "canvas": "Sandbox. Drag to pour the selected material."
+    },
+    "pill": "Daily · 15:17, puzzle No.43, 15 hours 17 minutes left"
+   },
+   {
+    "page": "/daily",
+    "stops": 5,
+    "noRing": [],
+    "hidden": [],
+    "names": {
+     "start": {
+      "h1": "No.43 · Fri 20 NovGatekeeper",
+      "cta": [
+       "Close",
+       "Pour",
+       "Solve",
+       "Browse"
+      ]
+     }
+    }
+   },
+   {
+    "page": "/play",
+    "stops": 50,
+    "noRing": [],
+    "hidden": []
+   },
+   {
+    "page": "/play/1-1",
+    "stops": 11,
+    "noRing": [],
+    "hidden": []
+   },
+   {
+    "page": "/gallery",
+    "stops": 51,
+    "noRing": [],
+    "hidden": []
+   },
+   {
+    "page": "/learn",
+    "stops": 17,
+    "noRing": [],
+    "hidden": []
+   },
+   {
+    "page": "/learn/margolus-falling-sand",
+    "stops": 30,
+    "noRing": [],
+    "hidden": [],
+    "content": {
+     "want": {
+      "toc": 8,
+      "pn": 1,
+      "details": 0,
+      "scroll": 0
+     },
+     "got": {
+      "toc": 8,
+      "pn": 1,
+      "details": 0
+     }
+    }
+   },
+   {
+    "page": "/materials",
+    "stops": 34,
+    "noRing": [],
+    "hidden": []
+   },
+   {
+    "page": "/materials/acid",
+    "stops": 21,
+    "noRing": [],
+    "hidden": [],
+    "content": {
+     "want": {
+      "toc": 0,
+      "pn": 2,
+      "details": 0,
+      "scroll": 0
+     },
+     "got": {
+      "toc": 0,
+      "pn": 2,
+      "details": 0
+     }
+    }
+   },
+   {
+    "page": "/about",
+    "stops": 21,
+    "noRing": [],
+    "hidden": []
+   },
+   {
+    "page": "/play/1-1/guide",
+    "stops": 22,
+    "noRing": [],
+    "hidden": [],
+    "content": {
+     "want": {
+      "toc": 3,
+      "pn": 1,
+      "details": 2,
+      "scroll": 0
+     },
+     "got": {
+      "toc": 3,
+      "pn": 1,
+      "details": 2
+     }
+    }
+   },
+   {
+    "page": "/privacy",
+    "stops": 16,
+    "noRing": [],
+    "hidden": []
+   },
+   {
+    "page": "/terms",
+    "stops": 18,
+    "noRing": [],
+    "hidden": []
+   },
+   {
+    "page": "/contact",
+    "stops": 19,
+    "noRing": [],
+    "hidden": []
+   },
+   {
+    "page": "/missing-page",
+    "stops": 17,
+    "noRing": [],
+    "hidden": []
+   }
+  ],
+  "loop": {
+   "on": {
+    "before": 0,
+    "n": 1,
+    "slug": "water",
+    "anim": "sl-tube-pour",
+    "src": "url(\"/ui-next/posters/rack/water.webp\")"
+   },
+   "reduced": {
+    "before": 0,
+    "n": 0,
+    "slug": null,
+    "anim": null,
+    "src": ""
+   },
+   "strips": [
+    [
+     "acid.webp",
+     18746
+    ],
+    [
+     "ash.webp",
+     12416
+    ],
+    [
+     "fire.webp",
+     14768
+    ],
+    [
+     "gunpowder.webp",
+     12748
+    ],
+    [
+     "lava.webp",
+     18938
+    ],
+    [
+     "oil.webp",
+     18408
+    ],
+    [
+     "salt.webp",
+     12284
+    ],
+    [
+     "sand.webp",
+     12972
+    ],
+    [
+     "seed.webp",
+     12994
+    ],
+    [
+     "smoke.webp",
+     14308
+    ],
+    [
+     "steam.webp",
+     17148
+    ],
+    [
+     "water.webp",
+     18570
+    ]
+   ]
+  },
+  "ads": {
+   "enabled": false,
+   "staticPages": 0,
+   "live": [
+    [
+     "/play",
+     0
+    ],
+    [
+     "/learn/margolus-falling-sand",
+     0
+    ],
+    [
+     "/materials/acid",
+     0
+    ],
+    [
+     "/about",
+     0
+    ],
+    [
+     "/play/1-1/guide",
+     0
+    ]
+   ]
+  },
+  "sheet": "ok",
+  "fails": []
+ },
+ "lcp": {
+  "when": "2026-11-20T08:48:48.641Z",
+  "load": [
+   7.4,
+   21.6,
+   17.7
+  ],
+  "out": "/private/tmp/claude-501/-Users-hyunseok-Desktop/dece547c-04bc-4cd8-9008-90c593f6b414/scratchpad/p12-out-next",
+  "lcp": [
+   {
+    "page": "/",
+    "lcp": 2330,
+    "fcp": 1203,
+    "cls": 0,
+    "clsMax": 0,
+    "tbt": 14,
+    "runs": [
+     2466,
+     2325,
+     2330
+    ],
+    "el": "<h1 class=\"sl-home-h1\">",
+    "blocking": [
+     "/_next/static/css/05a694e3aa92f4b1.css",
+     "/_next/static/css/945ed66ddffc53c2.css"
+    ],
+    "inpRuns": [
+     64,
+     64,
+     64
+    ],
+    "inp": 64
+   },
+   {
+    "page": "/daily",
+    "lcp": 2406,
+    "fcp": 903,
+    "cls": 0.037,
+    "clsMax": 0.037,
+    "tbt": 29,
+    "runs": [
+     2406,
+     2554,
+     2405
+    ],
+    "el": "<p class=\"sl-st-run\">",
+    "blocking": [
+     "/_next/static/css/0d62542304a3d5de.css",
+     "/_next/static/css/3e2713615b439748.css",
+     "/_next/static/css/945ed66ddffc53c2.css"
+    ],
+    "inpRuns": [
+     24,
+     32,
+     32
+    ],
+    "inp": 32
+   },
+   {
+    "page": "/play",
+    "lcp": 2337,
+    "fcp": 1353,
+    "cls": 0,
+    "clsMax": 0,
+    "tbt": 39,
+    "runs": [
+     2338,
+     2337,
+     2334
+    ],
+    "el": "<img src=\"/ui-next/levels/1-1.png\" width=\"160\" height=\"240\" alt=\"\" loa",
+    "blocking": [
+     "/_next/static/css/3e2713615b439748.css",
+     "/_next/static/css/945ed66ddffc53c2.css",
+     "/_next/static/css/1a2c6e3dfa7d38bd.css",
+     "/_next/static/css/c2420a8c2a4b128c.css"
+    ],
+    "inpRuns": [
+     40,
+     40,
+     40
+    ],
+    "inp": 40
+   },
+   {
+    "page": "/gallery",
+    "lcp": 2411,
+    "fcp": 1204,
+    "cls": 0,
+    "clsMax": 0,
+    "tbt": 17,
+    "runs": [
+     2411,
+     2414,
+     2402
+    ],
+    "el": "<p class=\"sl-gw-lede\">",
+    "blocking": [
+     "/_next/static/css/2ead67a35c0c6c46.css",
+     "/_next/static/css/945ed66ddffc53c2.css"
+    ],
+    "inpRuns": [
+     40,
+     32,
+     32
+    ],
+    "inp": 32
+   },
+   {
+    "page": "/learn/margolus-falling-sand",
+    "lcp": 2023,
+    "fcp": 1203,
+    "cls": 0,
+    "clsMax": 0,
+    "tbt": 30,
+    "runs": [
+     1802,
+     2028,
+     2023
+    ],
+    "el": "<p>",
+    "blocking": [
+     "/_next/static/css/1a2c6e3dfa7d38bd.css",
+     "/_next/static/css/945ed66ddffc53c2.css"
+    ],
+    "inpRuns": [
+     40,
+     40,
+     40
+    ],
+    "inp": 40
+   },
+   {
+    "page": "/materials/acid",
+    "lcp": 2027,
+    "fcp": 1203,
+    "cls": 0,
+    "clsMax": 0,
+    "tbt": 28,
+    "runs": [
+     2028,
+     2027,
+     2018
+    ],
+    "el": "<p>",
+    "blocking": [
+     "/_next/static/css/945ed66ddffc53c2.css",
+     "/_next/static/css/1a2c6e3dfa7d38bd.css"
+    ],
+    "inpRuns": [
+     40,
+     40,
+     40
+    ],
+    "inp": 40
+   },
+   {
+    "page": "/play/1-1/guide",
+    "lcp": 2028,
+    "fcp": 1203,
+    "cls": 0,
+    "clsMax": 0,
+    "tbt": 28,
+    "runs": [
+     2026,
+     2028,
+     2032
+    ],
+    "el": "<h1>",
+    "blocking": [
+     "/_next/static/css/1a2c6e3dfa7d38bd.css",
+     "/_next/static/css/945ed66ddffc53c2.css"
+    ],
+    "inpRuns": [
+     40,
+     32,
+     32
+    ],
+    "inp": 32
+   }
+  ],
+  "fails": []
+ },
+ "cutover_e2e": {
+  "base": "http://127.0.0.1:63107",
+  "when": "2026-11-20T08:47:32.084Z",
+  "results": [
+   {
+    "name": "WebGPU 어댑터(캔버스 검사 전제)",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "name": "#s=LmIK_BTArCk",
+    "ok": true,
+    "detail": "kind=scene title=true ink=34.6%"
+   },
+   {
+    "name": "#s=m71SWxdb9sc",
+    "ok": true,
+    "detail": "kind=scene title=true ink=66.5%"
+   },
+   {
+    "name": "#ref=x&s=rIxeixvTdzg",
+    "ok": true,
+    "detail": "kind=scene title=true ink=18.1%"
+   },
+   {
+    "name": "#s=byF1YyDKtUo&g=Y9zAeYOFYUuDGM8JRoYX7PQ…",
+    "ok": true,
+    "detail": "kind=scene title=true ink=36.5%"
+   },
+   {
+    "name": "#g=Y9zAeYOFYUuDGM8JRoYX7PQmpzwXZn8QCwA",
+    "ok": true,
+    "detail": "kind=link ink=2.8%"
+   },
+   {
+    "name": "#x=1&g=Y9zAeYOFYUuDGM8JRoYX7PQmpzwXZn8QC…",
+    "ok": true,
+    "detail": "kind=link ink=2.8%"
+   },
+   {
+    "name": "#s=abc12",
+    "ok": true,
+    "detail": "kind=blank ink=1.1%"
+   },
+   {
+    "name": "#g=!!!!",
+    "ok": true,
+    "detail": "kind=blank ink=1.1%"
+   },
+   {
+    "name": "#g=AAAA",
+    "ok": true,
+    "detail": "kind=blank ink=1.1%"
+   },
+   {
+    "name": "#s=zzzzzzzz404x",
+    "ok": true,
+    "detail": "kind=blank ink=1.1%"
+   },
+   {
+    "name": "/daily 지층 병: 옛 두 키 합쳐 solved 수",
+    "ok": true,
+    "detail": "\"5 SOLVED · 30 DAYS\""
+   },
+   {
+    "name": "/daily 연속(어제·그제 = 2-day run)",
+    "ok": true,
+    "detail": "2-day run · vein at 7 days, 5 to go"
+   },
+   {
+    "name": "홈 지층 띠: N days",
+    "ok": true,
+    "detail": "\"5 days of daily puzzles\""
+   },
+   {
+    "name": "/play 별: spill.v1.lvl.1-1 = 3, 1-2 = 1",
+    "ok": true,
+    "detail": "1-1=3 1-2=1"
+   },
+   {
+    "name": "/gallery Yours: sandlab.mine 장면이 보인다",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "name": "옛 저장 데이터 화면들 페이지 오류 0",
+    "ok": true,
+    "detail": ""
+   },
+   {
+    "name": "/ 읽기 전용 안내 0 · noindex 0 · 새 셸",
+    "ok": true,
+    "detail": "ro=0 noindex=0 html.class=\"sl-next\""
+   },
+   {
+    "name": "/gallery 읽기 전용 안내 0 · noindex 0 · 새 셸",
+    "ok": true,
+    "detail": "ro=0 noindex=0 html.class=\"sl-next\""
+   },
+   {
+    "name": "/daily 읽기 전용 안내 0 · noindex 0 · 새 셸",
+    "ok": true,
+    "detail": "ro=0 noindex=0 html.class=\"sl-next\""
+   },
+   {
+    "name": "/play/1-1 읽기 전용 안내 0 · noindex 0 · 새 셸",
+    "ok": true,
+    "detail": "ro=0 noindex=0 html.class=\"sl-next\""
+   }
+  ],
+  "fails": []
+ },
+ "head_parity": {
+  "pages": 53,
+  "fails": [],
+  "allowed": [
+   {
+    "page": "404.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "about.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "contact.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "daily.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "gallery.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "gallery.html",
+    "key": "h1",
+    "classic": "Sandlab Gallery — scenes people made",
+    "next": "The Wall",
+    "why": "옛 갤러리 h1은 화면에 안 보이는 SR 전용 \"Sandlab Gallery — scenes people made\"(= title과 같은 글) → 보이는 h1 \"The Wall\"(P9 디자인). title·description·canonical 그대로"
+   },
+   {
+    "page": "index.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "index.html",
+    "key": "h1",
+    "classic": "",
+    "next": "Pour something. It reacts.",
+    "why": "옛 홈은 h1이 없었다(캔버스만) → 새 홈 \"Pour something. It reacts.\" — 문서 개요가 생김(title·description 그대로)"
+   },
+   {
+    "page": "learn.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "learn/history-of-falling-sand-games.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "learn/margolus-falling-sand.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "learn/materials-as-data.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/acid.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/fire.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/gunpowder.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/ice.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/lava.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/metal.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/oil.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/plant.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/salt.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/sand.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/seed.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/stone.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/water.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "materials/wood.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-1.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-1/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-10.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-10/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-2.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-2/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-3.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-3/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-4.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-4/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-5.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-5/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-6.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-6/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-7.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-7/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-8.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-8/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-9.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/1-9/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/2-1.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/2-1/guide.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "play/verify.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "privacy.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "spill/bench.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "spill/editor.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   },
+   {
+    "page": "terms.html",
+    "key": "link:icon",
+    "classic": "rel=\"icon\" href=\"/icon.png\"",
+    "next": "rel=\"icon\" href=\"/ui-next/icon-48.png\" sizes=\"48x48\" type=\"image/png\"",
+    "why": "탭 아이콘 512px 52KB → 48px 2KB(public/ui-next/icon-48.png) — LCP 0.3s(P12 LCP), 검색 결과 파비콘 권장(48의 배수) 충족"
+   }
+  ],
+  "rows": [
+   {
+    "page": "404.html",
+    "keys": 23,
+    "diffs": 0
+   },
+   {
+    "page": "about.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "contact.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "daily.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "gallery.html",
+    "keys": 16,
+    "diffs": 0
+   },
+   {
+    "page": "index.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "learn.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "learn/history-of-falling-sand-games.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "learn/margolus-falling-sand.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "learn/materials-as-data.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "materials.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "materials/acid.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/fire.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/gunpowder.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/ice.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/lava.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/metal.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/oil.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/plant.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/salt.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/sand.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/seed.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/stone.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/water.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "materials/wood.html",
+    "keys": 15,
+    "diffs": 0
+   },
+   {
+    "page": "play.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-1.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-1/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-10.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-10/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-2.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-2/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-3.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-3/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-4.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-4/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-5.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-5/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-6.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-6/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-7.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-7/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-8.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-8/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-9.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/1-9/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/2-1.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "play/2-1/guide.html",
+    "keys": 19,
+    "diffs": 0
+   },
+   {
+    "page": "play/verify.html",
+    "keys": 23,
+    "diffs": 0
+   },
+   {
+    "page": "privacy.html",
+    "keys": 22,
+    "diffs": 0
+   },
+   {
+    "page": "spill/bench.html",
+    "keys": 23,
+    "diffs": 0
+   },
+   {
+    "page": "spill/editor.html",
+    "keys": 23,
+    "diffs": 0
+   },
+   {
+    "page": "terms.html",
+    "keys": 22,
+    "diffs": 0
+   }
+  ]
+ }
+}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { trackEvent } from '@/lib/sand/gallery'
+import { afterPageLoad, trackEvent } from '@/lib/sand/gallery'
 import { classifyLanding } from '@/lib/sand/landing'
 import { HOME_LANDING_KEY } from '@/lib/sand/measure'
 import { VISIT_STORAGE_KEY, shouldSendVisit, utcDay } from '@/lib/visitors'
@@ -12,8 +12,15 @@ function sendVisit() {
     const now = Date.now()
     if (!shouldSendVisit(localStorage.getItem(VISIT_STORAGE_KEY), now, navigator.webdriver === true)) return
     localStorage.setItem(VISIT_STORAGE_KEY, utcDay(now))
-    if (navigator.sendBeacon) navigator.sendBeacon('/api/visit')
-    else fetch('/api/visit', { method: 'POST', keepalive: true }).catch(() => {})
+    // 첫 그림 뒤로(P12 컷오버 — trackEvent와 같은 이유)
+    afterPageLoad(() => {
+      try {
+        if (navigator.sendBeacon) navigator.sendBeacon('/api/visit')
+        else fetch('/api/visit', { method: 'POST', keepalive: true }).catch(() => {})
+      } catch {
+        /* 계측 실패는 무시 */
+      }
+    })
   } catch {
     /* 저장소 차단·계측 실패는 무시 */
   }

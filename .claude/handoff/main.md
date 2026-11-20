@@ -1,3 +1,14 @@
+# 인계 (2026-11-20 밤): P12 컷오버 「prod sandlab.app = 새 셸」 — 오너 승인, 고위험. 다음은 72시간 지표 확인 → 옛 코드 삭제 PR
+
+- 브랜치 feat/p12-cutover. 결정·**되돌리기 런북**·72시간 확인 항목 = DECISIONS 2026-11-20 'P12 컷오버'. 계획서 6장 P12 행.
+- **전환 = 빌드 변수**: `pnpm run build:prod`(= `NEXT_PUBLIC_UI=${SANDLAB_UI:-next}`, READ_ONLY·NOINDEX 비움). deploy.yml이 저장소 변수 `vars.SANDLAB_UI`를 넘긴다. **급하면 `gh variable set SANDLAB_UI --body classic` + `gh workflow run deploy --ref main`** — PR 없이 옛 화면. 다시 켜기 = `gh variable delete SANDLAB_UI` + 재배포.
+- **색인 차단 = `NEXT_PUBLIC_NOINDEX=1`(build:preview만)**. 예전처럼 `UI_NEXT`로 noindex를 걸면 prod 전체가 색인에서 빠진다 — robots.ts·layout.tsx는 `NOINDEX`만 본다. verify-ads(prod)가 noindex·읽기 전용·기대 UI 불일치를 막는다.
+- **검사 묶음(prod 빌드 기준)**: `pnpm run build:prod` → `node scripts/qa/preview.mjs --out <복사본>`(이름은 preview지만 셸 class만 보면 돈다) · `node scripts/qa/cutover-e2e.mjs --out <dir>`(골든셋 10·옛 저장 데이터·prod 흔적, `--base https://sandlab.app`이면 라이브 — 쓰기는 브라우저에서 끊음) · `node scripts/qa/head-parity.mjs <classicOut> <nextOut>`(전 HTML head·h1·robots·sitemap, 의도된 변경은 파일 안 ALLOWED) · `node scripts/qa/content-parity.mjs <classicOut> <nextOut>`. classic 비교본은 `SANDLAB_UI=classic pnpm run build:prod`.
+- 함정: ① `SANDLAB_UI=classic`으로 빌드했으면 verify-ads에도 같은 변수를 줘야 한다(기대 UI 비교). ② 계측 핑(trackEvent·/api/visit)이 load 뒤로 미뤄졌다 — load 전 이탈 방문의 landing·daily_start가 약간 빠질 수 있다(72시간 비교 때 감안). ③ /play/<id> h1은 DOM이 "1-1 First Drop"(옛 prod), 화면은 CSS order로 이름 먼저 — 배지 순서를 바꾸면 spill.test 'h1 글자 순서'가 잡는다.
+- **다음(옛 코드 삭제 PR, 72시간 지표 OK 뒤)**: 목록은 DECISIONS 'P12 컷오버' 마지막 줄. CI '되돌리기 빌드' 단계와 verify-ads classic 분기도 그때 지운다(그 뒤로는 되돌리기 = revert PR).
+
+---
+
 # 인계 (2026-11-20 저녁): P12-LCP 「프리뷰 LCP 미달 3쪽 해소」 — 다음은 P12 컷오버(오너 승인 사항)
 
 - 브랜치 perf/preview-lcp. 결정 DECISIONS 2026-11-20 'P12 LCP', 계획서 6장 P12 게이트 표.

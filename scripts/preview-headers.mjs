@@ -6,7 +6,8 @@
  * 역으로 prod 배포(`pnpm run deploy`)는 next build가 out/을 새로 만들기 때문에 이전 프리뷰의 _headers가 남지 않는다
  * (scripts/verify-ads.mjs가 out/_headers가 있으면 prod 배포를 막는다).
  *
- * 실행: pnpm run build:preview (= NEXT_PUBLIC_UI=next NEXT_PUBLIC_READ_ONLY=1 next build && node scripts/preview-headers.mjs)
+ * 실행: pnpm run build:preview (= NEXT_PUBLIC_UI=next NEXT_PUBLIC_READ_ONLY=1 NEXT_PUBLIC_NOINDEX=1 next build && node scripts/preview-headers.mjs)
+ * 컷오버(P12) 뒤 prod도 NEXT_PUBLIC_UI=next라, 색인 차단은 NEXT_PUBLIC_NOINDEX=1(src/ui-next/flag.ts)이 정한다 — 아래 robots 검사가 그걸 확인한다.
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 

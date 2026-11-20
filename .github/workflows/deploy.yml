@@ -37,8 +37,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      # deploy = next build → verify-ads → wrangler deploy
+      # deploy = build:prod → verify-ads → wrangler deploy
+      # UI(P12 컷오버, 11-20): 기본 새 셸. 되돌리기 = 저장소 변수 SANDLAB_UI=classic 후 이 워크플로 재실행(런북 DECISIONS 'P12 컷오버').
       - run: pnpm run deploy
         env:
+          SANDLAB_UI: ${{ vars.SANDLAB_UI }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

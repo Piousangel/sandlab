@@ -269,3 +269,65 @@ describe('프리뷰 읽기 전용 안내(오너 11-20)', () => {
     expect(renderToStaticMarkup(<ShellHeader />)).not.toContain('data-sl-read-only')
   })
 })
+
+describe('P12 컷오버 계약 — prod는 새 셸, 되돌리기는 변수 하나, 색인 차단은 프리뷰만', () => {
+  const root = fileURLToPath(new URL('../../../', import.meta.url))
+  const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { scripts: Record<string, string> }
+  it('build:prod = NEXT_PUBLIC_UI=${SANDLAB_UI:-next}(기본 새 셸, SANDLAB_UI=classic이면 되돌리기) + READ_ONLY·NOINDEX 비움', () => {
+    expect(pkg.scripts['build:prod']).toBe('NEXT_PUBLIC_UI=${SANDLAB_UI:-next} NEXT_PUBLIC_READ_ONLY= NEXT_PUBLIC_NOINDEX= next build')
+    expect(pkg.scripts.deploy).toBe('pnpm run build:prod && node scripts/verify-ads.mjs && wrangler deploy')
+  })
+  it('프리뷰 빌드만 NOINDEX=1·READ_ONLY=1', () => {
+    expect(pkg.scripts['build:preview']).toContain('NEXT_PUBLIC_NOINDEX=1')
+    expect(pkg.scripts['build:preview']).toContain('NEXT_PUBLIC_READ_ONLY=1')
+  })
+  it('deploy 워크플로가 저장소 변수 SANDLAB_UI를 넘긴다(되돌리기 경로)', () => {
+    expect(readFileSync(join(root, '.github/workflows/deploy.yml'), 'utf8')).toContain('SANDLAB_UI: ${{ vars.SANDLAB_UI }}')
+  })
+  it('uiMode·noIndex: 정확히 "next"·"1"일 때만', async () => {
+    const { uiMode, noIndex } = await import('../flag')
+    expect(uiMode('next')).toBe('next')
+    for (const v of [undefined, '', 'classic', 'NEXT', '1']) expect(uiMode(v), String(v)).toBe('classic')
+    expect(noIndex('1')).toBe(true)
+    for (const v of [undefined, '', '0', 'true', 'next']) expect(noIndex(v), String(v)).toBe(false)
+  })
+  it('계측 핑은 load 뒤(afterPageLoad): load 전이면 load + 0ms 뒤, 이미 load면 바로', async () => {
+    const { afterPageLoad } = await import('@/lib/sand/gallery')
+    vi.useFakeTimers()
+    const listeners: (() => void)[] = []
+    vi.stubGlobal('document', { readyState: 'loading' })
+    vi.stubGlobal('window', { addEventListener: (_: string, f: () => void) => listeners.push(f) })
+    try {
+      const fn = vi.fn()
+      afterPageLoad(fn)
+      expect(fn).not.toHaveBeenCalled()
+      listeners.forEach((f) => f())
+      vi.runAllTimers()
+      expect(fn).toHaveBeenCalledTimes(1)
+      vi.stubGlobal('document', { readyState: 'complete' })
+      afterPageLoad(fn)
+      expect(fn).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.unstubAllGlobals()
+      vi.useRealTimers()
+    }
+  })
+  it('robots: 새 셸 prod(UI=next, NOINDEX 없음)는 전체 허용 + sitemap, 프리뷰(NOINDEX=1)만 전체 차단', async () => {
+    vi.stubEnv('NEXT_PUBLIC_UI', 'next')
+    vi.stubEnv('NEXT_PUBLIC_NOINDEX', '')
+    vi.resetModules()
+    try {
+      const prod = (await import('@/app/robots')).default()
+      expect(prod.rules).toEqual({ userAgent: '*', allow: '/' })
+      expect(prod.sitemap).toBe(`${SITE}/sitemap.xml`)
+      vi.stubEnv('NEXT_PUBLIC_NOINDEX', '1')
+      vi.resetModules()
+      const preview = (await import('@/app/robots')).default()
+      expect(preview.rules).toEqual({ userAgent: '*', disallow: '/' })
+      expect(preview.sitemap).toBeUndefined()
+    } finally {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    }
+  })
+})

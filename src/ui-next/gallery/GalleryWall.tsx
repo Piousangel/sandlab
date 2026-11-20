@@ -19,6 +19,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import {
   PAGE_SIZE,
+  afterPageLoad,
   getCreatorProfile,
   getCreatorTop,
   getSceneMeta,
@@ -131,6 +132,11 @@ export function GalleryWall() {
     setPending(0)
     ;(async () => {
       try {
+        // 첫 목록 요청은 페이지 load 뒤로(P12 컷오버, DECISIONS 'P12 LCP' 갤러리 후보): 벽 목록은 큐레이션 아래라 첫 그림에 필요 없는데,
+        // 응답이 첫 그림 전에 끝나면 Lighthouse가 그 왕복을 LCP 그래프 끝에 붙였다(/gallery 2.60s 사례). 빈 액자(skel)가 자리를 지켜 CLS 0.
+        // 탭·정렬을 바꿀 때는 이미 load 뒤라 바로 간다.
+        if (document.readyState !== 'complete') await new Promise<void>((r) => afterPageLoad(r))
+        if (my !== req.current) return
         if (!showsScenes) {
           // 이미 받은 순위는 그대로 보여 주고 새로 받아 바꾼다(되돌아올 때 옛 목록 → 빈 칸 → 목록으로 깜빡이지 않게)
           const r = await getCreatorTop()

@@ -52,9 +52,10 @@ export function SpillHeader({ badge, name, backHref, backLabel, sound, onSound, 
       <a href={backHref} className="sl-sp-icon" aria-label={backLabel}>
         <Icon name="back" />
       </a>
+      {/* 문서 순서 = 옛 prod h1 "1-1 First Drop"(SEO·스크린리더 그대로, P12 컷오버 판단), 보이는 순서는 이름 먼저(.sl-sp-badge order) */}
       <T className="sl-sp-title">
-        <span className="sl-sp-name">{name}</span>
         {badge && <span className="sl-sp-badge">{badge}</span>}
+        <span className="sl-sp-name">{name}</span>
       </T>
       <button type="button" className="sl-sp-icon" aria-label="Sound" aria-pressed={sound} onClick={onSound}>
         <Icon name={sound ? 'sound-on' : 'sound-off'} />

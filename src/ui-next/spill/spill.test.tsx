@@ -84,6 +84,10 @@ describe('새 HUD 렌더(SSR)', () => {
     expect(html).toContain('<h1')
     expect(html).toContain('touch-action:none')
   })
+  it('h1 글자 순서 = 옛 prod "<id> <이름>"(P12 SEO 판단 — 화면은 CSS order로 이름 먼저)', () => {
+    const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/)![1].replace(/<[^>]+>/g, '')
+    expect(h1).toBe(`${POT_LEVEL.id}${POT_LEVEL.name}`)
+  })
   it('이모지·유니코드 기호 0(아이콘은 <Icon>), 지금 HUD의 원형 버튼·글리프 없음', () => {
     expect(findViolations(html, 'out.html')).toEqual([])
     expect(html).not.toContain('\u25b6') // lint-ui-allow: 지금 HUD 글리프가 없는지 검사
