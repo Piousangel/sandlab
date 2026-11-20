@@ -117,3 +117,50 @@ export function hashNeedsReload(prev: string, next: string, sceneId: (h: string)
   if (b && b !== a) return true
   return /[#&]g=/.test(next) && next !== prev
 }
+
+/**
+ * P11 선택 관 붓기(S7): 12프레임 가로 스트립이 있는 재료(고체 6종은 없음 — scripts/capture-posters.mjs --strips).
+ * 파일 목록과 같아야 한다(home.test가 public/ui-next/posters/strips/와 대조).
+ */
+export const STRIP_SLUGS: ReadonlySet<string> = new Set(['acid', 'ash', 'fire', 'gunpowder', 'lava', 'oil', 'salt', 'sand', 'seed', 'smoke', 'steam', 'water'])
+export const STRIP_FRAMES = 12
+/** 한 번 붓는 길이. 900ms(보상 최대 토큰) 안, 12프레임 ≈ 15fps — 엔진 캔버스 옆 주변 시야에서 짧게. */
+export const STRIP_MS = 720
+/** 누른 뒤 이 안에 스트립이 도착(디코드까지)하면 재생, 늦으면 건너뛴다(뒤늦게 혼자 움직이는 관 없음). */
+export const STRIP_WAIT_MS = 300
+/** 첫 획 뒤 유휴 시간에 미리 받는 관 수(지금 탭 앞쪽 = 390폭 첫 화면에 보이는 관 수). */
+export const STRIP_WARM = 6
+
+/**
+ * 붓기 재생 여부. hardwareConcurrency로 저사양을 거르지 않는다 — WebKit은 코어 8개 미만이면 늘 4를 돌려줘
+ * 모든 iPhone이 '저사양'이 되고 옥타코어 저가 안드로이드는 통과한다(P11 반증 리서치, NavigatorBase.cpp).
+ */
+export function shouldPour(o: { slug: string; already: boolean; reducedMotion: boolean; saveData: boolean }): boolean {
+  return STRIP_SLUGS.has(o.slug) && !o.already && !o.reducedMotion && !o.saveData
+}
+
+/** 유휴 시간에 미리 받을 스트립: 지금 보이는 순서 앞쪽에서 스트립 있는 것만 n개. Save-Data면 0. */
+export function warmList(shown: readonly string[], saveData: boolean, n = STRIP_WARM): string[] {
+  if (saveData) return []
+  return shown.slice(0, n).filter((s) => STRIP_SLUGS.has(s))
+}
+
+/**
+ * 툴바 로빙(WAI-ARIA toolbar): 좌우 화살표·Home·End로 포커스만 옮긴다(선택은 Enter/Space = 버튼 클릭).
+ * radiogroup이 아닌 이유: 화살표가 곧 선택이라 18관을 지나며 재료가 계속 바뀌고, Erase 때 '선택 없음'을 못 나타낸다.
+ */
+export function rovingNext(key: string, i: number, n: number): number {
+  if (n <= 0) return -1
+  if (key === 'ArrowRight') return (i + 1) % n
+  if (key === 'ArrowLeft') return (i - 1 + n) % n
+  if (key === 'Home') return 0
+  if (key === 'End') return n - 1
+  return -1
+}
+
+/** Tab 정지점이 될 관: 마지막으로 포커스한 관 → 선택된 관 → 맨 앞(지금 탭에 보이는 것 중에서). */
+export function rovingStop(shown: readonly string[], focused: string | null, sel: string): string | null {
+  if (focused && shown.includes(focused)) return focused
+  if (shown.includes(sel)) return sel
+  return shown[0] ?? null
+}

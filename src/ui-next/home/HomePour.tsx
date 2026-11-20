@@ -11,7 +11,7 @@
  * 링크 규칙(#s= 정규식·parent·발행 후 링크)은 urlState.ts의 sceneIdFromHash 등 순수 함수(옛 홈과 공유, 골든셋 테스트).
  * Undo 없음(엔진에 없음). WebGPU가 없으면(B4 ③) 오늘 퍼즐(Spill은 2D)이 주 CTA, 우물 자리는 실엔진 정지 프레임 + 이유 + Open in browser/Copy link.
  */
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { SandEngine } from '@/lib/sand/engine'
 import { PRESETS, buildIndex } from '@/lib/sand/materials'
 import {
@@ -47,6 +47,7 @@ import {
   demoBrush,
   entryHeadline,
   hashNeedsReload,
+  rovingNext,
   shouldDemo,
   tabOf,
   type Entry,
@@ -287,6 +288,18 @@ export function HomePour() {
   const pick = (slug: string) => {
     setSel(slug)
     setErasing(false)
+  }
+
+  // 엄지 도크 = toolbar(P11): Tab 정지점 1개(Erase · 붓 3 · Share), 좌우 화살표·Home·End로 포커스(위치는 이벤트 대상 기준)
+  const DOCK_N = 2 + BRUSH_SIZES.length
+  const [dockStop, setDockStop] = useState(0)
+  const onDockKey = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    const btns = [...e.currentTarget.querySelectorAll<HTMLButtonElement>('button')]
+    const to = rovingNext(e.key, btns.indexOf(e.target as HTMLButtonElement), btns.length)
+    if (to < 0) return
+    e.preventDefault()
+    setDockStop(to)
+    btns[to]?.focus()
   }
 
   /* ---------- 공유 시트 ---------- */
@@ -549,9 +562,16 @@ export function HomePour() {
                   </span>
                 </div>
               )}
-              <Rack materials={PAINTABLE} sel={sel} erasing={erasing} onPick={pick} />
-              <div className="sl-dock" role="toolbar" aria-label="Brush">
-                <button type="button" className="sl-btn sl-dock-erase" aria-pressed={erasing} onClick={() => setErasing((v) => !v)}>
+              <Rack materials={PAINTABLE} sel={sel} erasing={erasing} onPick={pick} warm={hasDrawn} />
+              <div className="sl-dock" role="toolbar" aria-label="Brush" onKeyDown={onDockKey}>
+                <button
+                  type="button"
+                  className="sl-btn sl-dock-erase"
+                  aria-pressed={erasing}
+                  tabIndex={dockStop === 0 ? 0 : -1}
+                  onFocus={() => setDockStop(0)}
+                  onClick={() => setErasing((v) => !v)}
+                >
                   <Icon name="erase" />
                   <span>Erase</span>
                 </button>
@@ -563,6 +583,8 @@ export function HomePour() {
                       aria-pressed={radius === b.r}
                       aria-label={b.label}
                       className="sl-size"
+                      tabIndex={dockStop === i + 1 ? 0 : -1}
+                      onFocus={() => setDockStop(i + 1)}
                       onClick={() => setRadius(b.r)}
                     >
                       <span className="sl-size-dot" data-i={i} />
@@ -575,6 +597,8 @@ export function HomePour() {
                   className="sl-btn sl-dock-share"
                   aria-disabled={!hasDrawn || undefined}
                   aria-describedby={hasDrawn ? undefined : 'sl-share-why'}
+                  tabIndex={dockStop === DOCK_N - 1 ? 0 : -1}
+                  onFocus={() => setDockStop(DOCK_N - 1)}
                   onClick={openShare}
                 >
                   <Icon name="share" />

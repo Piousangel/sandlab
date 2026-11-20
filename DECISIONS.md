@@ -196,3 +196,10 @@
 - 선택: vitest를 **unit(기본 한도)·sim(결정적 시뮬 파일, 한도 CI 3분·로컬 15분)** 두 프로젝트로 나눴다(vitest.config.ts SIM_TESTS). `pnpm test`는 둘 다(제외 없음), CI는 두 job 병렬. sweep.test는 케이스×salt마다 테스트 하나로 쪼갰다(7×16 조합 그대로, 한 테스트가 수 분 걸리던 구조 해소). `scripts/spill-verify.ts`에 `--exclude`를 넣어 CI에서 1-8 Cascade(전체 시뮬의 절반 이상)와 나머지를 두 job으로, `--workers 4`(러너 vCPU 전부, 기본은 cpus-2=2라 예전 22분). 갤러리 API는 `wrangler dev --local`(로컬 D1, 계정 불필요)로 CI에서 verify-gallery.py까지 돈다.
 - 버린 안: 무거운 테스트 skip·salt 수 축소(검증 범위 축소), 전역 testTimeout 상향(가벼운 테스트의 느려짐까지 숨김), spill:verify를 1 job(벽시계 15분 초과).
 - 남은 것: 브랜치 보호에 CI 필수 체크를 켜는 것은 오너 할 일.
+
+## 2026-11-20 리디자인 P11a — Lighthouse 기준선 정정(압축 서빙), 선택 관 한 번 붓기 게이트, 툴바 로빙
+- **정정**: P10 기록의 "글 페이지 LCP 4.5~5.2s, 게이트 미달"은 압축 없는 로컬 서버에서 잰 값이다. Lantern(모의 스로틀링)은 기록된 전송 바이트로 다운로드 시간을 잡아 무압축 JS·CSS를 2배로 센다. 같은 프리뷰(main 7e3a1b1)를 압축 서빙하면 글 페이지 2.1~2.3s, /daily 2.1s, /play 2.26s로 게이트를 통과한다. **실제 미달은 3곳**이다: `/`(LCP 3.27s, 헤드리스는 WebGPU 어댑터가 없어 정지 프레임 경로이고 이미지 발견이 늦다), `/play/1-1`(CLS 0.073, 보드 유리 크기를 JS가 정함), `/gallery`(LCP 2.65s). → P11b.
+- 측정 도구 = `scripts/qa/lighthouse.mjs`(압축 정적 서버 + 중앙값 홀수 회 + exit 0 통과/1 게이트 미달/2 측정 실패). 렌더 차단 CSS(next.ts가 7개를 한 묶음으로)는 범인이 아니었다 → 셸 CSS 분할은 하지 않는다.
+- **붓기 게이트**: reduced-motion + Save-Data만. `hardwareConcurrency ≤ 4`(S7 원문)는 버린다. WebKit은 코어 8개 미만이면 늘 4를 돌려줘 모든 iPhone이 꺼지고 저가 안드로이드(8)는 켜진다. 거꾸로 거른다. 누른 뒤 300ms 안에 디코드까지 끝나야 재생한다(늦게 혼자 움직이는 관 0). 첫 획 전에는 스트립을 받지 않는다.
+- **키보드**: 재료 18관과 엄지 도크(5)를 WAI-ARIA toolbar 로빙으로 바꿨다(정지점 1개씩). radiogroup은 버렸다. 화살표가 곧 선택이라 18관을 지나며 재료가 바뀌고, Erase의 '선택 없음'을 나타낼 수 없다.
+- **미지원 홈 LCP**: 조건부 preload(`!('gpu' in navigator)`)는 버렸다. 헤드리스와 안드로이드 '어댑터 없음' 기기는 `navigator.gpu`가 있다. 우물 SSR 포스터도 버렸다. GPU 사용자에게 "쌓인 모래 → 빈 유리 → 데모" 모순이 생기고 LCP 이득도 0이다.

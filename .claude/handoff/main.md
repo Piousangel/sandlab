@@ -1,3 +1,20 @@
+# 인계 (2026-11-20 13시): 리디자인 P11a 「선택 관 한 번 붓기 · 툴바 키보드 · Lighthouse 기준선 정정」 — 다음은 P11b(게이트 미달 3곳)
+
+- 북극성 단계: 4장 1단계(컷오버 준비). 북극성 값은 여전히 측정 없음(측정 PR = 16시 몫, 11-27까지).
+- 브랜치 shift/1300-redesign-p11a. 기록 docs/team/specs/2026-11-20-p11a-tube-pour-a11y-lh.md, DECISIONS 11-20 P11a.
+- **Lighthouse는 반드시 압축 서빙으로 잰다**: `NODE_PATH=<lighthouse@12 설치한 node_modules> node scripts/qa/lighthouse.mjs <out> --runs 3`. 무압축 서버(scripts/qa/lib.cjs serve, python http.server)로 재면 LCP가 2배로 나온다. P10의 "4.5~5.2s"가 이 착시였다. exit 0 통과 / 1 게이트 미달 / 2 측정 실패.
+  - 함정: 같은 프로세스 안 서버라 Lighthouse 호출은 비동기여야 한다(execFileSync를 쓰면 서버가 막혀 실패한다). 크롬은 http에서 br을 광고하지 않으므로 gzip으로 서빙된다.
+- **P11b가 할 일(게이트 미달, 기준선 main 7e3a1b1)**:
+  ① `/play/1-1` CLS 0.073. `sl-sp-glass` 크기가 JS 레이아웃으로 정해진다. Lighthouse 기기(412×823, DPR 1.75)에서만 재현되고 DPR 1에서는 0.0035다.
+  ② `/` LCP 3.2s. 헤드리스는 `navigator.gpu`가 있고 어댑터만 null이라 미지원 화면 정지 프레임이 LCP가 되며, 발견이 늦다(Load Delay 2.3s). 조건부 preload는 이 경우를 못 잡는다(실측).
+  ③ `/gallery` LCP 2.65s(p.sl-gw-lede, Render Delay 2s).
+  ④ 글 페이지 목차·이전/다음·힌트 키보드, axe 전 페이지.
+- **랙 붓기**: `Rack.tsx` 모듈 전역 캐시(strips·loaded), 회차 `pourN`. 탭 전환 때 회차를 올려야 한다(안 그러면 돌아올 때 혼자 재생 — 리뷰 차단, 재현 후 수정). 스트립을 다시 찍으면(`capture-posters.mjs --strips`) home.test가 파일 목록과 `STRIP_SLUGS`를 대조한다.
+- **e2e**: `scripts/qa/home-rack-e2e.cjs <base>`(22항목). 헤드리스는 WebGPU 어댑터가 없으므로 requestAdapter를 끝나지 않는 약속으로 바꿔 랙 화면에 머문다. 실제 붓기 재생 감(첫 탭 300ms 컷)은 프리뷰 배포 뒤 실기기로 확인할 것.
+- 관찰 과제(리뷰 거부 항목): 스트립 첫 프레임이 빈 관이라 "비었다가 채워짐"으로 보일 수 있다. 혼동 보고가 있으면 keyframes 시작을 3번째 프레임(-64px)으로 옮긴다.
+
+---
+
 # 인계 (2026-11-20): 리디자인 P9b 「갤러리 후속 — Yours·Ko-fi·하단 글줄」 머지 — P10(#87)도 머지됨, 다음은 P11·P12 컷오버
 
 - 계획서 6장 진행표 P9b 행. 결정은 DECISIONS 2026-11-20 P9b. 브랜치 shift/redesign-p9b-yours.
