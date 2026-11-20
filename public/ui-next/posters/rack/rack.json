@@ -1,0 +1,66 @@
+{
+  "frames": 12,
+  "limit": 20000,
+  "slugs": {
+    "acid": {
+      "bytes": 18746,
+      "width": 672,
+      "quality": 80
+    },
+    "ash": {
+      "bytes": 12416,
+      "width": 768,
+      "quality": 80
+    },
+    "fire": {
+      "bytes": 14768,
+      "width": 768,
+      "quality": 80
+    },
+    "gunpowder": {
+      "bytes": 12748,
+      "width": 768,
+      "quality": 80
+    },
+    "lava": {
+      "bytes": 18938,
+      "width": 672,
+      "quality": 80
+    },
+    "oil": {
+      "bytes": 18408,
+      "width": 768,
+      "quality": 80
+    },
+    "salt": {
+      "bytes": 12284,
+      "width": 768,
+      "quality": 80
+    },
+    "sand": {
+      "bytes": 12972,
+      "width": 768,
+      "quality": 80
+    },
+    "seed": {
+      "bytes": 12994,
+      "width": 768,
+      "quality": 80
+    },
+    "smoke": {
+      "bytes": 14308,
+      "width": 768,
+      "quality": 80
+    },
+    "steam": {
+      "bytes": 17148,
+      "width": 768,
+      "quality": 80
+    },
+    "water": {
+      "bytes": 18570,
+      "width": 768,
+      "quality": 80
+    }
+  }
+}

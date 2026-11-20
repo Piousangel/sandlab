@@ -4,7 +4,13 @@ import sitemap from '@/app/sitemap'
 import { SITE } from '@/lib/site'
 import { findViolations } from '../../../scripts/lint-ui-rules.mjs'
 import { AdPlate } from '../ads/AdPlate'
-import { AD_SLOTS } from '../ads/config'
+import { ADS_ENABLED, AD_SLOTS } from '../ads/config'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { ARTICLES } from '@/lib/learn/articles'
+import { LearnArticle } from '../content/Articles'
+import { SHELL_AREAS } from '../../../next.config'
 import { DAILY_HREF, FOOTER_LINKS, MENU_LINKS, NAV, isActive } from './nav'
 import { SSR_PILL, msUntilUtcMidnight, pillText } from './dailyPill'
 import { ShellFooter } from './ShellFooter'
@@ -106,7 +112,7 @@ describe('광고 안내판 AdPlate(S11)', () => {
   })
 
   it('활성: Advertisement 라벨, 높이 예약(라벨 포함), 24px 이상 간격, 콘텐츠 카드와 다른 면', () => {
-    const html = renderToStaticMarkup(<AdPlate ads slot="123" format="rect" clearance={32} />)
+    const html = renderToStaticMarkup(<AdPlate enabled ads slot="123" format="rect" clearance={32} />)
     expect(html).toContain('>Advertisement</span>')
     expect(html).toContain('height:274px') // 250 + 라벨 24
     expect(html).toContain('margin-block:max(var(--sl-s-5), 32px)')
@@ -117,9 +123,60 @@ describe('광고 안내판 AdPlate(S11)', () => {
 
   it('간격은 24px 아래로 못 내려간다(타입을 우회해도 max()가 바닥)', () => {
     // @ts-expect-error — 24 미만은 타입에서 막힌다
-    const html = renderToStaticMarkup(<AdPlate ads slot="1" clearance={8} format="banner" />)
+    const html = renderToStaticMarkup(<AdPlate enabled ads slot="1" clearance={8} format="banner" />)
     expect(html).toContain('margin-block:max(var(--sl-s-5), 8px)')
     expect(html).toContain('height:124px')
+  })
+})
+
+describe('광고 꺼짐(P11, 허브와 같은 규칙 — AdSense 승인 전)', () => {
+  it('ADS_ENABLED = false면 단위 id가 있어도 안내판 DOM 0(빈 Advertisement 판 없음)', () => {
+    expect(ADS_ENABLED).toBe(false)
+    expect(AD_SLOTS.play).toBeTruthy()
+    expect(renderToStaticMarkup(<AdPlate ads slot={AD_SLOTS.play} format="rect" />)).toBe('')
+    expect(renderToStaticMarkup(<AdPlate ads slot={AD_SLOTS.contentMid} format="strip" clearance={32} />)).toBe('')
+  })
+  it('글 페이지 전체를 그려도 안내판 0, 광고 로더(심사 자격용)는 그대로 실린다', () => {
+    const a = ARTICLES[0]
+    const html = renderToStaticMarkup(
+      <LearnArticle title={a.title} byline="By x" sections={a.sections} sources={a.sources} others={[]} prev={null} next={null}>
+        {null}
+      </LearnArticle>,
+    )
+    expect(html).not.toContain('data-sl-ad')
+    expect(html).not.toContain('Advertisement')
+    expect(html).toContain('adsbygoogle.js')
+  })
+})
+
+describe('@ui-shell 영역 치환(P11 LCP — next.config.ts SHELL_AREAS)', () => {
+  const root = fileURLToPath(new URL('../../../', import.meta.url))
+  const walk = (d: string): string[] => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]))
+  const users = walk(join(root, 'src'))
+    .filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f))
+    .map((f) => ({ file: f.slice(root.length), src: readFileSync(f, 'utf8') }))
+    .map((u) => ({ file: u.file, names: [...u.src.matchAll(/import\s*\{([^}]*)\}\s*from\s*'@ui-shell'/g)].flatMap((m) => m[1].split(',').map((x) => x.trim()).filter(Boolean)) }))
+    .filter((u) => u.names.length)
+  const exportsOf = (area: string) => {
+    const src = readFileSync(join(root, `src/ui-next/shell/area-${area}.ts`), 'utf8')
+    return new Set([...src.matchAll(/export\s*\{([^}]*)\}/g)].flatMap((m) => m[1].split(',').map((x) => x.trim())).concat([...src.matchAll(/export const (\w+)/g)].map((m) => m[1])))
+  }
+  it('`@ui-shell` 사용처 전부가 표에 있고(없으면 프리뷰 빌드가 멈춘다), 그 영역이 쓰는 이름을 모두 내보낸다', () => {
+    expect(users.length).toBeGreaterThanOrEqual(12)
+    for (const u of users) {
+      const area = SHELL_AREAS[u.file]
+      expect(area, u.file).toBeTruthy()
+      const ex = exportsOf(area)
+      for (const n of u.names) expect(ex.has(n), `${u.file} to area-${area}.ts: ${n}`).toBe(true)
+    }
+  })
+  it('표에 사용처가 아닌 낡은 줄이 없다', () => {
+    const files = new Set(users.map((u) => u.file))
+    for (const f of Object.keys(SHELL_AREAS)) expect(files.has(f), f).toBe(true)
+  })
+  it('글 페이지 영역(content)은 엔진·홈·갤러리 화면을 import하지 않는다(글 페이지에 엔진 청크가 실리던 원인)', () => {
+    const src = readFileSync(join(root, 'src/ui-next/shell/area-content.ts'), 'utf8')
+    expect(src).not.toMatch(/home|gallery|spill|engine/)
   })
 })
 

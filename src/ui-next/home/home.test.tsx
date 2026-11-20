@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { PRESETS } from '@/lib/sand/materials'
@@ -137,6 +137,11 @@ describe('HomePour SSR(높이 예약·첫 화면)', () => {
 })
 
 describe('P11 선택 관 한 번 붓기(S7)', () => {
+  it('랙 스트립(rack/, 실제로 받는 파일)은 파일마다 20KB 이하이고 원본 strips/와 목록이 같다', () => {
+    const rack = readdirSync('public/ui-next/posters/rack').filter((f) => f.endsWith('.webp'))
+    expect(rack.sort()).toEqual(readdirSync('public/ui-next/posters/strips').sort())
+    for (const f of rack) expect(statSync(`public/ui-next/posters/rack/${f}`).size, f).toBeLessThanOrEqual(20_000)
+  })
   it('스트립 목록 = public/ui-next/posters/strips 파일, 고체 6종은 없음', () => {
     const files = readdirSync('public/ui-next/posters/strips')
       .map((f) => f.replace(/\.webp$/, ''))

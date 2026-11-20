@@ -496,6 +496,13 @@
   }
 }
 
+/* P11 CLS: 넓은 화면은 측정 전(서버 그림 = 390 배치) 숨김 — SpillHud Frame의 data-ready */
+@media (min-width: 900px) {
+  .sl-spill:not([data-ready]) {
+    visibility: hidden;
+  }
+}
+
 /* ---------- 데일리 시작 화면 ---------- */
 .sl-ds-main {
   min-height: 100dvh;
@@ -668,4 +675,11 @@
   .sl-ds-canvas {
     animation: none;
   }
+}
+
+/* P11 포커스 링: RUN 버튼의 들림·빛 그림자가 .sl-spill :focus-visible 링을 덮었다 — qa:preview keys가 잡음 */
+.sl-sp-run:focus-visible,
+.sl-sp-run[data-primary]:focus-visible,
+.sl-sp-run[data-glow]:focus-visible {
+  box-shadow: var(--sl-focus);
 }

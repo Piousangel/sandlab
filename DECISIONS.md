@@ -204,6 +204,19 @@
 - **키보드**: 재료 18관과 엄지 도크(5)를 WAI-ARIA toolbar 로빙으로 바꿨다(정지점 1개씩). radiogroup은 버렸다. 화살표가 곧 선택이라 18관을 지나며 재료가 바뀌고, Erase의 '선택 없음'을 나타낼 수 없다.
 - **미지원 홈 LCP**: 조건부 preload(`!('gpu' in navigator)`)는 버렸다. 헤드리스와 안드로이드 '어댑터 없음' 기기는 `navigator.gpu`가 있다. 우물 SSR 포스터도 버렸다. GPU 사용자에게 "쌓인 모래 → 빈 유리 → 데모" 모순이 생기고 LCP 이득도 0이다.
 
+## 2026-11-20 리디자인 P11b 성능·접근성 마감 — 셸 영역 치환·포커스 링·광고 꺼짐 스위치·qa:preview
+- **LCP 원인(측정 먼저)**: 프리뷰는 `@ui-shell`을 한 파일(next.ts)로 치환해, 그 파일이 import하는 모든 화면(홈 엔진·갤러리·HUD)과 CSS 9개가 **모든 페이지**에 실렸다 — 글 페이지에 WebGPU 엔진 청크, CSS gzip 12KB, JS gzip 164KB. Lighthouse 시뮬(Lantern)은 관측 LCP 전에 요청된 요청(비동기 JS 포함)을 모두 그래프에 넣으므로 바이트가 곧 LCP였다(압축 서빙 정정은 P11a).
+- **선택: 사용처(issuer)별 영역 치환**(next.config.ts `SHELL_AREAS`, `src/ui-next/shell/area-*.ts` 7개 — root·content·home·gallery·play·spill·daily). layout은 토큰·셸 크롬 CSS·서체만, 페이지는 자기 화면만. 글 페이지 JS 164 → 113KB, CSS 12 → 5KB(gzip), 엔진 청크 0. 표에 없는 사용처는 **프리뷰 빌드가 멈춘다**(조용히 다시 무거워지지 않게) + shell.test가 사용처·이름 대조. 모듈 식별자(request·userRequest·rawRequest)까지 바꿔야 영역들이 한 모듈로 합쳐지지 않는다. 영역 파일은 classic.ts와 같은 폴더(치환된 모듈의 상대 import가 classic.ts 폴더 기준으로 풀린다 — 하위 폴더에 두었다가 빌드 실패로 확인). issuer는 realpath일 수 있어 dir·realpath(dir) 두 기준으로 찾는다(리뷰). prod는 플러그인 자체가 없어 무변경.
+  - CSS 순서가 페이지 단위로 바뀐다(영역 import 순서). 영역 CSS끼리 겹치는 선택자 0(리뷰 확인). 홈 '벽이 비었을 때' 링크 밑줄이 살아났다(`.sl-shell a` vs `.sl-wall-empty a` 같은 특이도 — 작성 의도는 밑줄). 그 밖의 13쪽 × 390·1440 픽셀 차이 0.
+  - 버린 안: `@ui-shell/<영역>` 경로로 페이지 import 바꾸기(prod 페이지 파일·청크가 바뀜), `optimizePackageImports`(패키지 전용·배럴에 CSS 부작용), CSS를 각 컴포넌트로 옮기기(순서 보장 없음).
+- **홈 이미지 바이트**: 아틀라스 image-set(배율 ≤ 2 = `atlas-2x.webp` 384² 9.7KB, 3 = 원본 39KB). 선택 관 붓기 스트립은 랙 크기 `rack/<slug>.webp`(프레임 = 유리 32×64 @2x, 12.3~18.9KB ≤ 20KB, `capture-posters.mjs --rack-only`로 strips/에서 생성)로 바꿨다 — P11a는 캡처 원본 strips/(32~68KB)를 받았다. 붓기 규칙(한 번 재생·게이트)은 P11a 그대로.
+- **Spill 플레이 넓은 화면 CLS 0.134 → 0**: SSR은 390×844 배치라 900px 이상에서 하이드레이션 때 배치가 통째로 바뀌었다. 새 HUD(Frame)는 마운트 표시(data-ready) 전 900px 이상에서 `visibility:hidden`, JS 없으면 `<noscript>`로 푼다. 대가: 데스크톱 첫 그림이 하이드레이션까지 비어 있다(모바일은 그대로 보임) — 데스크톱 LCP는 qa가 재지 않는다(리뷰 지적, 기록).
+- **포커스 링 3곳(진짜 결함)**: 현재 페이지 내비(`.sl-nav-link[aria-current]` 밑줄 그림자), 글 페이지 주 행동·이전/다음 카드(`.sl-cs-cta`·`.sl-cs-pn-card`), Spill RUN(`.sl-sp-run` 들림 그림자)이 같은 특이도의 `:focus-visible` 링을 덮어 키보드 포커스가 안 보였다. 각 CSS 끝에 `:focus-visible` 규칙. qa keys는 '포커스 있을 때와 없을 때 모양이 달라야 링'으로 잰다(장식 그림자만 있는 요소가 통과하지 않게 — 리뷰 반영, 전환 효과 끄고).
+- **키보드**: 목차·이전/다음·힌트 details·코드/표 스크롤 영역은 Tab으로 닿고(details는 Enter로 열림) 링이 있다 — qa keys가 15쪽 전부 순회. 홈 로빙은 P11a(관 줄·도크 정지점 1개).
+- **광고 꺼짐 스위치(허브 `siteConfig.adsenseEnabled`와 같은 규칙)**: `ADS_ENABLED = false`(src/ui-next/ads/config.ts) — AdSense 승인 전에는 AD_SLOTS에 단위가 있어도 **안내판 DOM 0**(정적 HTML·마운트 뒤 모두). 컷오버(P12)에도 이 상태로 나가 빈 'Advertisement' 판이 안 보인다. 승인되면 이 한 줄만 true(고위험, 리뷰 2회). 광고 로더(심사 자격용)는 그대로. 로더가 스스로 넣는 숨은 ins(`adsbygoogle-noablate`, display:none)는 우리 DOM이 아니다.
+- **검사로 만들기**: `pnpm qa:preview`(scripts/qa/preview.mjs) = weight(엔진 청크 양성 대조 포함)·a11y·keys·loop·ads·lcp(+상호작용 지연 3회 중앙)·contrast, `--fps` 선택. 도구(playwright·axe·lighthouse)는 package.json 밖 `node_modules/.cache/sandlab-qa`에 고정 버전 자동 설치(NODE_PATH 불필요). P12 컷오버 게이트에서 그대로 다시 돈다. P11a의 `scripts/qa/lighthouse.mjs`·`home-rack-e2e.cjs`는 단독 도구로 남긴다.
+- **LCP 결과(Lighthouse 모바일 3회 중앙값, gzip 서버)**: P10 main(209b09b, load 38) → 이 PR(load 7~18): 홈 2977→2631, /daily 2927→2556, /play 2760→2410, /gallery 2980→2732, Learn 글 2586→2175, 재료 2571→2188, 레벨 공략 2593→2170ms. CLS 전부 ≤ 0.037, 상호작용 지연(CPU 4배) 32~64ms. **못 맞춘 3쪽**: ① /daily(2556) — 정적 HTML이 "Loading today's challenge…"뿐(날짜를 클라이언트가 고름)이라 LCP가 하이드레이션 뒤 → DailySpill 미정 상태를 새 셸 시작 화면 뼈대로 SSR(prod 컴포넌트 수정 → P12). ② /gallery(2732) — 첫 화면 벽 webp 4장이 CSS보다 먼저 요청되고 LiveCanvas 엔진이 정적 import → 벽 이미지 lazy·엔진 동적 import. ③ 홈(2631) — 프레임워크 JS 100KB + 홈 68KB + 서체 3개 48KB가 관측 LCP 전에 요청 → 공유 시트·녹화 동적 import, 서체 서브셋 축소(S8 재측정).
+
 ## 2026-11-20 오늘 방문자: 워커 + D1 일별 고유 방문자 카운터 (오너 "today 방문자 나왔으면 좋겠어")
 - 선택(오너): 사이트에 공개 표시 + 아침 메일·20시 요약에도. 허브(minigames-hub)와 같은 방식.
 - 집계 방법 비교

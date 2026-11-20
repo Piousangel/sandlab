@@ -431,3 +431,9 @@ html.sl-lock {
 .sl-ro-sheet {
   padding: 4px 12px 12px;
 }
+
+/* P11 포커스 링: 현재 내비(밑줄 inset 그림자)가 같은 특이도의 :focus-visible 링을 덮었다 — qa:preview keys가 잡음 */
+.sl-nav-link:focus-visible,
+.sl-nav-link[aria-current='page']:focus-visible {
+  box-shadow: var(--sl-focus);
+}

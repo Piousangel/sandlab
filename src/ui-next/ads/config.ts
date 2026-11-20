@@ -7,6 +7,13 @@
  */
 export const AD_CLIENT = 'ca-pub-9363381710674627'
 
+/**
+ * 광고 켜짐 스위치(P11, 허브 siteConfig.adsenseEnabled와 같은 규칙). **AdSense 승인 전에는 false** — AD_SLOTS에 단위가 있어도
+ * 안내판 DOM 0(빈 'Advertisement' 판이 보이지 않게, 컷오버 P12에도 그대로). 승인되면 이 한 줄만 true로(오너 확인, 고위험 리뷰 2회).
+ * 광고 로더(AdLoader, 심사·게재 자격용)는 이 스위치와 무관 — verify-ads 허용 목록이 정한다.
+ */
+export const ADS_ENABLED = false
+
 export type AdFormat = 'rect' | 'banner' | 'strip'
 
 /**
