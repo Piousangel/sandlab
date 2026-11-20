@@ -163,3 +163,14 @@
 - **광고 안내판 없음**: /gallery는 verify-ads 허용 목록 밖(라이브 캔버스 화면). AdPlate를 넣지 않았다.
 - **헤더 데일리 pill(P3 셸)**: 보이는 글자 `Daily · 06:12`(번호는 접근 이름으로), 접근 이름 `Daily · 06:12, puzzle No.43, 6 hours 12 minutes left` — 보이는 글자로 시작(label-in-name). P6 3초 테스트 3/5 "No.42 00:52가 뭔지 모르겠다" 반영. 칸 폭 12ch → 13ch(시간이 채워져도 폭 고정, CLS 0).
 - 버린 안: 큐레이션을 `#g=` 문자열로 저장(장면 크기 따라 URL 예산 초과·홈 진입이 'A scene someone shared'로 제목 없음), 새 업로드(지시: prod D1 쓰기 금지), 정렬 Top을 위해 `sort=top` API 추가(범위 밖 — 필요하면 별도 PR), 썸네일 위 Play 버튼(작은 2열 카드에서 그림의 1/4을 가림).
+
+## 2026-11-20 리디자인 P9b 갤러리 후속 — Yours 탭·작성자 링크·원본 링크·올린 시각·하단 Ko-fi 글줄 이식(프리뷰 전용)
+- **원칙(스승님 '길은 하나')**: 옛 GalleryBrowser의 기능을 새 벽(GalleryWall)에 빠짐없이 옮겨 P12 컷오버 때 옛 파일을 지울 수 있게 한다. 이번엔 옛 파일을 지우지 않는다(prod가 아직 classic).
+- **Yours = 옛 탭 그대로**: 출처 localStorage `sandlab.mine`(listMine) → id마다 `GET /api/scenes/:id?meta=1`(getSceneMeta), 지워진 장면은 건너뜀. 델타는 기준선 갱신 전에 계산(mineDeltas) → updateMineSeen. 새 API·새 키 0. 자기 작품엔 투표 버튼 없이 표 수만(옛 동작). 탭 순서도 옛 순서(Hot·New·Yours·Top).
+  - 다른 탭으로 넘어간 뒤 늦게 도착한 응답은 기준선을 갱신하지 않는다(요청 번호 확인) — 옛 코드는 갱신했다(보지 않은 증가분이 사라지는 작은 버그, 새 쪽만 고침).
+  - 증가분 줄 문구는 옛 배지와 같고 앞의 화살표 글리프만 `next` 아이콘(위로 회전)으로 바꿨다(R8). 합계·증가분 줄은 두 줄 자리를 먼저 잡아 CLS 0.
+  - 프리뷰(읽기 전용)에서는 투표 안내 대신 "Publishing is off in this read-only preview, so nothing new will show up here." — 프리뷰에선 새 게시가 막혀 Yours가 늘지 않는다는 사실.
+- **옛 카드 기능 중 P9에 빠져 있던 것도 같이 옮김**(대조표 작성 중 발견): 작성자 이름 → 그 사람 작품 + 서버 집계 줄(`/api/creators/:id`, 옛 작성자 화면 머리 문구), 리믹스 원본 링크("Original", 홈 리믹스 배너와 같은 말), 올린 시각(옛 ago() 구간). 작성자 줄은 44px 한 줄로 고정해 카드 높이가 같다(빈 액자 캡션 122 → 144).
+- **하단 글줄 = 옛 문구·링크·순서 그대로**("Made by Piousangel · About · Learn · Privacy · Terms · Contact · ♥ support", Ko-fi 새 탭 + `kofi_click` 계측). `♥`는 R8 기호 블록이지만 문구의 일부라 `lint-ui-allow`(지시: 텍스트 변경 금지). gallery.test가 옛·새 SSR에서 글줄 문구·href를 대조한다 — 갈라지면 실패(컷오버 때 같이 지움).
+- **검사 승격**: P9 스크래치 e2e를 `scripts/qa/gallery-e2e.cjs` + `scripts/qa/lib.cjs`로 올리고 `pnpm qa:gallery`로 등록(playwright·axe-core는 NODE_PATH, CI 연결은 오너 결정 C 대기). 로컬 시드는 로컬 wrangler dev에만(주소가 localhost가 아니면 멈춤), 업로드 한도는 사설 IP 헤더로 비켜 간다.
+- 버린 안: 옛 소개 문단(SEO용 정적 문단)을 새 벽에 다시 넣기 — P9가 lede + 정렬별 설명으로 바꾼 결정이라 이번 범위 밖(P12 SEO 점검 때 단어 수 비교). 카드 hover "Remix" 배지 — 새 벽은 작품을 열면 홈에서 바로 이어 붓는다(P6 진입), 같은 행동이 한 번 클릭 거리.

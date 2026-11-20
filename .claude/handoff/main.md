@@ -1,3 +1,15 @@
+# 인계 (2026-11-20): 리디자인 P9b 「갤러리 후속 — Yours·Ko-fi·하단 글줄」 머지 — 다음은 P10(진행 중)·P12 컷오버
+
+- 계획서 6장 진행표 P9b 행. 결정은 DECISIONS 2026-11-20 P9b. 브랜치 shift/redesign-p9b-yours.
+- **P9 인계의 ①(Yours 없음)·③(Ko-fi·하단 글줄)은 끝남.** 새 벽(GalleryWall)이 옛 GalleryBrowser의 탭·정렬·카드 버튼·링크를 전부 가진다(PR 본문 대조표) → **P12 컷오버 때 `src/components/GalleryBrowser.tsx`와 gallery.test의 '옛 갤러리와 대조' 묶음을 같이 지운다.**
+- Yours 데이터: localStorage `sandlab.mine`(rememberMine은 홈 Publish 성공 때 — 프리뷰는 읽기 전용이라 실제로 늘지 않는다, 안내 한 줄). 늦게 온 응답은 기준선을 건드리지 않는다.
+- 카드 캡션 높이 = 제목 36 + 작성자 줄 44 + 리믹스·시각 20 + 투표 줄 44 = 144(빈 액자 `.sl-gw-skel` margin-bottom과 같아야 CLS 0). 캡션 줄을 더하면 둘 다 고친다.
+- **검사**: `pnpm build:preview` → `npx wrangler dev --port 8799 --local`(로컬 D1: schema.sql + migrations/0001) → `python3 scripts/verify-gallery.py` → `NODE_PATH=<playwright·axe-core 있는 node_modules> pnpm qa:gallery out <capDir> http://localhost:8799`(144항목). localBase 없이 돌리면 prod GET 프록시 모드만(쓰기 0).
+- prod 비교 함정: base·브랜치를 **다른 폴더에서** 빌드하면 페이지 진입 모듈 id가 절대 경로 때문에 달라져 JS 20개가 '변경'으로 보인다(이번에 실측). 같은 폴더에서 빌드하면 196/196 동일.
+- 기준선: `pnpm test --testTimeout=30000`의 verify.test 훅 10s·sweep Steam vs vent 120s 타임아웃은 main에서도 재현(load 30+).
+
+---
+
 # 인계 (2026-11-21): 리디자인 v2 P9 「갤러리 The Wall」 머지 — P8(#79)도 머지됨, 다음은 P10
 
 - 계획서 6장 진행표가 기준. P9 = #81(브랜치 shift/redesign-p9-gallery). 결정은 DECISIONS 2026-11-20 P9.

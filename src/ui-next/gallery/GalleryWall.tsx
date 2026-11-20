@@ -11,10 +11,28 @@
  * - 투표: 기존 voteScene(브라우저당 1회). 프리뷰는 읽기 전용이라 버튼을 끄고 이유 한 줄.
  * - 무한 스크롤 대신 "More"(누른 뒤에만 아래가 늘어남 → CLS 0). 불러오는 동안 같은 높이의 빈 액자 6개로 자리를 잡는다.
  * - 광고 안내판: /gallery는 광고 허용 페이지가 아니다(scripts/verify-ads.mjs ALLOW 밖, 라이브 캔버스 화면) → 그리지 않는다.
+ * - Yours(P9b): 옛 GalleryBrowser의 'mine' 탭을 그대로 옮겼다 — 출처 localStorage `sandlab.mine`(listMine) → 단건 meta 조회(getSceneMeta),
+ *   델타는 기준선 갱신 전에 계산(mineDeltas) → 그 뒤 현재값을 새 기준선으로(updateMineSeen). 자기 작품엔 투표 버튼 없이 표 수만.
+ * - 옛 카드의 작성자 링크(by 이름 → 그 사람 작품 + 서버 집계), 리믹스 원본 링크, 올린 시각, 하단 후원(Ko-fi) 글줄도 같이 옮겼다(P9b — 빠진 기능 0).
  * - 댓글 없음(CLAUDE.md 절대 규칙).
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PAGE_SIZE, getCreatorTop, hasVoted, listScenes, voteScene, type CreatorTop, type SceneMeta } from '@/lib/sand/gallery'
+import {
+  PAGE_SIZE,
+  getCreatorProfile,
+  getCreatorTop,
+  getSceneMeta,
+  hasVoted,
+  listMine,
+  listScenes,
+  mineDeltas,
+  trackEvent,
+  updateMineSeen,
+  voteScene,
+  type CreatorProfile,
+  type CreatorTop,
+  type SceneMeta,
+} from '@/lib/sand/gallery'
 import { Icon } from '../icons/Icon'
 import { ShellHeader } from '../shell/ShellHeader'
 import { ShellFooter } from '../shell/ShellFooter'
@@ -23,16 +41,21 @@ import { LiveCanvas } from './LiveCanvas'
 import { PICKS, SANDLAB_CREATOR, isSandlabPick, pickThumb } from './picks'
 import {
   SORTS,
+  ago,
   appendPage,
   canPlay,
   creditLine,
+  deltaLine,
   emptyState,
   endLive,
   hasMore,
   liveKey,
+  makerStats,
+  mineTotals,
   nextLive,
   openHref,
   remixLabel,
+  sceneLabel,
   voteLabel,
   type Live,
   type WallSort,
@@ -70,6 +93,10 @@ export function GalleryWall() {
   const [liveOff, setLiveOff] = useState(false)
   const [voted, setVoted] = useState<Set<string>>(new Set())
   const [status, setStatus] = useState('')
+  // Yours: 지난 방문 뒤 늘어난 표·리믹스(옛 mineDelta), 불러오는 동안 그릴 빈 액자 수
+  const [delta, setDelta] = useState<{ votes: number; remix: number }>({ votes: 0, remix: 0 })
+  const [skel, setSkel] = useState(SKELETONS)
+  const [profile, setProfile] = useState<CreatorProfile | null>(null)
   const req = useRef(0)
   const reduced = useRef(false)
   // 실패 뒤 남은 hover 타이머가 엔진을 다시 띄우지 않게(리뷰 4) — setState보다 먼저 보이는 ref
@@ -85,6 +112,7 @@ export function GalleryWall() {
   }, [])
 
   const showsScenes = sort !== 'top' || maker !== null
+  const mine = sort === 'mine' && maker === null
 
   useEffect(() => {
     const my = ++req.current
@@ -100,7 +128,33 @@ export function GalleryWall() {
           if (my === req.current) setMakers(r.creators.filter((c) => c.name))
           return
         }
+        if (mine) {
+          // 옛 Yours 그대로: 내가 올린 id를 하나씩 단건 meta로 조회, 지워진 장면(404)은 건너뛴다. 개인 목록이라 수가 적다.
+          const entries = listMine()
+          setDelta({ votes: 0, remix: 0 })
+          setSkel(Math.min(SKELETONS, entries.length))
+          if (entries.length === 0) {
+            setScenes([])
+            setTotal(0)
+            return
+          }
+          setScenes(null)
+          const settled = await Promise.allSettled(entries.map((e) => getSceneMeta(e.id)))
+          if (my !== req.current) return
+          const found = settled
+            .filter((x): x is PromiseFulfilledResult<SceneMeta> => x.status === 'fulfilled')
+            .map((x) => x.value)
+          // 델타를 먼저 계산(기준선 갱신 전) → 그 뒤 현재값을 새 기준선으로 저장. 다른 탭으로 넘어간 뒤 늦게 온 응답은 기준선을 건드리지 않는다.
+          setDelta(mineDeltas(found, entries))
+          updateMineSeen(found.map((x) => ({ id: x.id, votes: x.votes || 0, remixCount: x.remixCount || 0 })))
+          setScenes(found)
+          setTotal(found.length)
+          return
+        }
+        setSkel(SKELETONS)
         setScenes(null)
+        setProfile(null)
+        if (maker) getCreatorProfile(maker.id).then((p) => my === req.current && setProfile(p), () => {})
         const r = maker ? await listScenes('new', 0, maker.id) : await listScenes(sort === 'new' ? 'new' : 'hot', 0)
         if (my !== req.current) return
         setScenes(r.scenes)
@@ -110,7 +164,7 @@ export function GalleryWall() {
         if (my === req.current) setFailed(true)
       }
     })()
-  }, [sort, maker, showsScenes, retry])
+  }, [sort, maker, showsScenes, mine, retry])
 
   const onMore = async () => {
     if (!scenes || loadingMore) return
@@ -171,7 +225,10 @@ export function GalleryWall() {
   }, [])
   const ctl: LiveCtl = { live, liveOff, request, end, fail }
 
-  const hint = maker ? `Every scene by ${maker.name}, newest first.` : SORTS.find((x) => x.id === sort)!.hint
+  const makerName = maker?.name || 'an unsigned maker'
+  const hint = maker ? `Every scene by ${makerName}, newest first.` : SORTS.find((x) => x.id === sort)!.hint
+  const totals = mine && scenes ? mineTotals(scenes) : null
+  const grew = deltaLine(delta)
 
   return (
     <div className="sl-gw">
@@ -193,7 +250,9 @@ export function GalleryWall() {
           <ul className="sl-gw-grid">
             {PICKS.map((p, i) => (
               <Frame key={p.id} id={p.id} lkey={liveKey('pick', p.id)} eager={i < EAGER_PICKS} title={p.title} thumb={pickThumb(p.id)} ctl={ctl}>
-                <p className="sl-gw-credit">{creditLine(SANDLAB_CREATOR)}</p>
+                <div className="sl-gw-by">
+                  <p className="sl-gw-credit">{creditLine(SANDLAB_CREATOR)}</p>
+                </div>
                 <p className="sl-gw-meta">Sandlab pick</p>
               </Frame>
             ))}
@@ -202,7 +261,7 @@ export function GalleryWall() {
 
         <section className="sl-gw-sec" aria-labelledby="sl-gw-all-h">
           <h2 className="sl-gw-h2" id="sl-gw-all-h">
-            {maker ? `Scenes by ${maker.name}` : 'Everyone’s scenes'}
+            {maker ? `Scenes by ${makerName}` : mine ? 'Your scenes' : 'Everyone’s scenes'}
           </h2>
           <div className="sl-gw-sorts" role="group" aria-label="Sort the wall">
             {SORTS.map((s) => (
@@ -213,17 +272,35 @@ export function GalleryWall() {
           </div>
           <div className="sl-gw-subrow">
             <p className="sl-gw-sub">{hint}</p>
+            {maker && profile && <span className="sl-gw-label">{makerStats(profile)}</span>}
             {maker && (
               <button type="button" className="sl-gw-textbtn" onClick={() => setMaker(null)}>
                 <Icon name="back" size={16} />
-                Top makers
+                {/* 카드의 작성자 링크로 들어왔으면 그 정렬로 돌아간다(옛 'Back to gallery') */}
+                {sort === 'top' ? 'Top makers' : 'All scenes'}
               </button>
             )}
           </div>
           {PREVIEW_READ_ONLY && showsScenes && (
             <p className="sl-gw-ro" id={RO_ID}>
-              Voting is off in this read-only preview.
+              {mine ? 'Publishing is off in this read-only preview, so nothing new will show up here.' : 'Voting is off in this read-only preview.'}
             </p>
+          )}
+          {/* 창작자 귀환 줄(옛 mineDigest) — 두 줄 자리를 먼저 잡아 둔다(불러온 뒤 델타가 생겨도 아래가 밀리지 않게, CLS) */}
+          {mine && !failed && (scenes === null || scenes.length > 0) && (
+            <div className="sl-gw-mine" aria-live="polite">
+              {totals && (
+                <p className="sl-gw-meta">
+                  {sceneLabel(totals.scenes)} · {voteLabel(totals.votes)} · {remixLabel(totals.remix)}
+                </p>
+              )}
+              {totals && grew && (
+                <p className="sl-gw-delta">
+                  <Icon name="next" size={16} className="sl-gw-up" />
+                  {grew}
+                </p>
+              )}
+            </div>
           )}
 
           {failed ? (
@@ -237,7 +314,7 @@ export function GalleryWall() {
             <MakerList makers={makers} onOpen={(m) => setMaker({ id: m.id, name: m.name ?? '' })} />
           ) : scenes === null ? (
             <ul className="sl-gw-grid" aria-hidden="true">
-              <Skeletons n={SKELETONS} />
+              <Skeletons n={skel} />
             </ul>
           ) : scenes.length === 0 ? (
             <Empty sort={sort} maker={!!maker} onNew={() => pickSort('new')} />
@@ -256,14 +333,36 @@ export function GalleryWall() {
                     thumb={`/api/scenes/${s.id}/thumb`}
                     ctl={ctl}
                   >
-                    {/* 팀 큐레이션은 이름 없이 올라가 있다 — 위 칸·홈 진입과 같은 표기(리뷰 5) */}
-                    <p className="sl-gw-credit">{creditLine(s.creatorName ?? (isSandlabPick(s.id) ? SANDLAB_CREATOR : null))}</p>
+                    <div className="sl-gw-by">
+                      {/* 팀 큐레이션은 이름 없이 올라가 있다 — 위 칸·홈 진입과 같은 표기(리뷰 5) */}
+                      {s.creatorId ? (
+                        // 옛 카드의 "by 이름" 버튼 그대로 — 그 사람 작품 + 서버 집계(작성자 화면)
+                        <button
+                          type="button"
+                          className="sl-gw-credit sl-gw-credit-btn"
+                          title={`See all scenes by ${s.creatorName || 'this maker'}`}
+                          onClick={() => setMaker({ id: s.creatorId!, name: s.creatorName ?? '' })}
+                        >
+                          {creditLine(s.creatorName)}
+                        </button>
+                      ) : (
+                        <p className="sl-gw-credit">{creditLine(s.creatorName ?? (isSandlabPick(s.id) ? SANDLAB_CREATOR : null))}</p>
+                      )}
+                      {s.parent && (
+                        // 리믹스 계보 — 원본 장면 열기(옛 카드의 remix 링크, 홈 리믹스 배너의 'Original'과 같은 말)
+                        <a className="sl-gw-from" href={openHref(s.parent)} aria-label={`Original of ${title}`}>
+                          Original
+                        </a>
+                      )}
+                    </div>
                     <p className="sl-gw-meta">
                       <Icon name="remix" size={16} />
-                      {remixLabel(s.remixCount)}
+                      {remixLabel(s.remixCount)} · {ago(s.createdAt)}
                     </p>
                     <div className="sl-gw-votes">
                       <span className="sl-gw-meta">{voteLabel(s.votes)}</span>
+                      {/* 자기 작품엔 투표하지 않는다 — 표는 지켜보는 신호(옛 Yours와 같음) */}
+                      {!mine && (
                       <button
                         type="button"
                         className="sl-gw-vote"
@@ -274,6 +373,7 @@ export function GalleryWall() {
                       >
                         {done ? 'Voted' : 'Vote'}
                       </button>
+                      )}
                     </div>
                   </Frame>
                 )
@@ -296,6 +396,25 @@ export function GalleryWall() {
             {status}
           </p>
         </section>
+
+        {/* 옛 갤러리 하단 글줄(후원 Ko-fi 포함) — 문구·링크·계측 그대로, 모양만 새 셸 */}
+        <p className="sl-gw-support">
+          Made by Piousangel ·{' '}
+          <a href="/about" className="sl-gw-support-link">About</a> ·{' '}
+          <a href="/learn" className="sl-gw-support-link">Learn</a> ·{' '}
+          <a href="/privacy" className="sl-gw-support-link">Privacy</a> ·{' '}
+          <a href="/terms" className="sl-gw-support-link">Terms</a> ·{' '}
+          <a href="/contact" className="sl-gw-support-link">Contact</a> ·{' '}
+          <a
+            href="https://ko-fi.com/piousangel"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sl-gw-support-link"
+            onClick={() => trackEvent('kofi_click')}
+          >
+            ♥ support{/* lint-ui-allow: 옛 갤러리 후원 문구 그대로(텍스트 변경 금지, P9b 지시) — 아이콘이 아니라 문구의 일부 */}
+          </a>
+        </p>
       </main>
       <ShellFooter />
     </div>
