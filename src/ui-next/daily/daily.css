@@ -171,3 +171,104 @@
   color: var(--sl-ember-text);
   font-weight: 700;
 }
+
+/* ---------- 모션(데일리 개편 D1): 들어올 때 층이 아래부터 부어지고, 오늘 처음 본 층은 알갱이와 함께 떨어진다 ----------
+ * transform·opacity만(CLS 0). 전체 ≤ 보상 상한 900ms + 오늘 층 620ms. 지연은 JS가 층 수에 맞춰 넣는다.
+ * reduced-motion이면 전부 끈다(토큰 길이는 0.01ms가 되지만 JS 지연은 남으므로 여기서 animation: none). */
+.sl-st-l {
+  transform-box: view-box;
+  animation: sl-st-pour var(--sl-st-settle, 400ms) var(--sl-ease-pour) both;
+}
+.sl-st-l[data-fresh] {
+  animation: sl-st-drop var(--sl-st-drop, 620ms) cubic-bezier(0.3, 0, 0.6, 1) both;
+}
+.sl-st-after {
+  animation: sl-st-fade var(--sl-st-fade, 240ms) ease-out both;
+  animation-delay: var(--sl-st-end, 400ms);
+}
+/* 오늘 아직 안 푼 층의 점선은 천천히 흐른다 — '채워질 자리' 표시. 3번만(계속 움직이면 시선을 뺏는다) */
+.sl-st [data-layer='pending'] path {
+  animation: sl-st-dash 1.2s linear var(--sl-st-end, 400ms) 3;
+}
+.sl-st-grain {
+  transform-box: view-box;
+  opacity: 0;
+  /* forwards만 — both면 지연 동안 0% 프레임(불투명)이 적용돼 알갱이가 입구에 멈춰 보인다(리뷰). 길이·지연은 JS(grainTiming) */
+  animation: sl-st-fall 380ms var(--sl-ease-drop) forwards;
+}
+@keyframes sl-st-pour {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sl-st-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-48px);
+  }
+  20% {
+    opacity: 1;
+  }
+  72% {
+    transform: translateY(2px);
+  }
+  86% {
+    transform: translateY(-1px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sl-st-fall {
+  0% {
+    opacity: 1;
+    transform: none;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(var(--sl-st-fall, 40px));
+  }
+}
+@keyframes sl-st-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sl-st-dash {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sl-st-l,
+  .sl-st-l[data-fresh],
+  .sl-st-after,
+  .sl-st [data-layer='pending'] path {
+    animation: none;
+  }
+  .sl-st-grains {
+    display: none;
+  }
+}
+/* 병이 화면에 들어오기 전(data-run 없음)에는 멈춰 둔다 — 첫 프레임(투명·위)에서 기다리다 보이는 순간 붓는다 */
+.sl-st:not([data-run]) .sl-st-l,
+.sl-st:not([data-run]) .sl-st-after,
+.sl-st:not([data-run]) .sl-st-grain,
+.sl-st:not([data-run]) [data-layer='pending'] path {
+  animation-play-state: paused;
+}

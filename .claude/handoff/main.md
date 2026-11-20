@@ -1,3 +1,13 @@
+# 인계 (2026-11-20 10시 개발): 데일리 개편 D1 「지층이 쌓이는 모션」 — 브랜치 shift/1000-daily-motion
+
+- 오너 '딱딱·고전적' 지적에 대해 /daily 허브·데일리 시작 화면의 **모션 0**을 메움(프리뷰 전용, prod 화면 무변경). 기록 docs/team/specs/2026-11-20-daily-motion-d1.md(독립 리뷰 5/10 → 전부 반영).
+- 코드: `src/ui-next/daily/StrataJar.tsx`(pourDelays·grainTiming·isFreshPour·POURED_KEY `sandlab.strata.poured.v1`, IntersectionObserver로 병이 보일 때 시작), daily.css 끝 모션 절, spill.css 끝 데일리 시작 모션 절. 테스트 daily.test.tsx '모션' 묶음.
+- 함정: ① 모바일에선 병이 첫 화면 밖 — 모션을 마운트 때 틀면 아무도 못 본다(IO 게이트 필수). ② 토큰 길이는 reduced-motion에서 0.01ms가 되지만 JS 지연(animation-delay)은 남는다 → `animation: none`을 따로 써야 한다(fill both면 지연 동안 투명). ③ SVG 패턴 id `sl-st-grain1~3`이 있어 문자열 'sl-st-grain' 검사는 늘 걸린다 — `class="sl-st-grain"`으로 찾을 것.
+- 캡처 스크립트: 스크래치 cap/cap.cjs(out/ 정적 서버 + 픽스처 fresh·pending·seen·reduced, 390 시점별 프레임). 같은 날 재방문 검사는 init script가 키를 지우므로 수동 확인.
+- **다음 교대(D2)**: 390에서 병이 112px라 오늘 층 낙하가 작다 → 병 확대 또는 오늘 카드 아래 미니 병 / 결과 "+1 stratum" → 병 전환 / 헤더 pill 'Daily' 글자 / 결과 "왜 별을 놓쳤나" 한 줄. 리디자인 계획의 다음 P는 P9(갤러리) — 데일리 담당이 아니면 그쪽.
+
+---
+
 # 인계 (2026-11-20 오전): 리디자인 v2 P8 「/play 전시실」 머지 — P6(#78)도 머지됨, 다음은 P9(갤러리 The Wall)
 
 - 계획서 6장 진행표가 기준. P8 = #79(브랜치 shift/redesign-p8-play). 결정은 DECISIONS 2026-11-20 P8.
