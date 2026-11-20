@@ -17,6 +17,8 @@ import { gpuAdvice, type GpuAdvice } from '@/lib/sand/gpuAdvice'
 import { paletteGrid } from '@/lib/sand/paletteGrid'
 import { isPortraitLayout, PORTRAIT_CSS } from '@/lib/sand/portraitLayout'
 import { LEVELS } from '@/lib/spill/levels'
+import { VISITORS_RESET_NOTE, useTodayVisitors } from '@/lib/useTodayVisitors'
+import { visitorsLine, visitorsShort } from '@/lib/visitors'
 // record.ts는 mediabunny(~대용량 코덱)를 정적 import한다. 방문자 대부분이 안 누르는 녹화 기능이므로
 // 랜딩 초기 JS에서 분리한다 — record() 호출 시점에 동적 import(아래).
 
@@ -66,6 +68,8 @@ export default function SandCanvas() {
   const [busy, setBusy] = useState(false)
   // 빈 캔버스 온보딩: 첫 방문자는 검은 상자만 보면 그릴 줄 모른다. 한 번이라도 그리면(또는 장면 복원 시) 끈다.
   const [hasDrawn, setHasDrawn] = useState(false)
+  // 오늘 방문자(오너 11-20) — 데스크톱은 헤드라인 아래, 세로 폰(링크가 ☰로 접힌 400 미만)은 헤더 브랜드 옆. 실패하면 아무것도 안 그린다(둘 다 레이아웃 밖·고정 높이 자리).
+  const visitorsN = useTodayVisitors()
   // 남의 씬(#s=id)을 열고 착지했을 때만 뜨는 리믹스 안내 배너. 첫 붓질/× 에 소멸.
   const [remix, setRemix] = useState<{ id: string; title: string } | null>(null)
   // 지우개 모드. 데스크톱은 우클릭으로도 지우지만 터치엔 우클릭이 없어 이 토글이 유일한 지우기 수단이다.
@@ -723,6 +727,9 @@ export default function SandCanvas() {
           <div style={S.heroHint}>
             <div style={S.heroHintTitle}>Sandlab</div>
             <div style={S.heroHintSub}>Pour sand, water, lava — watch them react.</div>
+            <div style={S.heroVisitors} data-testid="today-visitors" aria-hidden={visitorsLine(visitorsN) ? undefined : true}>
+              {visitorsLine(visitorsN) && `${visitorsLine(visitorsN)} · ${VISITORS_RESET_NOTE}`}
+            </div>
           </div>
         )}
         {/* 세로 폰에선 stage = 캔버스 상자라 온보딩·고스트 커서가 캔버스 위에 정확히 얹힌다. */}
@@ -741,6 +748,11 @@ export default function SandCanvas() {
 
       <div style={narrow ? S.brandN : S.brand}>
         <span style={{ fontWeight: 650, letterSpacing: -0.2 }}>Sandlab</span>
+        {narrow && compactNav && visitorsShort(visitorsN) && (
+          <span style={S.brandVisitors} data-testid="today-visitors-short">
+            {visitorsShort(visitorsN)}
+          </span>
+        )}
         {/* 좁은 세로 화면에선 태그라인이 4줄로 접혀 캔버스를 덮었다(2026-10-09 390px 점검) — 링크만 남긴다. */}
         {!narrow && <span style={S.brandSub}>no install · no sign-up · share as a link</span>}
         {/* 콘텐츠 페이지로 가는 정적 링크 — 없으면 /learn·/materials가 sitemap으로만 닿는 고아가 된다
@@ -1260,6 +1272,20 @@ const S: Record<string, React.CSSProperties> = {
     color: '#eef1f6',
     textShadow: '0 2px 20px rgba(0,0,0,0.7)',
   },
+  // 헤드라인 아래 오늘 방문자 — 한 줄 높이를 늘 잡아 숫자가 늦게 와도 헤드라인이 움직이지 않는다
+  heroVisitors: {
+    marginTop: 6,
+    height: 18,
+    fontSize: 12,
+    lineHeight: '18px',
+    opacity: 0.55,
+    color: '#eef1f6',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    fontVariantNumeric: 'tabular-nums',
+    textShadow: '0 1px 12px rgba(0,0,0,0.8)',
+  },
   heroHintSub: {
     marginTop: 6,
     fontSize: 13,
@@ -1282,6 +1308,17 @@ const S: Record<string, React.CSSProperties> = {
     pointerEvents: 'none',
   },
   brandSub: { fontSize: 11.5, opacity: 0.6, letterSpacing: 0.2 },
+  // 세로 폰 헤더(44px 고정)의 브랜드 옆 — 헤더 높이를 바꾸지 않는다. 남는 폭이 모자라면 말줄임.
+  brandVisitors: {
+    flex: '1 1 auto',
+    minWidth: 0,
+    fontSize: 11,
+    opacity: 0.6,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    fontVariantNumeric: 'tabular-nums',
+  },
   brandNav: { display: 'flex', gap: 10, marginLeft: 6, pointerEvents: 'auto' },
   brandLink: { fontSize: 11.5, color: '#eef1f6', opacity: 0.55, textDecoration: 'none' },
   stat: {
