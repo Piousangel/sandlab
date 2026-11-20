@@ -16,7 +16,7 @@
  * - 옛 카드의 작성자 링크(by 이름 → 그 사람 작품 + 서버 집계), 리믹스 원본 링크, 올린 시각, 하단 후원(Ko-fi) 글줄도 같이 옮겼다(P9b — 빠진 기능 0).
  * - 댓글 없음(CLAUDE.md 절대 규칙).
  */
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import {
   PAGE_SIZE,
   getCreatorProfile,
@@ -37,8 +37,13 @@ import { Icon } from '../icons/Icon'
 import { ShellHeader } from '../shell/ShellHeader'
 import { ShellFooter } from '../shell/ShellFooter'
 import { PREVIEW_READ_ONLY } from '../shell/ReadOnlyNote'
-import { LiveCanvas } from './LiveCanvas'
-import { PICKS, SANDLAB_CREATOR, isSandlabPick, pickThumb } from './picks'
+import { LazyBoundary } from '../LazyBoundary'
+import { afterLoad } from '../afterLoad'
+import { PICKS, PICK_SIZES, SANDLAB_CREATOR, isSandlabPick, pickSrcSet, pickThumb } from './picks'
+
+// 라이브 재생(WebGPU 엔진·셰이더 청크)은 hover·Play 때만 쓴다 — 첫 화면 JS에서 뺀다(P12 LCP). 받는 동안은 썸네일 그대로.
+const loadLive = () => import('./LiveCanvas')
+const LiveCanvas = lazy(() => loadLive().then((m) => ({ default: m.LiveCanvas })))
 import {
   SORTS,
   ago,
@@ -81,6 +86,8 @@ type LiveCtl = {
 const EAGER_PICKS = 4
 
 export function GalleryWall() {
+  // 마우스 기기는 hover 0.3초로 라이브가 켜진다 — 엔진 청크를 첫 그림 뒤 유휴에 미리 받아 첫 hover가 늦지 않게(터치는 Play 누를 때 받는다)
+  useEffect(() => afterLoad(() => matchMedia('(hover: hover)').matches && void loadLive().catch(() => {})), [])
   const [sort, setSort] = useState<WallSort>('hot')
   const [maker, setMaker] = useState<Maker | null>(null)
   const [scenes, setScenes] = useState<SceneMeta[] | null>(null) // null = 불러오는 중
@@ -257,7 +264,7 @@ export function GalleryWall() {
           <p className="sl-gw-sub">Chosen and made by the Sandlab team.</p>
           <ul className="sl-gw-grid">
             {PICKS.map((p, i) => (
-              <Frame key={p.id} id={p.id} lkey={liveKey('pick', p.id)} eager={i < EAGER_PICKS} title={p.title} thumb={pickThumb(p.id)} ctl={ctl}>
+              <Frame key={p.id} id={p.id} lkey={liveKey('pick', p.id)} eager={i < EAGER_PICKS} title={p.title} thumb={pickThumb(p.id)} srcSet={pickSrcSet(p.id)} ctl={ctl}>
                 <div className="sl-gw-by">
                   <p className="sl-gw-credit">{creditLine(SANDLAB_CREATOR)}</p>
                 </div>
@@ -434,6 +441,7 @@ function Frame({
   lkey,
   title,
   thumb,
+  srcSet,
   ctl,
   eager = false,
   playable = true,
@@ -443,6 +451,8 @@ function Frame({
   lkey: string
   title: string
   thumb: string
+  /** 큐레이션만(picks.ts 두 크기) — 사용자 장면 썸네일은 한 크기 */
+  srcSet?: string
   ctl: LiveCtl
   eager?: boolean
   playable?: boolean
@@ -482,8 +492,14 @@ function Frame({
           <span className="sl-gw-frame">
             <span className="sl-gw-glass">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={thumb} alt="" width={640} height={320} loading={eager ? 'eager' : 'lazy'} decoding="async" />
-              {isLive && <LiveCanvas id={id} onEnd={() => ctl.end(lkey, 'end')} onFail={ctl.fail} />}
+              <img src={thumb} srcSet={srcSet} sizes={srcSet ? PICK_SIZES : undefined} alt="" width={640} height={320} loading={eager ? 'eager' : 'lazy'} decoding="async" />
+              {isLive && (
+                <LazyBoundary fallback={null} onError={() => ctl.end(lkey, 'end')}>
+                  <Suspense fallback={null}>
+                    <LiveCanvas id={id} onEnd={() => ctl.end(lkey, 'end')} onFail={ctl.fail} />
+                  </Suspense>
+                </LazyBoundary>
+              )}
             </span>
           </span>
           <span className="sl-gw-title">{title}</span>

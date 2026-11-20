@@ -78,7 +78,7 @@
   --sl-ease-drop: cubic-bezier(0.55, 0, 0.75, 0.2);
   --sl-ease-grain: steps(6, end);
 
-  /* 서체 — 변수(--sl-font-bricolage·--sl-font-jbmono)는 next/font가 html 클래스로 단다 */
+  /* 서체 — 변수(--sl-font-bricolage·--sl-font-jbmono)는 fonts.css가 단다(@font-face, 글자 범위 core/ext — P12) */
   --sl-font-display: var(--sl-font-bricolage), ui-sans-serif, system-ui, sans-serif;
   --sl-font-mono: var(--sl-font-jbmono), ui-monospace, SFMono-Regular, Menlo, monospace;
 

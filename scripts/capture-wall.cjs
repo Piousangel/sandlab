@@ -18,7 +18,6 @@ const path = require('path')
 const { createRequire } = require('module')
 
 const root = path.resolve(__dirname, '..')
-const { chromium } = require('playwright')
 const sharp = createRequire(require.resolve('next/package.json', { paths: [root] }))('sharp')
 
 const argv = process.argv.slice(2)
@@ -60,8 +59,22 @@ async function toWebp(png) {
   throw new Error('20KB 이하로 못 줄임')
 }
 
+/**
+ * 작은 썸네일 `<id>-320.webp`(320×160) — 폰 2열 카드(CSS 약 170px)는 DPR 2 미만이면 이것으로 충분하다(GalleryWall srcset, P12 LCP).
+ * 캡처 없이 이미 있는 `<id>.webp`에서 줄인다: `node scripts/capture-wall.cjs --small-only`. 캡처(기본 실행)도 끝에 함께 만든다.
+ */
+async function writeSmall(ids) {
+  for (const id of ids) {
+    const buf = await sharp(path.join(dest, `${id}.webp`)).resize(320, 160, { fit: 'fill' }).webp({ quality: 72, effort: 6 }).toBuffer()
+    fs.writeFileSync(path.join(dest, `${id}-320.webp`), buf)
+    console.log(`${id}-320  ${buf.length}B`)
+  }
+}
+
 ;(async () => {
   const ids = opt('--ids', '') ? opt('--ids', '').split(',') : picks()
+  if (argv.includes('--small-only')) return writeSmall(ids)
+  const { chromium } = require('playwright') // 캡처할 때만(--small-only는 playwright 없이 돈다)
   if (!fs.existsSync(path.join(outDir, 'index.html'))) throw new Error('out/ 없음 — 먼저 pnpm build:preview')
   fs.mkdirSync(dest, { recursive: true })
   const srv = await serve(8833)
@@ -92,6 +105,7 @@ async function toWebp(png) {
     await browser.close()
     srv.close()
   }
+  await writeSmall(ids)
 })().catch((e) => {
   console.error(e)
   process.exit(1)

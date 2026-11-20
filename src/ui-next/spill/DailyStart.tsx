@@ -17,6 +17,9 @@ import { msUntilUtcMidnight } from '../shell/dailyPill'
 import type { DailyStartProps } from '../shell/spillTypes'
 import { SpillHeader } from './SpillHud'
 import { StrataJar } from '../daily/StrataJar'
+import { goalLine } from './goalLine'
+import { preloadSpillPlayer } from '../daily/LazySpillPlayer'
+import { afterLoad } from '../afterLoad'
 
 const fmtDate = (ms: number) => new Date(ms).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' })
 
@@ -26,14 +29,6 @@ function left(nowMs: number): string {
   return `${pad(Math.floor(mins / 60))}:${pad(mins % 60)}`
 }
 
-/** 목표 문장 한 줄 — 같은 문장이 여러 번이면(항아리 2개) 한 번으로 묶는다. 수치 스포일러(par·별·보석) 없음. */
-export function goalLine(goals: string[]): string {
-  const counts = new Map<string, number>()
-  for (const g of goals) counts.set(g, (counts.get(g) ?? 0) + 1)
-  return [...counts]
-    .map(([g, k]) => (k === 1 ? g : g.startsWith('Fill the pot ') ? g.replace('Fill the pot ', `Fill each of the ${k} pots `) : `${g} (${k} times)`))
-    .join('. ') + '.'
-}
 
 /** 미리보기 크기: 정수 장치 픽셀 배율(플레이 보드와 같은 규칙), 화면 높이의 절반 안쪽. */
 function previewScale() {
@@ -50,6 +45,9 @@ export function DailyStart({ dayNumber, level, solved, onStart, children }: Dail
   const d = describeLevel(level)
   // 그날 UTC 날짜 — dayNumber의 역(#1 = LAUNCH_UTC). DailySpill이 아니라 여기서 계산한다(prod 번들에 export를 늘리지 않게)
   const dateMs = LAUNCH_UTC + (dayNumber - 1) * 86_400_000
+
+  // 플레이 화면 청크는 첫 그림 뒤에 미리 받는다(P12 LCP — LazySpillPlayer). 누르는 순간(onPointerDown·onClick)에도 부른다.
+  useEffect(() => afterLoad(preloadSpillPlayer), [])
 
   useEffect(() => {
     setSound(loadSoundPref())
@@ -118,7 +116,15 @@ export function DailyStart({ dayNumber, level, solved, onStart, children }: Dail
               World {level.world} · {d.materials.length ? d.materials.join(', ') : level.name}
             </figcaption>
           </figure>
-          <button type="button" className="sl-ds-go" onClick={onStart}>
+          <button
+            type="button"
+            className="sl-ds-go"
+            onPointerDown={preloadSpillPlayer}
+            onClick={() => {
+              preloadSpillPlayer()
+              onStart()
+            }}
+          >
             <span>{solved ? 'Practice' : 'Solve today'}</span>
             <Icon name="next" />
           </button>

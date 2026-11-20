@@ -10,7 +10,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { ARTICLES } from '@/lib/learn/articles'
 import { LearnArticle } from '../content/Articles'
-import { SHELL_AREAS } from '../../../next.config'
+import { PREVIEW_SWAPS, SHELL_AREAS } from '../../../next.config'
 import { DAILY_HREF, FOOTER_LINKS, MENU_LINKS, NAV, isActive } from './nav'
 import { SSR_PILL, msUntilUtcMidnight, pillText } from './dailyPill'
 import { ShellFooter } from './ShellFooter'
@@ -177,6 +177,61 @@ describe('@ui-shell 영역 치환(P11 LCP — next.config.ts SHELL_AREAS)', () =
   it('글 페이지 영역(content)은 엔진·홈·갤러리 화면을 import하지 않는다(글 페이지에 엔진 청크가 실리던 원인)', () => {
     const src = readFileSync(join(root, 'src/ui-next/shell/area-content.ts'), 'utf8')
     expect(src).not.toMatch(/home|gallery|spill|engine/)
+  })
+})
+
+describe('프리뷰 모듈 바꿔 끼우기(P12 LCP — next.config.ts PREVIEW_SWAPS)', () => {
+  const root = fileURLToPath(new URL('../../../', import.meta.url))
+  it('표의 사용처가 그 import 문자열을 실제로 쓰고, 바꿀 모듈이 있다(낡은 줄은 조용히 무효가 된다)', () => {
+    expect(PREVIEW_SWAPS.length).toBeGreaterThanOrEqual(2)
+    for (const s of PREVIEW_SWAPS) {
+      const src = readFileSync(join(root, s.issuer), 'utf8')
+      expect(src, `${s.issuer}: from '${s.request}'`).toContain(`from '${s.request}'`)
+      const to = join(root, s.to.replace(/^@\//, 'src/'))
+      expect(['.tsx', '.ts'].some((ext) => statSync(to + ext, { throwIfNoEntry: false })), s.to).toBe(true)
+    }
+  })
+  it('바꾸는 모듈은 기본 내보내기가 있다(사용처가 default import로 쓴다)', () => {
+    for (const s of PREVIEW_SWAPS) {
+      const base = join(root, s.to.replace(/^@\//, 'src/'))
+      const file = ['.tsx', '.ts'].map((ext) => base + ext).find((f) => statSync(f, { throwIfNoEntry: false }))!
+      expect(readFileSync(file, 'utf8'), file).toMatch(/export default function/)
+    }
+  })
+})
+
+describe('서체 글자 범위 core/ext(P12 LCP — fonts.css)', () => {
+  const root = fileURLToPath(new URL('../../../', import.meta.url))
+  const css = readFileSync(join(root, 'src/ui-next/fonts.css'), 'utf8')
+  const faces = [...css.matchAll(/@font-face\s*\{([^}]*)\}/g)].map((m) => m[1])
+  const cps = (range: string) =>
+    range.split(',').flatMap((r) => {
+      const [a, b] = r.trim().replace(/^U\+/i, '').split('-').map((x) => parseInt(x, 16))
+      return Array.from({ length: (b ?? a) - a + 1 }, (_, i) => a + i)
+    })
+  it('웹폰트마다 core·ext 두 면이 있고, 두 범위는 겹치지 않으며 합치면 옛 라틴 서브셋 전부다(글자를 잃지 않는다)', () => {
+    const LATIN = new Set([
+      ...Array.from({ length: 0x100 }, (_, i) => i),
+      0x0131, 0x0152, 0x0153, 0x02bb, 0x02bc, 0x02c6, 0x02da, 0x02dc, 0x0304, 0x0308, 0x0329,
+      ...Array.from({ length: 0x70 }, (_, i) => 0x2000 + i),
+      0x20ac, 0x2122, 0x2191, 0x2193, 0x2212, 0x2215, 0xfeff, 0xfffd,
+    ])
+    const webfonts = faces.filter((f) => /url\(/.test(f))
+    expect(webfonts).toHaveLength(6)
+    for (const fam of ["'SL Bricolage'", "'SL JetBrains Mono'"]) {
+      for (const w of fam.includes('Mono') ? ['500'] : ['400', '700']) {
+        const pair = webfonts.filter((f) => f.includes(fam) && f.includes(`font-weight: ${w};`))
+        expect(pair, `${fam} ${w}`).toHaveLength(2)
+        const [core, ext] = ['core', 'ext'].map((k) => cps(pair.find((f) => f.includes(`-${k}.woff2`))!.match(/unicode-range:([^;]+);/)![1]))
+        expect(core.filter((c) => ext.includes(c))).toEqual([])
+        expect(new Set([...core, ...ext])).toEqual(LATIN)
+      }
+    }
+  })
+  it('url이 가리키는 woff2 파일이 있고, core는 영문 첫 화면에 필요한 문장부호(· — … ’ ©)를 담는다', () => {
+    for (const m of css.matchAll(/url\('\.\/([^']+)'\)/g)) expect(statSync(join(root, 'src/ui-next', m[1]), { throwIfNoEntry: false }), m[1]).toBeTruthy()
+    const core = cps(faces.find((f) => f.includes('400-core'))!.match(/unicode-range:([^;]+);/)![1])
+    for (const cp of [0x41, 0x7a, 0x30, 0xb7, 0x2014, 0x2026, 0x2019, 0xa9, 0xd7]) expect(core, cp.toString(16)).toContain(cp)
   })
 })
 
