@@ -10,6 +10,7 @@
  */
 import type { DailyAsideProps, DailyStartProps, SpillHudKit, SpillResultProps } from './spillTypes'
 import type { LevelAsideProps, PlayGalleryProps } from './playTypes'
+import type { ContentFrameProps, GuideArticleProps, LearnArticleProps, MaterialPageProps, MaterialsIndexProps } from './contentTypes'
 
 export const shellHtmlProps: { className?: string } = {}
 
@@ -27,3 +28,12 @@ export const DailyAside: null | ((p: DailyAsideProps) => React.JSX.Element) = nu
 export const PlayGallery: null | ((p: PlayGalleryProps) => React.JSX.Element) = null
 export const LevelAside: null | ((p: LevelAsideProps) => React.JSX.Element) = null
 export const HomePour: null | (() => React.JSX.Element) = null
+/**
+ * P10: null → ContentShell이 지금 다크 화면(헤더·main·푸터)을, /learn/[slug]·/play/[id]/guide·/materials·/materials/[slug]가
+ * 지금 화면을 그대로 그린다.
+ */
+export const ContentFrame: null | ((p: ContentFrameProps) => React.JSX.Element) = null
+export const LearnArticle: null | ((p: LearnArticleProps) => React.JSX.Element) = null
+export const GuideArticle: null | ((p: GuideArticleProps) => React.JSX.Element) = null
+export const MaterialPage: null | ((p: MaterialPageProps) => React.JSX.Element) = null
+export const MaterialsIndex: null | ((p: MaterialsIndexProps) => React.JSX.Element) = null

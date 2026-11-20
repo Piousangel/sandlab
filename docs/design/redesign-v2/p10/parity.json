@@ -1,0 +1,807 @@
+[
+ {
+  "page": "404.html",
+  "words": [
+   45,
+   45
+  ],
+  "links": [
+   4,
+   4
+  ],
+  "chrome": {
+   "words": 0,
+   "links": 0
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 0,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "about.html",
+  "words": [
+   564,
+   564
+  ],
+  "links": [
+   8,
+   8
+  ],
+  "chrome": {
+   "words": 1,
+   "links": 0
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 0,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "contact.html",
+  "words": [
+   120,
+   120
+  ],
+  "links": [
+   6,
+   6
+  ],
+  "chrome": {
+   "words": 0,
+   "links": 0
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 0,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "learn.html",
+  "words": [
+   213,
+   213
+  ],
+  "links": [
+   4,
+   4
+  ],
+  "chrome": {
+   "words": 0,
+   "links": 0
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 0,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "learn/history-of-falling-sand-games.html",
+  "words": [
+   1899,
+   1899
+  ],
+  "links": [
+   25,
+   25
+  ],
+  "chrome": {
+   "words": 60,
+   "links": 8
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "learn/margolus-falling-sand.html",
+  "words": [
+   1528,
+   1528
+  ],
+  "links": [
+   7,
+   7
+  ],
+  "chrome": {
+   "words": 57,
+   "links": 9
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "learn/materials-as-data.html",
+  "words": [
+   1690,
+   1690
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 74,
+   "links": 12
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials.html",
+  "words": [
+   1146,
+   1146
+  ],
+  "links": [
+   15,
+   15
+  ],
+  "chrome": {
+   "words": 10,
+   "links": 5
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 0,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/acid.html",
+  "words": [
+   485,
+   485
+  ],
+  "links": [
+   6,
+   6
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/fire.html",
+  "words": [
+   642,
+   642
+  ],
+  "links": [
+   11,
+   11
+  ],
+  "chrome": {
+   "words": 3,
+   "links": 1
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/gunpowder.html",
+  "words": [
+   500,
+   500
+  ],
+  "links": [
+   4,
+   4
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/ice.html",
+  "words": [
+   537,
+   537
+  ],
+  "links": [
+   6,
+   6
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/lava.html",
+  "words": [
+   666,
+   666
+  ],
+  "links": [
+   10,
+   10
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/metal.html",
+  "words": [
+   497,
+   497
+  ],
+  "links": [
+   3,
+   3
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/oil.html",
+  "words": [
+   519,
+   519
+  ],
+  "links": [
+   6,
+   6
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/plant.html",
+  "words": [
+   533,
+   533
+  ],
+  "links": [
+   6,
+   6
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/salt.html",
+  "words": [
+   444,
+   444
+  ],
+  "links": [
+   3,
+   3
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/sand.html",
+  "words": [
+   446,
+   446
+  ],
+  "links": [
+   2,
+   2
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/seed.html",
+  "words": [
+   454,
+   454
+  ],
+  "links": [
+   3,
+   3
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/stone.html",
+  "words": [
+   551,
+   551
+  ],
+  "links": [
+   3,
+   3
+  ],
+  "chrome": {
+   "words": 3,
+   "links": 1
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/water.html",
+  "words": [
+   581,
+   581
+  ],
+  "links": [
+   9,
+   9
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "materials/wood.html",
+  "words": [
+   557,
+   557
+  ],
+  "links": [
+   6,
+   6
+  ],
+  "chrome": {
+   "words": 5,
+   "links": 2
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 1,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/1-1/guide.html",
+  "words": [
+   483,
+   483
+  ],
+  "links": [
+   4,
+   4
+  ],
+  "chrome": {
+   "words": 21,
+   "links": 3
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/1-10/guide.html",
+  "words": [
+   489,
+   489
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 23,
+   "links": 3
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/1-2/guide.html",
+  "words": [
+   472,
+   472
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 21,
+   "links": 3
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/1-3/guide.html",
+  "words": [
+   490,
+   490
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 22,
+   "links": 3
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/1-4/guide.html",
+  "words": [
+   477,
+   477
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 21,
+   "links": 3
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/1-5/guide.html",
+  "words": [
+   460,
+   460
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 21,
+   "links": 3
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/1-6/guide.html",
+  "words": [
+   474,
+   474
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 18,
+   "links": 3
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/1-7/guide.html",
+  "words": [
+   506,
+   506
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 23,
+   "links": 4
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/1-8/guide.html",
+  "words": [
+   506,
+   506
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 24,
+   "links": 4
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/1-9/guide.html",
+  "words": [
+   501,
+   501
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 25,
+   "links": 3
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "play/2-1/guide.html",
+  "words": [
+   552,
+   552
+  ],
+  "links": [
+   4,
+   4
+  ],
+  "chrome": {
+   "words": 30,
+   "links": 4
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 2,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "privacy.html",
+  "words": [
+   429,
+   429
+  ],
+  "links": [
+   3,
+   3
+  ],
+  "chrome": {
+   "words": 0,
+   "links": 0
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 0,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ },
+ {
+  "page": "terms.html",
+  "words": [
+   288,
+   288
+  ],
+  "links": [
+   5,
+   5
+  ],
+  "chrome": {
+   "words": 0,
+   "links": 0
+  },
+  "h1": true,
+  "title": true,
+  "jsonld": true,
+  "ldCount": 0,
+  "loader": true,
+  "sameWords": true,
+  "sameHrefs": true,
+  "ok": true
+ }
+]
