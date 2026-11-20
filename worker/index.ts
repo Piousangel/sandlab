@@ -251,7 +251,9 @@ const app = {
       // 수백 KB를 낭비하지 않는다. 컬럼은 고정 상수라 인젝션 없음.
       const metaOnly = url.searchParams.get('meta') != null
       // parent(계보 원본) + remixCount(이 씬에서 파생된 작품 수)를 항상 포함한다.
-      const base = 'id,title,votes,created_at AS createdAt,w,h,parent,' +
+      // creatorName(P9): 목록(/api/scenes)이 이미 공개하는 표시 이름과 같은 값·같은 이름 — 홈 진입 부제 "by …"용.
+      // 익명 업로드는 null. creator_id는 싣지 않는다(이 화면에 필요 없음 — 필드 추가만, 하위 호환).
+      const base = 'id,title,votes,created_at AS createdAt,w,h,parent,creator_name AS creatorName,' +
         '(SELECT COUNT(*) FROM scenes r WHERE r.parent=scenes.id) AS remixCount'
       const cols = metaOnly ? base : `${base},data`
       const row = await env.DB.prepare(`SELECT ${cols} FROM scenes WHERE id=?`)
