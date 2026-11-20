@@ -69,7 +69,12 @@ export function thumbPixels(def: LevelDef): Uint8Array {
   for (const g of p.gems) {
     const cx = g.x + (g.w >> 1) - 2
     const cy = g.y + (g.h >> 1) - 2
-    for (let dy = 0; dy < 4; dy++) for (let dx = 0; dx < 4; dx++) if (p.mat[(cy + dy) * W + cx + dx] === 0) put(cx + dx, cy + dy, GEM)
+    for (let dy = 0; dy < 4; dy++)
+      for (let dx = 0; dx < 4; dx++) {
+        const x = cx + dx
+        const y = cy + dy
+        if (x >= 0 && y >= 0 && x < W && y < H && p.mat[y * W + x] === 0) put(x, y, GEM)
+      }
   }
   return out
 }

@@ -1,8 +1,9 @@
 /**
  * /play 전시실(리디자인 P8) 순수 계산 — 월드 카드·잠금·'곧 공개' 칸·주 행동 하나.
- * 잠금 규칙은 prod 목록(LevelList)과 같은 catalog 함수(worldUnlocked·levelOpen·lockMessage)를 그대로 쓴다.
+ * 잠금 규칙은 prod 목록(LevelList)과 같은 catalog 함수(worldUnlocked·levelOpen)를 그대로 쓴다.
+ * 안내 문구만 새로: prod lockMessage는 별 기호 글리프를 쓰므로 새 셸 규칙(기호 아이콘 금지)에 걸린다 → 같은 조건을 말로.
  */
-import { groupByWorld, levelOpen, lockMessage, worldUnlocked } from '@/lib/spill/client/catalog'
+import { groupByWorld, levelOpen, worldUnlocked } from '@/lib/spill/client/catalog'
 import type { PlayGalleryLevel } from '../shell/playTypes'
 
 /** 마지막 월드가 이 수보다 적으면 '곧 공개' 칸을 붙인다(월드 1 = 10칸 기준). */
@@ -31,6 +32,12 @@ export interface GalleryWorld {
   lock: string
 }
 
+/** 잠긴 칸 안내 — 조건은 catalog.worldUnlocked와 같다(앞 월드 레벨당 2별). */
+export function lockText(world: number, levels: readonly { world: number }[]): string {
+  const need = levels.filter((l) => l.world === world - 1).length * 2
+  return `Earn ${need} stars in World ${world - 1} to open this room.`
+}
+
 export function clampStars(n: number | undefined): number {
   return Math.max(0, Math.min(3, Math.round(n ?? 0)))
 }
@@ -48,7 +55,7 @@ export function galleryWorlds(levels: readonly PlayGalleryLevel[], starsOf: (id:
       total: g.levels.length * 3,
       cells: g.levels.map((l, i) => ({ id: l.id, name: l.name, n: i + 1, stars: of(l.id), open: levelOpen(open, i), guide: l.guide })),
       soon: last && g.world > 1 ? Math.min(SOON_MAX, Math.max(0, WORLD_SIZE - g.levels.length)) : 0,
-      lock: lockMessage(g.world, levels),
+      lock: lockText(g.world, levels),
     }
   })
 }

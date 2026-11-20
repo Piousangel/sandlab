@@ -1,3 +1,15 @@
+# 인계 (2026-11-20 오전): 리디자인 v2 P8 「/play 전시실」 머지 — P6(홈)은 별도 교대 진행 중, 다음은 P9(갤러리 The Wall)
+
+- 계획서 6장 진행표가 기준. P8 = #PRNUM(브랜치 shift/redesign-p8-play). 결정은 DECISIONS 2026-11-20 P8.
+- **전시실 = `src/ui-next/play/`**: PlayGallery.tsx(서버 — 광고 로더·새 셸 헤더·푸터를 직접 그림, ContentShell의 main이 옛 다크 인라인이라), PlayWorlds.tsx(클라이언트 — localStorage 별을 마운트 뒤 읽음, 칸 크기 고정이라 CLS 0), galleryModel.ts(순수 — 잠금은 catalog.ts 그대로, '곧 공개' = 마지막 월드가 10칸 미만일 때 최대 2칸, 주 행동 하나), LevelAside.tsx(/play/[id] 패널), play.css, play.test.tsx. 계약 타입 `shell/playTypes.ts`, classic.ts에 null 2개(PlayGallery·LevelAside).
+- **본문 문장 단일 출처**: /play 소개 2문단은 `src/app/play/page.tsx`의 `INTRO` 상수 — prod 화면과 전시실이 같이 쓴다(prod HTML 동일 확인). 문장을 고치면 두 빌드가 함께 바뀐다.
+- **레벨 썸네일**: `npx tsx scripts/gen-level-thumbs.mts`(→ public/ui-next/levels/<id>.png + levels.json). 레벨을 더하거나 맵을 고치면 다시 돌린다 — play.test가 레벨 해시 불일치·파일 누락·15KB 초과를 잡는다(일일 레벨 출시 교대가 잊기 쉬움). `--check`도 있음.
+- **광고**: `AD_SLOTS.play`만 채우면 /play 월드 카드 아래에 300×250 안내판이 뜬다(format rect, 간격 32px). 오너가 AdSense에서 **고정 300×250 디스플레이 단위**를 만들 때까지 렌더 0.
+- **P9가 알아야 할 것**: ① 화면 전체를 Bone으로 까는 글/목록 페이지는 PlayGallery처럼 `AdLoader`(광고 허용 페이지면)·ShellHeader·ShellFooter를 직접 그리는 래퍼를 쓰면 된다(ContentShell은 prod 화면이라 건드리지 않았다). 갤러리는 광고 금지 페이지라 AdLoader를 넣지 않는다(verify-ads가 잡는다). ② 이번에는 classic.ts에 null 2개를 더했는데도 prod JS 모듈 id 맞바뀜이 없었다(42개 JS 전부 동일) — 늘 생기는 건 아니니 diff 표로 확인. ③ 썸네일은 160×240 시작 보드라 '정적 미리보기' 패턴으로 갤러리 장면에도 재사용 가능(같은 PNG 인코더 — scripts/gen-level-thumbs.mts의 encodePng, 팔레트 ≤256색). ④ 검사 스크립트: 스크래치 p8/p8-play.mjs(진행 픽스처 none·some·all × 390·360·1440, 썸네일 바이트, /play/1-1 패널), p8/parity.py(prod vs 프리뷰 /play·/play/<id> 단어·링크·h1·title). 상시화하려면 scripts/qa/로.
+- 알려진 것(이번 범위 밖): /play/<id>의 h1이 prod "1-1 First Drop" vs 프리뷰 "First Drop 1-1"(P4 SpillHud 제목 표식 순서) — 컷오버 전 SEO 판단 필요.
+
+---
+
 # 인계 (2026-11-20 오전): 리디자인 v2 P7 「/daily 지층 허브」 머지 — P6(홈)은 별도 교대 진행 중, 다음은 P8(/play 전시실)
 
 - 계획서 6장 진행표가 기준. P7 = #77(브랜치 shift/redesign-p7-daily-strata). 결정은 DECISIONS 2026-11-20 P7. (이 파일 맨 위에 있던 머지 충돌 표식 `<<<<<<<`·`=======`·`>>>>>>>`은 양쪽 절을 다 살려 지웠다.)

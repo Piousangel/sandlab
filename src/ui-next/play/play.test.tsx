@@ -31,7 +31,7 @@ describe('전시실 모델', () => {
     const locked = galleryWorlds(extra, starsMap({}))
     const w2 = locked.find((w) => w.world === 2)!
     expect(w2.cells.map((c) => c.open)).toEqual([true, false])
-    expect(w2.lock).toMatch(/^Need \d+★ from W1$/) // lint-ui-allow: prod lockMessage 문구(catalog.ts) 그대로인지 검사
+    expect(w2.lock).toBe(`Earn ${levels.filter((l) => l.world === 1).length * 2} stars in World 1 to open this room.`)
     const opened = galleryWorlds(extra, starsMap(all(2)))
     expect(opened.find((w) => w.world === 2)!.cells.every((c) => c.open)).toBe(true)
   })
@@ -79,6 +79,7 @@ describe('PlayWorlds 정적 HTML(기록 없음 상태)', () => {
   })
   it('곧 공개 칸은 링크·이미지 없이 lock + Soon', () => {
     expect(html).toContain('coming soon')
+    expect(html).toContain('sl-pg-msg')
     expect(html.match(/sl-pg-soon"/g)?.length).toBe(galleryWorlds(levels, () => 0).reduce((n, w) => n + w.soon, 0))
   })
   it('이모지·별 기호 없음(아이콘은 스프라이트)', () => {

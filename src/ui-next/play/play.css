@@ -87,7 +87,7 @@
   box-shadow: none;
 }
 .sl-pg-msg {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   min-height: 20px;
   font-size: 13px;
   line-height: 20px;
@@ -96,10 +96,22 @@
 
 /* ---------- 월드 ---------- */
 .sl-pg-world {
-  margin-top: 20px;
+  margin-top: 32px;
 }
 .sl-pg-world + .sl-pg-world {
-  margin-top: 36px;
+  margin-top: 16px;
+}
+/* 화면 밖 텍스트(스크린리더용) */
+.sl-pg-vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.sl-pg-soon {
+  position: relative;
 }
 .sl-pg-wh {
   display: flex;
@@ -280,13 +292,15 @@
   padding-left: 22px;
 }
 .sl-pg-index li {
-  margin-bottom: 8px;
+  margin-bottom: 0;
   color: var(--sl-ink-2);
 }
 .sl-pg-index a,
 .sl-pg-daily a {
-  /* 줄 안 링크: 레이아웃은 그대로, 히트 영역만 위아래로 넓힌다(S9 44px) */
-  padding-block: 13px;
+  /* 줄 안 링크(S9 44px): 인라인 패딩만 주면 위아래 줄 링크와 히트 영역이 겹친다(리뷰) → 실제 높이 44px인 inline-block */
+  display: inline-block;
+  padding-block: 12px;
+  line-height: 20px;
   color: var(--sl-ember-text);
   font-weight: 700;
 }

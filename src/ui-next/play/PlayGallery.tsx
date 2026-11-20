@@ -43,7 +43,7 @@ export function PlayGallery({ levels, intro, children }: PlayGalleryProps) {
             <p key={i}>{p}</p>
           ))}
           <p className="sl-pg-how-links">
-            {first && (
+            {first?.guide && (
               <a href={`/play/${first.id}/guide`}>
                 Read the {first.id} guide
                 <Icon name="next" size={16} />

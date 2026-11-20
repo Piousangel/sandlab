@@ -22,15 +22,22 @@ export function thumbSrc(id: string): string {
 
 export function PlayWorlds({ levels }: { levels: PlayGalleryLevel[] }) {
   const [stars, setStars] = useState<Record<string, number>>({})
-  const [msg, setMsg] = useState<string | null>(null)
+  const [msg, setMsg] = useState<{ world: number; text: string } | null>(null)
 
   useEffect(() => {
-    const out: Record<string, number> = {}
-    for (const l of levels) {
-      const r = loadRecord(l.id)
-      if (r) out[l.id] = starCount(r.stars)
+    const read = () => {
+      const out: Record<string, number> = {}
+      for (const l of levels) {
+        const r = loadRecord(l.id)
+        if (r) out[l.id] = starCount(r.stars)
+      }
+      setStars(out)
     }
-    setStars(out)
+    read()
+    // 레벨을 깨고 뒤로가기로 돌아오면 bfcache 페이지가 그대로 보인다 — 그때 다시 읽는다(리뷰)
+    const onShow = (e: PageTransitionEvent) => e.persisted && read()
+    window.addEventListener('pageshow', onShow)
+    return () => window.removeEventListener('pageshow', onShow)
   }, [levels])
 
   useEffect(() => {
@@ -49,9 +56,6 @@ export function PlayWorlds({ levels }: { levels: PlayGalleryLevel[] }) {
         <span>{cta.label}</span>
         <Icon name="next" />
       </a>
-      <p className="sl-pg-msg" role="status" aria-live="polite">
-        {msg}
-      </p>
       {worlds.map((w) => (
         <section key={w.world} className="sl-pg-world" aria-labelledby={`sl-pg-w${w.world}`}>
           <div className="sl-pg-wh">
@@ -66,25 +70,31 @@ export function PlayWorlds({ levels }: { levels: PlayGalleryLevel[] }) {
           <ol className="sl-pg-grid">
             {w.cells.map((c) => (
               <li key={c.id}>
-                <Cell c={c} eager={order++ < EAGER} onLocked={() => setMsg(w.lock)} />
+                <Cell c={c} lock={w.lock} eager={order++ < EAGER} onLocked={() => setMsg({ world: w.world, text: w.lock })} />
               </li>
             ))}
             {Array.from({ length: w.soon }, (_, i) => (
-              <li key={`soon-${i}`} className="sl-pg-soon" aria-label={`More World ${w.world} rooms are coming soon`}>
+              <li key={`soon-${i}`} className="sl-pg-soon">
+                {/* 잠긴 칸(lock)과 다른 아이콘 — '별을 모으면 열린다'가 아니라 '아직 안 만들었다'(리뷰) */}
                 <span className="sl-pg-soon-face" aria-hidden>
-                  <Icon name="lock" size={18} />
+                  <Icon name="daily" size={18} />
                   <span className="sl-pg-lbl">Soon</span>
                 </span>
+                <span className="sl-pg-vh">More World {w.world} rooms are coming soon</span>
               </li>
             ))}
           </ol>
+          {/* 잠긴 칸 안내는 그 월드 바로 아래(첫 화면 위쪽 한 곳이면 아래 월드에서 눌렀을 때 화면 밖에 뜬다 — 리뷰). 높이 예약 */}
+          <p className="sl-pg-msg" role="status" aria-live="polite">
+            {msg?.world === w.world ? msg.text : null}
+          </p>
         </section>
       ))}
     </>
   )
 }
 
-function Cell({ c, eager, onLocked }: { c: GalleryCell; eager: boolean; onLocked(): void }) {
+function Cell({ c, lock, eager, onLocked }: { c: GalleryCell; lock: string; eager: boolean; onLocked(): void }) {
   const body = (
     <>
       <span className="sl-pg-glass">
@@ -115,7 +125,7 @@ function Cell({ c, eager, onLocked }: { c: GalleryCell; eager: boolean; onLocked
   )
   if (!c.open)
     return (
-      <button type="button" className="sl-pg-card is-locked" aria-label={`${c.id} ${c.name}, locked`} onClick={onLocked}>
+      <button type="button" className="sl-pg-card is-locked" aria-label={`${c.id} ${c.name}, locked. ${lock}`} onClick={onLocked}>
         {body}
       </button>
     )

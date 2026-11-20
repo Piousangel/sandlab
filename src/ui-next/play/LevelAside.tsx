@@ -23,11 +23,6 @@ export function LevelAside(p: LevelAsideProps & { readOnly?: boolean }) {
         ))}
         <li>Press Run to start the scene. Undo is free before you run; Retry keeps your placements.</li>
       </ul>
-      {readOnly && (
-        <p className="sl-la-note" role="note" data-sl-read-only="">
-          {LEVEL_READ_ONLY_NOTE}
-        </p>
-      )}
       {p.hint && (
         <details className="sl-la-hint">
           <summary>Show a hint</summary>
@@ -45,6 +40,11 @@ export function LevelAside(p: LevelAsideProps & { readOnly?: boolean }) {
             ))}
           </ul>
         </>
+      )}
+      {readOnly && (
+        <p className="sl-la-note" role="note" data-sl-read-only="">
+          {LEVEL_READ_ONLY_NOTE}
+        </p>
       )}
       <p className="sl-la-links">
         <span>
