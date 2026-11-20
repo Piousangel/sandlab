@@ -196,3 +196,10 @@
 - 선택: vitest를 **unit(기본 한도)·sim(결정적 시뮬 파일, 한도 CI 3분·로컬 15분)** 두 프로젝트로 나눴다(vitest.config.ts SIM_TESTS). `pnpm test`는 둘 다(제외 없음), CI는 두 job 병렬. sweep.test는 케이스×salt마다 테스트 하나로 쪼갰다(7×16 조합 그대로, 한 테스트가 수 분 걸리던 구조 해소). `scripts/spill-verify.ts`에 `--exclude`를 넣어 CI에서 1-8 Cascade(전체 시뮬의 절반 이상)와 나머지를 두 job으로, `--workers 4`(러너 vCPU 전부, 기본은 cpus-2=2라 예전 22분). 갤러리 API는 `wrangler dev --local`(로컬 D1, 계정 불필요)로 CI에서 verify-gallery.py까지 돈다.
 - 버린 안: 무거운 테스트 skip·salt 수 축소(검증 범위 축소), 전역 testTimeout 상향(가벼운 테스트의 느려짐까지 숨김), spill:verify를 1 job(벽시계 15분 초과).
 - 남은 것: 브랜치 보호에 CI 필수 체크를 켜는 것은 오너 할 일.
+
+## 2026-11-20 저장소 안전 설정 커밋 — 되돌릴 수 없는 명령만 deny + hook(exit 2) (오너 승인 제안 E, 고위험)
+- 맥락: 금지 목록(main 직접 푸시·force push·직접 배포·D1 쓰기)이 SESSION-GUIDE 문장뿐이었다. 스승님 원칙 H3·H6, 오너 11-20 "다 추천대로". 문서 대조 메모·로컬 실측은 허브 docs/team/mentor/lydia-hallie.md 7장 'E 실행 기록', 상세 결정은 허브 DECISIONS 같은 날 항목(같은 파일을 두 저장소에 둔다).
+- 선택: `.claude/settings.json` 정적 deny + PreToolUse(Bash) `scripts/hooks/guard-bash.mjs` + Stop `scripts/hooks/stop-unsaved-work.mjs`(클라우드에서만, 저장 안 된 작업이 있으면 한 번 막음).
+- 샌드랩 절차 대조: `wrangler d1 execute sandlab-gallery --local …`·`wrangler dev --local` 통과, 원격 D1 **읽기**(`--remote --json --command "SELECT …"`) 통과, 원격 D1 쓰기(`--remote --yes --command "DELETE …"`·`--remote --file=schema.sql`)는 막음 — 지금까지도 오너가 직접 쳤다(handoff 710행). 앞으로는 오너가 Claude Code 밖 터미널에서 친다(`!` 입력에 hook이 걸리는지는 확인 안 함). 로컬 `pnpm run deploy`·`deploy:preview`는 막음(deploy.yml·deploy-preview.yml이 main 머지 때 함). `sandlab-daily` 스킬의 배포 단계를 'PR 머지 → deploy.yml 확인'으로 고침.
+- 독립 리뷰 2회 반영(상세는 허브 DECISIONS 같은 날 'E' 항목): 작은따옴표 안 인용 오탐 수정, `.gitignore`에 `.claude/worktrees/`·`*.log`·`play-result.png`(Stop hook이 worktree·wrangler-dev.log·QA 캡처를 '커밋 안 된 파일'로 세던 것), **deploy.yml 배포 job을 main ref에서만**(수동 실행으로 리뷰 안 된 브랜치가 프로덕션에 가던 구멍), `.env`·`.dev.vars` Read 규칙을 모든 깊이로, Stop hook이 stash·모든 로컬 브랜치를 셈. 프리뷰(`deploy-preview.yml`)는 READ_ONLY라 그대로 둠.
+- 같은 PR: `.claude/handoff/main.md`의 "레포 (private)" 두 곳을 공개 저장소로 정정(gh repo view: PUBLIC). `.claude/team/references/monetization.md`의 '비공개 저장소' 전제(그랜트 자격 판단)는 당시 조사 기록이라 손대지 않았다 — 공개 저장소가 되어 Cloudflare Project Alexandria 자격 판단이 달라질 수 있다(오너 확인 거리).

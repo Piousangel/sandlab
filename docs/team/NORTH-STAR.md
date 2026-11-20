@@ -50,7 +50,7 @@
 | B. 하루 1출시 재정의 | 즉시 | 10·16·23시 개발, 03시 QA | **큰 기능·컷오버**만: 03시 QA 점검 + 48시간 프리뷰 써 보기(프리뷰 자동 배포 뒤). 새 레벨은 spill:verify + 솔버 클리어율 범위로 판정. 그날의 출시는 버그·성능·측정·prod 안전 조각으로 채워도 된다 |
 | C. 테스트 부채 0 + PR CI | 11-21 ~ 11-22 | 10·16시 개발 | `verify.test` 제외 없이 전체 test 초록, PR마다 typecheck·lint·test |
 | D. 위험 비례 리뷰 | 즉시 | 모든 교대 | 문서 = 가벼운 리뷰 1회, 제품 = 독립 1회, 고위험 = 2회 + 재현 |
-| E. `.claude/settings.json` 커밋 | C 다음 | 10시 개발 | Claude Code 문서로 hook 이벤트·키 대조 메모 → deny + hook → 루틴이 hook을 실행하는지 시험 기록 |
+| E. `.claude/settings.json` 커밋 | **11-20 구현**(대조 메모·deny·hook, 허브와 같은 파일) | 10시 개발 | 남은 것: 루틴이 hook을 실행하는지 첫 교대 시험 기록([허브 mentor E 실행 기록](https://github.com/Piousangel/minigames-hub/blob/main/docs/team/mentor/lydia-hallie.md)) |
 | F. 자동화 = 유지보수 | 2단계 | 23시 야간 개발 | 콘솔 에러·피드백 → 재현 → 수정 PR, 프리뷰 수동 실행 같은 '멈춘 곳' 우선 |
 | G. 산문 다이어트 | 이 PR(11-20) + 매주 금 20시 점검, 오너 로컬 `/doctor prompt-audit` | 20시 | SESSION-GUIDE 박스 정리(이 문서로 흡수) |
 | H. 오케스트레이터 1세션 | 3단계, A가 2주 연속 ≤ 3% | 13시 설계 숙의 | 시험 계획 문서 → 오너 확인 |

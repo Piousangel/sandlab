@@ -255,7 +255,7 @@
 
 # 인계: Sandlab — AdSense 반려 대응(콘텐츠 전면 보강 + 시뮬 버그 2건) 배포 → 다음은 챌린지 모드 Phase 2
 - 갱신: 2026-10-09 / 브랜치: main (feat/challenge-mode 병합) / 커밋 상태: committed
-- 라이브: https://sandlab.app · 레포: github.com/Piousangel/sandlab (private)
+- 라이브: https://sandlab.app · 레포: github.com/Piousangel/sandlab (공개 저장소 — 시크릿·개인정보를 커밋하지 않는다)
 
 ## 2026-10-09 세션 요약 (먼저 읽을 것)
 
@@ -294,7 +294,7 @@ Powder Game 9.2 HTML5 동기).
 - 갱신: 2026-08-13 / 브랜치: main / 커밋 상태: committed
   (프로덕션은 Ko-fi 계측까지만 배포됨, Version ID afbacbb5-3fa4-4005-9abe-5a74075d12b1 —
   `portal/`은 Cloudflare 배포 대상이 아닌 별도 정적 산출물이라 이 배포 버전과 무관)
-- 라이브: https://sandlab.app (workers.dev는 비활성) · 레포: github.com/Piousangel/sandlab (private)
+- 라이브: https://sandlab.app (workers.dev는 비활성) · 레포: github.com/Piousangel/sandlab (공개 저장소 — 시크릿·개인정보를 커밋하지 않는다)
 
 ## 멈춘 지점
 

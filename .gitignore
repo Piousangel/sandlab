@@ -6,3 +6,7 @@ out/
 .gstack/
 .worktrees/
 .claude/progress.md
+# Claude Code worktree·검증 산출물 — 클라우드 Stop hook(scripts/hooks/stop-unsaved-work.mjs)이 "커밋 안 된 파일"로 세지 않게
+.claude/worktrees/
+*.log
+play-result.png

@@ -14,7 +14,7 @@ description: 샌드랩 데일리 운영 세션(평일 07:00~09:00). 지표 확�
 ## 프로젝트 설정
 - 지표: `node scripts/daily-metrics.mjs`
 - 검증: `pnpm typecheck` · `pnpm test` · `pnpm spill:verify` · `node scripts/verify-ads.mjs`(빌드 후)
-- 배포: `pnpm run deploy` (run 필수, Cloudflare 전용)
+- 배포: main 머지 시 GitHub Actions(`deploy.yml`)가 `pnpm run deploy`. Claude 세션의 로컬 배포는 `.claude/settings.json` hook이 막는다(11-20)
 - 레벨·공략 근거: `CAP=400 npx tsx scripts/spill-explore.mts <id>` (해 공간·클리어율·젬 루트). 공략의 주장은 시뮬로 확인한 것만
 - 공략 데이터: `src/content/guides/<world>.ts` (테스트가 350단어+·6단어 구절 중복 0·좌표 노출 금지 강제)
 - 실화면 확인: `/play/<id>?autoplay=1` → `body.dataset.autoplay`, 390px·1280px
@@ -32,7 +32,7 @@ description: 샌드랩 데일리 운영 세션(평일 07:00~09:00). 지표 확�
 2. **결정 (10분, PM)**: 백로그 상위 3개 후보를 제시하고 추천 1개와 이유를 말한다. 사용자가 고른다.
 3. **설계 (15분, 디자이너)**: 레벨이면 아래 "레벨 카드"를 채운다. 기능이면 시그니처 스케치(flow M 1번).
 4. **구현·검증 (60~80분, 개발)**: 레벨 추가 절차는 인계서의 절차를 따른다. 공략 페이지는 300단어 이상의 고유 텍스트 — 그 레벨이 가르치는 물리, 막히는 지점, 힌트 2단계(해답 직접 노출 금지).
-5. **배포 (10분)**: 전체 검증 통과 후 `pnpm run deploy` → 프로덕션 스모크(해당 URL 200, autoplay 클리어).
+5. **배포 (10분)**: 전체 검증 통과 후 PR 머지 → `gh run list --workflow deploy.yml`로 배포 성공 확인 → 프로덕션 스모크(해당 URL 200, autoplay 클리어).
 6. **기록 (5분)**: `docs/daily/log.md`에 한 줄, 백로그 갱신, `.claude/progress.md` 갱신, 갈림길이 있었으면 `DECISIONS.md`.
 
 ## 레벨 카드
