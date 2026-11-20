@@ -565,6 +565,17 @@ h2.sl-home-label::after {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.sl-visitors {
+  margin-top: 10px;
+  height: 20px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--sl-ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
 .sl-cta {
   margin-top: 16px;
   min-height: 52px;

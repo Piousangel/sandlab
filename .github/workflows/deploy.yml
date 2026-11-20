@@ -27,6 +27,14 @@ jobs:
       # 만성 실패 0(11-20): verify.test 포함 전체. 무거운 시뮬은 vitest.config.ts sim 프로젝트(5분 한도).
       # spill:verify는 PR 단계 CI(ci.yml)가 두 job으로 나눠 머지 전에 돈다(각 ≤ 9분) — 배포에서는 다시 돌리지 않는다.
       - run: pnpm test
+      # 추가 전용·멱등 D1 마이그레이션(CREATE TABLE IF NOT EXISTS만). 기존 표·행은 건드리지 않는다. --file(가져오기 경로) 대신 --command(일반 쿼리).
+      # 실패해도 배포는 진행한다 — 워커는 visit_days·visit_seen이 없으면 방문자를 세지 않고 홈 줄을 비운다.
+      - name: D1 additive migrations
+        continue-on-error: true
+        run: pnpm exec wrangler d1 execute sandlab-gallery --remote --command "$(sed 's/--.*$//' migrations/0002_visitors.sql | tr '\n' ' ')"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       # deploy = next build → verify-ads → wrangler deploy
       - run: pnpm run deploy
         env:

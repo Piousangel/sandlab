@@ -12,6 +12,7 @@ import { validateDaily, summarize } from './daily'
 import { handleSpill, levelFloors, levelHashes } from './spill'
 import { spillRedirect } from './spill-redirects'
 import { readOnlyBlock, withNoindex } from './preview'
+import { isSameSite, readVisitors, recordVisit, utcDay, type VisitDb, type VisitorsPayload } from '../src/lib/visitors'
 import { LEVELS as SPILL_LEVELS } from '../src/lib/spill/levels'
 import {
   HOT_WINDOW_DAYS,
@@ -54,6 +55,8 @@ interface Env {
   // 프리뷰 Worker(wrangler env preview)만 '1' — /api/* 쓰기(GET·HEAD 외)를 403으로 막는다(오너 11-20, 같은 D1 공유).
   // prod에는 없다 → 기존 동작 그대로.
   READ_ONLY?: string
+  // 선택 시크릿 — 방문자 해시에 섞는다(src/lib/visitors.ts). 없어도 날마다 무작위 솔트라 다음 날부터는 되돌릴 수 없다.
+  VISIT_SALT?: string
 }
 
 /**
@@ -127,6 +130,51 @@ async function tooManyVotes(env: Env, hash: string): Promise<boolean> {
     .bind(hash, since)
     .first<{ n: number }>()
   return (row?.n ?? 0) >= VOTES_PER_HOUR
+}
+
+// 오늘 방문자(src/lib/visitors.ts). 엣지 60초 + isolate 15초 캐시 — 홈을 여는 사람마다 D1을 읽지 않는다.
+const VISITORS_TTL_SEC = 60
+const VISITORS_ISOLATE_MS = 15_000
+let visitorsIsolate: { at: number; day: string; body: VisitorsPayload } | null = null
+interface EdgeCache {
+  match(req: Request): Promise<Response | undefined>
+  put(req: Request, res: Response): Promise<void>
+}
+
+async function visitorsResponse(request: Request, env: Env): Promise<Response> {
+  const cache = (globalThis as unknown as { caches?: { default?: EdgeCache } }).caches?.default
+  const now = Date.now()
+  const day = utcDay(now)
+  // 키에 날짜 — 자정 직후 어제 응답이 '오늘'로 나가지 않게
+  const key = new Request(new URL(`/api/visitors?v=1&d=${day}`, request.url).toString(), { method: 'GET' })
+  if (cache) {
+    try {
+      const hit = await cache.match(key)
+      if (hit) {
+        const headers = new Headers(hit.headers)
+        headers.set('cache-control', `public, max-age=${VISITORS_TTL_SEC}`)
+        return new Response(hit.body, { status: hit.status, headers })
+      }
+    } catch {
+      /* 캐시 장애는 무시하고 원본 조회 */
+    }
+  }
+  let body: VisitorsPayload
+  if (visitorsIsolate && visitorsIsolate.day === day && now - visitorsIsolate.at < VISITORS_ISOLATE_MS) {
+    body = visitorsIsolate.body
+  } else {
+    body = await readVisitors(env.DB as unknown as VisitDb, now)
+    if (body.today != null) visitorsIsolate = { at: now, day, body }
+  }
+  const res = new Response(JSON.stringify(body), {
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      // 실패(null)는 캐시하지 않는다 — 마이그레이션 직후 곧바로 보이게
+      'cache-control': body.today == null ? 'no-store' : `public, max-age=${VISITORS_TTL_SEC}`,
+    },
+  })
+  if (cache && body.today != null) await cache.put(key, res.clone()).catch(() => {})
+  return res
 }
 
 let spillKnown: Map<string, string> | null = null
@@ -422,6 +470,30 @@ const app = {
       const isClear = request.method === 'POST'
       const res = await handleSpill(request, env.DB, spillKnown, { ip: isClear ? await ipHash(request) : '', now: Date.now(), floors: spillFloors })
       if (res) return res
+    }
+
+    // ── 오늘 방문자 ──
+    // POST /api/visit: 사람이 연 페이지의 비콘(LandingBeacon, 세션·UTC 날짜당 1회). 같은 날 같은 IP 1회, 봇 UA 제외.
+    // 실패해도 204 — 계측이 페이지를 깨지 않는다. 프리뷰(READ_ONLY)는 위 가드가 403으로 막아 세지 않는다.
+    if (p === '/api/visit' && request.method === 'POST') {
+      const pending: Promise<unknown>[] = []
+      try {
+        await recordVisit(env.DB as unknown as VisitDb, {
+          ip: request.headers.get('cf-connecting-ip'),
+          sameSite: isSameSite(request.headers, url.host),
+          ua: request.headers.get('user-agent'),
+          now: Date.now(),
+          secret: env.VISIT_SALT,
+          defer: (q) => pending.push(q),
+        })
+        await Promise.all(pending)
+      } catch (e) {
+        console.warn('visit count failed', e)
+      }
+      return new Response(null, { status: 204 })
+    }
+    if (p === '/api/visitors' && request.method === 'GET') {
+      return visitorsResponse(request, env)
     }
 
     if (p === '/api/track' && request.method === 'POST') {

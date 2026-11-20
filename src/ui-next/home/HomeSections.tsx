@@ -14,6 +14,8 @@ import { SpillController } from '@/lib/spill/play/controller'
 import { SpillRenderer } from '@/lib/spill/render/canvas'
 import { listScenes, type SceneMeta } from '@/lib/sand/gallery'
 import { readStrata, type Stratum } from '@/lib/strata'
+import { VISITORS_RESET_NOTE, useTodayVisitors } from '@/lib/useTodayVisitors'
+import { visitorsLine } from '@/lib/visitors'
 import { Icon } from '../icons/Icon'
 import { goalLine } from '../spill/DailyStart'
 import { daysLabel, strataBand } from './model'
@@ -45,6 +47,7 @@ export function TodayCard() {
     }
   }, [today])
   const goal = today ? describeLevel(today.level).goals : []
+  const visitors = visitorsLine(useTodayVisitors())
   return (
     <section className="sl-home-sec" aria-labelledby="sl-today-h">
       <h2 className="sl-home-label" id="sl-today-h">
@@ -64,6 +67,10 @@ export function TodayCard() {
         <span>Solve today</span>
         <Icon name="next" />
       </a>
+      {/* 오늘 방문자(오너 11-20) — 줄 높이 예약, 실패하면 빈 줄 */}
+      <p className="sl-visitors" data-testid="today-visitors" aria-hidden={visitors ? undefined : true}>
+        {visitors && `${visitors} · ${VISITORS_RESET_NOTE}`}
+      </p>
     </section>
   )
 }

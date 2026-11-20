@@ -203,3 +203,14 @@
 - **붓기 게이트**: reduced-motion + Save-Data만. `hardwareConcurrency ≤ 4`(S7 원문)는 버린다. WebKit은 코어 8개 미만이면 늘 4를 돌려줘 모든 iPhone이 꺼지고 저가 안드로이드(8)는 켜진다. 거꾸로 거른다. 누른 뒤 300ms 안에 디코드까지 끝나야 재생한다(늦게 혼자 움직이는 관 0). 첫 획 전에는 스트립을 받지 않는다.
 - **키보드**: 재료 18관과 엄지 도크(5)를 WAI-ARIA toolbar 로빙으로 바꿨다(정지점 1개씩). radiogroup은 버렸다. 화살표가 곧 선택이라 18관을 지나며 재료가 바뀌고, Erase의 '선택 없음'을 나타낼 수 없다.
 - **미지원 홈 LCP**: 조건부 preload(`!('gpu' in navigator)`)는 버렸다. 헤드리스와 안드로이드 '어댑터 없음' 기기는 `navigator.gpu`가 있다. 우물 SSR 포스터도 버렸다. GPU 사용자에게 "쌓인 모래 → 빈 유리 → 데모" 모순이 생기고 LCP 이득도 0이다.
+
+## 2026-11-20 오늘 방문자: 워커 + D1 일별 고유 방문자 카운터 (오너 "today 방문자 나왔으면 좋겠어")
+- 선택(오너): 사이트에 공개 표시 + 아침 메일·20시 요약에도. 허브(minigames-hub)와 같은 방식.
+- 집계 방법 비교
+  - (a) Cloudflare 분석: 존 uniques는 지표 토큰으로 읽히지만 **봇 포함** — 공개하면 부풀린 숫자다. AE `sandlab_events`는 일부러 per-user 식별자를 싣지 않아(워커 track 주석) 고유 방문자를 낼 수 없다.
+  - (b) **채택**: 사람이 연 페이지의 JS 비콘(LandingBeacon → `POST /api/visit`, 브라우저(localStorage)·UTC 날짜당 1회, `navigator.webdriver`면 안 보냄)을 워커가 D1에 센다. 같은 UTC 날 같은 IP 1회(IPv6는 /64), 봇·스크립트 UA·빈 UA 제외, 같은 사이트 요청만(Sec-Fetch-Site same-origin 또는 Origin 일치 — curl 한 줄 부풀리기 문턱, 위조는 가능). 프리뷰 워커는 READ_ONLY 가드가 POST를 403으로 막아 세지 않는다(표시는 같은 D1 숫자). NAT 공유는 1명으로 덜 세고, 한 사람이 하루에 네트워크를 바꾸면 2명으로 셀 수 있다(IP 기준의 한계, localStorage 1회 비콘이 일부 줄인다). 비용: 새 방문자당 D1 쓰기 2, 읽기는 엣지 60초(키에 UTC 날짜) + isolate 15초 캐시, 지연 최대 약 2분. 화면은 응답 day가 지금 UTC 날짜가 아니면 쓰지 않는다.
+- 개인정보: IP 원문 미저장. `visit_seen(day, h)`의 h = HMAC-SHA256(키 = VISIT_SALT|그날 무작위 솔트, IP 셀) 앞 16바이트. 다음 날 첫 방문 때 지난 날 솔트 NULL(먼저) + 해시 행 삭제(솔트가 NULL인 지난 날 늦은 요청은 세지 않는다) → `visit_days(day, visitors)` 숫자만 남는다. VISIT_SALT(선택 시크릿, 11-20 현재 미설정 — 오너 할 일)가 없어도 솔트가 날마다 무작위라 다음 날부터는 되돌릴 수 없다(그날 안에는 D1 접근권자가 IPv4 전수 대입 가능 — 시크릿 설정 시 불가). 기존 votes·scenes의 무솔트 IP 해시와는 별개.
+- D1: `migrations/0002_visitors.sql`(새 표 2개, 추가 전용·멱등, 기존 표 무변경, DROP 두 줄로 되돌림). deploy.yml에 배포 전 원격 적용 단계를 새로 둔다(`--command` 일반 쿼리 경로, 실패해도 배포 진행 — 표가 없으면 세지 않고 홈 줄은 빈 줄). 저장 형식이 새로 생기므로 독립 리뷰 2회.
+- 공개 표시: **prod 홈(옛 SandCanvas)도 바뀐다** — 데스크톱은 캔버스 위 헤드라인("Sandlab / Pour sand…") 아래 한 줄(첫 획 전까지 보임), 세로 폰은 링크가 ☰로 접히는 폭(400 미만)에서만 44px 헤더의 브랜드 옆(헤더 높이 그대로, 넘치면 말줄임 — 400~899 세로는 링크 5개가 펼쳐져 자리가 없어 표시 안 함). 프리뷰 새 셸은 Today 카드의 Solve today 아래 한 줄(높이 20px 예약). 문구: 10 이상 "N visitors in the lab today · since 00:00 UTC"(폰: "N visitors today (UTC)"), 1~9는 "A few visitors in the lab today"(폰: "A few visitors today (UTC)"), 0은 빈 줄. 홈에는 광고가 없다(verify-ads 허용 목록 밖).
+- 보고: daily-metrics에 '방문자(UTC, 사이트 집계): 어제 N / 오늘 지금까지 N' + 7일 줄. OPERATING 0-1-6·SESSION-GUIDE 06시·20시 메일 형식에 같은 줄.
+- 첫날(11-20) 숫자는 배포 시각부터라 하루치가 아니다.
