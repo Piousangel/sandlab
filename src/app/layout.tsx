@@ -23,7 +23,9 @@ export const metadata: Metadata = {
     description: TAGLINE,
     images: ['/og.png'],
   },
-  icons: { icon: '/icon.png', apple: '/icon.png' },
+  // 프리뷰(P12 LCP): 탭 아이콘은 48px 2KB(public/ui-next/icon-48.png, icon.png를 줄인 것). 512px 52KB 원본은 브라우저가 load 직후 받아
+  // 첫 그림 전 요청에 끼면 LCP를 0.3s 늘렸다(Lighthouse 실측). 홈 화면 아이콘(apple)은 원본 그대로. prod는 이 분기가 빌드 때 지워져 그대로.
+  icons: UI_NEXT ? { icon: [{ url: '/ui-next/icon-48.png', sizes: '48x48', type: 'image/png' }], apple: '/icon.png' } : { icon: '/icon.png', apple: '/icon.png' },
   alternates: { canonical: SITE },
   // AdSense 사이트 소유권 확인 — 모든 페이지에 있어야 한다 (ads.txt와 별개).
   other: { 'google-adsense-account': 'ca-pub-9363381710674627' },

@@ -1,7 +1,7 @@
 The .woff2 files in this folder are modified versions (static instances + Latin subset,
 made by scripts/fonts/build-fonts.py) of:
-  - Bricolage Grotesque v1.001 (google/fonts, ofl/bricolagegrotesque) -> bricolage-grotesque-*.woff2
-  - JetBrains Mono v2.211 (google/fonts, ofl/jetbrainsmono)            -> jetbrains-mono-*.woff2
+  - Bricolage Grotesque v1.001 (google/fonts, ofl/bricolagegrotesque) -> bricolage-grotesque-*-{core,ext}.woff2
+  - JetBrains Mono v2.211 (google/fonts, ofl/jetbrainsmono)            -> jetbrains-mono-*-{core,ext}.woff2
 Both are licensed under the SIL Open Font License 1.1; the two license texts follow.
 
 ==============================================================================

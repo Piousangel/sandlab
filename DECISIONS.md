@@ -254,6 +254,20 @@
 - 한계: 측정 전 이벤트는 blob5가 비어 7일 창이 차는 11-27까지 값은 '부분'. 첫 붓기율은 홈 landing으로 시작한 세션만(first_stroke·landing 모두 value 1) — 다른 페이지로 들어와 홈에서 부은 세션은 북극성에만 잡힌다. WebGPU 없는 기기는 분모에만 있다(gpu_unsupported 값과 나란히 볼 것). `daily_start`는 /daily 마운트 때 나가므로 '데일리 화면을 연 기기'에 가깝다(퍼즐 정의 변경은 기존 지표와 끊기므로 이번엔 유지). 봇 UA·webdriver·autoplay는 기기 id·landing·first_stroke에서 뺀다.
 - 리뷰(독립 1회): 차단 0, 수정 권고 3(분자·분모 세션 불일치 → value 1 통일, 크롤러 id 남발 → 봇 UA면 blob5 비움, landing webdriver 제외) 모두 반영, Privacy 문장 정리. 거부: AE 행 수 세기의 샘플링 과소(지금 규모에선 샘플링 없음, 하루 수천 이벤트 넘으면 재검토).
 
+## 2026-11-20 P12 LCP — 프리뷰 LCP 미달 3쪽(홈·/daily·/gallery)을 2.5s 안으로: 측정한 원인은 "관측 LCP 전에 끝난 바이트 합" (P12 컷오버 게이트 항목)
+- **측정 먼저**: Lighthouse 12 Lantern의 LCP 그래프(optimistic·pessimistic 노드)를 덤프해 봤다. LCP 요소는 세 쪽 모두 글자(홈 `p.sl-ro` 읽기 전용 안내, /daily `p.sl-st-run` — 하이드레이션 뒤, /gallery `p.sl-gw-lede`)라 Load Delay·Load Time 0, 전부 Render Delay. Lantern은 **로컬 관측 LCP 전에 끝난 요청 전부**(낮은 우선순위 스크립트·서체·lazy 이미지·파비콘까지)를 그래프에 넣고 Slow 4G 대역을 나눠 쓰게 하므로 프레임워크 청크(a039 54KB)의 끝이 밀린다 → LCP ≈ 그래프 바이트 합(쪽마다 4~7ms/KB) + 평가 CPU. 갤러리는 pessimistic(이미지 포함 3123ms)과 optimistic(2267ms)의 평균이 2.7s였다.
+  - 반증된 후보(실험 기록): 서체 preload(관측 LCP만 당겨지고 바이트 그대로 — 2.70/2.87/2.79s), `font-display: optional`(차이 없음), 갤러리 이미지 전부 lazy(첫 화면 근처라 받는 시점만 늦고 그래프에 남음 — 2.71s 그대로), /daily 정적 골격 SSR(Bricolage 글자가 서체를 기다려 관측 LCP 103ms → 서체·스크립트가 그대로 그래프에 — 2.54s, 이득 거의 없음 → **안 함**, DailySpill prod 무변경).
+- **선택(바이트 줄이기, 전부 프리뷰 전용)**
+  1. **서체 core/ext 글자 범위 분할**: `next/font/local` 대신 `src/ui-next/fonts.css` 손 @font-face(파일마다 unicode-range를 줄 수 있어서). core = ASCII + 사이트가 쓰는 문장부호(· — … ’ © × “ ” – − •), ext = 나머지 옛 라틴 서브셋. 영어 첫 화면은 core 3개만: 47.4 → 31.2KB. 폴백 메트릭(Arial size-adjust)은 next가 계산하던 값과 같다(리뷰가 next 내부 함수로 재계산 확인). 재현 `scripts/fonts/build-fonts.py`(원본 sha256 같음, 범위 문자열을 찍는다). 대가: 사용자 제목의 악센트 글자는 ext가 따로 와 그 글자만 swap이 늦고 core↔ext 사이 커닝이 끊긴다(미미). `<html class>`는 `sl-next`(프리뷰 표식).
+  2. **`PREVIEW_SWAPS`(next.config.ts)**: prod 파일이 import하는 prod 모듈을 사용처(issuer)+import 문자열이 맞을 때만 프리뷰 빌드에서 바꿔 끼운다(beforeResolve). 홈 `page.tsx`의 `SandCanvas`(프리뷰에선 그려질 일이 없는데 import만으로 10KB gzip) → 빈 모듈, `DailySpill`의 `./SpillPlayer`(플레이 화면 24KB, Solve today 뒤에만 씀) → `LazySpillPlayer`(시작 화면이 load 뒤 유휴·버튼 누름에 미리 받음). 사용처가 컴파일됐는데 한 번도 안 걸리면 **빌드 실패**(리뷰 반영, 음성 대조로 확인). prod 파일 수정 0.
+  3. 홈 오늘 카드: `goalLine`을 순수 모듈로(DailyStart·HUD·지층 병이 딸려 오던 것), 판 실루엣 렌더러(Spill 시뮬)는 `afterLoad`(load 뒤 유휴) 동적 import. **마운트 때 import()는 오히려 LCP를 늘린다**(프레임워크 평가 뒤 줄을 서는 노드가 그래프 끝에 붙음) — 그래서 load 뒤.
+  4. 갤러리: `LiveCanvas`(WebGPU 엔진 청크) `React.lazy`(마우스 기기는 load 뒤 미리 받음), 큐레이션 썸네일 320w srcset(12장 125 → 36KB, DPR 2 미만 폰). 실제 고밀도 폰은 640을 고른다(리뷰: 실사용 이득은 작다 — 480w 단계는 다음 후보).
+  5. 프리뷰 파비콘 512px 52KB → 48px 2KB(`public/ui-next/icon-48.png`, layout.tsx `UI_NEXT` 분기). 52KB 파비콘은 load 직후 받혀 관측 LCP가 늦은 회차에 그래프에 끼어 홈 LCP를 2.35 → 2.84s로 흔들었다(덤프 실측). **컷오버 때 prod에도 같은 처리를 권한다.**
+  6. lazy 청크 실패 경계 `LazyBoundary`(리뷰 반영): 데일리는 "The puzzle didn't load. Reload", 갤러리는 썸네일로 돌아감 — 없으면 Next 기본 오류 화면.
+- **결과(Lighthouse 모바일 3회 중앙값, `pnpm qa:preview`, load 8~10)**: 홈 2631 → 2334, /daily 2556 → 2403, /gallery 2732 → 2400, /play 2410 → 2330, 글 3쪽 2.02~2.04s (보고 JSON `docs/perf/2026-11-20-p12-lcp-qa.json`). 7쪽 모두 ≤ 2.5s. CLS·a11y·keys·sheet·loop·ads·contrast 회귀 없음. 여유가 97~170ms라 부하가 높으면 넘는다 — main(#94) 병합 뒤 load 22~25에서 /gallery 2602ms(3회 중 1회는 `/api/scenes` 응답이 관측 LCP 전에 끝나 그래프 끝에 RTT가 붙음), load 6~14 재측정 2432ms. 게이트는 부하를 같이 적고 load 10 안팎에서 잰다. 갤러리 여유를 더 벌릴 후보: 첫 화면 밖 액자 8장을 IntersectionObserver(좁은 여백)로 늦추기(약 22KB), 벽 목록 API 호출을 load 뒤로.
+- **남은 후보(숫자 근거)**: /daily는 마운트 때 `/api/track` 핑 2개가 그래프 끝에 붙어 +150ms(prod 코드 trackEvent — 컷오버 뒤 load 뒤로 미루기 후보), 시작 화면 보드 렌더러(Spill 시뮬 약 15KB)는 첫 화면 주인공이라 미루지 않았다. 홈 LCP 요소는 프리뷰 읽기 전용 안내라 컷오버(prod 빌드, READ_ONLY 없음) 뒤에는 h1 등으로 바뀐다 — 컷오버 PR에서 다시 잰다.
+- prod 영향: prod out/ 210/210 main과 동일(같은 폴더 빌드, 빌드 id만 다름) + 참조 없는 정적 파일 13개(320 썸네일 12·아이콘 1, P9 webp와 같은 방식). content-parity 35쪽 0 차이.
+
 ## 2026-11-20 공개 저장소 추적 파일에서 오너 개인 메일 주소 제거 (오너 승인)
 - 맥락: 공개 저장소의 팀 문서(SESSION-GUIDE)에 오너 개인 메일 주소가 그대로 있었다.
 - 선택: 보고 메일 규칙은 '연결된 Gmail 계정 본인 주소(받는 사람 = 보내는 사람) 외 발송 금지'로 바꾸고, 루틴이 Gmail 커넥터의 최근 보낸 보고 메일 From으로 주소를 확인하게 했다. 기록성 문장은 주소만 지우거나 '오너'로 바꿨다.

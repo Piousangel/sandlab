@@ -272,3 +272,41 @@
 .sl-st:not([data-run]) [data-layer='pending'] path {
   animation-play-state: paused;
 }
+
+/* 플레이 화면 청크를 받는 동안(P12 LCP — LazySpillPlayer). 보통은 시작 화면이 미리 받아 두어 안 보인다. */
+.sl-sp-wait {
+  min-height: 100dvh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  background: var(--sl-bone);
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-fs-label-tap);
+  font-weight: 500;
+  letter-spacing: var(--sl-ls-label);
+  text-transform: uppercase;
+  color: var(--sl-ink-2);
+}
+.sl-sp-wait > p {
+  margin: 0 0 12px;
+}
+.sl-sp-wait[role="alert"] {
+  align-content: center;
+  justify-items: center;
+}
+.sl-sp-wait-btn {
+  min-height: var(--sl-hit);
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--sl-r-md);
+  background: var(--sl-ember);
+  color: var(--sl-on-ember);
+  box-shadow: 0 3px 0 var(--sl-ember-edge);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sl-sp-wait-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--sl-focus);
+}

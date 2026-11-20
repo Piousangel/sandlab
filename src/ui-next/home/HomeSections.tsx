@@ -10,14 +10,13 @@ import { dayNumber, dailyIdFor } from '@/lib/spill/client/daily'
 import { levelById } from '@/lib/spill/client/catalog'
 import { describeLevel } from '@/lib/spill/client/describe'
 import { LEVELS } from '@/lib/spill/levels'
-import { SpillController } from '@/lib/spill/play/controller'
-import { SpillRenderer } from '@/lib/spill/render/canvas'
 import { listScenes, type SceneMeta } from '@/lib/sand/gallery'
 import { readStrata, type Stratum } from '@/lib/strata'
 import { VISITORS_RESET_NOTE, useTodayVisitors } from '@/lib/useTodayVisitors'
 import { visitorsLine } from '@/lib/visitors'
 import { Icon } from '../icons/Icon'
-import { goalLine } from '../spill/DailyStart'
+import { goalLine } from '../spill/goalLine'
+import { afterLoad } from '../afterLoad'
 import { daysLabel, strataBand } from './model'
 
 const COLOR: Record<string, string> = Object.fromEntries(PRESETS.map((m) => [m.slug, m.color]))
@@ -39,11 +38,22 @@ export function TodayCard() {
   useEffect(() => {
     const c = canvasRef.current
     if (!c || !today) return
-    try {
-      // 시작 전 판(틱 0) 한 장 — 데일리 시작 화면(P4)과 같은 방법, 시뮬은 돌리지 않는다
-      new SpillRenderer(c).draw(new SpillController(today.level).sim.grid, 0)
-    } catch {
-      /* 2d 컨텍스트가 없으면 빈 유리 */
+    let off = false
+    // 판 그리기(Spill 시뮬·렌더러 모듈)는 홈 첫 화면 JS에서 뺀다(P12 LCP) — 카드 글자는 바로 보이고, 실루엣은 load 뒤 유휴에 그린다
+    const cancel = afterLoad(() => {
+      Promise.all([import('@/lib/spill/play/controller'), import('@/lib/spill/render/canvas')])
+        .then(([{ SpillController }, { SpillRenderer }]) => {
+          if (off) return
+          // 시작 전 판(틱 0) 한 장 — 데일리 시작 화면(P4)과 같은 방법, 시뮬은 돌리지 않는다
+          new SpillRenderer(c).draw(new SpillController(today.level).sim.grid, 0)
+        })
+        .catch(() => {
+          /* 2d 컨텍스트가 없거나 청크를 못 받으면 빈 유리 */
+        })
+    })
+    return () => {
+      off = true
+      cancel()
     }
   }, [today])
   const goal = today ? describeLevel(today.level).goals : []
