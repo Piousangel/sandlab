@@ -13,7 +13,7 @@ export default function Page() {
   return (
     <ContentShell ads={false}>
       <h1 style={{ fontSize: 30, lineHeight: 1.2, margin: '0 0 12px' }}>Privacy</h1>
-      <p style={{ opacity: 0.7, fontSize: 14 }}>Last updated: 16 November 2026</p>
+      <p style={{ opacity: 0.7, fontSize: 14 }}>Last updated: 20 November 2026</p>
       <p>
         Sandlab has no accounts and no sign-up. This page lists everything the site stores and why. If
         something here is unclear, email <a href={`mailto:${CONTACT_EMAIL}`} style={{ color: '#eef1f6' }}>{CONTACT_EMAIL}</a>.
@@ -36,17 +36,21 @@ export default function Page() {
       </p>
       <h2 style={h2}>Usage statistics</h2>
       <p>
-        We count a few events, such as a shared link being opened, a scene being published, a vote being
-        cast or the support link being clicked. Each count records the event type, the website that linked
-        to us, your country as reported by our hosting provider, Cloudflare, and, where relevant, which
-        scene it was about. There is no per-person identifier in these counts.
+        We count a few events, such as your first pour on the home page in a visit, a puzzle being started
+        or solved, a shared link being opened, a scene being published, a vote being cast or the support link
+        being clicked. Each count records the event type, the website that linked to us, your country as
+        reported by our hosting provider, Cloudflare, where relevant which scene or puzzle it was about, and
+        a random device id. That id is generated in your browser, is not connected to any account, email or
+        IP address, and is used only to count how many different devices used Sandlab each week. Clearing
+        your browser data replaces it with a new one.
       </p>
       <h2 style={h2}>Stored in your browser</h2>
       <p>
         Your browser keeps a few things locally so the site remembers you without an account: your display
-        name and a random creator id if you set a name, the list of scenes you published, and which scenes
-        you have voted for. This never leaves your device except when you publish or vote. Clearing your
-        browser data removes it.
+        name and a random creator id if you set a name, the list of scenes you published, which scenes you
+        have voted for, and the random device id described above. These never leave your device except when
+        you publish or vote, and the device id, which is sent with the usage counts. Clearing your browser
+        data removes them.
       </p>
       <h2 style={h2}>Advertising</h2>
       <p>

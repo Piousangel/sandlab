@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseTrack } from './track'
+import { parseDevice, parseTrack } from './track'
 
 describe('parseTrack — /api/track 화이트리스트', () => {
   it('kofi_click은 ref 없이 허용', () => {
@@ -76,5 +76,36 @@ describe('parseTrack — S1 value는 화면 코드만(리뷰 5)', () => {
   it('puzzle_land value는 0만, 그 밖은 거부', () => {
     expect(parseTrack({ event: 'puzzle_land', ref: 'insta' })?.value).toBe(0)
     expect(parseTrack({ event: 'puzzle_land', ref: 'insta', value: 1 })).toBeNull()
+  })
+})
+
+describe('북극성 계측(11-20) — first_stroke · landing 홈 표시 · 기기 id', () => {
+  it('first_stroke는 ref home만, value는 항상 0', () => {
+    expect(parseTrack({ event: 'first_stroke', ref: 'home' })).toEqual({ event: 'first_stroke', ref: 'home', value: 0 })
+    expect(parseTrack({ event: 'first_stroke', ref: 'home', value: 999 })?.value).toBe(0)
+    expect(parseTrack({ event: 'first_stroke' })).toBeNull()
+    expect(parseTrack({ event: 'first_stroke', ref: 'gallery' })).toBeNull()
+  })
+  it('landing value는 1(홈 진입)만 살리고 나머지는 0 — 옛 클라이언트(value 없음)도 받는다', () => {
+    expect(parseTrack({ event: 'landing', ref: 'direct', value: 1 })?.value).toBe(1)
+    expect(parseTrack({ event: 'landing', ref: 'direct' })?.value).toBe(0)
+    expect(parseTrack({ event: 'landing', ref: 'direct', value: 7 })?.value).toBe(0)
+    expect(parseTrack({ event: 'landing', ref: 'tag-threads', value: 1 })).toEqual({ event: 'landing', ref: 'tag-threads', value: 1 })
+    expect(parseTrack({ event: 'landing', ref: 'ref-threads' })?.ref).toBe('ref-threads')
+  })
+  it('parseDevice: UUID·폴백 형식만, 그 밖은 빈 값(원시 문자열이 AE로 새지 않는다)', () => {
+    expect(parseDevice({ event: 'x', d: '3f2b8c1e-9a4d-4e7b-8c2a-1b2c3d4e5f60' })).toBe('3f2b8c1e-9a4d-4e7b-8c2a-1b2c3d4e5f60')
+    expect(parseDevice({ d: 'm3x9k2-ab12cd34ef' })).toBe('m3x9k2-ab12cd34ef')
+    expect(parseDevice({ d: 'short' })).toBe('')
+    expect(parseDevice({ d: 'x'.repeat(41) })).toBe('')
+    expect(parseDevice({ d: 'Mozilla/5.0 (iPhone)' })).toBe('')
+    expect(parseDevice({ d: 'user@example.com' })).toBe('')
+    expect(parseDevice({ d: 12345678 })).toBe('')
+    expect(parseDevice({})).toBe('')
+    expect(parseDevice(null)).toBe('')
+  })
+  it('기기 id가 있어도 parseTrack 판정은 그대로(이벤트 화이트리스트가 우선)', () => {
+    expect(parseTrack({ event: 'pageview', d: '3f2b8c1e-9a4d-4e7b-8c2a-1b2c3d4e5f60' })).toBeNull()
+    expect(parseTrack({ event: 'kofi_click', d: 'bad id!' })).toEqual({ event: 'kofi_click', ref: '', value: 0 })
   })
 })

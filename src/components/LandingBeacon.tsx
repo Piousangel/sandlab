@@ -28,7 +28,7 @@ export default function LandingBeacon() {
       if (sessionStorage.getItem('sl-landing')) return
       sessionStorage.setItem('sl-landing', '1')
       const ref = classifyLanding(location.search, document.referrer, location.hostname)
-      if (ref) trackEvent('landing', ref)
+      if (ref) trackEvent('landing', ref, location.pathname === '/' ? 1 : 0) // value 1 = 홈 진입(첫 붓기율 분모)
     } catch {
       /* 저장소 차단·계측 실패는 무시 */
     }
