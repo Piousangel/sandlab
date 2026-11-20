@@ -3,7 +3,7 @@
 - 브랜치 perf/preview-lcp. 결정 DECISIONS 2026-11-20 'P12 LCP', 계획서 6장 P12 게이트 표.
 - **원인 보는 법**: Lighthouse LCP는 Lantern이 "로컬 관측 LCP 전에 끝난 요청 전부"를 그래프에 넣어 계산한다 → 바이트 합(쪽마다 4~7ms/KB)이 LCP다. 노드 덤프는 qa 캐시의 `@paulirish/trace_engine/.../lantern/metrics/LargestContentfulPaint.js` getEstimateFromSimulation에 임시 출력을 넣어 봤다(저장소 밖, 다시 하려면 같은 자리).
 - **함정**: ① 마운트 때 `import()`는 LCP를 늘린다(그래프 끝에 줄을 선다) — 첫 그림에 필요 없는 모듈은 `src/ui-next/afterLoad.ts`(load 뒤 유휴)로. ② 서체는 `src/ui-next/fonts.css`(next/font 아님) — 범위를 바꾸면 `scripts/fonts/build-fonts.py`를 다시 돌리고 찍힌 unicode-range를 그대로 옮긴다(shell.test가 core∪ext = 옛 라틴, 겹침 0을 본다). ③ `PREVIEW_SWAPS`(next.config.ts) — prod 파일의 import 문자열을 바꾸면 프리뷰 빌드가 멈춘다(의도). ④ lazy 화면은 `LazyBoundary`로 감쌀 것. ⑤ 갤러리 썸네일을 다시 찍으면 `node scripts/capture-wall.cjs`가 320 버전도 만든다(`--small-only`는 기존 webp에서).
-- **P12가 알아야 할 것**: LCP 여유 97~170ms(load 8~10) — 부하 30+면 넘을 수 있다. 홈 LCP 요소는 프리뷰 읽기 전용 안내라 컷오버 뒤 다시 잴 것. prod 파비콘(512px 52KB)도 48px로 바꾸는 걸 권함. /daily `/api/track` 핑 2개가 +150ms(prod trackEvent를 load 뒤로 미루기 후보).
+- **P12가 알아야 할 것**: LCP 여유 97~170ms(load 8~10) — load 22~25에서 /gallery 2.60s로 넘었다(게이트는 load 10 안팎에서 잴 것, 갤러리 후보는 DECISIONS 'P12 LCP'). 홈 LCP 요소는 프리뷰 읽기 전용 안내라 컷오버 뒤 다시 잴 것. prod 파비콘(512px 52KB)도 48px로 바꾸는 걸 권함. /daily `/api/track` 핑 2개가 +150ms(prod trackEvent를 load 뒤로 미루기 후보).
 
 ---
 
