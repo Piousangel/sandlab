@@ -246,3 +246,10 @@
 - **prod 무변경**: `ResultCard`(prod 결과 카드)·`ChallengePlayer`(DailyPlayer와 함께 어디서도 import 안 함)는 손대지 않았다 — prod out/ 210파일 main과 동일(빌드 id만 다름, 같은 폴더 빌드). 둘 다 P12 컷오버 때 지울 대상이라 sheet.test의 LEGACY 목록에만 있다(새 항목 금지).
 - 검사로 만들기: `src/ui-next/sheet/sheet.test.tsx`(손으로 만든 모달 표식이 생기면 실패 + 양성 대조), `scripts/qa/sheet-e2e.mjs`(= `pnpm qa:preview --only sheet`) 12항목 + 390 UX 감사(44px elementFromPoint·입력 16px·확대 막음·가로 넘침, 양성 대조). 체크리스트 `docs/team/UX-CHECKLIST.md`.
 - 버린 안: 결과 화면을 시트로(위 이유), `<dialog>` 유지 + 끌기만 덧붙이기(뒤로 가기·history·스크롤 잠금·inert를 다시 짜야 하고 허브와 두 갈래가 된다), prod ResultCard에 Esc 붙이기(prod diff·컷오버 때 사라질 코드).
+
+## 2026-11-20 북극성 측정 — 익명 기기 id(AE blob5)·first_stroke·홈 landing 표시 (16시)
+- 맥락: NORTH-STAR 2장 북극성(주간 손댄 방문자)·보조 3(첫 붓기율)이 '측정 없음'. 4장 1단계 측정 PR(11-27까지, 16시 몫).
+- 선택: 허브 `hit.ts`와 같이 브라우저 무작위 UUID(localStorage `sandlab.did`)를 `/api/track` 본문 `d`로 보내고, 워커가 형식(`/^[a-z0-9-]{8,40}$/`)만 보고 AE blob5에 싣는다(D1 쓰기 없음). 손댄 = `first_stroke`(홈 샌드박스 탭당 1회, 지우개·autoplay·webdriver 제외) ∪ `challenge_start` ∪ `daily_start`의 7일 distinct blob5. 첫 붓기율 = first_stroke ÷ landing(value 1 = `/` 진입), 둘 다 세션 단위. `?ref=threads`·threads.net/com referrer 분류 추가. Privacy 페이지에 기기 id 고지.
+- 버린 안: IP 해시로 기기 대신(모바일 IP 공유·변동으로 과소·과대, /api/visit과 중복), D1 테이블(쓰기 = 고위험, AE로 충분), 쿠키(동의 배너 필요).
+- 한계: 측정 전 이벤트는 blob5가 비어 7일 창이 차는 11-27까지 값은 '부분'. 홈 landing은 세션 첫 페이지가 `/`일 때만 1 — 다른 페이지로 들어와 홈에서 부은 세션은 분자에만 잡혀 비율이 약간 부풀 수 있다(기준값은 같은 정의로 12-04에 확정하므로 추세 판정엔 영향 없음).
+
