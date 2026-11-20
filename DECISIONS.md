@@ -207,3 +207,10 @@
 - 공개 표시: **prod 홈(옛 SandCanvas)도 바뀐다** — 데스크톱은 캔버스 위 헤드라인("Sandlab / Pour sand…") 아래 한 줄(첫 획 전까지 보임), 세로 폰은 링크가 ☰로 접히는 폭(400 미만)에서만 44px 헤더의 브랜드 옆(헤더 높이 그대로, 넘치면 말줄임 — 400~899 세로는 링크 5개가 펼쳐져 자리가 없어 표시 안 함). 프리뷰 새 셸은 Today 카드의 Solve today 아래 한 줄(높이 20px 예약). 문구: 10 이상 "N visitors in the lab today · since 00:00 UTC"(폰: "N visitors today (UTC)"), 1~9는 "A few visitors in the lab today"(폰: "A few visitors today (UTC)"), 0은 빈 줄. 홈에는 광고가 없다(verify-ads 허용 목록 밖).
 - 보고: daily-metrics에 '방문자(UTC, 사이트 집계): 어제 N / 오늘 지금까지 N' + 7일 줄. OPERATING 0-1-6·SESSION-GUIDE 06시·20시 메일 형식에 같은 줄.
 - 첫날(11-20) 숫자는 배포 시각부터라 하루치가 아니다.
+
+## 2026-11-20 저장소 안전 설정 커밋 — 되돌릴 수 없는 명령만 deny + hook(exit 2) (오너 승인 제안 E, 고위험)
+- 맥락: 금지 목록(main 직접 푸시·force push·직접 배포·D1 쓰기)이 SESSION-GUIDE 문장뿐이었다. 스승님 원칙 H3·H6, 오너 11-20 "다 추천대로". 문서 대조 메모·로컬 실측은 허브 docs/team/mentor/lydia-hallie.md 7장 'E 실행 기록', 상세 결정은 허브 DECISIONS 같은 날 항목(같은 파일을 두 저장소에 둔다).
+- 선택: `.claude/settings.json` 정적 deny + PreToolUse(Bash) `scripts/hooks/guard-bash.mjs` + Stop `scripts/hooks/stop-unsaved-work.mjs`(클라우드에서만, 저장 안 된 작업이 있으면 한 번 막음).
+- 샌드랩 절차 대조: `wrangler d1 execute sandlab-gallery --local …`·`wrangler dev --local` 통과, 원격 D1 **읽기**(`--remote --json --command "SELECT …"`) 통과, 원격 D1 쓰기(`--remote --yes --command "DELETE …"`·`--remote --file=schema.sql`)는 막음 — 지금까지도 오너가 직접 쳤다(handoff 710행). 앞으로는 오너가 Claude Code 밖 터미널에서 친다(`!` 입력에 hook이 걸리는지는 확인 안 함). 로컬 `pnpm run deploy`·`deploy:preview`는 막음(deploy.yml·deploy-preview.yml이 main 머지 때 함). `sandlab-daily` 스킬의 배포 단계를 'PR 머지 → deploy.yml 확인'으로 고침.
+- 독립 리뷰 2회 반영(상세는 허브 DECISIONS 같은 날 'E' 항목): 작은따옴표 안 인용 오탐 수정, `.gitignore`에 `.claude/worktrees/`·`*.log`·`play-result.png`(Stop hook이 worktree·wrangler-dev.log·QA 캡처를 '커밋 안 된 파일'로 세던 것), **deploy.yml 배포 job을 main ref에서만**(수동 실행으로 리뷰 안 된 브랜치가 프로덕션에 가던 구멍), `.env`·`.dev.vars` Read 규칙을 모든 깊이로, Stop hook이 stash·모든 로컬 브랜치를 셈. 프리뷰(`deploy-preview.yml`)는 READ_ONLY라 그대로 둠.
+- 같은 PR: `.claude/handoff/main.md`의 "레포 (private)" 두 곳을 공개 저장소로 정정(gh repo view: PUBLIC). `.claude/team/references/monetization.md`의 '비공개 저장소' 전제(그랜트 자격 판단)는 당시 조사 기록이라 손대지 않았다 — 공개 저장소가 되어 Cloudflare Project Alexandria 자격 판단이 달라질 수 있다(오너 확인 거리).
