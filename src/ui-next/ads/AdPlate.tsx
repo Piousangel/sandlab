@@ -9,13 +9,14 @@
  * 2. 인터랙티브 요소·라이브 루프(캔버스·시험관 루프·버튼 줄)와 24px 이상 떨어진다: 바깥 여백이 --sl-s-5(24px) 아래로 못 내려간다
  *    (`clearance`는 24·32·48만 받는다). 캔버스·퍼즐 화면에는 아예 못 둔다 — 그 페이지에는 로더가 없고 verify-ads가 막는다.
  * 3. 높이 예약: 광고가 오기 전에도 최종 높이를 차지한다(CLS 0). format마다 고정 높이.
- * 4. 광고 비활성이면 DOM에 아무것도 그리지 않는다: 지금 광고 로딩 방식(ContentShell의 `ads` → AdLoader, verify-ads 허용 목록)을
+ * 4. 광고 비활성이면 DOM에 아무것도 그리지 않는다. P11: 맨 먼저 `ADS_ENABLED`(config.ts, AdSense 승인 전 false — 허브와 같은 규칙)가 꺼져 있으면 null.
+ *    그다음 지금 광고 로딩 방식(ContentShell의 `ads` → AdLoader, verify-ads 허용 목록)을
  *    그대로 따른다 — `ads`(그 페이지가 로더를 싣는가)와 `slot`(AdSense 광고 단위 id)이 둘 다 있어야 렌더한다.
  *    자동광고는 대시보드에서 꺼져 있고 광고 단위도 아직 없다(AD_SLOTS가 비어 있음) → P3 시점에는 어디서도 렌더되지 않는다.
  * 5. 회색 면 위에 두지 않는다(R3) — 바탕 Bone 위에만. 같은 파일 안 중첩은 pnpm lint:ui가 잡는다.
  */
 import { useEffect, useId, useRef, useState } from 'react'
-import { AD_CLIENT, AD_FORMATS, type AdFormat, type AdSlotPair } from './config'
+import { ADS_ENABLED, AD_CLIENT, AD_FORMATS, type AdFormat, type AdSlotPair } from './config'
 
 export type AdClearance = 24 | 32 | 48
 
@@ -27,12 +28,14 @@ type Props = {
   format?: AdFormat
   /** 주변 인터랙티브·라이브 루프와의 최소 간격(px). 24 미만은 타입에서 막는다. */
   clearance?: AdClearance
+  /** 광고 켜짐 스위치. 기본 = ADS_ENABLED(config.ts). 테스트가 켜진 모양을 볼 때만 넘긴다. */
+  enabled?: boolean
 }
 
 type AdsQueue = { push(x: object): void }
 
 export function AdPlate(props: Props) {
-  if (!props.ads || !props.slot) return null
+  if (!(props.enabled ?? ADS_ENABLED) || !props.ads || !props.slot) return null
   const strip = !!AD_FORMATS[props.format ?? 'rect'].wide
   // strip 자리는 단위 한 쌍, 나머지는 단위 하나 — 모양이 안 맞으면 그리지 않는다(잘못된 크기 단위 = 정책 위험)
   if (strip !== (typeof props.slot === 'object')) return null

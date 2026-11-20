@@ -254,6 +254,11 @@
   background-clip: content-box;
   overflow: hidden;
 }
+/* 정지 포스터 아틀라스(Rack은 크기·위치만 인라인): 배율 2 이하 = @2x 384²(≈10KB), 3 = 원본 576²(39KB). image-set 모르는 브라우저는 원본 */
+.sl-tube-glass[data-atlas] {
+  background-image: url('/ui-next/posters/atlas.webp');
+  background-image: image-set(url('/ui-next/posters/atlas-2x.webp') 2x, url('/ui-next/posters/atlas.webp') 3x);
+}
 /* 유리 반사광 한 줄 */
 .sl-tube-glass::after {
   content: '';

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { renderToStaticMarkup } from 'react-dom/server'
@@ -8,6 +8,10 @@ import { AD_FORMATS, AD_SLOTS } from '../ads/config'
 import { LearnArticle } from './Articles'
 import { ContentFrame } from './ContentFrame'
 import { midAfter, neighbours, proseMidIndex, sectionIds, showToc, stripStyles } from './model'
+
+// 이 파일은 광고 자리 '위치'를 본다 — 광고 켜짐(ADS_ENABLED = true)으로 가정한다.
+// 승인 전 기본값(false → 안내판 DOM 0)은 shell.test.tsx '광고 꺼짐' 묶음이 실제 config로 본다.
+vi.mock('../ads/config', async (orig) => ({ ...(await orig<typeof import('../ads/config')>()), ADS_ENABLED: true }))
 
 const root = fileURLToPath(new URL('../../../', import.meta.url))
 const words = (html: string) =>

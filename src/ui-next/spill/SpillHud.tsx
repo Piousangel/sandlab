@@ -9,7 +9,7 @@
  * 세로 예산은 chrome.ts(HUD)와 같다 — 여기 높이를 바꾸면 chrome.ts도 바꾼다.
  */
 import { usePathname } from 'next/navigation'
-import { useRef, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { DockRow } from '@/lib/spill/client/dock'
 import type { RunAction, TrayVerb } from '@/lib/spill/client/view'
 import type { Verb } from '@/lib/spill/level/define'
@@ -173,8 +173,16 @@ export function Frame(p: SpillFrameProps) {
   const face = runFace(p.run.action, p.run.watching)
   // 좁은 화면 + 동사 2개 이상이면 동사를 아이콘 44칸으로 접는다(라벨·남은 수는 접근 이름에) — 도구 줄이 한 줄에 들어가게(360 실측: Retry 라벨일 때 RUN이 가장 넓다)
   const compactVerbs = p.verbs.length > 1 && l.stageW < 420
+  // P11 CLS: 서버 그림은 390×844 배치(SpillPlayer SSR_LAYOUT) — 넓은 화면은 측정 뒤 배치가 통째로 바뀌어 이동(1440 CLS 0.134)이 났다.
+  // 마운트 표시(data-ready)가 붙기 전에는 900px 이상에서 숨긴다(spill.css) — 나타나는 것은 레이아웃 이동이 아니다. 모바일(390)은 그대로 보인다.
+  const [ready, setReady] = useState(false)
+  useEffect(() => setReady(true), [])
   return (
-    <div className="sl-spill" data-desk={desk ? '1' : undefined}>
+    <div className="sl-spill" data-desk={desk ? '1' : undefined} data-ready={ready ? '1' : undefined}>
+      {/* JS가 없으면 측정도 없다 — 숨김(spill.css data-ready)을 푼다 */}
+      <noscript>
+        <style>{'.sl-spill{visibility:visible!important}'}</style>
+      </noscript>
       <IconSprite />
       <div className="sl-sp-main" onPointerDownCapture={p.onPointer} onPointerUpCapture={p.onPointer}>
         <SpillHeader badge={p.title.badge} name={p.title.name} backHref={p.title.backHref} backLabel={p.title.backLabel} sound={p.sound} onSound={p.onSound} />

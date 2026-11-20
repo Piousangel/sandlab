@@ -14,7 +14,8 @@
     "deploy:preview": "pnpm run build:preview && node scripts/verify-ads.mjs --preview && wrangler deploy --env preview",
     "lint:ui": "node scripts/lint-ui-rules.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
-    "qa:gallery": "node scripts/qa/gallery-e2e.cjs"
+    "qa:gallery": "node scripts/qa/gallery-e2e.cjs",
+    "qa:preview": "node scripts/qa/preview.mjs"
   },
   "dependencies": {
     "mediabunny": "^1.50.8",

@@ -1,3 +1,16 @@
+# 인계 (2026-11-20 오후): 리디자인 P11b 「성능·접근성 마감 + qa:preview」 — 다음은 P12(컷오버)
+
+- 계획서 6장 P11b 행. 결정 DECISIONS 2026-11-20 P11b. 브랜치 shift/redesign-p11-perf-a11y.
+- **`pnpm qa:preview`(scripts/qa/preview.mjs) = P12 컷오버 게이트 검사 묶음**. `pnpm build:preview` 뒤에 돌린다(out/이 프리뷰 빌드가 아니면 exit 2). 항목 weight(엔진 청크 양성 대조)·a11y(15쪽 × 390·1440 axe serious·가로 스크롤·CLS·페이지 오류)·keys(Tab 순회 포커스 링 = 포커스 전후 모양 비교, 홈 로빙, 글 페이지 목차/이전다음/details/스크롤 영역, 스크린리더 이름)·loop(관 붓기 rack/ ≤ 20KB)·ads·lcp(Lighthouse 모바일 7쪽 × 3회 중앙값 + 상호작용 지연 3회 중앙)·contrast, `--fps`. `--only`·`--skip`·`--runs`·`--out`·`--report`. 맥 로컬 약 15분.
+  - 도구(playwright 1.65.1·axe-core 4.10.2·lighthouse 12.8.2)는 첫 실행에 `node_modules/.cache/sandlab-qa`에 자동 설치(NODE_PATH 불필요). 리눅스·CI면 `QA_GPU_ARGS`로 swiftshader 인자.
+  - qa가 돌 동안 같은 폴더에서 `pnpm build`를 하면 out/이 바뀐다 — `--out <복사본>`으로 돌릴 것. 부하(load 30+)에서는 LCP가 0.2~0.4s 부풀려진다(보고 맨 위 load).
+- **`@ui-shell` 영역 치환**: 프리뷰는 `@ui-shell`을 import한 파일마다 `src/ui-next/shell/area-<영역>.ts`로 치환(next.config.ts `SHELL_AREAS`). **새 사용처를 만들면 표에 한 줄 더할 것** — 안 하면 프리뷰 빌드가 멈춘다(의도). 영역 파일은 classic.ts와 같은 폴더여야 한다. next.ts는 타입 계약용 `export *` 묶음.
+- **광고**: `ADS_ENABLED = false`(ads/config.ts) → 안내판 DOM 0. AdSense 승인 뒤 이 한 줄만 true(고위험 리뷰 2회). content.test는 vi.mock으로 켠 상태의 위치를, shell.test '광고 꺼짐'이 실제 기본값을 본다.
+- **P12가 알아야 할 것**: ① LCP 미달 3쪽(홈 2.63·/daily 2.56·/gallery 2.73s) — /daily는 DailySpill 미정 상태 SSR 뼈대(prod 컴포넌트 수정이라 컷오버 PR에서), /gallery는 벽 webp lazy·LiveCanvas 엔진 동적 import, 홈은 공유 시트·녹화 동적 import·서체 서브셋. ② 넓은 화면 Spill HUD는 하이드레이션 전 숨김(CLS 0 대가로 데스크톱 첫 그림 지연) — 데스크톱 LCP는 qa가 재지 않는다. ③ 상호작용 지연은 부하 기계에서 흔들린다 — 실기기 Web Vitals로 확인.
+- 기준선: `pnpm test --testTimeout=30000`의 verify.test·replay.test 30s 타임아웃은 부하 탓(단독 실행 32/32 통과).
+
+---
+
 # 인계 (2026-11-20 13시): 리디자인 P11a 「선택 관 한 번 붓기 · 툴바 키보드 · Lighthouse 기준선 정정」 — 다음은 P11b(게이트 미달 3곳)
 
 - 북극성 단계: 4장 1단계(컷오버 준비). 북극성 값은 여전히 측정 없음(측정 PR = 16시 몫, 11-27까지).

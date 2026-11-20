@@ -612,3 +612,9 @@
     margin-top: 12px;
   }
 }
+
+/* P11 포커스 링: 주 행동·이전/다음 카드의 그림자 규칙이 .sl-cs :focus-visible 링을 덮었다 — qa:preview keys가 잡음 */
+.sl-cs .sl-cs-cta:focus-visible,
+.sl-cs .sl-cs-pn-card:focus-visible {
+  box-shadow: var(--sl-focus);
+}

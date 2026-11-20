@@ -10,6 +10,11 @@
  * vite는 vitest의 의존성이라 최상위에 없다 → vitest 기준으로 resolve.
  * playwright는 package.json에 없다 — 클라우드 컨테이너에 전역 설치된 것을 쓴다(로컬이면 `npm i -g playwright` 후 `npx playwright install chromium`).
  * --strips 없이 돌리면 기존 strips/는 그대로 남는다(장면을 바꿨으면 --strips로 함께 다시 찍을 것). 고체 6종은 스트립 없음.
+ *
+ * 랙 루프(P11, S7): `--strips`로 찍으면 rack/<slug>.webp(선택된 관 1개만 도는 12프레임, 관 크기 @2x = 프레임 64×128, ≤ 20KB)와
+ * rack/rack.json도 함께 만든다. 이미 찍힌 strips/에서 다시 만들기만 하려면 `node scripts/capture-posters.mjs --rack-only`(브라우저 없음).
+ * 아틀라스 @2x(atlas-2x.webp, 384×384): 기기 배율 2 이하는 이걸 받는다(Rack의 image-set — 홈 첫 화면 이미지 39KB → 약 10KB, P11 LCP).
+ * 캡처할 때마다, 그리고 --rack-only에서도 atlas.webp에서 다시 만든다.
  */
 import { createRequire } from 'node:module'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -17,9 +22,6 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const req = createRequire(createRequire(path.join(root, 'package.json')).resolve('vitest/package.json'))
-const { createServer } = await import(pathToFileURL(req.resolve('vite')).href)
-const { chromium } = createRequire(import.meta.url)('playwright')
 
 const argv = process.argv.slice(2)
 const flag = (k) => argv.includes(k)
@@ -27,6 +29,45 @@ const opt = (k) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : un
 const only = opt('--only')?.split(',')
 const out = path.resolve(root, opt('--out') ?? 'public/ui-next/posters')
 const withStrips = flag('--strips')
+
+/** strips/(타일 96×192 × 12)를 랙 크기로 줄인다. 20KB를 넘으면 품질 → 폭 순으로 낮춘다. 결과 표를 rack.json에. */
+async function buildRack() {
+  const { readdirSync, readFileSync } = await import('node:fs')
+  const sharp = createRequire(createRequire(path.join(root, 'package.json')).resolve('next/package.json'))('sharp')
+  const LIMIT = 20_000
+  const src = path.join(out, 'strips')
+  const dst = path.join(out, 'rack')
+  mkdirSync(dst, { recursive: true })
+  const slugs = {}
+  for (const f of readdirSync(src).filter((f) => f.endsWith('.webp')).sort()) {
+    const input = readFileSync(path.join(src, f))
+    let buf = null
+    let used = null
+    for (const w of [768, 672, 576]) {
+      for (const q of [80, 70, 60]) {
+        buf = await sharp(input).resize(w, w / 6, { kernel: 'lanczos3' }).webp({ quality: q, alphaQuality: 80, effort: 6 }).toBuffer()
+        used = { w, q }
+        if (buf.length <= LIMIT) break
+      }
+      if (buf.length <= LIMIT) break
+    }
+    if (buf.length > LIMIT) throw new Error(`${f}: 랙 스트립 ${buf.length}B > ${LIMIT}B`)
+    writeFileSync(path.join(dst, f), buf)
+    slugs[f.replace(/\.webp$/, '')] = { bytes: buf.length, width: used.w, quality: used.q }
+  }
+  const a2 = await sharp(readFileSync(path.join(out, 'atlas.webp'))).resize(384, 384, { kernel: 'lanczos3' }).webp({ quality: 80, alphaQuality: 85, effort: 6 }).toBuffer()
+  writeFileSync(path.join(out, 'atlas-2x.webp'), a2)
+  console.log(`atlas-2x.webp ${a2.length}B`)
+  writeFileSync(path.join(dst, 'rack.json'), JSON.stringify({ frames: 12, limit: LIMIT, slugs }, null, 2) + '\n')
+  console.log(`rack strips ${Object.keys(slugs).length} → ${path.relative(root, dst)} (max ${Math.max(...Object.values(slugs).map((x) => x.bytes))}B)`)
+}
+if (flag('--rack-only')) {
+  await buildRack()
+  process.exit(0)
+}
+const req = createRequire(createRequire(path.join(root, 'package.json')).resolve('vitest/package.json'))
+const { createServer } = await import(pathToFileURL(req.resolve('vite')).href)
+const { chromium } = createRequire(import.meta.url)('playwright')
 
 const server = await createServer({
   root,
@@ -61,6 +102,7 @@ try {
     mkdirSync(path.join(out, 'strips'), { recursive: true })
     for (const [slug, u] of Object.entries(r.strips)) writeFileSync(path.join(out, 'strips', `${slug}.webp`), dec(u))
   }
+  await buildRack()
   console.log(`captured ${Object.keys(r.layout.tiles).length} tubes in ${((Date.now() - t0) / 1000).toFixed(1)}s → ${path.relative(root, out)}`)
   console.log('census (cells of own material):', r.census)
 } finally {

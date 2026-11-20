@@ -26,7 +26,7 @@ import {
   type RackTab,
 } from './model'
 
-const ATLAS_URL = '/ui-next/posters/atlas.webp'
+// 아틀라스 파일은 home.css가 image-set으로 고른다(배율 ≤ 2 = atlas-2x.webp ≈ 10KB, 3 = atlas.webp 39KB — P11b LCP)
 /** 관 유리 안쪽 크기(px). 아틀라스 타일 96×192를 1/3로. */
 const GLASS_W = 32
 const GLASS_H = 64
@@ -34,7 +34,8 @@ const SCALE = GLASS_W / atlas.tile.w
 
 type Tiles = Record<string, { x: number; y: number }>
 
-const stripUrl = (slug: string) => `/ui-next/posters/strips/${slug}.webp`
+// P11b: 랙 크기 스트립(프레임 = 유리 32×64 @2x, 파일마다 ≤ 20KB — capture-posters.mjs --rack-only). 원본 strips/(32~68KB)는 캡처 원본으로만 남긴다
+const stripUrl = (slug: string) => `/ui-next/posters/rack/${slug}.webp`
 /** 스트립 받기 상태(모듈 전역 — 랙이 다시 마운트돼도 같은 파일을 두 번 받지 않는다). */
 const strips = new Map<string, Promise<void>>()
 const loaded = new Set<string>()
@@ -229,10 +230,10 @@ export function Rack({
                   <span
                     className="sl-tube-glass"
                     aria-hidden="true"
+                    data-atlas={t ? '' : undefined}
                     style={
                       t
                         ? {
-                            backgroundImage: `url(${ATLAS_URL})`,
                             backgroundSize: `${atlas.width * SCALE}px ${atlas.height * SCALE}px`,
                             backgroundPosition: `${-t.x * SCALE}px ${-t.y * SCALE}px`,
                           }
