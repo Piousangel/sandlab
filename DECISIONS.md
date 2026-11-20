@@ -197,6 +197,17 @@
 - 버린 안: 무거운 테스트 skip·salt 수 축소(검증 범위 축소), 전역 testTimeout 상향(가벼운 테스트의 느려짐까지 숨김), spill:verify를 1 job(벽시계 15분 초과).
 - 남은 것: 브랜치 보호에 CI 필수 체크를 켜는 것은 오너 할 일.
 
+## 2026-11-20 오늘 방문자: 워커 + D1 일별 고유 방문자 카운터 (오너 "today 방문자 나왔으면 좋겠어")
+- 선택(오너): 사이트에 공개 표시 + 아침 메일·20시 요약에도. 허브(minigames-hub)와 같은 방식.
+- 집계 방법 비교
+  - (a) Cloudflare 분석: 존 uniques는 지표 토큰으로 읽히지만 **봇 포함** — 공개하면 부풀린 숫자다. AE `sandlab_events`는 일부러 per-user 식별자를 싣지 않아(워커 track 주석) 고유 방문자를 낼 수 없다.
+  - (b) **채택**: 사람이 연 페이지의 JS 비콘(LandingBeacon → `POST /api/visit`, 브라우저(localStorage)·UTC 날짜당 1회, `navigator.webdriver`면 안 보냄)을 워커가 D1에 센다. 같은 UTC 날 같은 IP 1회(IPv6는 /64), 봇·스크립트 UA·빈 UA 제외, 같은 사이트 요청만(Sec-Fetch-Site same-origin 또는 Origin 일치 — curl 한 줄 부풀리기 문턱, 위조는 가능). 프리뷰 워커는 READ_ONLY 가드가 POST를 403으로 막아 세지 않는다(표시는 같은 D1 숫자). NAT 공유는 1명으로 덜 세고, 한 사람이 하루에 네트워크를 바꾸면 2명으로 셀 수 있다(IP 기준의 한계, localStorage 1회 비콘이 일부 줄인다). 비용: 새 방문자당 D1 쓰기 2, 읽기는 엣지 60초(키에 UTC 날짜) + isolate 15초 캐시, 지연 최대 약 2분. 화면은 응답 day가 지금 UTC 날짜가 아니면 쓰지 않는다.
+- 개인정보: IP 원문 미저장. `visit_seen(day, h)`의 h = HMAC-SHA256(키 = VISIT_SALT|그날 무작위 솔트, IP 셀) 앞 16바이트. 다음 날 첫 방문 때 지난 날 솔트 NULL(먼저) + 해시 행 삭제(솔트가 NULL인 지난 날 늦은 요청은 세지 않는다) → `visit_days(day, visitors)` 숫자만 남는다. VISIT_SALT(선택 시크릿, 11-20 현재 미설정 — 오너 할 일)가 없어도 솔트가 날마다 무작위라 다음 날부터는 되돌릴 수 없다(그날 안에는 D1 접근권자가 IPv4 전수 대입 가능 — 시크릿 설정 시 불가). 기존 votes·scenes의 무솔트 IP 해시와는 별개.
+- D1: `migrations/0002_visitors.sql`(새 표 2개, 추가 전용·멱등, 기존 표 무변경, DROP 두 줄로 되돌림). deploy.yml에 배포 전 원격 적용 단계를 새로 둔다(`--command` 일반 쿼리 경로, 실패해도 배포 진행 — 표가 없으면 세지 않고 홈 줄은 빈 줄). 저장 형식이 새로 생기므로 독립 리뷰 2회.
+- 공개 표시: **prod 홈(옛 SandCanvas)도 바뀐다** — 데스크톱은 캔버스 위 헤드라인("Sandlab / Pour sand…") 아래 한 줄(첫 획 전까지 보임), 세로 폰은 링크가 ☰로 접히는 폭(400 미만)에서만 44px 헤더의 브랜드 옆(헤더 높이 그대로, 넘치면 말줄임 — 400~899 세로는 링크 5개가 펼쳐져 자리가 없어 표시 안 함). 프리뷰 새 셸은 Today 카드의 Solve today 아래 한 줄(높이 20px 예약). 문구: 10 이상 "N visitors in the lab today · since 00:00 UTC"(폰: "N visitors today (UTC)"), 1~9는 "A few visitors in the lab today"(폰: "A few visitors today (UTC)"), 0은 빈 줄. 홈에는 광고가 없다(verify-ads 허용 목록 밖).
+- 보고: daily-metrics에 '방문자(UTC, 사이트 집계): 어제 N / 오늘 지금까지 N' + 7일 줄. OPERATING 0-1-6·SESSION-GUIDE 06시·20시 메일 형식에 같은 줄.
+- 첫날(11-20) 숫자는 배포 시각부터라 하루치가 아니다.
+
 ## 2026-11-20 저장소 안전 설정 커밋 — 되돌릴 수 없는 명령만 deny + hook(exit 2) (오너 승인 제안 E, 고위험)
 - 맥락: 금지 목록(main 직접 푸시·force push·직접 배포·D1 쓰기)이 SESSION-GUIDE 문장뿐이었다. 스승님 원칙 H3·H6, 오너 11-20 "다 추천대로". 문서 대조 메모·로컬 실측은 허브 docs/team/mentor/lydia-hallie.md 7장 'E 실행 기록', 상세 결정은 허브 DECISIONS 같은 날 항목(같은 파일을 두 저장소에 둔다).
 - 선택: `.claude/settings.json` 정적 deny + PreToolUse(Bash) `scripts/hooks/guard-bash.mjs` + Stop `scripts/hooks/stop-unsaved-work.mjs`(클라우드에서만, 저장 안 된 작업이 있으면 한 번 막음).
