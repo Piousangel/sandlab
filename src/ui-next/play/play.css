@@ -193,16 +193,23 @@
   color: var(--sl-ink);
 }
 .sl-pg-name {
-  display: block;
+  /* 두 줄까지(긴 이름이 잘리지 않게) — 높이는 두 줄로 고정해 칸마다 별 줄 높이가 같다 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  min-height: 36px;
   font-size: 14px;
   line-height: 18px;
   font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+@media (min-width: 720px) {
+  .sl-pg-name {
+    min-height: 18px;
+  }
 }
 .sl-pg-n {
-  margin-right: 5px;
   font-family: var(--sl-font-mono);
   font-weight: 500;
   font-size: var(--sl-fs-label);
@@ -283,6 +290,9 @@
   color: var(--sl-ember-text);
   font-weight: 700;
 }
+.sl-pg-index .sl-pg-guide {
+  padding-inline: 4px;
+}
 .sl-pg-index a:first-child {
   color: var(--sl-ink);
 }
@@ -295,7 +305,8 @@
 .sl-la p {
   margin: 0 0 10px;
 }
-.sl-la-note {
+.sl-la .sl-la-note {
+  margin: 8px 0 10px;
   color: var(--sl-ink-2);
   font-size: 14px;
 }
@@ -313,8 +324,10 @@
   margin-top: 16px;
   color: var(--sl-ink-2);
 }
+.sl-la ul a,
 .sl-la-links a {
   display: inline-flex;
   align-items: center;
   min-height: var(--sl-hit);
+  min-width: var(--sl-hit);
 }

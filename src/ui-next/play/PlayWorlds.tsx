@@ -104,8 +104,7 @@ function Cell({ c, eager, onLocked }: { c: GalleryCell; eager: boolean; onLocked
         )}
       </span>
       <span className="sl-pg-name">
-        <span className="sl-pg-n">{String(c.n).padStart(2, '0')}</span>
-        {c.name}
+        <span className="sl-pg-n">{c.id}</span> {c.name}
       </span>
       <span className="sl-pg-beads" aria-hidden>
         {[0, 1, 2].map((i) => (

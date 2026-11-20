@@ -128,3 +128,13 @@
 - **레벨 모드(/play)는 원본** — 레벨은 고정 공략이라 같은 날 겨루는 사람이 없고, 공략 글(/play/:id/guide)도 공개돼 있다.
 - **한계(리뷰, 과장 금지)**: 가림은 '피드에서 남의 첫 시도를 망치지 않는 매너' 수준이다. 같은 날 /play/<같은 레벨>을 풀면 원본 이미지가 나가고, 데일리 풀이 9개라 다음 날 공개되는 원본은 9일 뒤 데일리의 정답이기도 하다. 막으려면 데일리 전용 레벨(풀 확장)이 필요 — 별도 판단.
 - 지층 병 이미지를 결과 공유에 넣는 안은 이번에 하지 않는다(범위 밖, 제안만: 1:1 이미지 오른쪽 아래 작은 병 — 연속 기록이 공유 동기가 됨).
+
+## 2026-11-20 리디자인 P8 /play 전시실 — 정적 썸네일, '곧 공개' 칸, h1 유지, 광고 자리
+- **전시실 = 새 셸 `@ui-shell` PlayGallery**(`src/ui-next/play/`, classic null → prod /play는 지금 화면 그대로). 화면 전체 Bone, 레벨 보드 썸네일만 어두운 유리 액자(S1). 월드별 줄 = 모노 라벨 "World N · 이름" + 구분선 + "n / m stars", 칸 = 썸네일·레벨 id·이름(두 줄까지)·유리알 별 0~3(star-full/empty 아이콘, 이모지 0). 잠긴 칸 = lock 아이콘 + 썸네일 45%, 누르면 prod와 같은 "Need N★ from W(n-1)" 안내(role=status). 잠금 규칙은 catalog.ts 그대로.
+- **썸네일 = 빌드 전 스크립트로 구운 정적 PNG**(`npx tsx scripts/gen-level-thumbs.mts` → `public/ui-next/levels/<id>.png` + `levels.json`의 레벨 해시). 시작 보드(parseLevel + 엔진 팔레트, 노이즈는 맵 문자 2×2셀 단위) + 목표 1셀 윤곽 + 보석 점, 정답 경로 없음. 160×240 팔레트 PNG 2.3~4.6KB(11개 합 34.7KB, 상한 15KB/개). 셀 단위 노이즈는 흙 많은 1-2가 12.4KB라 버렸다. 라이브 캔버스 0. 레벨을 고치면 play.test가 해시 불일치로 실패 → 스크립트 재실행. 정적 파일이라 prod out/에도 12개 파일이 생기지만 어느 prod 페이지도 참조하지 않는다(포스터 아틀라스와 같은 방식).
+- **'곧 공개' 칸**: 마지막 월드가 10칸보다 적을 때만, 최대 2칸(점선 윤곽 + lock + "Soon", 링크·이미지·이름 없음). 가짜 레벨 이름·썸네일 금지.
+- **주 행동 하나(Ember)**: 기록 없음 "Start with 1-1 First Drop"(prod의 시작 링크와 같은 문구) → 진행 중 "Continue with <열린 칸 중 3별 아닌 첫 레벨>" → 전부 3별 "Every room solved. Play today's daily". 높이 고정이라 진행을 읽은 뒤 문구만 바뀐다(CLS 0, prod는 기록이 있으면 시작 링크가 사라져 아래가 밀린다).
+- **h1은 prod 그대로 "Sandlab Spill"(SEO diff 0)**, 내비 라벨 Solve와는 h1 위 모노 눈썹 라벨 "Solve"로 맞춘다(S10). 이유: 시안의 "Puzzles"나 "Solve"는 검색어(Sandlab Spill)를 잃고, title("Sandlab Spill — falling-sand physics puzzles")과도 멀어진다. h1을 바꾸려면 컷오버(P12) 전에 SEO 판단으로 따로.
+- **본문 = prod와 같은 문장**: 소개 2문단은 page.tsx의 상수 하나를 두 빌드가 함께 쓴다("How Spill works" 카드 안), 'All levels' 목록(레벨·공략 링크)·데일리 줄 유지. 카드에 공략 링크(1-1 guide)와 Learn 글 `/learn/margolus-falling-sand`(Spill 보드도 같은 낙사 규칙) 링크. 실측: /play main 단어 438→471, 링크 35→37.
+- **광고(S11)**: AdPlate를 월드 카드 아래 1곳(format rect, 간격 32px, 'Advertisement' 라벨), 슬롯 `AD_SLOTS.play`가 비어 있어 지금은 렌더 0. 오너와 만들 단위 제안: **고정 300×250 디스플레이 1개**(모바일 390·360 폭 안, 1440에서도 본문 열 안) — 반응형 단위 금지(안내판 고정 높이 250 + 라벨 24).
+- **/play/[id] 설명 패널 = `@ui-shell` LevelAside**(DailyAside 방식): 인라인 색·opacity 없음 → spill.css의 `.sl-sp-aside a[style]`·`p[style*='opacity']` !important 두 규칙 삭제. 순서 = SpillPlayer의 How to win(목표)·Stars 다음 바로 How to play(방법)·힌트, 그 뒤 About this level(요약)·Materials·링크(문장·링크는 prod와 같다). 프리뷰 읽기 전용이면 "your stars stay in this browser, but clears aren't added to the shared stats" 한 줄.
