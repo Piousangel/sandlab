@@ -1,3 +1,4 @@
+import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { PRESETS } from '@/lib/sand/materials'
@@ -6,19 +7,27 @@ import type { Stratum } from '@/lib/strata'
 import atlas from '../../../public/ui-next/posters/atlas.json'
 import * as Classic from '../shell/classic'
 import { HomePour } from './HomePour'
+import { TUBE_GLASS } from './Rack'
 import {
   BRUSH_SIZES,
   DEFAULT_BRUSH,
   DEMO_MS,
   HEADLINE,
   PALE,
+  STRIP_FRAMES,
+  STRIP_MS,
+  STRIP_SLUGS,
   daysLabel,
   demoBrush,
   entryHeadline,
   hashNeedsReload,
   rackOrder,
+  rovingNext,
+  rovingStop,
   shouldDemo,
+  shouldPour,
   strataBand,
+  warmList,
   tabOf,
 } from './model'
 
@@ -124,5 +133,71 @@ describe('HomePour SSR(높이 예약·첫 화면)', () => {
     expect(html).toContain('sl-today')
     expect(html).toContain('sl-strata')
     expect(html.match(/class="sl-wall-frame"/g)).toHaveLength(2)
+  })
+})
+
+describe('P11 선택 관 한 번 붓기(S7)', () => {
+  it('스트립 목록 = public/ui-next/posters/strips 파일, 고체 6종은 없음', () => {
+    const files = readdirSync('public/ui-next/posters/strips')
+      .map((f) => f.replace(/\.webp$/, ''))
+      .sort()
+    expect([...STRIP_SLUGS].sort()).toEqual(files)
+    for (const m of rackOrder(PRESETS)) expect(STRIP_SLUGS.has(m.slug)).toBe(tabOf(m) !== 'solid')
+  })
+  it('재생 조건: 스트립 있음 + 새로 고름 + 움직임 허용 + Save-Data 아님(코어 수로 거르지 않음)', () => {
+    const base = { slug: 'water', already: false, reducedMotion: false, saveData: false }
+    expect(shouldPour(base)).toBe(true)
+    expect(shouldPour({ ...base, slug: 'stone' })).toBe(false)
+    expect(shouldPour({ ...base, already: true })).toBe(false)
+    expect(shouldPour({ ...base, reducedMotion: true })).toBe(false)
+    expect(shouldPour({ ...base, saveData: true })).toBe(false)
+  })
+  it('미리 받기: 보이는 순서 앞 6관 중 스트립 있는 것, Save-Data면 0', () => {
+    const shown = rackOrder(PRESETS).map((m) => m.slug)
+    const w = warmList(shown, false)
+    expect(w.length).toBeGreaterThan(0)
+    expect(w.length).toBeLessThanOrEqual(6)
+    expect(w.every((s) => STRIP_SLUGS.has(s) && shown.indexOf(s) < 6)).toBe(true)
+    expect(warmList(shown, true)).toEqual([])
+    expect(warmList(['stone', 'wall', 'metal'], false)).toEqual([])
+  })
+  it('CSS 스트립 이동 = (프레임-1) x 관 폭, 길이는 보상 최대(900ms) 안', () => {
+    const css = readFileSync('src/ui-next/home/home.css', 'utf8')
+    expect(css).toContain(`translateX(-${(STRIP_FRAMES - 1) * TUBE_GLASS.w}px)`)
+    expect(css).toContain(`steps(${STRIP_FRAMES}, jump-none)`)
+    expect(STRIP_MS).toBeLessThanOrEqual(900)
+  })
+})
+
+describe('P11 재료·도크 툴바 키보드(로빙)', () => {
+  it('좌우 화살표는 감기, Home·End, 다른 키는 무시', () => {
+    expect(rovingNext('ArrowRight', 17, 18)).toBe(0)
+    expect(rovingNext('ArrowLeft', 0, 18)).toBe(17)
+    expect(rovingNext('Home', 9, 18)).toBe(0)
+    expect(rovingNext('End', 2, 18)).toBe(17)
+    expect(rovingNext('Enter', 2, 18)).toBe(-1)
+    expect(rovingNext('ArrowRight', 0, 0)).toBe(-1)
+  })
+  it('정지점: 마지막 포커스, 선택, 맨 앞 순(보이는 관 중에서)', () => {
+    expect(rovingStop(['sand', 'water'], 'water', 'sand')).toBe('water')
+    expect(rovingStop(['sand', 'water'], 'lava', 'water')).toBe('water')
+    expect(rovingStop(['stone', 'wood'], null, 'sand')).toBe('stone')
+    expect(rovingStop([], null, 'sand')).toBeNull()
+  })
+  const html = renderToStaticMarkup(<HomePour />)
+  it('SSR: 재료 toolbar 하나, 관 18개 중 Tab 정지점은 선택된 sand 하나', () => {
+    expect(html.match(/role="toolbar" aria-label="Material"/g)).toHaveLength(1)
+    const tubes = html.match(/<button[^>]*class="sl-tube-btn"[^>]*>/g) ?? []
+    expect(tubes).toHaveLength(18)
+    const stops = tubes.filter((b) => b.includes('tabindex="0"'))
+    expect(stops).toHaveLength(1)
+    expect(stops[0]).toContain('aria-pressed="true"')
+  })
+  it('SSR: 엄지 도크 toolbar도 Tab 정지점 1개(Erase), 버튼 5개', () => {
+    const dock = html.slice(html.indexOf('aria-label="Brush"'), html.indexOf('id="sl-share-why"'))
+    const btns = dock.match(/<button[^>]*>/g) ?? []
+    expect(btns).toHaveLength(5)
+    expect(btns.filter((b) => b.includes('tabindex="0"'))).toHaveLength(1)
+    expect(btns[0]).toContain('tabindex="0"')
   })
 })
