@@ -12,6 +12,10 @@
  * 실행: node scripts/daily-metrics.mjs
  */
 
+import { devicesSql, firstPourSql, northStarLines, TOUCH_EVENTS } from './north-star.mjs'
+
+/** 측정 PR(익명 기기 id·first_stroke) prod 배포일(UTC). 이 날 전 이벤트엔 기기 id가 없다. */
+const MEASURE_SINCE = '2026-11-20'
 const DB = 'sandlab-gallery'
 const ZONE = 'sandlab.app'
 const DAY = 86_400_000
@@ -124,6 +128,18 @@ try {
        WHERE timestamp > NOW() - INTERVAL '7' DAY AND blob1 = 'landing' GROUP BY src ORDER BY n DESC LIMIT 12`,
     )
     console.log(`유입 태그(?ref=)·referrer 분류 (7일, landing): ${landings.map((r) => `${r.src}=${r.n}`).join(' · ') || '없음(계측 배포 전이거나 방문 없음)'}`)
+    // 북극성(NORTH-STAR 2장): 기기 id(blob5)는 측정 PR 배포(MEASURE_SINCE) 뒤 이벤트에만 있다.
+    try {
+      const [touched, dailyClear, pour] = await Promise.all([
+        ae(devicesSql(TOUCH_EVENTS)),
+        ae(devicesSql(['daily_clear'])),
+        ae(firstPourSql()),
+      ])
+      console.log('')
+      for (const line of northStarLines({ touched, dailyClear, pour, since: MEASURE_SINCE, today: new Date(now).toISOString().slice(0, 10) })) console.log(line)
+    } catch (e) {
+      console.log(`\n북극성: 실패 (${String(e.message).split('\n')[0]})`) // 위 이벤트 표는 이미 찍혔다
+    }
   }
 } catch (e) {
   console.log(`\nAE: 실패 (${e.message})`)

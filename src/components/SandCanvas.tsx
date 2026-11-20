@@ -11,7 +11,7 @@ import { getCreatorName, setCreatorName, getCreatorId } from '@/lib/sand/creator
 import { makeThumb, isBlank } from '@/lib/sand/thumb'
 import { noteFirstTry, buildSuggestionPairs, pickSuggestion } from '@/lib/sand/discovery'
 import { checkPourMilestone } from '@/lib/sand/milestones'
-import { trackEvent } from '@/lib/sand/gallery'
+import { trackEvent, trackFirstStroke } from '@/lib/sand/gallery'
 import { uaClass } from '@/lib/sand/ua'
 import { gpuAdvice, type GpuAdvice } from '@/lib/sand/gpuAdvice'
 import { paletteGrid } from '@/lib/sand/paletteGrid'
@@ -385,6 +385,7 @@ export default function SandCanvas() {
     strokeIsEraseRef.current.set(e.pointerId, isErase)
     if (!isErase) {
       const msg = noteFirstTry(triedRef.current, sel, NAME_BY_SLUG[sel] ?? sel, PAINTABLE.length)
+      trackFirstStroke() // 북극성: 탭당 첫 붓기 1회(지우개 획 제외)
       // 부은 양 누적 — 첫 다브(원 면적 근사)부터. 지우개 스트로크는 안 센다.
       pourPrevRef.current.set(e.pointerId, { x, y })
       pouredRef.current += Math.PI * radiusRef.current * radiusRef.current

@@ -7,7 +7,7 @@
 //  - 로그인 없음. 남용 방어는 IP 레이트리밋 + 투표 IP 중복 차단으로 한다.
 //    localStorage 중복 차단만으론 시크릿 창 한 번이면 뚫린다.
 
-import { parseTrack } from './track'
+import { parseDevice, parseTrack } from './track'
 import { validateDaily, summarize } from './daily'
 import { handleSpill, levelFloors, levelHashes } from './spill'
 import { spillRedirect } from './spill-redirects'
@@ -61,10 +61,10 @@ interface Env {
 
 /**
  * 배급 퍼널 계측 — 비차단·프라이버시 보존. 절대 요청을 깨뜨리지 않는다(전부 try/catch).
- * per-user 식별자 없음: event_type · referrer host · country · scene_id(선택)만 집계한다.
+ * event_type · referrer host · country · scene_id(선택) + /api/track만 blob5 = 브라우저가 만든 무작위 기기 id(북극성, 계정·IP와 무관).
  * 활성화 이벤트 = 페이지뷰가 아니라 '씬을 공유/업로드/투표함'(허영지표 배제).
  */
-function track(env: Env, event: string, req: Request, sceneId = '', value = 0) {
+function track(env: Env, event: string, req: Request, sceneId = '', value = 0, device = '') {
   try {
     if (!env.AE) return
     let ref = ''
@@ -76,7 +76,7 @@ function track(env: Env, event: string, req: Request, sceneId = '', value = 0) {
     const cf = (req as { cf?: { country?: string } }).cf
     const country = typeof cf?.country === 'string' ? cf.country : ''
     env.AE.writeDataPoint({
-      blobs: [event, ref, country, sceneId],
+      blobs: [event, ref, country, sceneId, device], // blob5 = 익명 기기 id(/api/track만, worker/track.ts)
       doubles: [1, value], // value = 챌린지 클리어 잉크 등(없으면 0)
       indexes: [event], // 저카디널리티 샘플링 키
     })
@@ -504,7 +504,7 @@ const app = {
         return new Response(null, { status: 204 })
       }
       const t = parseTrack(body) // 화이트리스트·형식 검증(worker/track.ts)
-      if (t) track(env, t.event, request, t.ref, t.value)
+      if (t) track(env, t.event, request, t.ref, t.value, parseDevice(body, request.headers.get('user-agent')))
       return new Response(null, { status: 204 })
     }
 
