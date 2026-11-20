@@ -1281,6 +1281,8 @@ const S: Record<string, React.CSSProperties> = {
     opacity: 0.55,
     color: '#eef1f6',
     whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
     fontVariantNumeric: 'tabular-nums',
     textShadow: '0 1px 12px rgba(0,0,0,0.8)',
   },
