@@ -164,6 +164,32 @@
 - **헤더 데일리 pill(P3 셸)**: 보이는 글자 `Daily · 06:12`(번호는 접근 이름으로), 접근 이름 `Daily · 06:12, puzzle No.43, 6 hours 12 minutes left` — 보이는 글자로 시작(label-in-name). P6 3초 테스트 3/5 "No.42 00:52가 뭔지 모르겠다" 반영. 칸 폭 12ch → 13ch(시간이 채워져도 폭 고정, CLS 0).
 - 버린 안: 큐레이션을 `#g=` 문자열로 저장(장면 크기 따라 URL 예산 초과·홈 진입이 'A scene someone shared'로 제목 없음), 새 업로드(지시: prod D1 쓰기 금지), 정렬 Top을 위해 `sort=top` API 추가(범위 밖 — 필요하면 별도 PR), 썸네일 위 Play 버튼(작은 2열 카드에서 그림의 1/4을 가림).
 
+## 2026-11-20 리디자인 P10 글 페이지 — 셸 치환 방식·본문 서체(실측)·광고 자리·AdSense 단위 연결
+- **치환 방식 두 갈래**: ① 데이터로 그리는 글(Learn 글·레벨 공략·재료 목록·재료)은 `@ui-shell` 전용 화면(LearnArticle·GuideArticle·MaterialsIndex·MaterialPage, `src/ui-next/content/`)이 page.tsx가 넘긴 **같은 데이터**로 그린다. JSON-LD는 page가 객체 하나를 만들어 두 빌드가 같이 쓴다. ② 손으로 쓴 산문(About·Privacy·Terms·Contact·Learn 허브·404)은 ContentShell이 `ContentFrame`(classic null)으로 넘기고, **같은 JSX에서 옛 다크 인라인 style만 걷어낸다**(`stripStyles`, React.Children + cloneElement — id·href·aria·글자는 그대로). 문장을 두 벌로 복사하지 않고, P4의 `!important` 덮어쓰기도 쓰지 않는다. Learn 허브만 `kind="index"`(ContentShell prop, prod HTML 영향 없음)로 글 카드.
+- **새 셸이 더한 글자는 `data-sl-chrome`**: 목차 제목 "On this page", 이전/다음 라벨, Learn 글·재료의 이전/다음 카드(prod에 없던 탐색), 광고 라벨. 파리티 검사(`scripts/qa/content-parity.mjs`)는 이걸 빼고 prod와 단어·링크 수·순서를 대조한다(35쪽 전부 같음).
+- **본문 서체 = 시스템 산세리프(제목만 Bricolage 700)**. Lighthouse 모바일 6쪽 × 3회 중앙값(로컬 정적 서버, 기본 throttling): 시스템 본문 4.46~5.22s vs Bricolage 400 본문 4.76~5.09s — 차이는 측정 잡음 범위(±0.3s), 폰트 파일은 헤더가 이미 3개를 받아 바이트 차이 0. 갈린 것은 CLS: Bricolage 본문은 /about에서 swap 재배치 0.011, 시스템은 0. 긴 글(1,500~1,900단어)의 가독성도 시스템 쪽. P3 이전(옛 다크 본문) 기준선 4.71~5.51s와 같은 수준 → LCP 2.5s 게이트는 이 PR이 아니라 P11(렌더 차단 CSS·JS)에서 다룬다.
+- **광고 자리(S11)**: 글 페이지마다 본문 중간 1곳(가운데 섹션 뒤 / 산문은 가운데 h2 앞 / 재료 목록은 Powders 뒤 / 재료는 본문 문단 뒤) + 글 끝 1곳(article 뒤, 이전/다음 위). 둘 다 AdPlate(간격 32px, 'Advertisement', 다른 면). 광고 로더 없는 페이지(Learn 허브·정책 페이지·404)는 자리 0. 글 안 라이브 데모(캔버스)는 지금 없음 — 생기면 광고와 24px+·동시 라이브 1개 이하.
+- **AdSense 단위(오너 11-20 생성, docs/team/adsense-units.md)**: `play` 9581379414(300×250), `contentMid` = 고정 크기 **단위 2개를 800px에서 갈아 끼움** — 320×100 6955216070 / 728×90 5642134405(마운트 뒤 맞는 쪽 ins 하나만 DOM에 — 리뷰: push는 첫 미처리 ins를 채운다. 768이 아니라 800인 이유 = 데스크톱 스크롤바 15px 포함 768~790에서 728이 열을 넘침), `contentEnd`(300×250)는 단위 없음 → null(렌더 0). 반응형 단위는 쓰지 않는다(고정 높이 예약·overflow hidden이라 잘림 = 정책 위험). 새 셸(프리뷰)에서만 렌더, prod 화면 변화 0, 재심사 신청 금지.
+- **컷오버(P12) 주의**: 승인 전에 새 셸을 prod로 내보내면 빈 안내판이 보인다 — 그 시점 승인 상태로 AD_SLOTS를 비울지 결정.
+- 버린 안: 산문 페이지도 전용 화면으로 문장 복제(문장 두 벌 = 드리프트), 본문 Bricolage(LCP 이득 0·CLS 0.011), contentMid를 반응형 단위 1개 + CSS 크기 지정(오너가 고정 단위 2개를 만듦), 목차를 모든 글에(섹션 3개 미만이면 숨김).
+
+## 2026-11-20 북극성 문서 + 오너 승인 A~H 배치 (오너 지시, 제품 전략)
+- 맥락: 오너 "개별 사이트의 방향성을 잘 설정하고 팀 모든 인원이 그대로 나아가길". 스승님 제안 A~H(허브 mentor/lydia-hallie.md 7장)는 오너 "다 추천대로" 승인.
+- 선택: `docs/team/NORTH-STAR.md`(90일, 11-20~02-17). 북극성 = **주간 손댄 방문자**(첫 획 또는 퍼즐 시작한 고유 기기). 유입이 하루 약 5세션이라 데일리 클리어 하나로는 병목(유입)을 못 본다(그로스 리뷰) → 데일리 클리어·외부 유입·첫 붓기율은 보조. 1단계 측정 PR로 `trackEvent`에 익명 기기 id와 첫 획 이벤트를 넣는다. 목표는 12-04 기준값의 배수.
+- 연결: SESSION-GUIDE 맨 위 북극성 박스, 끝난 최우선 박스 2개(11-19 UI·UX 전면 교체 → 진행 중 박스에 흡수, 11-18 챌린지 UI 개편 → 리디자인 P4·P5·P7로 완료)를 걷고 스승님 원칙 박스는 0장 아래 절로 옮김(G), 루틴 설명을 7교대로, 시작 시 NORTH-STAR 확인, 20시 요약 첫 줄 북극성 값, OPERATING 일일 출시 원칙에 B 조정. B는 큰 기능·컷오버에만(새 레벨은 spill:verify·솔버 클리어율).
+
+## 2026-11-20 리디자인 P9b 갤러리 후속 — Yours 탭·작성자 링크·원본 링크·올린 시각·하단 Ko-fi 글줄 이식(프리뷰 전용)
+- **원칙(스승님 '길은 하나')**: 옛 GalleryBrowser의 기능을 새 벽(GalleryWall)에 빠짐없이 옮겨 P12 컷오버 때 옛 파일을 지울 수 있게 한다. 이번엔 옛 파일을 지우지 않는다(prod가 아직 classic).
+- **Yours = 옛 탭 그대로**: 출처 localStorage `sandlab.mine`(listMine) → id마다 `GET /api/scenes/:id?meta=1`(getSceneMeta), 지워진 장면은 건너뜀. 델타는 기준선 갱신 전에 계산(mineDeltas) → updateMineSeen. 새 API·새 키 0. 자기 작품엔 투표 버튼 없이 표 수만(옛 동작). 탭 순서도 옛 순서(Hot·New·Yours·Top).
+  - 다른 탭으로 넘어간 뒤 늦게 도착한 응답은 기준선을 갱신하지 않는다(요청 번호 확인) — 옛 코드는 갱신했다(보지 않은 증가분이 사라지는 작은 버그, 새 쪽만 고침).
+  - 증가분 줄 문구는 옛 배지와 같고 앞의 화살표 글리프만 `next` 아이콘(위로 회전)으로 바꿨다(R8). 합계·증가분 줄은 두 줄 자리를 먼저 잡아 CLS 0.
+  - 프리뷰(읽기 전용)에서는 투표 안내 대신 "Publishing is off in this read-only preview, so nothing new will show up here." — 프리뷰에선 새 게시가 막혀 Yours가 늘지 않는다는 사실.
+- **옛 카드 기능 중 P9에 빠져 있던 것도 같이 옮김**(대조표 작성 중 발견): 작성자 이름 → 그 사람 작품 + 서버 집계 줄(`/api/creators/:id`, 옛 작성자 화면 머리 문구), 리믹스 원본 링크("Original", 홈 리믹스 배너와 같은 말), 올린 시각(옛 ago() 구간). 작성자 줄은 44px 한 줄로 고정해 카드 높이가 같다(빈 액자 캡션 122 → 144).
+- **하단 글줄 = 옛 문구·링크·순서 그대로**("Made by Piousangel · About · Learn · Privacy · Terms · Contact · ♥ support", Ko-fi 새 탭 + `kofi_click` 계측). `♥`는 R8 기호 블록이지만 문구의 일부라 `lint-ui-allow`(지시: 텍스트 변경 금지). gallery.test가 옛·새 SSR에서 글줄 문구·href를 대조한다 — 갈라지면 실패(컷오버 때 같이 지움).
+- **검사 승격**: P9 스크래치 e2e를 `scripts/qa/gallery-e2e.cjs` + `scripts/qa/lib.cjs`로 올리고 `pnpm qa:gallery`로 등록(playwright·axe-core는 NODE_PATH, CI 연결은 오너 결정 C 대기). 로컬 시드는 로컬 wrangler dev에만(주소가 localhost가 아니면 멈춤), 업로드 한도는 사설 IP 헤더로 비켜 간다.
+- 독립 리뷰 8.5/10(차단 0) 반영: Yours 조회가 전부 실패하고 이유가 404(지워진 장면)만이 아니면 빈 상태 대신 "Couldn't reach the wall · Try again"(`isGone`), 작성자 화면 돌아가기 라벨 = 들어온 정렬("Back to Hot"·"Top makers"), 작성자 이름은 서버 집계 이름 우선, 하단 링크 간격(min-width 대신 padding), 합계 줄 aria-live 제거(증가분 줄만 status), 작성자 버튼 title 제거. 미반영: Yours 작성자 화면 Vote(단건 meta에 creatorId가 없어 Yours 카드엔 작성자 버튼이 없음 — 일어나지 않음), Ko-fi 새 탭 sr 문구(문구 변경 금지·옛 쪽도 없음), 지워진 장면 수만큼 빈 액자가 남는 미세 이동(실측 CLS ≤ 0.0003).
+- 버린 안: 옛 소개 문단(SEO용 정적 문단)을 새 벽에 다시 넣기 — P9가 lede + 정렬별 설명으로 바꾼 결정이라 이번 범위 밖(P12 SEO 점검 때 단어 수 비교). 카드 hover "Remix" 배지 — 새 벽은 작품을 열면 홈에서 바로 이어 붓는다(P6 진입), 같은 행동이 한 번 클릭 거리.
+
 ## 2026-11-20 오늘 방문자: 워커 + D1 일별 고유 방문자 카운터 (오너 "today 방문자 나왔으면 좋겠어")
 - 선택(오너): 사이트에 공개 표시 + 아침 메일·20시 요약에도. 허브(minigames-hub)와 같은 방식.
 - 집계 방법 비교

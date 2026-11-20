@@ -7,7 +7,8 @@ import { sceneIdFromHash } from '@/lib/sand/urlState'
 import * as Classic from '../shell/classic'
 import { GalleryWall } from './GalleryWall'
 import { PICKS, SANDLAB_CREATOR, isSandlabPick, pickThumb } from './picks'
-import { SORTS, appendPage, canPlay, creditLine, emptyState, endLive, hasMore, liveKey, nextLive, openHref, remixLabel, voteLabel } from './model'
+import GalleryBrowser from '@/components/GalleryBrowser'
+import { SORTS, ago, appendPage, backLabel, isGone, canPlay, creditLine, deltaLine, emptyState, endLive, hasMore, liveKey, makerStats, mineTotals, nextLive, openHref, remixLabel, voteLabel } from './model'
 
 const pub = (p: string) => fileURLToPath(new URL(`../../../public${p}`, import.meta.url))
 const meta = (id: string): SceneMeta => ({ id, title: id, votes: 0, createdAt: 0, w: 1200, h: 600 })
@@ -48,8 +49,38 @@ describe('문구·규칙', () => {
     expect(voteLabel(1)).toBe('1 vote')
     expect(voteLabel(3)).toBe('3 votes')
   })
-  it('정렬은 Hot·New·Top 세 개(기존 API)', () => {
-    expect(SORTS.map((s) => s.id)).toEqual(['hot', 'new', 'top'])
+  it('정렬은 옛 갤러리 탭 순서 그대로 Hot·New·Yours·Top(기존 API + 로컬 내 작품)', () => {
+    expect(SORTS.map((s) => s.id)).toEqual(['hot', 'new', 'mine', 'top'])
+    expect(SORTS.map((s) => s.label)).toEqual(['Hot', 'New', 'Yours', 'Top'])
+  })
+  it('올린 시각: 옛 카드와 같은 구간', () => {
+    const now = 1_000_000_000
+    expect(ago(now - 30_000, now)).toBe('just now')
+    expect(ago(now - 5 * 60_000, now)).toBe('5m ago')
+    expect(ago(now - 3 * 3600_000, now)).toBe('3h ago')
+    expect(ago(now - 2 * 86400_000, now)).toBe('2d ago')
+  })
+  it('Yours 합계·증가분: 늘어난 게 없으면 줄이 없다, 단수·복수', () => {
+    expect(mineTotals([{ votes: 2, remixCount: 1 }, { votes: 3 }, {}])).toEqual({ scenes: 3, votes: 5, remix: 1 })
+    expect(deltaLine({ votes: 0, remix: 0 })).toBeNull()
+    expect(deltaLine({ votes: 1, remix: 0 })).toBe('+1 vote since your last visit')
+    expect(deltaLine({ votes: 2, remix: 1 })).toBe('+2 votes, +1 remix since your last visit')
+    expect(deltaLine({ votes: 0, remix: 3 })).toBe('+3 remixes since your last visit')
+  })
+  it('Yours 조회 실패 구분: 지워진 장면(404)만 빈 상태, 그 밖은 장애', () => {
+    expect(isGone(new Error('{"error":"not found"}'))).toBe(true)
+    expect(isGone(new Error('HTTP 404'))).toBe(true)
+    expect(isGone(new Error('Failed to fetch'))).toBe(false)
+    expect(isGone(new Error('HTTP 503'))).toBe(false)
+  })
+  it('작성자 화면 돌아가기 라벨 = 들어온 정렬', () => {
+    expect(backLabel('top')).toBe('Top makers')
+    expect(backLabel('hot')).toBe('Back to Hot')
+    expect(backLabel('new')).toBe('Back to New')
+  })
+  it('작성자 집계 줄(옛 작성자 화면 머리 문구)', () => {
+    expect(makerStats({ sceneCount: 1, totalVotes: 1, remixCount: 1 })).toBe('1 scene · 1 vote · 1 remix')
+    expect(makerStats({ sceneCount: 4, totalVotes: 0, remixCount: 2 })).toBe('4 scenes · 0 votes · 2 remixes')
   })
   it('More 병합은 이미 있는 id를 버린다(새 업로드로 offset이 밀린 경우)', () => {
     const r = appendPage([meta('aaaaaa'), meta('bbbbbb')], [meta('bbbbbb'), meta('cccccc')])
@@ -62,6 +93,7 @@ describe('문구·규칙', () => {
     expect(emptyState('new', false).action).toBe('pour')
     expect(emptyState('top', false).action).toBe('pour')
     expect(emptyState('hot', true).action).toBe('pour')
+    expect(emptyState('mine', false)).toEqual({ text: 'Nothing of yours yet. Publish a scene and it shows up here.', action: 'pour' })
   })
   it('라이브는 한 번에 하나: 새 요청이 대체, 같은 버튼은 멈춤, reduced-motion이면 hover 무시', () => {
     const B = (key: string) => ({ key, via: 'button' as const })
@@ -110,9 +142,10 @@ describe('GalleryWall SSR', () => {
   it('SSR에는 라이브 캔버스가 없다(재생은 사용자 동작 뒤 한 점만)', () => {
     expect(html).not.toContain('<canvas')
   })
-  it('정렬 버튼 세 개, Hot이 눌린 상태로 시작', () => {
+  it('정렬 버튼 네 개, Hot이 눌린 상태로 시작', () => {
     expect(html).toMatch(/aria-pressed="true"[^>]*>Hot</)
     expect(html).toContain('>New<')
+    expect(html).toContain('>Yours<')
     expect(html).toContain('>Top<')
   })
   it('댓글 없음(절대 규칙)', () => {
@@ -120,5 +153,33 @@ describe('GalleryWall SSR', () => {
   })
   it('classic 셸은 GalleryWall = null(prod /gallery 그대로)', () => {
     expect(Classic.GalleryWall).toBeNull()
+  })
+})
+
+/** 옛 갤러리(prod)와 새 벽(프리뷰)의 하단 글줄 대조 — 문구·링크가 한 글자라도 갈라지면 실패(P9b 지시: 텍스트 변경 금지). 컷오버(P12)로 옛 쪽을 지울 때 이 묶음도 지운다. */
+describe('옛 갤러리와 대조(P9b)', () => {
+  const wall = renderToStaticMarkup(<GalleryWall />)
+  const old = renderToStaticMarkup(<GalleryBrowser />)
+  const supportLine = (h: string) => {
+    const i = h.indexOf('Made by Piousangel')
+    const j = h.indexOf('</a>', h.indexOf('ko-fi.com/piousangel', i)) + 4
+    const seg = h.slice(i, j)
+    return {
+      text: seg.replace(/<[^>]+>/g, '').replace(/&#x27;/g, "'").replace(/\s+/g, ' ').trim(),
+      hrefs: [...seg.matchAll(/href="([^"]+)"/g)].map((m) => m[1]),
+      kofi: /href="https:\/\/ko-fi\.com\/piousangel" target="_blank" rel="noopener noreferrer"/.test(seg),
+    }
+  }
+  it('하단 글줄(Ko-fi 포함) 문구·링크·순서가 옛 갤러리와 같다', () => {
+    const a = supportLine(old)
+    const b = supportLine(wall)
+    expect(a.text).toBe('Made by Piousangel · About · Learn · Privacy · Terms · Contact · ♥ support') // lint-ui-allow: 옛 갤러리 문구 그대로 대조
+    expect(b.text).toBe(a.text)
+    expect(b.hrefs).toEqual(a.hrefs)
+    expect(a.kofi && b.kofi).toBe(true)
+  })
+  it('옛 탭(Hot this week·Newest·Yours·Top Creators)이 새 정렬에 하나씩 대응한다', () => {
+    for (const t of ['Hot this week', 'Newest', 'Yours', 'Top Creators']) expect(old).toContain(`>${t}<`)
+    expect(SORTS).toHaveLength(4)
   })
 })

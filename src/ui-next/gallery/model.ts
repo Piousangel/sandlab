@@ -3,12 +3,17 @@
  */
 import type { SceneMeta } from '@/lib/sand/gallery'
 
-/** 정렬 = 기존 API 그대로. hot/new = /api/scenes?sort=, top = /api/creators/top(작품 순위 API는 없다 — 표를 많이 받은 작성자). */
-export type WallSort = 'hot' | 'new' | 'top'
+/**
+ * 정렬 = 기존 API 그대로. hot/new = /api/scenes?sort=, top = /api/creators/top(작품 순위 API는 없다 — 표를 많이 받은 작성자).
+ * mine(Yours, P9b) = 옛 갤러리와 같은 출처 — 이 브라우저 localStorage `sandlab.mine`(listMine)의 id를 단건 meta로 하나씩 조회.
+ * 순서는 옛 탭 순서(Hot·Newest·Yours·Top Creators) 그대로.
+ */
+export type WallSort = 'hot' | 'new' | 'mine' | 'top'
 
 export const SORTS: readonly { id: WallSort; label: string; hint: string }[] = [
   { id: 'hot', label: 'Hot', hint: 'Most votes from the last seven days.' },
   { id: 'new', label: 'New', hint: 'Every scene, newest first.' },
+  { id: 'mine', label: 'Yours', hint: 'Scenes you published from this browser. Come back to see their votes climb.' },
   { id: 'top', label: 'Top', hint: 'Makers whose scenes earned the most votes.' },
 ]
 
@@ -20,6 +25,53 @@ export function creditLine(creatorName: string | null | undefined): string {
 
 export const remixLabel = (n: number | undefined) => (n === 1 ? '1 remix' : `${n ?? 0} remixes`)
 export const voteLabel = (n: number) => (n === 1 ? '1 vote' : `${n} votes`)
+export const sceneLabel = (n: number) => (n === 1 ? '1 scene' : `${n} scenes`)
+
+/** 올린 지 얼마나(옛 갤러리 카드 ago()와 같은 구간·문구). now는 테스트용. */
+export function ago(t: number, now = Date.now()): string {
+  const s = (now - t) / 1000
+  if (s < 60) return 'just now'
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`
+  return `${Math.floor(s / 86400)}d ago`
+}
+
+/** Yours 합계 줄(옛 mineDigest와 같은 합산): 작품 수·받은 표·리믹스. */
+export function mineTotals(scenes: readonly { votes?: number; remixCount?: number }[]) {
+  return {
+    scenes: scenes.length,
+    votes: scenes.reduce((n, s) => n + (s.votes || 0), 0),
+    remix: scenes.reduce((n, s) => n + (s.remixCount || 0), 0),
+  }
+}
+
+/**
+ * 지난 Yours 방문 뒤 늘어난 표·리믹스(gallery.ts mineDeltas 결과) → 한 줄. 늘어난 게 없으면 null(줄을 그리지 않는다).
+ * 문구는 옛 배지와 같다("+2 votes, +1 remix since your last visit") — 앞의 화살표 글리프만 아이콘으로 바꿨다(R8).
+ */
+export function deltaLine(d: { votes: number; remix: number }): string | null {
+  const parts = [
+    d.votes > 0 ? `+${d.votes} vote${d.votes === 1 ? '' : 's'}` : null,
+    d.remix > 0 ? `+${d.remix} remix${d.remix === 1 ? '' : 'es'}` : null,
+  ].filter(Boolean)
+  return parts.length ? `${parts.join(', ')} since your last visit` : null
+}
+
+/** Yours 단건 조회 실패가 '지워진 장면'인가 — 워커 404 본문은 {"error":"not found"}(gallery.ts req가 본문을 Error 메시지로). 그 밖(망·5xx)은 장애. */
+export function isGone(reason: unknown): boolean {
+  return reason instanceof Error && /not found|HTTP 404/.test(reason.message)
+}
+
+/** 작성자 화면에서 돌아가는 버튼 — 들어온 정렬로 돌아간다(Top이면 작성자 순위, 카드 작성자 링크로 왔으면 그 정렬, 리뷰 2). */
+export function backLabel(sort: WallSort): string {
+  if (sort === 'top') return 'Top makers'
+  return `Back to ${SORTS.find((s) => s.id === sort)!.label}`
+}
+
+/** 작성자 집계 줄(옛 작성자 화면 머리와 같은 문구) — /api/creators/:id 서버 집계. */
+export function makerStats(p: { sceneCount: number; totalVotes: number; remixCount: number }): string {
+  return `${sceneLabel(p.sceneCount)} · ${voteLabel(p.totalVotes)} · ${p.remixCount} remix${p.remixCount === 1 ? '' : 'es'}`
+}
 
 /** "More"로 받은 다음 쪽을 붙인다 — 그 사이 새 업로드로 offset이 밀려 같은 id가 다시 오면 버린다(같은 key 두 번 = React 경고·중복 액자). */
 export function appendPage(prev: SceneMeta[], next: SceneMeta[]): SceneMeta[] {
@@ -32,6 +84,7 @@ export const hasMore = (shown: number, total: number) => shown < total
 /** 빈 상태 문구(목록이 0개일 때). 행동은 하나만: hot은 New로, new·작성자는 홈에서 붓기. */
 export function emptyState(sort: WallSort, creator: boolean): { text: string; action: 'new' | 'pour' } {
   if (creator) return { text: 'Nothing from this maker yet.', action: 'pour' }
+  if (sort === 'mine') return { text: 'Nothing of yours yet. Publish a scene and it shows up here.', action: 'pour' }
   if (sort === 'hot') return { text: 'Nothing new on the wall this week.', action: 'new' }
   if (sort === 'top') return { text: 'No named makers yet. Add a name when you publish and you will show up here.', action: 'pour' }
   return { text: 'The wall is empty. Pour the first scene.', action: 'pour' }

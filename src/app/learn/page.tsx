@@ -15,7 +15,7 @@ const fmt = (d: string) =>
 export default function Page() {
   return (
     // 목록 페이지(본문 약 216단어)라 광고 없음 — 얇은 화면 광고 = 9-21 반려 사유(2026-11-16 점검)
-    <ContentShell ads={false}>
+    <ContentShell ads={false} kind="index">
       <h1 style={{ fontSize: 30, lineHeight: 1.2, margin: '0 0 12px' }}>Learn</h1>
       <p style={{ opacity: 0.85 }}>
         Sandlab is small enough that one person can explain all of it. These articles go through how the
