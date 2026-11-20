@@ -5,10 +5,20 @@
 - **prod에 들어간 것: 워커 `GET /api/scenes/:id`(풀·meta)에 `creatorName`**(목록과 같은 키·값, creatorId는 안 실음). worker/scene-one.test.ts, verify-gallery.py 단건·meta·익명 3항목 추가. P6 홈 진입 부제가 이제 "by 이름 · N remixes"(이름 없는 장면은 그대로 "From the gallery").
 - **큐레이션 12점 = 기존 공개 팀 작품 id**(아트 카운슬 2026-08 업로드, D1 creator_name 비어 있음) → 카드·아래 목록·홈 진입 부제 모두 `isSandlabPick`이면 "by Sandlab". 썸네일 `public/ui-next/wall/<id>.webp`(로컬 Metal WebGPU 실엔진 캡처, 3.4~19.1KB). 재생성 `pnpm build:preview && NODE_PATH=<playwright 있는 곳> node scripts/capture-wall.cjs`. **팀 작품이 D1에서 지워지면 picks.ts에서도 빼야 한다**(링크가 홈 빈 화면으로 떨어짐).
 - 라이브 규칙: `live = {key: 구역+id, via}` 하나만 → 동시 캔버스 ≤ 1(같은 id가 위·아래 두 구역에 있어도). hover 0.3초 재생/떠나면 정지, hover 중 Play = 고정, reduced-motion은 hover 없음, WebGPU 없음·init 실패면 Play 버튼 없음, 1200×600 아닌 옛 장면 Play 없음.
-- 헤더 데일리 pill: 보이는 글자 "Daily · hh:mm"(번호는 접근 이름 "Daily · hh:mm, puzzle No.N, …"). 13ch.
+- 헤더 데일리 pill: 보이는 글자 "Daily · hh:mm"(번호는 접근 이름 "Daily · hh:mm, puzzle No.N, …"). 13ch. **아래 D1 인계의 "헤더 pill Daily 글자" 할 일은 이 PR로 끝남.**
 - **P10·P12가 알아야 할 것**: ① 옛 갤러리의 **Yours 탭(내 작품·표/리믹스 델타)이 새 화면에 없다** — 컷오버 전 이식 필요(gallery.ts listMine·mineDeltas·updateMineSeen 그대로 쓰면 됨). ② Top = 작성자 순위(`/api/creators/top`)다. 작품 전 기간 순위를 원하면 워커 `sort=top` 추가(별도 PR, 오너 확인). ③ Ko-fi 후원 링크·About/Learn 글줄은 옛 갤러리 하단에만 있다 — 새 셸 푸터로 충분한지 P10에서 판단. ④ /gallery는 광고 허용 목록 밖 → AdPlate 없음. ⑤ `public/ui-next/wall/*.webp` 12개는 prod out/에도 복사된다(참조 없음, P6 still.webp와 같은 방식).
 - 검사 스크립트(스크래치 p9/e2e.cjs, 상시화하려면 scripts/qa/로): 3폭 레이아웃·CLS·44px·axe·pill, New·More·중복, Top → 작성자, 라이브 hover/탭/두 구역/고정, reduced-motion, WebGPU 없음, 큐레이션 → 홈 "by Sandlab", 로컬 워커(wrangler dev)에 이름 있는 1200×600 장면을 올려 홈 "by LocalTester".
 - 기준선: `pnpm test --testTimeout=30000`의 sweep·verify·replay 계열 30s 타임아웃은 main에서도 재현(머신 load 30+).
+
+---
+
+# 인계 (2026-11-20 10시 개발): 데일리 개편 D1 「지층이 쌓이는 모션」 — 브랜치 shift/1000-daily-motion
+
+- 오너 '딱딱·고전적' 지적에 대해 /daily 허브·데일리 시작 화면의 **모션 0**을 메움(프리뷰 전용, prod 화면 무변경). 기록 docs/team/specs/2026-11-20-daily-motion-d1.md(독립 리뷰 5/10 → 전부 반영).
+- 코드: `src/ui-next/daily/StrataJar.tsx`(pourDelays·grainTiming·isFreshPour·POURED_KEY `sandlab.strata.poured.v1`, IntersectionObserver로 병이 보일 때 시작), daily.css 끝 모션 절, spill.css 끝 데일리 시작 모션 절. 테스트 daily.test.tsx '모션' 묶음.
+- 함정: ① 모바일에선 병이 첫 화면 밖 — 모션을 마운트 때 틀면 아무도 못 본다(IO 게이트 필수). ② 토큰 길이는 reduced-motion에서 0.01ms가 되지만 JS 지연(animation-delay)은 남는다 → `animation: none`을 따로 써야 한다(fill both면 지연 동안 투명). ③ SVG 패턴 id `sl-st-grain1~3`이 있어 문자열 'sl-st-grain' 검사는 늘 걸린다 — `class="sl-st-grain"`으로 찾을 것.
+- 캡처 스크립트: 스크래치 cap/cap.cjs(out/ 정적 서버 + 픽스처 fresh·pending·seen·reduced, 390 시점별 프레임). 같은 날 재방문 검사는 init script가 키를 지우므로 수동 확인.
+- **다음 교대(D2)**: 390에서 병이 112px라 오늘 층 낙하가 작다 → 병 확대 또는 오늘 카드 아래 미니 병 / 결과 "+1 stratum" → 병 전환 / 헤더 pill 'Daily' 글자 / 결과 "왜 별을 놓쳤나" 한 줄. 리디자인 계획의 다음 P는 P9(갤러리) — 데일리 담당이 아니면 그쪽.
 
 ---
 

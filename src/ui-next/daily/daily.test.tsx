@@ -4,7 +4,7 @@ import { readStrata, STRATA_CYCLE } from '@/lib/strata'
 import { DAILY_KEY, DAILY_POOL_IDS, LAUNCH_UTC, dayNumber } from '@/lib/spill/client/daily'
 import { LEVELS } from '@/lib/spill/levels'
 import { BASE_H, GLASS_ON_BONE, INK, LABEL_GAP, MAX_LABELS, buildJar, contrast, materialColor, needsEdge, runs, waveAmp } from './strataModel'
-import { JAR, StrataJar } from './StrataJar'
+import { JAR, POUR, POURED_KEY, StrataJar, grainTiming, isFreshPour, pourDelays } from './StrataJar'
 import { DailyAside } from './DailyAside'
 import {
   VEIL_BLOCK, VEIL_FLATTEN, defaultScale, keepRects, mosaicPixels, shareLayout, veilBoard, type ShareFormat,
@@ -270,5 +270,65 @@ describe('공유 이미지 스포일러 가림(P7)', () => {
       expect(T.noteY).toBeGreaterThan(T.statY + T.stat * 0.5)
       expect(T.noteY).toBeLessThan(T.siteY - T.site - 8)
     }
+  })
+})
+
+describe('지층 병 — 모션(데일리 개편 D1)', () => {
+  const withSeen = (rec: Record<number, number>, seen: string | null) => {
+    const s = store(rec)
+    return { getItem: (k: string) => (k === POURED_KEY ? seen : s.getItem(k)) }
+  }
+  it('붓기 지연: 아래부터 오르고, 30층이어도 지시선·캡션 페이드까지 합친 전체가 보상 상한(900ms) 안', () => {
+    for (const n of [1, 2, 5, 12, 30]) {
+      const { delays, end, total } = pourDelays(n, false)
+      expect(delays[0]).toBe(0)
+      for (let i = 1; i < n; i++) expect(delays[i]).toBeGreaterThan(delays[i - 1])
+      expect(end).toBe(delays[n - 1] + POUR.settle)
+      expect(total).toBe(end + POUR.fade)
+      expect(total).toBeLessThanOrEqual(900)
+    }
+  })
+  it('오늘 처음 본 층은 나머지가 쌓인 뒤 떨어지고, 페이드까지 1.3초 안', () => {
+    const { delays, end, total } = pourDelays(30, true)
+    expect(delays[29] - delays[28]).toBeGreaterThanOrEqual(POUR.freshGap)
+    expect(end).toBe(delays[29] + POUR.drop)
+    expect(total).toBeLessThanOrEqual(1300)
+    expect(pourDelays(0, true)).toEqual({ delays: [], end: POUR.settle, total: POUR.settle + POUR.fade })
+  })
+  it('알갱이는 오늘 층이 바닥에 닿는 순간에 닿는다(먼 거리는 더 길게, 지연은 0 이상)', () => {
+    const land = 500 + POUR.drop * POUR.land
+    for (const fall of [8, 60, 220]) {
+      const t = grainTiming(500, fall, 0)
+      expect(t.delay + t.dur).toBe(Math.round(land))
+    }
+    expect(grainTiming(500, 220, 0).dur).toBeGreaterThan(grainTiming(500, 8, 0).dur)
+    expect(grainTiming(0, 220, 150).delay).toBe(0)
+  })
+  it('fresh = 오늘 풀었고 아직 안 본 날만(아직 안 풀었으면·이미 봤으면 아님, 저장소 오류도 안전)', () => {
+    const solved = jarOf({ 42: 2, 43: 3 })
+    expect(isFreshPour(solved, TODAY, withSeen({}, null))).toBe(true)
+    expect(isFreshPour(solved, TODAY, withSeen({}, '42'))).toBe(true)
+    expect(isFreshPour(solved, TODAY, withSeen({}, '43'))).toBe(false)
+    expect(isFreshPour(jarOf({ 42: 2 }), TODAY, withSeen({}, null))).toBe(false)
+    expect(isFreshPour(solved, TODAY, { getItem: () => { throw new Error('denied') } })).toBe(true)
+  })
+  it('렌더: fresh면 맨 위 층에만 data-fresh + 알갱이 6개, 본 날이면 둘 다 없음, 층마다 지연', () => {
+    const fresh = renderToStaticMarkup(<StrataJar today={TODAY} storage={withSeen({ 41: 1, 42: 2, 43: 3 }, null)} />)
+    expect(fresh).toContain('data-fresh="1"')
+    expect(fresh.match(/class="sl-st-grain"/g)).toHaveLength(6)
+    expect(fresh.match(/class="sl-st-l"/g)).toHaveLength(3)
+    // 층 지연은 아래 → 위로 오르고, 맨 위(오늘) 층이 가장 늦다
+    const ds = [...fresh.matchAll(/class="sl-st-l"[^>]*?animation-delay:(\d+)ms/g)].map((m) => +m[1])
+    expect(ds).toHaveLength(3)
+    expect(ds[0]).toBe(0)
+    expect(ds[2] - ds[1]).toBeGreaterThanOrEqual(POUR.freshGap)
+    // 알갱이는 층보다 먼저(아래에) 그려지고, 각자 낙하 길이가 있다
+    expect(fresh.indexOf('class="sl-st-grain"')).toBeLessThan(fresh.indexOf('class="sl-st-l"'))
+    expect(fresh).toMatch(/class="sl-st-grain"[^>]*animation-duration:\d+ms/)
+    const seen = renderToStaticMarkup(<StrataJar today={TODAY} storage={withSeen({ 41: 1, 42: 2, 43: 3 }, '43')} />)
+    expect(seen).not.toContain('data-fresh')
+    expect(seen).not.toContain('class="sl-st-grain"')
+    const pending = renderToStaticMarkup(<StrataJar today={TODAY} storage={withSeen({ 42: 2 }, null)} />)
+    expect(pending).not.toContain('data-fresh')
   })
 })
