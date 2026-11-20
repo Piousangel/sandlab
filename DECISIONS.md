@@ -268,6 +268,11 @@
 - **남은 후보(숫자 근거)**: /daily는 마운트 때 `/api/track` 핑 2개가 그래프 끝에 붙어 +150ms(prod 코드 trackEvent — 컷오버 뒤 load 뒤로 미루기 후보), 시작 화면 보드 렌더러(Spill 시뮬 약 15KB)는 첫 화면 주인공이라 미루지 않았다. 홈 LCP 요소는 프리뷰 읽기 전용 안내라 컷오버(prod 빌드, READ_ONLY 없음) 뒤에는 h1 등으로 바뀐다 — 컷오버 PR에서 다시 잰다.
 - prod 영향: prod out/ 210/210 main과 동일(같은 폴더 빌드, 빌드 id만 다름) + 참조 없는 정적 파일 13개(320 썸네일 12·아이콘 1, P9 webp와 같은 방식). content-parity 35쪽 0 차이.
 
+## 2026-11-20 공개 저장소 추적 파일에서 오너 개인 메일 주소 제거 (오너 승인)
+- 맥락: 공개 저장소의 팀 문서(SESSION-GUIDE)에 오너 개인 메일 주소가 그대로 있었다.
+- 선택: 보고 메일 규칙은 '연결된 Gmail 계정 본인 주소(받는 사람 = 보내는 사람) 외 발송 금지'로 바꾸고, 루틴이 Gmail 커넥터의 최근 보낸 보고 메일 From으로 주소를 확인하게 했다. 기록성 문장은 주소만 지우거나 '오너'로 바꿨다.
+- 한계: 주소는 git 기록(과거 커밋)에는 남는다. 기록 재작성(force push)은 하지 않는다.
+
 ## 2026-11-20 P12 컷오버 — prod sandlab.app을 새 셸(Glass & Grain)로, 되돌리기는 변수 하나 (오너 11-20 명시 승인, 고위험)
 - **전환 방식**: `package.json` `build:prod` = `NEXT_PUBLIC_UI=${SANDLAB_UI:-next} NEXT_PUBLIC_READ_ONLY= NEXT_PUBLIC_NOINDEX= next build`, `deploy` = `build:prod → verify-ads → wrangler deploy`. 새 셸은 이미 있던 `@ui-shell` 영역 치환·`PREVIEW_SWAPS`가 그대로 끼운다(코드 경로는 프리뷰와 같음 — 다른 점은 READ_ONLY·NOINDEX가 꺼진 것뿐).
   - 버린 안: ① 런타임 쿠키 분기(S6에서 이미 기각 — 정적 export 깜빡임) ② 옛 컴포넌트를 지우고 새 셸만 남기기(되돌리기가 revert + 재빌드로만 가능해짐 — 72시간 동안은 classic 빌드 경로를 살려 둔다) ③ deploy 스크립트에 `NEXT_PUBLIC_UI=next`를 박기(되돌리려면 PR·CI를 기다려야 함 — 변수로 바로 되돌릴 수 있게 `${SANDLAB_UI:-next}`).
