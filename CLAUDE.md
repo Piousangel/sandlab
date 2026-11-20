@@ -10,6 +10,7 @@ WebGPU 낙사 시뮬레이터. Next.js 15 정적 export + Cloudflare Worker(갤�
 ## 매일 아침 팀 운영
 
 06:00 KST 클라우드 루틴이 회의(docs/team/meetings) → 리뷰 → 반영(PR·머지) → 메일 보고. 운영 방식 docs/ops/playbook.md.
+**방향(필독)**: [docs/team/NORTH-STAR.md](./docs/team/NORTH-STAR.md) — 모든 교대가 시작할 때 본다.
 **아침 팀은 회의 전에 [docs/team/OPERATING.md](./docs/team/OPERATING.md)를 반드시 읽고 따른다** (어제 회고, 첫 화면 상시 안건, 방향 문서·주간 회고, 마케팅 실제 게시 큐).
 
 ## 절대 규칙 (어기면 사고)
