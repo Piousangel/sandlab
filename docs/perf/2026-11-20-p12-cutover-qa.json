@@ -1,115 +1,115 @@
 {
  "nolcp": {
-  "when": "2026-11-20T08:42:36.434Z",
+  "when": "2026-11-21T02:00:20.017Z",
   "load": [
-   27.2,
-   16.5,
-   12.2
+   21.6,
+   22.4,
+   18.1
   ],
   "out": "/private/tmp/claude-501/-Users-hyunseok-Desktop/dece547c-04bc-4cd8-9008-90c593f6b414/scratchpad/p12-out-next",
   "weight": [
    {
     "page": "/",
     "cssGz": 9370,
-    "jsGz": 147263,
+    "jsGz": 147269,
     "css": 3,
     "engine": true
    },
    {
     "page": "/daily",
     "cssGz": 10818,
-    "jsGz": 148745,
+    "jsGz": 148751,
     "css": 4,
     "engine": false
    },
    {
     "page": "/play",
     "cssGz": 11035,
-    "jsGz": 124136,
+    "jsGz": 124142,
     "css": 4,
     "engine": false
    },
    {
     "page": "/play/1-1",
     "cssGz": 11035,
-    "jsGz": 163558,
+    "jsGz": 163564,
     "css": 4,
     "engine": false
    },
    {
     "page": "/gallery",
     "cssGz": 8056,
-    "jsGz": 129197,
+    "jsGz": 129173,
     "css": 3,
     "engine": false
    },
    {
     "page": "/learn",
     "cssGz": 5929,
-    "jsGz": 119643,
+    "jsGz": 119649,
     "css": 2,
     "engine": false
    },
    {
     "page": "/learn/margolus-falling-sand",
     "cssGz": 5929,
-    "jsGz": 119643,
+    "jsGz": 119649,
     "css": 2,
     "engine": false
    },
    {
     "page": "/materials",
     "cssGz": 5929,
-    "jsGz": 119643,
+    "jsGz": 119649,
     "css": 2,
     "engine": false
    },
    {
     "page": "/materials/acid",
     "cssGz": 5929,
-    "jsGz": 119643,
+    "jsGz": 119649,
     "css": 2,
     "engine": false
    },
    {
     "page": "/about",
     "cssGz": 5929,
-    "jsGz": 119643,
+    "jsGz": 119649,
     "css": 2,
     "engine": false
    },
    {
     "page": "/play/1-1/guide",
     "cssGz": 5929,
-    "jsGz": 119643,
+    "jsGz": 119649,
     "css": 2,
     "engine": false
    },
    {
     "page": "/privacy",
     "cssGz": 5929,
-    "jsGz": 119643,
+    "jsGz": 119649,
     "css": 2,
     "engine": false
    },
    {
     "page": "/terms",
     "cssGz": 5929,
-    "jsGz": 119643,
+    "jsGz": 119649,
     "css": 2,
     "engine": false
    },
    {
     "page": "/contact",
     "cssGz": 5929,
-    "jsGz": 119643,
+    "jsGz": 119649,
     "css": 2,
     "engine": false
    },
    {
     "page": "/missing-page",
     "cssGz": 5929,
-    "jsGz": 119643,
+    "jsGz": 119649,
     "css": 2,
     "engine": false
    }
@@ -328,7 +328,7 @@
     "page": "/privacy",
     "axe": [],
     "hs": 0,
-    "cls": 0.0001,
+    "cls": 0,
     "errors": []
    },
    {
@@ -453,7 +453,7 @@
      ],
      "canvas": "Sandbox. Drag to pour the selected material."
     },
-    "pill": "Daily · 15:17, puzzle No.43, 15 hours 17 minutes left"
+    "pill": "Daily · 21:59, puzzle No.44, 21 hours 59 minutes left"
    },
    {
     "page": "/daily",
@@ -462,7 +462,7 @@
     "hidden": [],
     "names": {
      "start": {
-      "h1": "No.43 · Fri 20 NovGatekeeper",
+      "h1": "No.44 · Sat 21 NovTwo Taps",
       "cta": [
        "Close",
        "Pour",
@@ -686,25 +686,25 @@
   "fails": []
  },
  "lcp": {
-  "when": "2026-11-20T08:48:48.641Z",
+  "when": "2026-11-21T02:03:54.334Z",
   "load": [
-   7.4,
-   21.6,
-   17.7
+   9.1,
+   15.6,
+   16.1
   ],
   "out": "/private/tmp/claude-501/-Users-hyunseok-Desktop/dece547c-04bc-4cd8-9008-90c593f6b414/scratchpad/p12-out-next",
   "lcp": [
    {
     "page": "/",
-    "lcp": 2330,
-    "fcp": 1203,
+    "lcp": 2375,
+    "fcp": 1207,
     "cls": 0,
     "clsMax": 0,
-    "tbt": 14,
+    "tbt": 36,
     "runs": [
-     2466,
-     2325,
-     2330
+     2439,
+     2359,
+     2375
     ],
     "el": "<h1 class=\"sl-home-h1\">",
     "blocking": [
@@ -712,7 +712,7 @@
      "/_next/static/css/945ed66ddffc53c2.css"
     ],
     "inpRuns": [
-     64,
+     56,
      64,
      64
     ],
@@ -720,24 +720,24 @@
    },
    {
     "page": "/daily",
-    "lcp": 2406,
-    "fcp": 903,
+    "lcp": 2405,
+    "fcp": 904,
     "cls": 0.037,
     "clsMax": 0.037,
-    "tbt": 29,
+    "tbt": 71,
     "runs": [
      2406,
-     2554,
-     2405
+     2405,
+     2404
     ],
     "el": "<p class=\"sl-st-run\">",
     "blocking": [
      "/_next/static/css/0d62542304a3d5de.css",
-     "/_next/static/css/3e2713615b439748.css",
-     "/_next/static/css/945ed66ddffc53c2.css"
+     "/_next/static/css/945ed66ddffc53c2.css",
+     "/_next/static/css/3e2713615b439748.css"
     ],
     "inpRuns": [
-     24,
+     32,
      32,
      32
     ],
@@ -745,29 +745,29 @@
    },
    {
     "page": "/play",
-    "lcp": 2337,
+    "lcp": 2330,
     "fcp": 1353,
     "cls": 0,
     "clsMax": 0,
-    "tbt": 39,
+    "tbt": 48,
     "runs": [
-     2338,
-     2337,
-     2334
+     2330,
+     2347,
+     2319
     ],
     "el": "<img src=\"/ui-next/levels/1-1.png\" width=\"160\" height=\"240\" alt=\"\" loa",
     "blocking": [
      "/_next/static/css/3e2713615b439748.css",
-     "/_next/static/css/945ed66ddffc53c2.css",
      "/_next/static/css/1a2c6e3dfa7d38bd.css",
+     "/_next/static/css/945ed66ddffc53c2.css",
      "/_next/static/css/c2420a8c2a4b128c.css"
     ],
     "inpRuns": [
-     40,
-     40,
-     40
+     48,
+     56,
+     56
     ],
-    "inp": 40
+    "inp": 56
    },
    {
     "page": "/gallery",
@@ -778,8 +778,8 @@
     "tbt": 17,
     "runs": [
      2411,
-     2414,
-     2402
+     2420,
+     2411
     ],
     "el": "<p class=\"sl-gw-lede\">",
     "blocking": [
@@ -787,23 +787,23 @@
      "/_next/static/css/945ed66ddffc53c2.css"
     ],
     "inpRuns": [
-     40,
-     32,
-     32
+     48,
+     48,
+     48
     ],
-    "inp": 32
+    "inp": 48
    },
    {
     "page": "/learn/margolus-falling-sand",
-    "lcp": 2023,
+    "lcp": 2025,
     "fcp": 1203,
     "cls": 0,
     "clsMax": 0,
-    "tbt": 30,
+    "tbt": 33,
     "runs": [
-     1802,
-     2028,
-     2023
+     2031,
+     2025,
+     2024
     ],
     "el": "<p>",
     "blocking": [
@@ -819,20 +819,20 @@
    },
    {
     "page": "/materials/acid",
-    "lcp": 2027,
+    "lcp": 2042,
     "fcp": 1203,
     "cls": 0,
     "clsMax": 0,
-    "tbt": 28,
+    "tbt": 44,
     "runs": [
-     2028,
-     2027,
-     2018
+     2077,
+     2042,
+     2036
     ],
     "el": "<p>",
     "blocking": [
-     "/_next/static/css/945ed66ddffc53c2.css",
-     "/_next/static/css/1a2c6e3dfa7d38bd.css"
+     "/_next/static/css/1a2c6e3dfa7d38bd.css",
+     "/_next/static/css/945ed66ddffc53c2.css"
     ],
     "inpRuns": [
      40,
@@ -843,15 +843,15 @@
    },
    {
     "page": "/play/1-1/guide",
-    "lcp": 2028,
-    "fcp": 1203,
+    "lcp": 2046,
+    "fcp": 1204,
     "cls": 0,
     "clsMax": 0,
-    "tbt": 28,
+    "tbt": 47,
     "runs": [
-     2026,
-     2028,
-     2032
+     2039,
+     2046,
+     2048
     ],
     "el": "<h1>",
     "blocking": [
@@ -861,16 +861,16 @@
     "inpRuns": [
      40,
      32,
-     32
+     40
     ],
-    "inp": 32
+    "inp": 40
    }
   ],
   "fails": []
  },
  "cutover_e2e": {
-  "base": "http://127.0.0.1:63107",
-  "when": "2026-11-20T08:47:32.084Z",
+  "base": "http://127.0.0.1:62545",
+  "when": "2026-11-21T02:00:15.757Z",
   "results": [
    {
     "name": "WebGPU 어댑터(캔버스 검사 전제)",
@@ -885,7 +885,7 @@
    {
     "name": "#s=m71SWxdb9sc",
     "ok": true,
-    "detail": "kind=scene title=true ink=66.5%"
+    "detail": "kind=scene title=true ink=66.4%"
    },
    {
     "name": "#ref=x&s=rIxeixvTdzg",

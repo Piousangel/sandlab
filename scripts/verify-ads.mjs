@@ -78,7 +78,9 @@ if (!process.argv.includes('--preview')) {
   if (roPages.length) failures.push(`prod HTML ${roPages.length}쪽에 프리뷰 읽기 전용 안내(data-sl-read-only) — 프리뷰 빌드 산출물. prod는 다시 빌드`)
   // 원래 noindex인 쪽(404·검증 도구 화면)만 허용 — 그 밖에 하나라도 있으면 프리뷰 색인 차단이 섞인 것
   const NOINDEX_OK = new Set(['404.html', 'play/verify.html', 'spill/editor.html', 'spill/bench.html'])
-  const noindexPages = pages.filter((f) => !NOINDEX_OK.has(relative(OUT, f)) && /<meta name="robots" content="[^"]*noindex/.test(readFileSync(f, 'utf8')))
+  // 속성 순서와 무관하게(content가 앞이어도), robots·googlebot 둘 다(독립 리뷰 ①)
+  const isNoindexMeta = (tag) => /\bname="(robots|googlebot)"/i.test(tag) && /\bcontent="[^"]*noindex/i.test(tag)
+  const noindexPages = pages.filter((f) => !NOINDEX_OK.has(relative(OUT, f)) && (readFileSync(f, 'utf8').match(/<meta\b[^>]*>/gi) ?? []).some(isNoindexMeta))
   if (noindexPages.length) failures.push(`prod HTML ${noindexPages.length}쪽에 메타 robots noindex(예: ${relative(OUT, noindexPages[0])}) — 프리뷰 빌드 산출물. pnpm run build:prod로 다시 빌드`)
   if (existsSync(join(OUT, '_headers'))) failures.push('out/_headers 있음 — 프리뷰 빌드 산출물(noindex)이 남아 있다. prod는 다시 빌드')
   const robotsPath = join(OUT, 'robots.txt')

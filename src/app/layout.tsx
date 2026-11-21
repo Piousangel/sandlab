@@ -35,8 +35,13 @@ export const metadata: Metadata = {
 
 // VideoGame 구조화 데이터는 페이지별(src/lib/gameJsonLd.ts) — 홈만 WebGPU, Spill 퍼즐은 CPU.
 
+// 새 셸(P12 컷오버, 독립 리뷰 ②): 주소창·오버스크롤·노치 여백 색 = Bone(--sl-bone). 옛 어두운 색이면 크림 화면 위로 검은 띠가 보인다.
+// classic(되돌리기) 빌드는 옛 값 그대로.
+const CHROME = UI_NEXT ? { bg: '#F4ECDD', fg: '#2A2118', scheme: 'light' } : { bg: '#07090D', fg: '#eef1f6', scheme: undefined }
+
 export const viewport: Viewport = {
-  themeColor: '#07090D',
+  themeColor: CHROME.bg,
+  ...(CHROME.scheme ? { colorScheme: 'light' as const } : {}),
   // 노치·홈인디케이터 아이폰에서 도크가 시스템 UI에 가리지 않게 (#9와 함께 쓰임)
   viewportFit: 'cover',
 }
@@ -47,8 +52,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         style={{
           margin: 0,
-          background: '#07090D',
-          color: '#eef1f6',
+          background: CHROME.bg,
+          color: CHROME.fg,
           fontFamily:
             'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
           overscrollBehavior: 'none',
