@@ -371,7 +371,7 @@ export default defineLevel({
 
 ## 부록 A. 재현 (모두 읽기 전용, 저장소 미수정)
 - 기존 레벨: `CAP=400 npx tsx scripts/spill-explore.mts <id>`, `pnpm spill:verify`.
-- 프로토타입·실측 스크립트: `/private/tmp/claude-501/-Users-hyunseok-Desktop/dece547c-04bc-4cd8-9008-90c593f6b414/scratchpad/sl/` — `l21b.mts`(2-1 정의+1수 스캔), `raw.mts`(연소 속도), `raw2.mts`(도화선·기름·용암), `v21.mts`(verifyLevel), `scan.mts`(마개 주변 전 칸 스캔), `patch.mts`(failure 패치 시뮬), `daily.mts`(일정 계산).
+- 프로토타입·실측 스크립트: `<scratchpad>/sl/` — `l21b.mts`(2-1 정의+1수 스캔), `raw.mts`(연소 속도), `raw2.mts`(도화선·기름·용암), `v21.mts`(verifyLevel), `scan.mts`(마개 주변 전 칸 스캔), `patch.mts`(failure 패치 시뮬), `daily.mts`(일정 계산).
 
 ## 부록 B. 가장 불확실한 것
 2-2~2-5 예상 클리어율, W2 잠금 임계값, 불 연출의 시각적 가시성, 도화선 수중 동작, W1 별 분포(D1 권한), 사이트 일 방문 규모, 스파크 버튼 UI의 직관성.
