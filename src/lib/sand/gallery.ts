@@ -277,15 +277,31 @@ export function getCreatorProfile(id: string) {
 /** 클릭류 이벤트 계측(예: Ko-fi 후원 링크) — 서버가 직접 못 보는 지점만 sendBeacon으로 보고한다.
  *  fire-and-forget: 실패해도 사용자 흐름(링크 새 탭 열림)엔 영향 없다.
  *  `d` = 익명 기기 id(measure.ts, 북극성 '주간 손댄 방문자'용) — 서버가 형식만 보고 AE blob5에 싣는다. */
+/**
+ * 계측 핑을 페이지 load 뒤로(P12 컷오버): 마운트 때 나가는 핑(/daily의 daily_start·landing, /api/visit)이 첫 그림 전에 끝나면
+ * Lighthouse가 그 요청을 LCP 그래프에 넣어 /daily LCP가 약 150ms 늘었다(DECISIONS 'P12 LCP'). load가 이미 지났으면 바로 보낸다
+ * (클릭·클리어 같은 이벤트는 늘 이 경우라 지연 0). load 전에 탭을 닫으면 그 핑은 빠진다 — 첫 그림 전 이탈이라 지표 영향은 작다.
+ */
+export function afterPageLoad(fn: () => void) {
+  if (typeof document === 'undefined' || document.readyState === 'complete') return fn()
+  window.addEventListener('load', () => setTimeout(fn, 0), { once: true })
+}
+
 export function trackEvent(event: string, ref?: string, value?: number) {
   try {
     const body = JSON.stringify({ event, ref, value, d: deviceId() })
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))
-    } else {
-      // .catch 필수 — 없으면 거부가 try/catch를 우회해 unhandled rejection이 된다(허브 hit.ts 교훈).
-      fetch('/api/track', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {})
-    }
+    afterPageLoad(() => {
+      try {
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))
+        } else {
+          // .catch 필수 — 없으면 거부가 try/catch를 우회해 unhandled rejection이 된다(허브 hit.ts 교훈).
+          fetch('/api/track', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {})
+        }
+      } catch {
+        /* 계측 실패는 조용히 무시 */
+      }
+    })
   } catch {
     /* 계측 실패는 조용히 무시 — 후원 링크 자체는 target=_blank라 이미 새 탭으로 열린다 */
   }

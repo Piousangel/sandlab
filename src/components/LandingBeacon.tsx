@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { trackEvent } from '@/lib/sand/gallery'
+import { afterPageLoad, trackEvent } from '@/lib/sand/gallery'
 import { classifyLanding } from '@/lib/sand/landing'
 import { HOME_LANDING_KEY } from '@/lib/sand/measure'
 import { VISIT_STORAGE_KEY, shouldSendVisit, utcDay } from '@/lib/visitors'
@@ -11,9 +11,18 @@ function sendVisit() {
   try {
     const now = Date.now()
     if (!shouldSendVisit(localStorage.getItem(VISIT_STORAGE_KEY), now, navigator.webdriver === true)) return
-    localStorage.setItem(VISIT_STORAGE_KEY, utcDay(now))
-    if (navigator.sendBeacon) navigator.sendBeacon('/api/visit')
-    else fetch('/api/visit', { method: 'POST', keepalive: true }).catch(() => {})
+    // 첫 그림 뒤로(P12 컷오버 — trackEvent와 같은 이유). '오늘 보냄' 표시는 실제로 보낼 때 남긴다 —
+    // 먼저 남기면 load 전에 떠난 기기의 그날 방문이 통째로 빠진다(독립 리뷰 ①). 같은 날 두 번 가도 서버가 IP로 한 번만 센다.
+    afterPageLoad(() => {
+      try {
+        if (!shouldSendVisit(localStorage.getItem(VISIT_STORAGE_KEY), now, false)) return
+        localStorage.setItem(VISIT_STORAGE_KEY, utcDay(now))
+        if (navigator.sendBeacon) navigator.sendBeacon('/api/visit')
+        else fetch('/api/visit', { method: 'POST', keepalive: true }).catch(() => {})
+      } catch {
+        /* 계측 실패는 무시 */
+      }
+    })
   } catch {
     /* 저장소 차단·계측 실패는 무시 */
   }

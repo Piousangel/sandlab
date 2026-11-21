@@ -131,6 +131,7 @@
   text-overflow: ellipsis;
 }
 .sl-sp-badge {
+  order: 1; /* DOM은 배지 먼저(h1 텍스트 = 옛 prod "1-1 First Drop"), 화면은 이름 다음 */
   font-family: var(--sl-font-mono);
   font-size: var(--sl-fs-label-tap);
   font-weight: 500;
