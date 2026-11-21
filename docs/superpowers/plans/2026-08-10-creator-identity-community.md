@@ -950,7 +950,7 @@ Expected: 전부 통과.
 `!` 프리픽스로 직접 실행:
 
 ```bash
-! cd /Users/hyunseok/Desktop/Code/sandlab && npx wrangler d1 execute sandlab-gallery --remote --yes --command "ALTER TABLE scenes ADD COLUMN creator_id TEXT; ALTER TABLE scenes ADD COLUMN creator_name TEXT; CREATE INDEX IF NOT EXISTS idx_scenes_creator ON scenes(creator_id);"
+! cd ~/Desktop/Code/sandlab && npx wrangler d1 execute sandlab-gallery --remote --yes --command "ALTER TABLE scenes ADD COLUMN creator_id TEXT; ALTER TABLE scenes ADD COLUMN creator_name TEXT; CREATE INDEX IF NOT EXISTS idx_scenes_creator ON scenes(creator_id);"
 ```
 
 - [ ] **Step 3: 배포**

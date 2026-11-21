@@ -780,7 +780,7 @@ Bioluminescent Mushroom Grove·Descending Glowvines. **교훈:** 그레인=per-p
 썸네일 300K초과(제거함). 회색 평면 배경=실패, 어두운/그라데이션+글로우=성공.
 **★사용자 대기(옛 8개 삭제):** 에이전트는 프로덕션 D1 삭제가 안전분류기에 막힘 → 사용자가 `!` 프리픽스로
 아래 실행(좋은 7개만 남김):
-`! cd /Users/hyunseok/Desktop/Code/sandlab && npx wrangler d1 execute sandlab-gallery --remote --yes --command "DELETE FROM votes WHERE scene NOT IN ('KrL2Zri9mFk','OrvXQ1OIu9E','m71SWxdb9sc','iSYHbdYprI8','YVMAgr-Rhko','byF1YyDKtUo','laZ7c3B20l4'); DELETE FROM scenes WHERE id NOT IN ('KrL2Zri9mFk','OrvXQ1OIu9E','m71SWxdb9sc','iSYHbdYprI8','YVMAgr-Rhko','byF1YyDKtUo','laZ7c3B20l4');"`
+`! cd ~/Desktop/Code/sandlab && npx wrangler d1 execute sandlab-gallery --remote --yes --command "DELETE FROM votes WHERE scene NOT IN ('KrL2Zri9mFk','OrvXQ1OIu9E','m71SWxdb9sc','iSYHbdYprI8','YVMAgr-Rhko','byF1YyDKtUo','laZ7c3B20l4'); DELETE FROM scenes WHERE id NOT IN ('KrL2Zri9mFk','OrvXQ1OIu9E','m71SWxdb9sc','iSYHbdYprI8','YVMAgr-Rhko','byF1YyDKtUo','laZ7c3B20l4');"`
 
 ### 규모 사용성 감사 → BLOCKER 수정 (2026-07-22)
 "수천 명이 잘 쓰게"를 향해 5렌즈(신뢰성·성능·모바일·첫사용·a11y) 감사 → 순위 → 적대적 검증.
@@ -1142,7 +1142,7 @@ Yours 탭, Remix, hot/new)이 전부 '갤러리에 볼 게 있다'를 전제한�
 ### 재현 명령
 
 ```bash
-cd /Users/hyunseok/Desktop/Code/sandlab
+cd ~/Desktop/Code/sandlab
 pnpm test                              # vitest 유닛 24개
 npx wrangler dev --port 8799 --local   # 8799 — 앱 전체 + API. 3120 아님!
 python3 scripts/verify-gallery.py      # 별도 셸에서 (D1 비우고 실행 권장, 위 주의 참조)
