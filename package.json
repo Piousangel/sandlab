@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
+    "check:docs": "node scripts/checks/docs-budget.mjs && node scripts/checks/decisions.mjs",
+    "verify": "pnpm typecheck && pnpm lint:ui && pnpm check:contrast && node scripts/verify-margolus.mjs && pnpm test && pnpm check:docs && pnpm spill:verify && pnpm run build:prod && node scripts/verify-ads.mjs",
     "spill:verify": "npx tsx scripts/spill-verify.ts",
     "deploy": "pnpm run build:prod && node scripts/verify-ads.mjs && wrangler deploy",
     "deploy:preview": "pnpm run build:preview && node scripts/verify-ads.mjs --preview && wrangler deploy --env preview",

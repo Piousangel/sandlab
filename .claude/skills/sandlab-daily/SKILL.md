@@ -1,39 +1,24 @@
 ---
 name: sandlab-daily
-description: 샌드랩 데일리 운영 세션(평일 07:00~09:00). 지표 확인 → 오늘 출시 1개 결정 → 설계 → 구현·검증 → 배포 → 기록. 사용자가 /sandlab-daily를 치거나 "오늘 데일리 시작"이라고 할 때 사용.
+description: 샌드랩 수동 작업 세션(사람이 /sandlab-daily를 치거나 "오늘 데일리 시작"이라고 할 때). 운영안 v2 규칙(docs/team/SHIFT.md)대로 카드 1장을 골라 구현·검증·PR까지. 루틴은 docs/team/routines/를 쓴다.
 ---
 
-# 샌드랩 데일리 — 하루 1개 출시
+# 샌드랩 수동 세션 (운영안 v2, 2026-11-24 개정)
 
-목표: **AdSense 승인**과 **재방문**. 매일 "검증된 콘텐츠 1개"를 배포한다.
-출시 단위(2026-11-10 결정): 평일 = Spill 레벨 1개 + 그 레벨의 공략·물리 해설 페이지. 주 1회 = 새 동사·재료·월드 또는 플랫폼 기능(레벨 갤러리 등).
-시간 상자 2시간. 09:00에 배포 못 하면 범위를 줄여서라도 배포하거나, 못 한 이유를 기록하고 멈춘다.
-
-> 다른 프로젝트(minigames-hub 등)로 옮길 때: 아래 "프로젝트 설정"만 바꾼다. 절차는 공용.
-
-## 프로젝트 설정
-- 지표: `node scripts/daily-metrics.mjs`
-- 검증: `pnpm typecheck` · `pnpm test` · `pnpm spill:verify` · `node scripts/verify-ads.mjs`(빌드 후)
-- 배포: main 머지 시 GitHub Actions(`deploy.yml`)가 `pnpm run deploy`. Claude 세션의 로컬 배포는 `.claude/settings.json` hook이 막는다(11-20)
-- 레벨·공략 근거: `CAP=400 npx tsx scripts/spill-explore.mts <id>` (해 공간·클리어율·젬 루트). 공략의 주장은 시뮬로 확인한 것만
-- 공략 데이터: `src/content/guides/<world>.ts` (테스트가 350단어+·6단어 구절 중복 0·좌표 노출 금지 강제)
-- 실화면 확인: `/play/<id>?autoplay=1` → `body.dataset.autoplay`, 390px·1280px
-- 백로그: `docs/daily/backlog.md` / 출시 로그: `docs/daily/log.md`
-- 함정: `.claude/handoff/main.md` "함정 · 결정사항" (격자 1200×600·댓글 없음·버셀 금지·시뮬 품질 동결)
-
-## 역할 (한 세션 안에서 순서대로 쓰는 모자)
-- **PM** — 지표를 읽고 오늘 1개를 고른다. 판단 기준: AdSense 근거가 되나, 재방문을 만드나, 2시간에 끝나나.
-- **디자이너** — 레벨이면 퍼즐 아이디어(무엇을 깨닫게 하나 한 문장), 동사·재료, 화면 스케치. 기능이면 화면 흐름.
-- **개발** — 구현, 솔버 검증, 테스트, 배포.
-- **검토자(끝에 1회)** — QA: 폰 폭에서 실제로 깨지나 / 배급: 이게 공유·재방문에 기여하나, 기능 과잉은 아닌가.
+규칙 정본은 `docs/team/SHIFT.md`(카드·리뷰·기록·금지), 방향은 `docs/team/NORTH-STAR.md`, 현재 상태는 `.claude/handoff/main.md`. 옛 '하루 1개 출시' 절차(평일 레벨+공략, 2시간 상자)는 v2 주기 상한으로 바뀌었다 — 원문은 `docs/archive/team-2026-11/skill-sandlab-daily.md`.
 
 ## 절차
-1. **지표 (5분)**: `node scripts/daily-metrics.mjs` 실행. 어제 대비 변화와 어제 출시물 반응을 3줄로 요약한다. 사용자에게 Web Analytics 방문자 수를 물어 같이 적는다.
-2. **결정 (10분, PM)**: 백로그 상위 3개 후보를 제시하고 추천 1개와 이유를 말한다. 사용자가 고른다.
-3. **설계 (15분, 디자이너)**: 레벨이면 아래 "레벨 카드"를 채운다. 기능이면 시그니처 스케치(flow M 1번).
-4. **구현·검증 (60~80분, 개발)**: 레벨 추가 절차는 인계서의 절차를 따른다. 공략 페이지는 300단어 이상의 고유 텍스트 — 그 레벨이 가르치는 물리, 막히는 지점, 힌트 2단계(해답 직접 노출 금지).
-5. **배포 (10분)**: 전체 검증 통과 후 PR 머지 → `gh run list --workflow deploy.yml`로 배포 성공 확인 → 프로덕션 스모크(해당 URL 200, autoplay 클리어).
-6. **기록 (5분)**: `docs/daily/log.md`에 한 줄, 백로그 갱신, `.claude/progress.md` 갱신, 갈림길이 있었으면 `DECISIONS.md`.
+1. 지표: `node scripts/daily-metrics.mjs | tail -n 60` — 북극성·어제 대비 3줄.
+2. 카드: `gh issue list --label ready --limit 10`에서 사람과 함께 1장 고른다(없으면 카드 템플릿 `.github/ISSUE_TEMPLATE/card.md`로 만든다). assign + `in-progress`.
+3. 레벨 카드면 아래 '레벨 카드'를 채우고 솔버로 확인: `CAP=400 npx tsx scripts/spill-explore.mts <id>`(해 공간·클리어율·젬 루트). 공략 주장은 시뮬로 확인한 것만.
+4. 구현 → `pnpm verify 2>&1 | tail -n 80` → 브랜치 `card/<번호>-<주제>` PR(첫 줄 오답 검사, `Closes #번호`, 증거).
+5. 머지는 독립 리뷰 뒤(SHIFT 4장). 배포는 main 머지 시 Actions — 세션에서 배포하지 않는다. 머지 뒤 `gh run list --workflow deploy.yml --limit 1`과 라이브 URL.
+6. 기록 3곳만(SHIFT 6장): 인계 현재분, 갈림길이면 DECISIONS, `docs/daily/log.md` 한 줄.
+
+## 프로젝트 설정
+- 공략 데이터: `src/content/guides/<world>.ts`(테스트가 350단어+·6단어 구절 중복 0·좌표 노출 금지 강제)
+- 실화면 확인: `/play/<id>?autoplay=1` → `body.dataset.autoplay`, 390px·1280px. 레벨을 더하면 `npx tsx scripts/gen-level-thumbs.mts`
+- 함정: `docs/team/PITFALLS.md`(격자 1200×600·댓글 없음·버셀 금지·시뮬 품질 동결), 레벨 추가 절차·실측 물리 제약도 같은 파일
 
 ## 레벨 카드
 ```
@@ -42,12 +27,13 @@ id / 이름:
 동사·재료:
 par(수/초):
 실패 유도 함정(오답 경로):
+솔버 클리어율 밴드:
 공략 페이지 제목:
 ```
 
 ## 완료 보고
 ```
-출시: <URL> — 무엇
+카드 #n / PR #p: 무엇
 검증: 실행한 명령과 결과 (못 돌린 것 명시)
 지표 메모: 내일 볼 것
 ```
