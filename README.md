@@ -47,24 +47,20 @@
 
 커밋 대부분은 Claude Code 세션(정해진 시각에 도는 클라우드 루틴 포함)이 씁니다. 자매 프로젝트 [Quick MiniGames](https://github.com/Piousangel/minigames-hub)와 같은 운영 체계를 씁니다.
 
-### 교대 구조
+### 교대 구조 (운영안 v2, 2026-11-24)
 
-24시간 교대 규칙은 허브 저장소의 [ROTA.md](https://github.com/Piousangel/minigames-hub/blob/main/docs/team/ROTA.md)에 함께 있고, 개편 기간의 개발 교대 배정은 [계획서 5장](docs/plans/2026-11-19-redesign-v2.md)을 따릅니다. 샌드랩은 하루 7교대(KST):
+규칙은 [SHIFT.md](docs/team/SHIFT.md)(정본은 허브 저장소, 여기는 사본 + 샌드랩 절), 보고·회고·마케팅은 [OPS.md](docs/team/OPS.md). 이전 7교대 체제의 문서는 [docs/archive/](docs/archive/team-2026-11/)에 있습니다.
 
-| 시각 | 교대 |
-|---|---|
-| 03 | 야간 QA·품질 |
-| 06 | 회의 → 반영 → 오너 보고 메일 |
-| 10 · 16 | 개발(리디자인 v2 PR을 계획서 순서대로 이어받음) |
-| 13 | 설계 숙의·개발 |
-| 20 | 마무리·출시 확인·홍보 초안·하루 요약 |
-| 23 | 야간 개발 |
+1. **계획**(05:37) — 지표·오너 결정·어제 PR을 보고 GitHub 이슈 카드를 만듭니다. 팀 라벨 `team:S1`(챌린지 — 1-1~1-3 버티컬 슬라이스를 오너가 10분 플레이로 승인한 뒤 확산), `team:S2`(SEO·GEO).
+2. **작업**(01:07·14:07·16:07) — `ready` 카드 1장 = PR 1개, 하트비트 코멘트로 이어 받기.
+3. **독립 리뷰·머지** — 작성 세션과 다른 세션이 증거 먼저, 위험 비례(문서 1회 · 제품 1회 · 고위험 2회 + 오너 확인)로 리뷰하고 squash 머지 → Actions 배포.
+4. **품질**(03:07)·**운영**(20:37 Slack 요약 + 두 사이트 합본 메일 1통).
 
-교대 규칙: 시작할 때 [NORTH-STAR.md](docs/team/NORTH-STAR.md)(90일 미션·지표)를 보고 열린 PR·브랜치를 확인해 같은 일을 겹쳐 하지 않고, 끝낼 때 인계서([.claude/handoff/main.md](.claude/handoff/main.md))에 한 일·막힌 것·다음 교대 몫을 남깁니다. main 직접 푸시·force push·테스트 약화는 금지입니다.
+주기는 상한이고(확산 후 주 2레벨), 품질 미달로 미룬 것도 성과입니다. 교대가 읽는 필독 세트(CLAUDE.md·SHIFT·NORTH-STAR·인계서)는 30KB를 넘으면 CI가 실패합니다.
 
 ### 한 출시가 거치는 절차
 
-리서치(서로 다른 출처 3종 이상) → 기획 v1 → **반증 리서치** → 기획 v2 → **독립 리뷰**(작성자가 아닌 에이전트가 혹평, 지적마다 수용·거부 응답) → 구현 → 모바일·데스크톱 캡처와 수치 → 리뷰 → squash 머지 → Actions 배포. 절차는 [SESSION-GUIDE.md](docs/team/SESSION-GUIDE.md), 결정과 버린 안은 [DECISIONS.md](DECISIONS.md)에 남깁니다.
+리서치(서로 다른 출처 3종 이상) → 기획 v1 → **반증 리서치** → 기획 v2 → **독립 리뷰**(작성자가 아닌 에이전트가 혹평, 지적마다 수용·거부 응답) → 구현 → 모바일·데스크톱 캡처와 수치 → 리뷰 → squash 머지 → Actions 배포. 절차는 [DESIGN-PROCESS.md](docs/team/DESIGN-PROCESS.md) '기획 라운드', 결정과 버린 안은 [DECISIONS.md](DECISIONS.md)에 남깁니다.
 
 큰 개편은 PR마다 **운영 빌드 HTML이 바뀌지 않았는지** 비교해, 공개 전까지 사용자 화면에 영향을 주지 않게 합니다. 일부러 운영에 들어가는 변경(예: 데일리 공유 텍스트)은 진행표에 따로 적습니다.
 
@@ -75,20 +71,20 @@
 | `node scripts/verify-ads.mjs` | 광고 로더가 캔버스·로딩 화면에 실리거나, 광고 페이지 본문이 최소 분량보다 적은 빌드. AdSense 반려(2026-09-21) 뒤 만든 검사 | CI(배포 명령) |
 | `src/lib/sand/shareLinks.golden.test.ts` | 공유 링크(`#s=`·`#g=`·`/s/:id`)와 리믹스 계보가 바뀌어 기존 링크가 깨지는 것 | CI(Vitest) |
 | `src/app/sitemap.test.ts` | 사이트맵에서 레벨·공략·Learn 페이지가 빠지거나, 301로 옮긴 옛 URL이 남는 것 | CI(Vitest) |
-| `pnpm spill:verify` | Spill 레벨이 풀리지 않거나, 가만히 둬도 풀리거나, 시드·타이밍이 조금만 달라도 결과가 뒤집히는 것(레벨마다 검사 13종) | 머지 전 교대(로컬 약 3분, CI에선 22분이라 제외) |
+| `pnpm spill:verify` | Spill 레벨이 풀리지 않거나, 가만히 둬도 풀리거나, 시드·타이밍이 조금만 달라도 결과가 뒤집히는 것(레벨마다 검사 13종) | PR CI(2갈래로 나눠 병렬)·로컬 `pnpm verify` |
 | `pnpm check:contrast` | 디자인 토큰 색 쌍이 WCAG 대비(본문 4.5:1, 큰 글자·윤곽 3:1)를 못 넘는 것 | 개편 PR에서 수동·프리뷰 워크플로 |
 | `pnpm lint:ui` | 새 UI에 이모지·유니코드 기호를 아이콘으로 쓰거나, 회색 면 위에 회색 면을 쌓는 것 | 개편 PR에서 수동·프리뷰 워크플로 |
 | `node scripts/verify-margolus.mjs` | Margolus 규칙의 CPU 레퍼런스 포트가 질량을 잃거나, 밀도 순서가 틀리거나, 좌우로 치우치는 것(GPU 셰이더 자체는 브라우저에서 확인) | 시뮬 변경 시 수동 |
 
 ### 참고 강연에서 가져온 원칙 (팀 안에서는 '스승님 원칙')
 
-Lauren Tan·Lydia Hallie의 강연에서 가져온 원칙(교정은 검사로, 오답을 떨어뜨리는 검사를 PR 첫 줄에, 되돌릴 수 없는 변경은 `고위험` 표시와 리뷰 2회)을 [SESSION-GUIDE.md](docs/team/SESSION-GUIDE.md) 맨 위에 두었습니다. 위 표의 `verify-ads`·`check:contrast`·`lint:ui`가 그 본보기입니다. 원문 정리는 허브의 [docs/team/mentor/](https://github.com/Piousangel/minigames-hub/blob/main/docs/team/mentor/README.md).
+Lauren Tan·Lydia Hallie의 강연에서 가져온 원칙(교정은 검사로, 오답을 떨어뜨리는 검사를 PR 첫 줄에, 되돌릴 수 없는 변경은 `고위험` 표시와 리뷰 2회)을 [SHIFT.md](docs/team/SHIFT.md) 4장(위험 비례 리뷰·오답 검사)에 두었습니다. 위 표의 `verify-ads`·`check:contrast`·`lint:ui`가 그 본보기입니다. 원문 정리는 허브의 [docs/team/mentor/](https://github.com/Piousangel/minigames-hub/blob/main/docs/team/mentor/README.md).
 
 ### 자격증명은 에이전트 밖에
 
-에이전트 샌드박스에는 계정 자격증명이 없습니다. 에이전트는 PR만 올리고, main 머지 후 GitHub Actions가 시크릿으로 배포(`deploy.yml`), 그림 생성(`gen-assets.yml`), 지표 수집(`metrics.yml` → `docs/daily/metrics/`)을 합니다. SNS 게시 파이프라인(`marketing-post.yml`)도 있지만 지금 샌드랩 규칙상 에이전트는 문안 초안까지만 쓰고 게시는 사람이 합니다.
+에이전트 샌드박스에는 계정 자격증명이 없습니다. 에이전트는 PR만 올리고, main 머지 후 GitHub Actions가 시크릿으로 배포(`deploy.yml`), 그림 생성(`gen-assets.yml`), 지표 수집(`metrics.yml` → `docs/daily/metrics/`)을 합니다. SNS 게시는 에이전트가 대기열 JSON을 PR로 넣으면 머지 뒤 `marketing-post.yml`이 올립니다(오너 11-24 결정, 에이전트의 직접 호출은 금지).
 
-Claude Code 설정도 저장소에 있습니다: 데일리 세션 스킬 [.claude/skills/sandlab-daily/SKILL.md](.claude/skills/sandlab-daily/SKILL.md), 역할 헌장과 조사 자료 [.claude/team/](.claude/team/charter.md).
+Claude Code 설정도 저장소에 있습니다: 수동 세션 스킬 [.claude/skills/sandlab-daily/SKILL.md](.claude/skills/sandlab-daily/SKILL.md), 서브에이전트 정의 [.claude/agents/](.claude/agents/), 조사 자료 [.claude/team/references/](.claude/team/references/).
 
 ## 기술 구성
 
@@ -151,7 +147,7 @@ python3 scripts/verify-daily.py        # 데일리 API (wrangler dev 필요)
 pnpm run deploy    # next build → scripts/verify-ads.mjs → wrangler deploy
 ```
 
-> `pnpm deploy`(`run` 없이)는 실패합니다 — pnpm 내장 workspace 명령과 충돌합니다. 평소에는 main 머지 시 GitHub Actions가 배포합니다.
+> `pnpm deploy`(`run` 없이)는 실패합니다 — pnpm 내장 workspace 명령과 충돌합니다. **배포는 main 머지 시 GitHub Actions(`deploy.yml`)가 하고**, 에이전트 세션의 로컬 배포는 `.claude/settings.json` hook이 막습니다(위 명령은 오너 터미널용).
 
 **Vercel에서는 동작하지 않습니다.** 정적 시뮬은 뜨지만 갤러리 호출이 모두 404입니다.
 
@@ -170,14 +166,15 @@ pnpm run deploy    # next build → scripts/verify-ads.mjs → wrangler deploy
 | 문서 | 내용 |
 |---|---|
 | [CLAUDE.md](CLAUDE.md) | 에이전트가 먼저 읽는 절대 규칙·검증 명령 |
-| [.claude/handoff/main.md](.claude/handoff/main.md) | 인계서 — 다음 할 일, 멈춘 지점, 함정 |
+| [.claude/handoff/main.md](.claude/handoff/main.md) | 인계서 — 현재 상태, 다음 할 일(≤10KB) |
+| [docs/team/PITFALLS.md](docs/team/PITFALLS.md) | 함정·결정 정본(인계서에서 분리) |
 | [DECISIONS.md](DECISIONS.md) | 결정 기록(맥락·선택·버린 안·근거) |
-| [docs/team/NORTH-STAR.md](docs/team/NORTH-STAR.md) | 북극성 — 90일 미션·지표·단계. 교대마다 시작할 때 보고, 끝날 때 지표 한 줄을 남김 |
-| [docs/team/SESSION-GUIDE.md](docs/team/SESSION-GUIDE.md) | 세션 절차, 참고 강연 원칙 |
-| [docs/team/OPERATING.md](docs/team/OPERATING.md) | 팀 운영 규칙(첫 화면, 마케터, 주간 회고) |
+| [docs/team/NORTH-STAR.md](docs/team/NORTH-STAR.md) | 북극성 — 90일 미션·지표·단계. 필독 세트, 카드가 움직일 지표를 고르는 기준 |
+| [docs/team/SHIFT.md](docs/team/SHIFT.md) | 교대 규칙 — 카드·교대표·팀 라벨·리뷰·기록·Slack 결정 요청·금지 |
+| [docs/team/OPS.md](docs/team/OPS.md) | 20시 요약·합본 메일·월요일 회고·마케팅 게시 규칙 |
+| [docs/team/routines/](docs/team/routines/README.md) | 루틴 프롬프트 초안 |
 | [docs/team/DESIGN-PROCESS.md](docs/team/DESIGN-PROCESS.md) · [GEMINI.md](docs/team/GEMINI.md) | 설계 관문, Gemini 시안·혹평 절차 |
 | [docs/plans/2026-11-19-redesign-v2.md](docs/plans/2026-11-19-redesign-v2.md) | 리디자인 v2 계획과 PR 진행표 |
-| [docs/ops/playbook.md](docs/ops/playbook.md) | 팀 운영 플레이북(사이트마다 한 팀, 새 팀 세우는 순서) |
 | [docs/daily/](docs/daily/) | 일일 지표(`metrics/`)·로그·백로그 |
 
 ## 라이선스·크레딧
