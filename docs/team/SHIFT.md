@@ -79,6 +79,6 @@ main 직접 푸시·force push·로컬 배포·`--admin` 머지, 테스트 약�
 
 ## 10. 사이트 절 — 샌드랩
 - Slack 이름표: `샌드 · 운영 리드` / `샌드 · PL-1 챌린지 기획` / `샌드 · DS-1 디자인` / `샌드 · DV-1 개발` / `샌드 · QA-1 품질 리뷰` / `샌드 · SE-1 SEO` / `샌드 · GE-1 GEO`.
-- 인계 `.claude/handoff/main.md`, 함정·결정 정본 [PITFALLS.md](PITFALLS.md). 검증 `pnpm verify`(typecheck·lint:ui·contrast·margolus·test·spill:verify·build:prod·verify-ads), 갤러리 API·build:preview는 CI.
+- 인계 `.claude/handoff/main.md`, 함정·결정 정본 [PITFALLS.md](PITFALLS.md). 검증 `pnpm verify`(typecheck·lint:ui·contrast·margolus·test·check:docs·spill:verify·build:prod·verify-ads), 갤러리 API·build:preview는 CI.
 - 고정: Cloudflare 전용(Vercel 금지), 격자 1200×600·공유 링크(`#s=`·`#g=`·`/s/:id`)·레벨 id 불변, 댓글 없음, 시뮬 품질 동결. 화면 롤백 변수 `SANDLAB_UI`는 고위험.
 - 오너 보류·할 일: AdSense 재심사 신청(사람, 색인 확인 후 1회), 광고 켜기(`ADS_ENABLED`, 고위험), AdSense 자동 광고(Auto ads) 꺼짐 확인(캔버스 페이지에 광고가 실릴 위험).

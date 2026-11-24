@@ -1,5 +1,5 @@
 # PR 단계 CI(오너 11-20 승인 제안 C — 허브 docs/team/mentor/lydia-hallie.md 7장).
-# PR마다 SESSION-GUIDE 검증 관문 전부를 돈다. 초록이 머지 조건이다. 배포는 deploy.yml(main push)이 그대로 맡는다.
+# PR마다 검증 관문 전부(docs/team/SHIFT.md 5장, 로컬은 `pnpm verify`)를 돈다. 초록이 머지 조건이다. 배포는 deploy.yml(main push)이 그대로 맡는다.
 # 시크릿을 쓰지 않는다(포크 PR에서도 안전). 갤러리 API는 wrangler dev --local(로컬 D1, 계정 불필요)로 검사한다.
 # job은 병렬이라 벽시계 시간은 가장 긴 job에 맞춰진다. spill:verify는 무거운 1-8 Cascade를 따로 떼어 두 job으로 나눈다.
 name: ci
@@ -14,7 +14,7 @@ permissions:
   contents: read
 jobs:
   checks:
-    name: typecheck · lint:ui · contrast · margolus
+    name: typecheck · lint:ui · contrast · margolus · docs
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -31,6 +31,8 @@ jobs:
       - run: pnpm lint:ui
       - run: pnpm check:contrast
       - run: node scripts/verify-margolus.mjs
+      # 필독 세트 ≤30KB·인계 ≤10KB·150줄·지시 문서 모델명 금지·decisions/open.json 스키마(운영안 v2, SHIFT 0장)
+      - run: pnpm check:docs
 
   test:
     name: vitest (${{ matrix.project }})

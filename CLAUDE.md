@@ -16,7 +16,7 @@
 
 ## 검증 (머지 전 하나)
 ```bash
-pnpm verify 2>&1 | tail -n 80   # typecheck · lint:ui · contrast · margolus · test · spill:verify · build:prod · verify-ads
+pnpm verify 2>&1 | tail -n 80   # typecheck · lint:ui · contrast · margolus · test · check:docs · spill:verify · build:prod · verify-ads
 ```
 - spill:verify 출력은 길다 — 따로 돌릴 때는 파일로 리다이렉트. CI는 같은 검사를 나눠 돌고 갤러리 API(`wrangler dev --local` + `python3 scripts/verify-gallery.py`)·build:preview도 본다.
 - `node scripts/verify-url.mjs`는 URL 예산 측정(의도적으로 exit 1).
