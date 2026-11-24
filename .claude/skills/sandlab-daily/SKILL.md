@@ -18,7 +18,7 @@ description: 샌드랩 수동 작업 세션(사람이 /sandlab-daily를 치거�
 ## 프로젝트 설정
 - 공략 데이터: `src/content/guides/<world>.ts`(테스트가 350단어+·6단어 구절 중복 0·좌표 노출 금지 강제)
 - 실화면 확인: `/play/<id>?autoplay=1` → `body.dataset.autoplay`, 390px·1280px. 레벨을 더하면 `npx tsx scripts/gen-level-thumbs.mts`
-- 함정: `docs/team/PITFALLS.md`(격자 1200×600·댓글 없음·버셀 금지·시뮬 품질 동결)
+- 함정: `docs/team/PITFALLS.md`(격자 1200×600·댓글 없음·버셀 금지·시뮬 품질 동결), 레벨 추가 절차·실측 물리 제약도 같은 파일
 
 ## 레벨 카드
 ```

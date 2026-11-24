@@ -23,26 +23,8 @@
 8. [운영] 운영안 v2 마무리: ① 루틴 재편 — 오너가 루틴 계정 로그인 + Slack 커넥터 연결 후 메인 세션이 `docs/team/routines/` 초안으로 생성(그 전엔 루틴 생성·수정 금지) ② 허브 정본 SHIFT·OPS 공통부 → 이 저장소 사본 동기화 Action ③ 하트비트 누락 감지 Actions cron ④ 로그 절삭 PreToolUse hook(고위험·리뷰 2회) ⑤ `stop-unsaved-work` 안내의 브랜치 이름 `shift/` → `card/`(고위험).
 - 오너 선택·할 일: 갤러리 Top을 작품 전 기간 순위로(워커 `sort=top`), AdSense 고정 300×250 단위 생성(`AD_SLOTS.play`), workers.dev 하위 도메인 활성(프리뷰 배포는 한 번도 안 함), main 브랜치 보호 필수 체크(`pr-guard / high-risk` 포함 — Actions가 main에 직접 커밋하는 워크플로 4개를 PR 방식으로 바꾼 뒤), Search Console·Bing 접근 방법.
 
-## 현재 유효한 함정 (전체 정본은 docs/team/PITFALLS.md)
-- `SANDLAB_UI=classic`으로 빌드했으면 verify-ads에도 같은 변수를 준다(기대 UI 비교).
-- 색인 차단은 `NEXT_PUBLIC_NOINDEX=1`(build:preview만). `UI_NEXT`로 noindex를 걸면 prod 전체가 색인에서 빠진다 — verify-ads가 막는다.
-- /play/<id> h1 DOM 순서는 옛 prod("1-1First Drop"), 화면은 CSS `order` — spill.test가 잡는다.
-- 계측 핑(trackEvent·/api/visit)은 load 뒤 — load 전 이탈은 조금 빠진다. 새 퍼즐 화면은 `trackEvent('challenge_start'|'daily_start')`를 꼭 불러야 북극성에 잡힌다. 이벤트 필드를 더하면 Privacy 'Usage statistics'도.
-- 마운트 때 `import()`는 LCP를 늘린다 → 첫 그림에 불필요한 모듈은 `src/ui-next/afterLoad.ts`. lazy 화면은 `LazyBoundary`.
-- 서체는 `src/ui-next/fonts.css` — 범위를 바꾸면 `scripts/fonts/build-fonts.py` 재실행.
-- `@ui-shell` 새 사용처는 next.config.ts `SHELL_AREAS` 표에 한 줄(없으면 프리뷰 빌드가 멈춤, 의도). `PREVIEW_SWAPS` import 문자열도 같음.
-- Lighthouse는 압축 서빙으로만: `scripts/qa/lighthouse.mjs`(무압축이면 LCP 2배 착시). 부하(load 30+)면 0.2~0.4s 부풀음.
-- 모달은 `src/ui-next/sheet/BottomSheet` 하나(sheet.test가 손 dialog를 떨어뜨림). 시트 열린 동안 `history.replaceState` 금지. 768+는 내용에 Close 버튼.
-- `ADS_ENABLED` true 전환은 한 줄이지만 고위험(리뷰 2회).
-- 갤러리 캡션 높이 144 = `.sl-gw-skel` margin-bottom(CLS 0). 팀 작품이 D1에서 지워지면 `picks.ts`에서도 뺀다.
-- 레벨을 더하거나 맵을 고치면 `npx tsx scripts/gen-level-thumbs.mts`(play.test가 해시·누락·15KB 검사).
-- /play 소개 문장은 `INTRO` 단일 출처. 글 페이지 꼬리 문구는 두 벌 → 고치면 `scripts/qa/content-parity.mjs`.
-- base·브랜치 빌드 비교는 같은 폴더에서(모듈 id 절대 경로 차이).
-- 새 시뮬 테스트를 다른 폴더에 만들면 vitest.config.ts `SIM_TESTS`에. spill:verify job이 15분을 넘으면 ci.yml matrix 분리. spill:verify 출력은 파일로 리다이렉트.
-- `ember-text`는 bone 위에서만. 아이콘 이모지 금지(`pnpm lint:ui`), 색 쌍은 `pnpm check:contrast`.
-- `.claude/worktrees/`가 남아 있으면 `pnpm test`에 중복 테스트가 섞인다.
-- reduced-motion은 토큰 0.01ms로는 부족 — JS 지연이 남으니 `animation: none`을 따로.
-- 헤드리스 크롬엔 WebGPU 어댑터가 없다 — 시뮬 시각·홈 붓기 실화면은 실제 크롬·실기기.
+## 현재 유효한 함정
+- 정본은 [docs/team/PITFALLS.md](../../docs/team/PITFALLS.md) 맨 위 절 — 카드 영역의 줄만 읽는다. 새 함정은 그 파일에.
 
 ## 검증 상태
 - main(#98, 11-21) 기준 PR CI 초록. 컷오버 게이트(#97): Lighthouse 모바일 중앙값 홈 2375·/daily 2405·/play 2330·/gallery 2411ms, CLS ≤0.037, cutover-e2e 21/21, head-parity·content-parity 차이 0(보고 `docs/perf/2026-11-20-p12-cutover-qa.json`).

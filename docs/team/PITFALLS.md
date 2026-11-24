@@ -1,5 +1,35 @@
 # 샌드랩 함정·결정 정본 (인계서 1043행~에서 분리, 2026-11-24)
 
+## 현재 유효한 함정 (11-24 인계서 현재분에서 옮김 — 컷오버 뒤 새 셸 기준)
+- `SANDLAB_UI=classic`으로 빌드했으면 verify-ads에도 같은 변수를 준다(기대 UI 비교).
+- 색인 차단은 `NEXT_PUBLIC_NOINDEX=1`(build:preview만). `UI_NEXT`로 noindex를 걸면 prod 전체가 색인에서 빠진다 — verify-ads가 막는다.
+- /play/<id> h1 DOM 순서는 옛 prod("1-1First Drop"), 화면은 CSS `order` — spill.test가 잡는다.
+- 계측 핑(trackEvent·/api/visit)은 load 뒤 — load 전 이탈은 조금 빠진다. 새 퍼즐 화면은 `trackEvent('challenge_start'|'daily_start')`를 꼭 불러야 북극성에 잡힌다. 이벤트 필드를 더하면 Privacy 'Usage statistics'도.
+- 마운트 때 `import()`는 LCP를 늘린다 → 첫 그림에 불필요한 모듈은 `src/ui-next/afterLoad.ts`. lazy 화면은 `LazyBoundary`.
+- 서체는 `src/ui-next/fonts.css` — 범위를 바꾸면 `scripts/fonts/build-fonts.py` 재실행.
+- `@ui-shell` 새 사용처는 next.config.ts `SHELL_AREAS` 표에 한 줄(없으면 프리뷰 빌드가 멈춤, 의도). `PREVIEW_SWAPS` import 문자열도 같음.
+- Lighthouse는 압축 서빙으로만: `scripts/qa/lighthouse.mjs`(무압축이면 LCP 2배 착시). 부하(load 30+)면 0.2~0.4s 부풀음.
+- 모달은 `src/ui-next/sheet/BottomSheet` 하나(sheet.test가 손 dialog를 떨어뜨림). 시트 열린 동안 `history.replaceState` 금지. 768+는 내용에 Close 버튼.
+- `ADS_ENABLED` true 전환은 한 줄이지만 고위험(리뷰 2회).
+- 갤러리 캡션 높이 144 = `.sl-gw-skel` margin-bottom(CLS 0). 팀 작품이 D1에서 지워지면 `picks.ts`에서도 뺀다.
+- 레벨을 더하거나 맵을 고치면 `npx tsx scripts/gen-level-thumbs.mts`(play.test가 해시·누락·15KB 검사).
+- /play 소개 문장은 `INTRO` 단일 출처. 글 페이지 꼬리 문구는 두 벌 → 고치면 `scripts/qa/content-parity.mjs`.
+- base·브랜치 빌드 비교는 같은 폴더에서(모듈 id 절대 경로 차이).
+- 새 시뮬 테스트를 다른 폴더에 만들면 vitest.config.ts `SIM_TESTS`에. spill:verify job이 15분을 넘으면 ci.yml matrix 분리. spill:verify 출력은 파일로 리다이렉트.
+- `ember-text`는 bone 위에서만. 아이콘 이모지 금지(`pnpm lint:ui`), 색 쌍은 `pnpm check:contrast`.
+- `.claude/worktrees/`가 남아 있으면 `pnpm test`에 중복 테스트가 섞인다.
+- reduced-motion은 토큰 0.01ms로는 부족 — JS 지연이 남으니 `animation: none`을 따로.
+- 헤드리스 크롬엔 WebGPU 어댑터가 없다 — 시뮬 시각·홈 붓기 실화면은 실제 크롬·실기기.
+
+## 레벨 추가 절차·실측 물리 제약 (2026-10-09 챌린지 모드 인계에서 옮김 — `src/lib/challenge` 옛 엔진 기준이라 Spill(`src/lib/spill/levels`)에서는 `pnpm spill:verify <id>`·`CAP=400 npx tsx scripts/spill-explore.mts <id>`·`npx tsx scripts/gen-level-thumbs.mts`가 현재 관문. 물리 제약은 레벨 설계 참고로 유효)
+- **레벨 추가 절차(반드시)**: 레벨 파일 + levels/index.ts 한 줄 → `pnpm test`(정합성·**지름길** 테스트:
+  목표 재료 직접 낙하 금지, 점화 재료로 연료 옆 칠 금지) → `npx wrangler dev --port 8799 --local` →
+  `/play/verify` **ALL PASS**(모범답안 ≤3★·예산 내 + 방치 미클리어). 데일리 풀은 `/play/verify?set=daily`.
+  디버그: `?only=<id>&mode=solution|idle&ticks=N` → `window.__verify.census`(재료 집계).
+- **실측 물리 제약(레벨 설계 시)**: 액체 수평 확산 매우 느림(수평 흐름 의존 금지), 덩어리 가연물은 수 초 내 전소,
+  2줄 이상 용암은 윗줄 돌 껍질이 봉인, 기체는 위로 뜸 → 위에서 붙인 불은 가로 나무를 못 태움(아래서 붙여야),
+  빈칸에만 칠하기라 이미 찬 칸(기름막 등)엔 못 칠함, 불 꺼진 뒤 연료 몇 칸 남음(clear max).
+
 ## 함정 · 결정사항
 
 - **버셀 금지.** 시도했다가 지웠다. `worker/index.ts`를 모르고 D1 접근 불가 →
