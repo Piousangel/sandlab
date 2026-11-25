@@ -2,7 +2,7 @@
 갱신: 2026-11-25(계획 루틴) · 북극성 주간 손댄 방문자 11(부분, 측정 11-20부터) · 방문자(UTC) 하루 약 5
 
 ## 지금 상태
-- P12 컷오버 완료(#97, 11-21): prod sandlab.app = 새 셸 「Glass & Grain」(`src/ui-next/`). 되돌리기 런북 = DECISIONS 11-20 'P12 컷오버'(가장 빠른 길: `gh variable set SANDLAB_UI --body classic` + `gh workflow run deploy --ref main`).
+- P12 컷오버 완료(#97, 11-21): prod sandlab.app = 새 셸 「Glass & Grain」(`src/ui-next/`). 72시간 판정 = 유지(DECISIONS 11-26, #108). #108 PR 머지 뒤 되돌리기 = revert PR(고위험·리뷰 2회) — `SANDLAB_UI=classic` 변수 경로는 next.config.ts가 빌드를 멈춘다.
 - 72시간 확인 기한(11-23) 지남 — 판정 기록 없음. 지표 11-25(7일): landing 66 · first_stroke 14 · daily_start 16 · challenge_start 26 · challenge_clear 21 · gpu_unsupported 5 · 첫 붓기율 55%(11/20). 컷오버 전(11-22 파일): 46 · 2 · 8 · 15 · 8 · 8 → 핵심 흐름 끊김 없음, 실패 신호 늘지 않음(표본 작음).
 - 11-21 이후 main 머지 0(지표 커밋만) — 루틴 한도·운영안 v2 재편 중.
 - PR CI 초록 = 머지 조건(typecheck·lint:ui·contrast·margolus / vitest unit·sim / spill:verify 2갈래 / prod 빌드·verify-ads·갤러리 API / build:preview), 만성 실패 0.
@@ -11,10 +11,10 @@
 
 ## 진행 중·열린 PR
 - #107 `card/104-slice-prepro` S1 슬라이스 프리프로(브리프·채점표·시안 요청, #99 대체) — 리뷰 대기, CI 초록. #99는 #107 머지 뒤 닫기.
-- 오늘 카드(11-25): #108 [S1] 72시간 판정 + 옛 화면 코드 삭제(ready, high-risk) · #105 [S2] SEO·GEO 감사 + llms.txt(ready) · #104 [S1] 슬라이스(review, #107).
+- #108 `card/108-classic-removal` 72시간 판정 기록 + 옛 화면 코드 삭제 — 리뷰 대기(high-risk, 내부 2중 리뷰). 오늘 카드(11-25): · #105 [S2] SEO·GEO 감사 + llms.txt(ready) · #104 [S1] 슬라이스(review, #107).
 
 ## 다음 할 일 (우선순위)
-1. [S1] #108 — 72시간 판정을 DECISIONS에 기록(위 숫자, 판단 기준 ①~⑤) → 유지면 옛 코드 삭제 PR: SandCanvas·GalleryBrowser·ResultCard·ChallengePlayer·DailyPlayer, classic.ts null들, sheet.test LEGACY, gallery.test '옛 갤러리와 대조', shareLinks.golden.test 소스 검사, ci.yml '되돌리기 빌드', verify-ads classic 분기, `PREVIEW_SWAPS` 홈 SandCanvas 줄. 그 뒤 되돌리기 = revert PR(고위험 — 리뷰 2회).
+1. [S1] #108 PR 리뷰·머지(리뷰 루틴) → 라이브 확인. 후속 카드 후보: classic.ts 나머지 null 자리와 옛 분기(ContentShell 헤더·푸터, DailySpill·/play·글 페이지 옛 JSX) 정리 = `@ui-shell` 해석을 새 셸로, 고아가 된 `lib/sand/paletteGrid.ts`·`portraitLayout.ts` 삭제.
 2. [S1] #104 1-1~1-3 버티컬 슬라이스: #107 시안 요청 → 혹평 채점 통과 전 개발 금지 → 구현(전후 녹화) → 48시간 내부 써 보기(솔버 클리어율 밴드) → 오너 10분 플레이.
 3. [S2] #105 SEO·GEO: Search Console 색인 상태(컷오버 뒤 'noindex로 제외' 없음 확인 — 오너 접근 필요), 공략 롱테일 유입 확인 방법, 유입 태그 7일 direct 46·google 17.
 4. [S1] 데일리 D2: 390에서 병 112px이라 낙하가 작음 → 병 확대 또는 미니 병, 결과 "+1 stratum" → 병 전환, "왜 별을 놓쳤나" 한 줄.
