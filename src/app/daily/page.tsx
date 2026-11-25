@@ -32,6 +32,36 @@ export default function Page() {
           stars and moves. There is no account and no leaderboard.
         </p>
       </DailySpill>
+      <section className="sl-doc" aria-labelledby="daily-rules-h" style={{ maxWidth: '68ch', margin: '0 auto', padding: '24px 16px' }}>
+        <h2 id="daily-rules-h">The rules of the daily puzzle</h2>
+        <p>
+          The daily puzzle is a Spill level chosen by the date. At midnight UTC the day number goes up by one and the
+          level changes, so a player in Seoul and a player in Lisbon are always looking at the same glass, the same
+          stream of material and the same goal. The goal is written on the start screen, and a star rating tells you how close you came to the shortest known solution.
+        </p>
+        <h3>Moves and stars</h3>
+        <p>
+          You steer the falling material with a few moves, such as digging a channel or tapping a gate, and each one counts. Fewer moves earn more
+          stars. Your first clear of the day is the official one: it is saved on your device and turned into a short
+          share text with the day number, your stars and your moves. Replaying the level is free practice and does
+          not overwrite that record.
+        </p>
+        <h3>Can I get stuck?</h3>
+        <p>
+          No. Every level, including each daily, is run through a solver before it ships, so a solution always
+          exists. If you are stuck, open the hint on the play screen, or read the written walkthrough for the same
+          level in the <a href="/play">level list</a>. Spill runs on a plain 2D canvas, so you do not need WebGPU
+          or a graphics card, and it works on phones.
+        </p>
+        <h3>Past days and your streak</h3>
+        <p>
+          Each day you clear adds a layer to your strata, a colored band stored in this browser and shown on the
+          home page. There is no account and no leaderboard, so nothing about your play leaves your device unless you
+          choose to share the text. Missed days show as gaps. Want to try the physics sandbox the puzzles are built
+          on? Open the <a href="/">home page</a>, or read how the engine works in the <a href="/learn">Learn</a>{' '}
+          section.
+        </p>
+      </section>
     </>
   )
 }

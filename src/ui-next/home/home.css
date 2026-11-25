@@ -887,3 +887,16 @@ h2.sl-home-label::after {
     max-width: 560px;
   }
 }
+
+/* 홈 소개 절(#112) — 글 본문. 읽기 폭을 제한하고 캔버스 아래에서만 보인다 */
+.sl-home-about {
+  max-width: 68ch;
+}
+.sl-home-about p {
+  margin: 0 0 var(--sl-s-4, 16px);
+  line-height: 1.6;
+}
+.sl-home-about h3 {
+  margin: var(--sl-s-5, 20px) 0 var(--sl-s-2, 8px);
+  font-size: 1rem;
+}
