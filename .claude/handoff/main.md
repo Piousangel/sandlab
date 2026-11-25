@@ -1,5 +1,5 @@
 # HANDOFF — 샌드랩 (현재분 ≤10KB · 줄 ≤150. 이력은 docs/archive/handoff-2026-*.md, 함정 정본은 docs/team/PITFALLS.md, 규칙은 docs/team/SHIFT.md)
-갱신: 2026-11-24 · 북극성 주간 손댄 방문자 11(부분, 측정 11-20부터) · 방문자(UTC) 하루 약 5
+갱신: 2026-11-25(계획 루틴) · 북극성 주간 손댄 방문자 11(부분, 측정 11-20부터) · 방문자(UTC) 하루 약 5
 
 ## 지금 상태
 - P12 컷오버 완료(#97, 11-21): prod sandlab.app = 새 셸 「Glass & Grain」(`src/ui-next/`). 되돌리기 런북 = DECISIONS 11-20 'P12 컷오버'(가장 빠른 길: `gh variable set SANDLAB_UI --body classic` + `gh workflow run deploy --ref main`).
@@ -10,12 +10,13 @@
 - 오너 11-24: S1 = /play 월드 1~2 챌린지를 Steam 「Sandcastle Demo」급으로 — 1-1~1-3 버티컬 슬라이스 → 오너 10분 플레이 승인 → 확산.
 
 ## 진행 중·열린 PR
-- 카드 #104(S1, stage:prepro) PR `card/104-slice-prepro`: 브리프 `docs/team/specs/2026-11-24-s1-slice-brief.md`(진단 D1~D7·채점표 S1~S6·오답 검사·독립 혹평 반영) + 시안 요청 `challenge-board-v2.json`(1-3 보드 3방향 pro + 현 화면 혹평). #99 커밋을 포함·대체 — 머지 뒤 #99는 닫는다.
+- #107 `card/104-slice-prepro` S1 슬라이스 프리프로(브리프·채점표·시안 요청, #99 대체) — 리뷰 대기, CI 초록. #99는 #107 머지 뒤 닫기.
+- 오늘 카드(11-25): #108 [S1] 72시간 판정 + 옛 화면 코드 삭제(ready, high-risk) · #105 [S2] SEO·GEO 감사 + llms.txt(ready) · #104 [S1] 슬라이스(review, #107).
 
 ## 다음 할 일 (우선순위)
-1. [S1] 72시간 판정을 DECISIONS에 기록(위 숫자, 판단 기준 ①~⑤) → 유지면 옛 코드 삭제 PR: SandCanvas·GalleryBrowser·ResultCard·ChallengePlayer·DailyPlayer, classic.ts null들, sheet.test LEGACY, gallery.test '옛 갤러리와 대조', shareLinks.golden.test 소스 검사, ci.yml '되돌리기 빌드', verify-ads classic 분기, `PREVIEW_SWAPS` 홈 SandCanvas 줄. 그 뒤 되돌리기 = revert PR(고위험 — 리뷰 2회).
-2. [S1] 1-1~1-3 버티컬 슬라이스: #104 브리프 PR 머지 → gen-assets가 `docs/design/challenge-v2/concepts/slice13-*.webp` 생성 → 다음 S1 run이 160×240 격자 사본으로 S1~S6 채점(reviewer + 시안 critique 1건 추가) → 통과면 `stage:slice`, 전시실 썸네일(`thumbPixels.ts`) 맞출지 그때 결정 → 구현(전후 캡처·회귀 묶음) → 오너 10분 플레이.
-3. [S2] SEO·GEO: Search Console 색인 상태(컷오버 뒤 'noindex로 제외' 없음 확인 — 오너 접근 필요), 공략 롱테일 유입 확인 방법, 유입 태그 7일 direct 46·google 17.
+1. [S1] #108 — 72시간 판정을 DECISIONS에 기록(위 숫자, 판단 기준 ①~⑤) → 유지면 옛 코드 삭제 PR: SandCanvas·GalleryBrowser·ResultCard·ChallengePlayer·DailyPlayer, classic.ts null들, sheet.test LEGACY, gallery.test '옛 갤러리와 대조', shareLinks.golden.test 소스 검사, ci.yml '되돌리기 빌드', verify-ads classic 분기, `PREVIEW_SWAPS` 홈 SandCanvas 줄. 그 뒤 되돌리기 = revert PR(고위험 — 리뷰 2회).
+2. [S1] #104 1-1~1-3 버티컬 슬라이스: #107 시안 요청 → 혹평 채점 통과 전 개발 금지 → 구현(전후 녹화) → 48시간 내부 써 보기(솔버 클리어율 밴드) → 오너 10분 플레이.
+3. [S2] #105 SEO·GEO: Search Console 색인 상태(컷오버 뒤 'noindex로 제외' 없음 확인 — 오너 접근 필요), 공략 롱테일 유입 확인 방법, 유입 태그 7일 direct 46·google 17.
 4. [S1] 데일리 D2: 390에서 병 112px이라 낙하가 작음 → 병 확대 또는 미니 병, 결과 "+1 stratum" → 병 전환, "왜 별을 놓쳤나" 한 줄.
 5. [S1] 실기기 확인: iOS Safari·안드로이드 홈 붓기·시트 끌기·데일리 클리어, Web Vitals LCP p75 ≤2.5s·CLS ≤0.1.
 6. [S1] 북극성 관찰: `daily_start`가 /daily 마운트 때 나가 '퍼즐 시작'보다 넓다 — 데일리로 쏠리면 SpillPlayer 첫 RUN으로 옮길지(지표 끊김 주의).
