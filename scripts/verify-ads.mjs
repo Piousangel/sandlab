@@ -6,7 +6,7 @@
  * 이 스크립트는 (1) 로더가 허용 페이지에만 있고 (2) 허용 페이지엔 반드시 있으며
  * (3) 허용 페이지의 정적 본문 텍스트가 최소 분량 이상인지를 강제한다.
  *
- * 실행: pnpm run build:prod && node scripts/verify-ads.mjs   (되돌리기 빌드 검사: SANDLAB_UI=classic 를 두 명령 모두에)
+ * 실행: pnpm run build:prod && node scripts/verify-ads.mjs   (classic 되돌리기 빌드는 #108에서 없어졌다 — next.config.ts가 막는다)
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -66,8 +66,7 @@ if (allowedSeen === 0) failures.push('허용 페이지가 하나도 빌드되지
 
 // 프리뷰 산출물(S6)이 prod로 나가는 사고 방지. 모드는 env가 아니라 인자로 정한다(env가 새면 가드가 스스로 꺼지므로).
 //  - 기본(prod): 색인 차단(out/_headers noindex·전체 차단 robots·메타 robots noindex)·읽기 전용 안내가 있으면 실패.
-//    UI는 컷오버(P12, 11-20)부터 새 셸이 기본 — `SANDLAB_UI`(build:prod와 같은 변수, 비면 next)로 기대 UI를 정하고 out/이 그 UI인지 본다.
-//    되돌리기(SANDLAB_UI=classic) 빌드는 새 셸 흔적이 0이어야, 새 셸 빌드는 셸 class·토큰이 있어야 한다(치환이 조용히 빠지는 사고).
+//    UI는 새 셸 하나(P12 컷오버, #108에서 classic 화면 삭제) — out/에 셸 class·토큰이 있어야 한다(치환이 조용히 빠지는 사고).
 //  - --preview: 위 검사를 건너뛴다(pnpm run deploy:preview 전용).
 if (!process.argv.includes('--preview')) {
   // 프리뷰 읽기 전용 안내(오너 11-20, src/ui-next/shell/ReadOnlyNote.tsx)는 prod에 뜨면 안 된다 — 컷오버(P12) 뒤에도.
@@ -87,16 +86,11 @@ if (!process.argv.includes('--preview')) {
   if (!existsSync(robotsPath)) failures.push('out/robots.txt 없음')
   else if (/Disallow:\s*\/\s*$/m.test(readFileSync(robotsPath, 'utf8')))
     failures.push('out/robots.txt가 전체 차단 — 프리뷰 빌드 산출물. pnpm run build:prod로 다시 빌드')
-  // 기대 UI와 out/이 같은가 — 셸 class(<html class>)와 새 셸 토큰(--sl-*)
-  const want = process.env.SANDLAB_UI || 'next'
+  // out/이 새 셸인가 — 셸 class(<html class>)와 새 셸 토큰(--sl-*)
   const shellClass = /<html[^>]*\sclass="[^"]+"/.test(readFileSync(join(OUT, 'index.html'), 'utf8'))
   const cssDir = join(OUT, '_next/static/css')
   const tokens = existsSync(cssDir) && readdirSync(cssDir).some((f) => readFileSync(join(cssDir, f), 'utf8').includes('--sl-'))
-  if (want === 'next') {
-    if (!shellClass || !tokens) failures.push(`SANDLAB_UI=next(기본)인데 out/이 새 셸이 아니다(<html class> ${shellClass}, --sl-* 토큰 ${tokens}) — @ui-shell 치환이 빠졌거나 classic 빌드. pnpm run build:prod`)
-  } else if (shellClass || tokens) {
-    failures.push(`SANDLAB_UI=${want}(되돌리기)인데 out/에 새 셸이 섞였다(<html class> ${shellClass}, --sl-* 토큰 ${tokens}) — .next 캐시를 지우고 SANDLAB_UI=${want} pnpm run build:prod`)
-  }
+  if (!shellClass || !tokens) failures.push(`out/이 새 셸이 아니다(<html class> ${shellClass}, --sl-* 토큰 ${tokens}) — @ui-shell 치환이 빠졌거나 옛 classic 산출물. pnpm run build:prod`)
 }
 
 if (failures.length) {

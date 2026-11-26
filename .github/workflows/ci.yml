@@ -123,13 +123,6 @@ jobs:
           python3 scripts/verify-gallery.py
       - if: failure()
         run: tail -100 wrangler-dev.log || true
-      # 되돌리기 경로가 살아 있는지(P12 컷오버 런북): 옛 화면(classic) prod 빌드도 빌드되고 verify-ads를 통과해야 한다.
-      # 옛 컴포넌트 삭제 PR(72시간 지표 확인 뒤)에서 이 두 줄도 같이 지운다.
-      - name: 되돌리기 빌드(SANDLAB_UI=classic)
-        run: |
-          rm -rf .next/cache
-          SANDLAB_UI=classic pnpm run build:prod
-          SANDLAB_UI=classic node scripts/verify-ads.mjs
 
   build-preview:
     name: build:preview · verify-ads --preview

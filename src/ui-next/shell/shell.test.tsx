@@ -183,7 +183,7 @@ describe('@ui-shell 영역 치환(P11 LCP — next.config.ts SHELL_AREAS)', () =
 describe('프리뷰 모듈 바꿔 끼우기(P12 LCP — next.config.ts PREVIEW_SWAPS)', () => {
   const root = fileURLToPath(new URL('../../../', import.meta.url))
   it('표의 사용처가 그 import 문자열을 실제로 쓰고, 바꿀 모듈이 있다(낡은 줄은 조용히 무효가 된다)', () => {
-    expect(PREVIEW_SWAPS.length).toBeGreaterThanOrEqual(2)
+    expect(PREVIEW_SWAPS.length).toBeGreaterThanOrEqual(1) // 홈 SandCanvas 줄은 #108에서 지웠다(옛 홈 파일 삭제)
     for (const s of PREVIEW_SWAPS) {
       const src = readFileSync(join(root, s.issuer), 'utf8')
       expect(src, `${s.issuer}: from '${s.request}'`).toContain(`from '${s.request}'`)
@@ -270,10 +270,10 @@ describe('프리뷰 읽기 전용 안내(오너 11-20)', () => {
   })
 })
 
-describe('P12 컷오버 계약 — prod는 새 셸, 되돌리기는 변수 하나, 색인 차단은 프리뷰만', () => {
+describe('P12 컷오버 계약 — prod는 새 셸, classic 빌드는 #108부터 막힘, 색인 차단은 프리뷰만', () => {
   const root = fileURLToPath(new URL('../../../', import.meta.url))
   const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { scripts: Record<string, string> }
-  it('build:prod = NEXT_PUBLIC_UI=${SANDLAB_UI:-next}(기본 새 셸, SANDLAB_UI=classic이면 되돌리기) + READ_ONLY·NOINDEX 비움', () => {
+  it('build:prod = NEXT_PUBLIC_UI=${SANDLAB_UI:-next}(기본 새 셸) + READ_ONLY·NOINDEX 비움', () => {
     expect(pkg.scripts['build:prod']).toBe('NEXT_PUBLIC_UI=${SANDLAB_UI:-next} NEXT_PUBLIC_READ_ONLY= NEXT_PUBLIC_NOINDEX= next build')
     expect(pkg.scripts.deploy).toBe('pnpm run build:prod && node scripts/verify-ads.mjs && wrangler deploy')
   })
@@ -281,8 +281,19 @@ describe('P12 컷오버 계약 — prod는 새 셸, 되돌리기는 변수 하�
     expect(pkg.scripts['build:preview']).toContain('NEXT_PUBLIC_NOINDEX=1')
     expect(pkg.scripts['build:preview']).toContain('NEXT_PUBLIC_READ_ONLY=1')
   })
-  it('deploy 워크플로가 저장소 변수 SANDLAB_UI를 넘긴다(되돌리기 경로)', () => {
+  it('deploy 워크플로가 저장소 변수 SANDLAB_UI를 넘긴다(classic이면 아래 검사대로 빌드가 멈춰 라이브는 그대로)', () => {
     expect(readFileSync(join(root, '.github/workflows/deploy.yml'), 'utf8')).toContain('SANDLAB_UI: ${{ vars.SANDLAB_UI }}')
+  })
+  it('#108: NEXT_PUBLIC_UI=classic이면 next.config가 멈춘다(옛 홈·갤러리·결과 카드가 지워져 빈 화면 prod가 나가는 일 방지)', async () => {
+    vi.resetModules()
+    vi.stubEnv('NEXT_PUBLIC_UI', 'classic')
+    try {
+      await expect(import('../../../next.config')).rejects.toThrow(/SANDLAB_UI=classic/)
+    } finally {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    }
+    await expect(import('../../../next.config')).resolves.toBeTruthy()
   })
   it('uiMode·noIndex: 정확히 "next"·"1"일 때만', async () => {
     const { uiMode, noIndex } = await import('../flag')

@@ -2,7 +2,7 @@
 갱신: 2026-11-26(계획 루틴) · 북극성 주간 손댄 방문자 13(부분 5일치, 지표 11-26 파일) · 첫 붓기율 52%(13/25) · 방문자(UTC) 하루 약 5
 
 ## 지금 상태
-- P12 컷오버 완료(#97, 11-21): prod sandlab.app = 새 셸 「Glass & Grain」(`src/ui-next/`). 되돌리기 런북 = DECISIONS 11-20 'P12 컷오버'(가장 빠른 길: `gh variable set SANDLAB_UI --body classic` + `gh workflow run deploy --ref main`).
+- P12 컷오버 완료(#97, 11-21): prod sandlab.app = 새 셸 「Glass & Grain」(`src/ui-next/`). 72시간 판정 = 유지(DECISIONS 11-26, #108). #108 PR 머지 뒤 되돌리기 = revert PR(고위험·리뷰 2회) — `SANDLAB_UI=classic` 변수 경로는 next.config.ts가 빌드를 멈춘다.
 - 72시간 확인 기한(11-23) 지남 — 판정 기록 없음. 지표 11-25(7일): landing 66 · first_stroke 14 · daily_start 16 · challenge_start 26 · challenge_clear 21 · gpu_unsupported 5 · 첫 붓기율 55%(11/20). 컷오버 전(11-22 파일): 46 · 2 · 8 · 15 · 8 · 8 → 핵심 흐름 끊김 없음, 실패 신호 늘지 않음(표본 작음).
 - 11-21 이후 main 머지 0(지표 커밋만) — 루틴 한도·운영안 v2 재편 중.
 - PR CI 초록 = 머지 조건(typecheck·lint:ui·contrast·margolus / vitest unit·sim / spill:verify 2갈래 / prod 빌드·verify-ads·갤러리 API / build:preview), 만성 실패 0.
@@ -13,7 +13,8 @@
 - #119 `card/108-classic-removal` [S1] 72시간 판정 '유지' 기록 + classic 옛 화면 코드 삭제(24파일 −3196줄) — high-risk, 팀 내부 2중 리뷰 대기. cutover-e2e는 클라우드 환경에서 10/21(main도 같음) → 맥·라이브 21/21 확인 필요.
 - #107 `card/104-slice-prepro` S1 프리프로(draft) — QA 지적: `.claude/handoff/main.md` main과 충돌(main 쪽 받아 merge 커밋), D1의 `SandCanvas`→`HomePour`. 고친 뒤 머지. #99는 #107 머지 뒤 닫기.
 - #116 `card/112-home-daily-body` S2 홈·/daily 본문(draft) — QA 지적: 홈 소개 링크 6개 구분 불가(색·밑줄), /daily `sl-doc` 클래스 미정의, DailySpill children 중복 노출.
-- 열린 카드: #104 S1 prepro(ready) · #112 S2(ready, 이어받기) · #115·#117·#105 S2(ready) · #108 S1(review, #119).
+- #123(새 PR) `card/123-daily-d2-prepro` [S1 prepro] 데일리 D2 브리프·시안 요청 `daily-d2.json`(flash 2 + 혹평) — 문서 등급. 머지 → gen-assets → 다음 S1 기획 run이 D1~D5 채점.
+- 열린 카드: #104 S1 prepro(review, #107 ready·CI 초록·충돌 없음) · #123 S1 prepro(review) · #112 S2(ready, 이어받기) · #115·#117·#105 S2(ready) · #108 S1(review, #119).
 
 ## 다음 할 일 (우선순위)
 오늘(11-26) 카드 — 새 카드 0(기존 ready 카드로 슬롯이 찬다, S1 개발 단계 카드는 #107 머지 뒤):
@@ -21,7 +22,7 @@
 2. [S1] 09:07 #104 — #107 충돌 해소·D1 용어 수정 → ready_for_review → 머지 → gen-assets 시안 → 격자 사본 S1~S6 채점(관문 ①). 머지되면 계획 루틴이 `stage:slice` 카드를 만든다.
 3. [S2] 14:07 #112 — #116 지적 3개 고친 뒤 ready → 머지 뒤 ② 레벨 화면 11개 보강(새 `card/112-*` 브랜치).
 4. [S2] #115 유입 출처 분류 → #117 Search Console 주간 수집 → #105(허브 H4의 llms.txt 생성기 부탁 `끝냄` 답 뒤, 노하우만).
-5. [S1] 데일리 D2: 390에서 병 112px이라 낙하가 작음 → 병 확대 또는 미니 병, 결과 "+1 stratum" → 병 전환, "왜 별을 놓쳤나" 한 줄.
+5. [S1] 데일리 D2 → 카드 #123(브리프 `docs/team/specs/2026-11-26-daily-d2-brief.md`). 시안 생성 뒤 채점 → slice.
 6. [S1] 실기기 확인: iOS Safari·안드로이드 홈 붓기·시트 끌기·데일리 클리어, Web Vitals LCP p75 ≤2.5s·CLS ≤0.1.
 7. [S1] 북극성 관찰: `daily_start`가 /daily 마운트 때 나가 '퍼즐 시작'보다 넓다 — 데일리로 쏠리면 SpillPlayer 첫 RUN으로 옮길지(지표 끊김 주의).
 8. 리뷰 보류: 넓은 화면 Spill HUD 메뉴 카드 위치(버튼 rect 기준), share-1440 썸네일 480 < 카드 560, 메뉴 doc 링크 전체 이동.

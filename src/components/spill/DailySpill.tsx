@@ -3,7 +3,7 @@
 /**
  * /daily — 오늘(UTC)의 Spill 레벨을 고르고 SpillPlayer로 플레이한다. 정적 export라 레벨은 클라이언트가 고른다.
  * 첫 클리어(별·수, 리디자인 P4부터 ticks·mask도)는 기기에 저장하고 공유 문구를 만든다.
- * 공유 문구 = shareTextV2(공식 기록 기준, 레벨 id 없음 — P5). 본문 버튼과 결과 카드의 Share가 같은 문구를 쓴다.
+ * 공유 문구 = shareTextV2(공식 기록 기준, 레벨 id 없음 — P5). 본문 버튼과 결과 화면(onCleared가 돌려준 text)이 같은 문구를 쓴다.
  * 새 셸(프리뷰 빌드)에서는 플레이 전에 시작 화면(@ui-shell DailyStart)을 먼저 보여 준다 — classic(prod)은 null이라 지금 그대로. 서버 계정·순위표 없음 — 레벨별 분포는 SpillPlayer의 결과 카드가 이미 보여준다.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react'
@@ -81,7 +81,7 @@ export default function DailySpill({ children }: { children?: ReactNode }) {
   }
 
   return (
-    <SpillPlayer level={level} nextId={null} onCleared={onCleared} badge={DailyStart ? `No.${n}` : undefined} back={DailyStart ? { href: '/daily', label: 'Daily start' } : undefined} share={text ? { text, onClick: () => trackEvent('share_click', 'daily') } : undefined}>
+    <SpillPlayer level={level} nextId={null} onCleared={onCleared} badge={DailyStart ? `No.${n}` : undefined} back={DailyStart ? { href: '/daily', label: 'Daily start' } : undefined}>
       {/* 새 셸(P7): 레벨 id·옛 Share 버튼 없는 패널. classic은 null → 아래 지금 패널 그대로 */}
       {DailyAside ? (
         <DailyAside n={n} level={level} mine={mine}>
