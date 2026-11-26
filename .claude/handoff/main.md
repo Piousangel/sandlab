@@ -1,5 +1,5 @@
 # HANDOFF — 샌드랩 (현재분 ≤10KB · 줄 ≤150. 이력은 docs/archive/handoff-2026-*.md, 함정 정본은 docs/team/PITFALLS.md, 규칙은 docs/team/SHIFT.md)
-갱신: 2026-11-26(계획 루틴) · 북극성 주간 손댄 방문자 13(부분 5일치, 지표 11-26 파일) · 첫 붓기율 52%(13/25) · 방문자(UTC) 하루 약 5
+갱신: 2026-11-27(01시 S1 작업 루틴) · 이전 2026-11-26(계획 루틴) · 북극성 주간 손댄 방문자 13(부분 5일치, 지표 11-26 파일) · 첫 붓기율 52%(13/25) · 방문자(UTC) 하루 약 5
 
 ## 지금 상태
 - P12 컷오버 완료(#97, 11-21): prod sandlab.app = 새 셸 「Glass & Grain」(`src/ui-next/`). 72시간 판정 = 유지(DECISIONS 11-26, #108). #108 PR 머지 뒤 되돌리기 = revert PR(고위험·리뷰 2회) — `SANDLAB_UI=classic` 변수 경로는 next.config.ts가 빌드를 멈춘다.
@@ -12,7 +12,7 @@
 ## 진행 중·열린 PR
 - [S3] #126 오늘의 레벨 2-2 Fuse(W2 둘째, Line 동사 첫 출시) + 공략 — PR review, 15:37 리뷰 머지 대기. 다음 S3: 2-3(스펙 3.3 Plank Bridge = line plank) — 도화선 실측 수치는 PR 본문.
 - #119 `card/108-classic-removal` [S1] 72시간 판정 '유지' 기록 + classic 옛 화면 코드 삭제(24파일 −3196줄) — high-risk, 팀 내부 2중 리뷰 대기. cutover-e2e는 클라우드 환경에서 10/21(main도 같음) → 맥·라이브 21/21 확인 필요.
-- #107 `card/104-slice-prepro` S1 프리프로(draft) — QA 지적: `.claude/handoff/main.md` main과 충돌(main 쪽 받아 merge 커밋), D1의 `SandCanvas`→`HomePour`. 고친 뒤 머지. #99는 #107 머지 뒤 닫기.
+- `card/104-slice-g3-score` [S1 prepro] #104 관문 1 라운드 1 채점 = **보류**(A 5.5·B 6.2·C 5.3 배치 변경, 통과 0) + r2 요청 `challenge-board-v2r2.json`(B2·A2 pro + 라운드 1 혹평) — 문서 등급. 채점표 `docs/design/critiques/slice13-g3-score-1127.md`.
 - #116 `card/112-home-daily-body` S2 홈·/daily 본문(draft) — QA 지적: 홈 소개 링크 6개 구분 불가(색·밑줄), /daily `sl-doc` 클래스 미정의, DailySpill children 중복 노출.
 - #123(새 PR) `card/123-daily-d2-prepro` [S1 prepro] 데일리 D2 브리프·시안 요청 `daily-d2.json`(flash 2 + 혹평) — 문서 등급. 머지 → gen-assets → 다음 S1 기획 run이 D1~D5 채점.
 - 열린 카드: #104 S1 prepro(review, #107 ready·CI 초록·충돌 없음) · #123 S1 prepro(review) · #112 S2(ready, 이어받기) · #115·#117·#105 S2(ready) · #108 S1(review, #119).
@@ -20,7 +20,7 @@
 ## 다음 할 일 (우선순위)
 오늘(11-26) 카드 — 새 카드 0(기존 ready 카드로 슬롯이 찬다, S1 개발 단계 카드는 #107 머지 뒤):
 1. [리뷰] #119(#108) high-risk 2중 리뷰 → `team-2review` → 머지 → 라이브 확인. 되돌리기 = revert PR(고위험).
-2. [S1] 09:07 #104 — #107 충돌 해소·D1 용어 수정 → ready_for_review → 머지 → gen-assets 시안 → 격자 사본 S1~S6 채점(관문 ①). 머지되면 계획 루틴이 `stage:slice` 카드를 만든다.
+2. [S1] #104 — r2 PR 머지 → gen-assets(B2·A2) → 다음 S1 run이 같은 격자 사본 절차(채점표 문서 머리말)로 r2 채점. 통과 → `stage:slice` 카드(1-3 보드 렌더, 목표 = 셀 틴트·윤곽 규칙을 수락 기준에). 미달 → 결정 요청 'S1 보드 방향'(B 밝은 종이 / A 어두운 따뜻한 / 크롬 유지 + 목표 규칙만).
 3. [S2] #112 — #116 머지됨(11-26). ② 레벨 화면 11개 고유 노트 PR 올림(`card/112-level-screens`, 전 11개 ≥300단어). 다음: ③ learn 고유 장문(주 2편 이하) → ④ 틀 글 다듬기 → ⑤ docs/adsense 11-25 기록·얇은 페이지 검사.
 4. [S2] #115 유입 출처 분류 → #117 Search Console 주간 수집 → #105(허브 H4의 llms.txt 생성기 부탁 `끝냄` 답 뒤, 노하우만).
 5. [S1] 데일리 D2 → 카드 #123(브리프 `docs/team/specs/2026-11-26-daily-d2-brief.md`). 시안 생성 뒤 채점 → slice.

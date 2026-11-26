@@ -75,6 +75,7 @@
 - fps: `/spill/bench` 전후 같은 기기 조건, 하락 ≤5%. LCP ≤2.5s(Lighthouse 모바일 /play/1-1).
 
 ## 9. 다음 run
+- **11-27 라운드 1 결과: 보류**(통과 0, 최고 B 6.2) → r2 재생성 1회(`challenge-board-v2r2.json`). 채점표·수정 근거 [slice13-g3-score-1127](../../design/critiques/slice13-g3-score-1127.md).
 이 PR 머지 → gen-assets가 `docs/design/challenge-v2/concepts/slice13-*.webp`·`docs/design/critiques/slice-before-critique-1124.md` 커밋 → 다음 S1 run이 4장 채점표로 채점(카드 코멘트 `설계: S1 슬라이스 G3 통과/보류`) → 통과면 `stage:slice`로 바꾸고 첫 구현 PR(1-3 보드 렌더).
 
 ## 독립 혹평 (브리프) — 아래에 지적과 응답
