@@ -15,7 +15,7 @@ describe('W1 Flow levels', () => {
       '1-1 First Drop', '1-2 Detour', '1-3 Two Pots', '1-4 Hourglass', '1-5 Gatekeeper', '1-6 Displacement', '1-7 Two Taps', '1-8 Cascade', '1-9 Overflow', '1-10 Twin Cups',
     ])
     expect(LEVELS.slice(0, 10)).toEqual(W1)
-    expect(LEVELS.slice(10).map((l) => `${l.id} ${l.name}`)).toEqual(['2-1 Wooden Door'])
+    expect(LEVELS.slice(10).map((l) => `${l.id} ${l.name}`)).toEqual(['2-1 Wooden Door', '2-2 Fuse'])
   })
 
   it('ids, salts and hashes are unique', () => {
@@ -84,6 +84,26 @@ describe('W1 Flow levels', () => {
     it('a spark just under the plug clears; one seven tiles below fizzles', () => {
       expect(simulate(w2, spark(9, 15)).outcome).toBe('cleared')
       expect(simulate(w2, spark(9, 21)).outcome).toBe('failed')
+    })
+  })
+  describe('2-2 Fuse (fire travels along a fuse)', () => {
+    const l = LEVELS.find((x) => x.id === '2-2')!
+    const spark = (tx: number, ty: number) => ({ tick: 0, verb: 'drop' as const, tx, ty, tx2: tx, ty2: ty, arg: 'spark' })
+    const fuse = (tx: number, ty: number, tx2: number, ty2: number) => ({ tick: 0, verb: 'line' as const, tx, ty, tx2, ty2, arg: 'fuse' })
+    it('dev solution clears within par; doing nothing stalls', () => {
+      const r = simulate(l, devActions(l))
+      expect(r.outcome).toBe('cleared')
+      expect(r.ticks).toBeLessThanOrEqual(parTicks(l.par!.secs))
+      expect(simulate(l, []).reason).toBe('stalled')
+    })
+    it('a spark alone opens only one door; a fuse that reaches one door is not enough', () => {
+      expect(simulate(l, [spark(13, 14)]).outcome).toBe('failed')
+      expect(simulate(l, [fuse(14, 14, 20, 14), spark(19, 15)]).outcome).toBe('failed')
+      expect(simulate(l, [fuse(14, 14, 25, 14)]).outcome).toBe('failed')
+    })
+    it('a fuse spanning both doors clears from any corridor row', () => {
+      expect(simulate(l, [fuse(14, 15, 25, 15), spark(19, 16)]).outcome).toBe('cleared')
+      expect(simulate(l, [fuse(14, 16, 25, 16), spark(19, 15)]).outcome).toBe('cleared')
     })
   })
 })
