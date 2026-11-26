@@ -1,5 +1,5 @@
 # HANDOFF — 샌드랩 (현재분 ≤10KB · 줄 ≤150. 이력은 docs/archive/handoff-2026-*.md, 함정 정본은 docs/team/PITFALLS.md, 규칙은 docs/team/SHIFT.md)
-갱신: 2026-11-25(계획 루틴) · 북극성 주간 손댄 방문자 11(부분, 측정 11-20부터) · 방문자(UTC) 하루 약 5
+갱신: 2026-11-26(계획 루틴) · 북극성 주간 손댄 방문자 13(부분 5일치, 지표 11-26 파일) · 첫 붓기율 52%(13/25) · 방문자(UTC) 하루 약 5
 
 ## 지금 상태
 - P12 컷오버 완료(#97, 11-21): prod sandlab.app = 새 셸 「Glass & Grain」(`src/ui-next/`). 되돌리기 런북 = DECISIONS 11-20 'P12 컷오버'(가장 빠른 길: `gh variable set SANDLAB_UI --body classic` + `gh workflow run deploy --ref main`).
@@ -10,18 +10,22 @@
 - 오너 11-24: S1 = /play 월드 1~2 챌린지를 Steam 「Sandcastle Demo」급으로 — 1-1~1-3 버티컬 슬라이스 → 오너 10분 플레이 승인 → 확산.
 
 ## 진행 중·열린 PR
-- #107 `card/104-slice-prepro` S1 슬라이스 프리프로(브리프·채점표·시안 요청, #99 대체) — 리뷰 대기, CI 초록. #99는 #107 머지 뒤 닫기.
-- 오늘 카드(11-25): #108 [S1] 72시간 판정 + 옛 화면 코드 삭제(ready, high-risk) · #105 [S2] SEO·GEO 감사 + llms.txt(ready) · #104 [S1] 슬라이스(review, #107).
+- #119 `card/108-classic-removal` [S1] 72시간 판정 '유지' 기록 + classic 옛 화면 코드 삭제(24파일 −3196줄) — high-risk, 팀 내부 2중 리뷰 대기. cutover-e2e는 클라우드 환경에서 10/21(main도 같음) → 맥·라이브 21/21 확인 필요.
+- #107 `card/104-slice-prepro` S1 프리프로(draft) — QA 지적: `.claude/handoff/main.md` main과 충돌(main 쪽 받아 merge 커밋), D1의 `SandCanvas`→`HomePour`. 고친 뒤 머지. #99는 #107 머지 뒤 닫기.
+- #116 `card/112-home-daily-body` S2 홈·/daily 본문(draft) — QA 지적: 홈 소개 링크 6개 구분 불가(색·밑줄), /daily `sl-doc` 클래스 미정의, DailySpill children 중복 노출.
+- 열린 카드: #104 S1 prepro(ready) · #112 S2(ready, 이어받기) · #115·#117·#105 S2(ready) · #108 S1(review, #119).
 
 ## 다음 할 일 (우선순위)
-1. [S1] #108 — 72시간 판정을 DECISIONS에 기록(위 숫자, 판단 기준 ①~⑤) → 유지면 옛 코드 삭제 PR: SandCanvas·GalleryBrowser·ResultCard·ChallengePlayer·DailyPlayer, classic.ts null들, sheet.test LEGACY, gallery.test '옛 갤러리와 대조', shareLinks.golden.test 소스 검사, ci.yml '되돌리기 빌드', verify-ads classic 분기, `PREVIEW_SWAPS` 홈 SandCanvas 줄. 그 뒤 되돌리기 = revert PR(고위험 — 리뷰 2회).
-2. [S1] #104 1-1~1-3 버티컬 슬라이스: #107 시안 요청 → 혹평 채점 통과 전 개발 금지 → 구현(전후 녹화) → 48시간 내부 써 보기(솔버 클리어율 밴드) → 오너 10분 플레이.
-3. [S2] #105 SEO·GEO: Search Console 색인 상태(컷오버 뒤 'noindex로 제외' 없음 확인 — 오너 접근 필요), 공략 롱테일 유입 확인 방법, 유입 태그 7일 direct 46·google 17.
-4. [S1] 데일리 D2: 390에서 병 112px이라 낙하가 작음 → 병 확대 또는 미니 병, 결과 "+1 stratum" → 병 전환, "왜 별을 놓쳤나" 한 줄.
-5. [S1] 실기기 확인: iOS Safari·안드로이드 홈 붓기·시트 끌기·데일리 클리어, Web Vitals LCP p75 ≤2.5s·CLS ≤0.1.
-6. [S1] 북극성 관찰: `daily_start`가 /daily 마운트 때 나가 '퍼즐 시작'보다 넓다 — 데일리로 쏠리면 SpillPlayer 첫 RUN으로 옮길지(지표 끊김 주의).
-7. 리뷰 보류: 넓은 화면 Spill HUD 메뉴 카드 위치(버튼 rect 기준), share-1440 썸네일 480 < 카드 560, 메뉴 doc 링크 전체 이동.
-8. [운영] 운영안 v2 마무리: ① 루틴 재편 — 오너가 루틴 계정 로그인 + Slack 커넥터 연결 후 메인 세션이 `docs/team/routines/` 초안으로 생성(그 전엔 루틴 생성·수정 금지) ② 허브 정본 SHIFT·OPS 공통부 → 이 저장소 사본 동기화 Action ③ 하트비트 누락 감지 Actions cron(GitHub cron은 3~5시간 늦을 수 있다, archive playbook '배운 점') ④ 로그 절삭 PreToolUse hook(고위험·리뷰 2회) ⑤ `stop-unsaved-work` 안내의 브랜치 이름 `shift/` → `card/`(고위험).
+오늘(11-26) 카드 — 새 카드 0(기존 ready 카드로 슬롯이 찬다, S1 개발 단계 카드는 #107 머지 뒤):
+1. [리뷰] #119(#108) high-risk 2중 리뷰 → `team-2review` → 머지 → 라이브 확인. 되돌리기 = revert PR(고위험).
+2. [S1] 09:07 #104 — #107 충돌 해소·D1 용어 수정 → ready_for_review → 머지 → gen-assets 시안 → 격자 사본 S1~S6 채점(관문 ①). 머지되면 계획 루틴이 `stage:slice` 카드를 만든다.
+3. [S2] 14:07 #112 — #116 지적 3개 고친 뒤 ready → 머지 뒤 ② 레벨 화면 11개 보강(새 `card/112-*` 브랜치).
+4. [S2] #115 유입 출처 분류 → #117 Search Console 주간 수집 → #105(허브 H4의 llms.txt 생성기 부탁 `끝냄` 답 뒤, 노하우만).
+5. [S1] 데일리 D2: 390에서 병 112px이라 낙하가 작음 → 병 확대 또는 미니 병, 결과 "+1 stratum" → 병 전환, "왜 별을 놓쳤나" 한 줄.
+6. [S1] 실기기 확인: iOS Safari·안드로이드 홈 붓기·시트 끌기·데일리 클리어, Web Vitals LCP p75 ≤2.5s·CLS ≤0.1.
+7. [S1] 북극성 관찰: `daily_start`가 /daily 마운트 때 나가 '퍼즐 시작'보다 넓다 — 데일리로 쏠리면 SpillPlayer 첫 RUN으로 옮길지(지표 끊김 주의).
+8. 리뷰 보류: 넓은 화면 Spill HUD 메뉴 카드 위치(버튼 rect 기준), share-1440 썸네일 480 < 카드 560, 메뉴 doc 링크 전체 이동.
+9. [운영] 운영안 v2 마무리: ① 루틴 재편 — 오너가 루틴 계정 로그인 + Slack 커넥터 연결 후 메인 세션이 `docs/team/routines/` 초안으로 생성(그 전엔 루틴 생성·수정 금지) ② 허브 정본 SHIFT·OPS 공통부 → 이 저장소 사본 동기화 Action ③ 하트비트 누락 감지 Actions cron(GitHub cron은 3~5시간 늦을 수 있다, archive playbook '배운 점') ④ 로그 절삭 PreToolUse hook(고위험·리뷰 2회) ⑤ `stop-unsaved-work` 안내의 브랜치 이름 `shift/` → `card/`(고위험).
 - 오너 선택·할 일: 갤러리 Top을 작품 전 기간 순위로(워커 `sort=top`), AdSense 고정 300×250 단위 생성(`AD_SLOTS.play`), workers.dev 하위 도메인 활성(프리뷰 배포는 한 번도 안 함), main 브랜치 보호 필수 체크(`pr-guard / high-risk` 포함 — Actions가 main에 직접 커밋하는 워크플로 4개를 PR 방식으로 바꾼 뒤), Search Console·Bing 접근 방법.
 
 ## 현재 유효한 함정

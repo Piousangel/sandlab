@@ -1,0 +1,48 @@
+[
+ {
+  "id": "slice13-a-glass-case",
+  "model": "gemini-3-pro-image",
+  "aspect": "9:16",
+  "size": 1024,
+  "refs": [
+   "docs/design/challenge-v2/before/play_1-3-390.jpg",
+   "docs/design/challenge-v2/before/home-390.jpg"
+  ],
+  "out": "docs/design/challenge-v2/concepts/slice13-a-glass-case.webp",
+  "prompt": "Redesign the visual rendering of the first reference image. This is a mobile portrait screenshot (390x844) of level 1-3 'Two Pots' of a falling-sand physics puzzle. Keep the EXACT same level layout and screen layout: same terrain silhouette, the water reservoir at the top resting on three small dirt plugs, the gem in the small notch under it, the two dashed target pots at the bottom left and right, the header row (back arrow, level title area, sound and menu icons), the goal chips row under the header, and the bottom control row (Dig tool on the left, undo / retry / speed in the middle, a big Run button on the right). Keep the warm cream page of the second reference image and its glass test-tube style (soft white glass highlights, dark espresso caps, thin warm-ink outlines) as the quality bar for every element. Direction A 'glass specimen case': the board is a museum specimen case of thick clear glass sitting on the cream page - a slim warm-ink rim with a bright 1px top-left glass highlight, rounded corners, a soft contact shadow under it. The empty space inside is NOT flat black: a deep warm espresso-to-ink vertical gradient (#2A221C top to #120E0C bottom) and a soft pool of light from above. Rock is warm sandstone built from small square cells, each cell slightly varied in tone; the top surface row of every rock mass catches light (pale cream rim) and undersides are in shadow, so masses read as carved stone. Diggable dirt is rich dark soil, clearly different from rock. Water is deep glassy blue with a bright meniscus line and a subtle depth gradient. Target pots are glass beakers set into the rock: a thin luminous outline in the target material colour, faint fill-line ticks. The gem is a small cut crystal with a sparkle. Keep the header, goal chips and bottom controls exactly as they are in the first reference image (only the board changes). Everything on the board must be achievable with per-cell pixel colours, vertical gradients, top-edge highlights, bottom-edge shadows and thin outline glows on a 160x240 pixel grid scaled up with nearest-neighbour - no 3D, no perspective, no photographic textures, no characters. Do not imitate any existing game's art. No text, no numbers, no letters, no logos anywhere - leave label areas as blank pill shapes. Each board cell is only about 2 screen pixels, so no detail finer than one cell."
+ },
+ {
+  "id": "slice13-b-limestone",
+  "model": "gemini-3-pro-image",
+  "aspect": "9:16",
+  "size": 1024,
+  "refs": [
+   "docs/design/challenge-v2/before/play_1-3-390.jpg",
+   "docs/design/challenge-v2/before/home-390.jpg"
+  ],
+  "out": "docs/design/challenge-v2/concepts/slice13-b-limestone.webp",
+  "prompt": "Redesign the visual rendering of the first reference image. This is a mobile portrait screenshot (390x844) of level 1-3 'Two Pots' of a falling-sand physics puzzle. Keep the EXACT same level layout and screen layout: same terrain silhouette, the water reservoir at the top resting on three small dirt plugs, the gem in the small notch under it, the two dashed target pots at the bottom left and right, the header row (back arrow, level title area, sound and menu icons), the goal chips row under the header, and the bottom control row (Dig tool on the left, undo / retry / speed in the middle, a big Run button on the right). Keep the warm cream page of the second reference image and its glass test-tube style (soft white glass highlights, dark espresso caps, thin warm-ink outlines) as the quality bar for every element. Direction B 'paper and limestone cross-section': the board looks like a geological cross-section printed on fine paper inside a framed print. Empty space is a pale warm paper tone slightly darker than the page (#E9DFCC) and a soft inner shadow at the edges, like a shallow tray. Rock is layered sedimentary limestone in warm greys and ochres drawn with small square cells, two-tone horizontal strata at least 3 cells tall, a crisp darker outline on every edge facing empty space and a light top edge. Diggable dirt is a darker umber soil band. Water is saturated ultramarine with a white meniscus line. Target pots are clean ink-outlined vessels with tick marks. The gem is a cyan crystal with an ink outline. Frame: thin espresso ink line with a narrow cream mat. Keep the header, goal chips and bottom controls exactly as they are in the first reference image (only the board changes). Everything on the board must be achievable with per-cell pixel colours, vertical gradients, top-edge highlights, bottom-edge shadows and thin outline glows on a 160x240 pixel grid scaled up with nearest-neighbour - no 3D, no perspective, no photographic textures, no characters. Do not imitate any existing game's art. No text, no numbers, no letters, no logos anywhere - leave label areas as blank pill shapes. Each board cell is only about 2 screen pixels, so no detail finer than one cell."
+ },
+ {
+  "id": "slice13-c-night-lab",
+  "model": "gemini-3-pro-image",
+  "aspect": "9:16",
+  "size": 1024,
+  "refs": [
+   "docs/design/challenge-v2/before/play_1-3-390.jpg",
+   "docs/design/challenge-v2/before/home-390.jpg"
+  ],
+  "out": "docs/design/challenge-v2/concepts/slice13-c-night-lab.webp",
+  "prompt": "Redesign the visual rendering of the first reference image. This is a mobile portrait screenshot (390x844) of level 1-3 'Two Pots' of a falling-sand physics puzzle. Keep the EXACT same level layout and screen layout: same terrain silhouette, the water reservoir at the top resting on three small dirt plugs, the gem in the small notch under it, the two dashed target pots at the bottom left and right, the header row (back arrow, level title area, sound and menu icons), the goal chips row under the header, and the bottom control row (Dig tool on the left, undo / retry / speed in the middle, a big Run button on the right). Keep the warm cream page of the second reference image and its glass test-tube style (soft white glass highlights, dark espresso caps, thin warm-ink outlines) as the quality bar for every element. Direction C 'night laboratory lamp': the board is a dark glass window into a lab at night inside a thick rounded dark-glass bezel with a bright top highlight, sitting on the cream page. Empty space is deep blue-black (#0E1420 to #070A10) with a warm lamp glow from the top centre and gentle falloff. Rock is dark slate made of small square cells with subtle tonal noise; every edge facing open space has a thin cool rim light on top and a deep shadow below. Diggable dirt is warm brown with a faint orange rim. Water glows deep blue with a bright meniscus. Target pots have a soft luminous outline in the target material colour and a gentle inner glow showing where it must fill. The gem is a cyan sparkle. Keep the header, goal chips and bottom controls exactly as they are in the first reference image (only the board changes). Everything on the board must be achievable with per-cell pixel colours, vertical gradients, top-edge highlights, bottom-edge shadows and thin outline glows on a 160x240 pixel grid scaled up with nearest-neighbour - no 3D, no perspective, no photographic textures, no characters. Do not imitate any existing game's art. No text, no numbers, no letters, no logos anywhere - leave label areas as blank pill shapes. Each board cell is only about 2 screen pixels, so no detail finer than one cell."
+ },
+ {
+  "id": "slice-before-critique-1124",
+  "type": "critique",
+  "refs": [
+   "docs/design/challenge-v2/before/play_1-1-390.jpg",
+   "docs/design/challenge-v2/before/play_1-3-390.jpg",
+   "docs/design/challenge-v2/before/home-390.jpg"
+  ],
+  "prompt": "까다로운 모바일 캐주얼 퍼즐 게임 아트 디렉터로서 한국어로 혹평해 주세요. 앞의 두 장은 낙사(falling sand) 퍼즐의 레벨 화면(1-1, 1-3)이고 세 번째는 같은 사이트 홈(크림 페이지·시험관 도크·검은 붓기 캔버스)입니다. 다음 6항목을 각각 10점 만점으로 매기고 근거 한 줄씩. 7점의 기준 = '홈 시험관 도크 옆에 놓아도 이질감이 없다'. S1 톤 통일(보드가 홈의 크림 페이지·시험관 도크·붓기 캔버스와 같은 앱으로 보이나) S2 재질(돌·흙·물·빈 공간이 명암만으로 구분되나) S3 목표 위계(처음 보는 사람이 3초 안에 어디를 무엇으로 채우는지 아나) S4 구현 가능성(160x240 셀 격자 색만으로 그려진 화면인가 — 지금 화면은 기준선) S5 대비·접근성(재료 대비, 색각 이상에서 목표·위험 구분) S6 마감(이 스크린샷 한 장이 PC 게임 상점 이미지로 쓰여도 어색하지 않나). 마지막에 평균과 가장 약한 3가지에 대한 구체적 수정 지시."
+ }
+]
