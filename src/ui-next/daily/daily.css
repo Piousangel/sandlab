@@ -1,5 +1,5 @@
 /*
- * /daily 지층 허브(리디자인 P7). 접두 sl-st-(지층 병)·sl-da-(플레이 화면 설명 패널)·sl-ds-hub(시작 화면 배치). 전역 규칙 없음.
+ * /daily 지층 허브(리디자인 P7). 접두 sl-st-(지층 병)·sl-da-(플레이 화면 설명 패널)·sl-ds-hub(시작 화면 배치)·sl-dr(정적 규칙 절, #112). 전역 규칙 없음.
  * 면 규칙(R3): 병은 Bone 위 유리(반투명 흰색 + tube-line 윤곽) — 회색 패널을 깔지 않는다.
  * 재료색은 SVG 층 채움에만. 글자는 ink·ink-2·ember-text뿐.
  */
@@ -170,6 +170,38 @@
   min-height: var(--sl-hit);
   color: var(--sl-ember-text);
   font-weight: 700;
+}
+
+/* ---------- 정적 규칙 절(#112, src/app/daily/page.tsx) — DailySpill 바깥이라 .sl-ds·.sl-spill 서체를 못 받는다 ---------- */
+.sl-dr {
+  max-width: 68ch;
+  margin: 0 auto;
+  padding: 24px 16px;
+  background: var(--sl-bone);
+  color: var(--sl-ink);
+  font-family: var(--sl-font-display);
+  font-size: var(--sl-fs-body);
+  line-height: 1.6;
+}
+.sl-dr h2 {
+  font-size: var(--sl-fs-h2);
+  margin: 0 0 8px;
+}
+.sl-dr h3 {
+  font-size: 17px;
+  margin: 20px 0 4px;
+}
+.sl-dr p {
+  margin: 0 0 16px;
+}
+.sl-dr a {
+  color: var(--sl-ember-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.sl-dr a:hover {
+  text-decoration-thickness: 2px;
 }
 
 /* ---------- 모션(데일리 개편 D1): 들어올 때 층이 아래부터 부어지고, 오늘 처음 본 층은 알갱이와 함께 떨어진다 ----------
