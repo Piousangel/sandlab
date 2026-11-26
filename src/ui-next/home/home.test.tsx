@@ -5,7 +5,6 @@ import { PRESETS } from '@/lib/sand/materials'
 import { sceneIdFromHash } from '@/lib/sand/urlState'
 import type { Stratum } from '@/lib/strata'
 import atlas from '../../../public/ui-next/posters/atlas.json'
-import * as Classic from '../shell/classic'
 import { HomePour } from './HomePour'
 import { TUBE_GLASS } from './Rack'
 import {
@@ -106,12 +105,6 @@ describe('지층 띠', () => {
     expect(b.map((s) => s.dayNumber)).toEqual([2, 3, 4])
     expect(daysLabel(b)).toBe('2 days')
     expect(daysLabel([st(5, false)])).toBe('1 day')
-  })
-})
-
-describe('셸 치환(@ui-shell)', () => {
-  it('classic(prod)은 HomePour = null to 홈이 지금 SandCanvas를 그린다', () => {
-    expect(Classic.HomePour).toBeNull()
   })
 })
 

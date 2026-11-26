@@ -4,10 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { isValidId, type SceneMeta } from '@/lib/sand/gallery'
 import { sceneIdFromHash } from '@/lib/sand/urlState'
-import * as Classic from '../shell/classic'
 import { GalleryWall } from './GalleryWall'
 import { PICKS, SANDLAB_CREATOR, isSandlabPick, pickThumb } from './picks'
-import GalleryBrowser from '@/components/GalleryBrowser'
 import { SORTS, ago, appendPage, backLabel, isGone, canPlay, creditLine, deltaLine, emptyState, endLive, hasMore, liveKey, makerStats, mineTotals, nextLive, openHref, remixLabel, voteLabel } from './model'
 
 const pub = (p: string) => fileURLToPath(new URL(`../../../public${p}`, import.meta.url))
@@ -151,15 +149,12 @@ describe('GalleryWall SSR', () => {
   it('댓글 없음(절대 규칙)', () => {
     expect(html.toLowerCase()).not.toContain('comment')
   })
-  it('classic 셸은 GalleryWall = null(prod /gallery 그대로)', () => {
-    expect(Classic.GalleryWall).toBeNull()
-  })
 })
 
-/** 옛 갤러리(prod)와 새 벽(프리뷰)의 하단 글줄 대조 — 문구·링크가 한 글자라도 갈라지면 실패(P9b 지시: 텍스트 변경 금지). 컷오버(P12)로 옛 쪽을 지울 때 이 묶음도 지운다. */
-describe('옛 갤러리와 대조(P9b)', () => {
+/** 하단 글줄(P9b 옛 갤러리 대조에서 고정한 문구) — 옛 GalleryBrowser는 #108에서 지웠다. 그때 대조해 맞춘 값을 그대로 기대값으로 둔다. */
+const HREFS = ['/about', '/learn', '/privacy', '/terms', '/contact', 'https://ko-fi.com/piousangel']
+describe('하단 글줄(옛 갤러리 대조 P9b의 고정값)', () => {
   const wall = renderToStaticMarkup(<GalleryWall />)
-  const old = renderToStaticMarkup(<GalleryBrowser />)
   const supportLine = (h: string) => {
     const i = h.indexOf('Made by Piousangel')
     const j = h.indexOf('</a>', h.indexOf('ko-fi.com/piousangel', i)) + 4
@@ -170,16 +165,13 @@ describe('옛 갤러리와 대조(P9b)', () => {
       kofi: /href="https:\/\/ko-fi\.com\/piousangel" target="_blank" rel="noopener noreferrer"/.test(seg),
     }
   }
-  it('하단 글줄(Ko-fi 포함) 문구·링크·순서가 옛 갤러리와 같다', () => {
-    const a = supportLine(old)
+  it('하단 글줄(Ko-fi 포함) 문구·링크·순서', () => {
     const b = supportLine(wall)
-    expect(a.text).toBe('Made by Piousangel · About · Learn · Privacy · Terms · Contact · ♥ support') // lint-ui-allow: 옛 갤러리 문구 그대로 대조
-    expect(b.text).toBe(a.text)
-    expect(b.hrefs).toEqual(a.hrefs)
-    expect(a.kofi && b.kofi).toBe(true)
+    expect(b.text).toBe('Made by Piousangel · About · Learn · Privacy · Terms · Contact · ♥ support') // lint-ui-allow: 옛 갤러리 문구 그대로 고정
+    expect(b.hrefs).toEqual(HREFS)
+    expect(b.kofi).toBe(true)
   })
-  it('옛 탭(Hot this week·Newest·Yours·Top Creators)이 새 정렬에 하나씩 대응한다', () => {
-    for (const t of ['Hot this week', 'Newest', 'Yours', 'Top Creators']) expect(old).toContain(`>${t}<`)
+  it('정렬은 넷(옛 탭 Hot this week·Newest·Yours·Top Creators에 하나씩 대응)', () => {
     expect(SORTS).toHaveLength(4)
   })
 })

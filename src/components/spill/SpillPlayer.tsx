@@ -20,8 +20,7 @@ import { TILE } from '@/lib/spill/sim/grid'
 import {
   autoplayMark, clearKind, failMessage, hudKey, hudParts, rejectMessage, runButton, showMovesFor, trayVerbs, usageOf, type RunAction,
 } from '@/lib/spill/client/view'
-import { histBars, type HistBars } from '@/lib/spill/client/hist'
-import { fetchHist, postClear } from '@/lib/spill/client/api'
+import { postClear } from '@/lib/spill/client/api'
 import { getPid } from '@/lib/spill/client/pid'
 import { describeLevel } from '@/lib/spill/client/describe'
 import { trackEvent } from '@/lib/sand/gallery'
@@ -31,7 +30,6 @@ import Tray, { RUN_CENTER_Y, TRAY_ROW } from './Tray'
 import GoalDock from './GoalDock'
 import { dockMode, dockRows } from '@/lib/spill/client/dock'
 import FloatButtons from './FloatButtons'
-import ResultCard from './ResultCard'
 import Onboarding from './Onboarding'
 import { C, K, starRow } from './ui'
 import { SpillHud, SpillResult } from '@ui-shell'
@@ -49,14 +47,11 @@ interface Props {
   /** 새 HUD(프리뷰) 전용: 제목 옆 표식(기본 레벨 id — 데일리는 No.N)과 뒤로 가기 링크. */
   badge?: string
   back?: { href: string; label: string }
-  /** 결과 카드 Share가 쓸 문구(데일리: 데일리 공유 문구·/daily 링크). 없으면 레벨 공유 문구(/play/<id>). */
-  share?: { text: string; onClick?(): void }
 }
 
 interface Card {
   result: RunResult
   stars: Stars
-  newBest: boolean
   starGapMs: number
   key: number
   solution: boolean
@@ -124,7 +119,7 @@ function measure(probe: HTMLElement | null): Layout {
 
 const cellCenter = (r: { x: number; y: number; w: number; h: number }) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
 
-export default function SpillPlayer({ level, nextId, onCleared, children, badge, back, share }: Props) {
+export default function SpillPlayer({ level, nextId, onCleared, children, badge, back }: Props) {
   const [ctl] = useState(() => new SpillController(level))
   const [audio] = useState(() => new SpillAudio())
   const fx = useRef(new Fx(level.salt || 1))
@@ -137,7 +132,6 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
   })
   const [toast, setToast] = useState<Toast | null>(null)
   const [card, setCard] = useState<Card | null>(null)
-  const [hist, setHist] = useState<HistBars | null>(null)
   const [onboard, setOnboard] = useState(false)
   const [mode, setMode] = useState<'play' | 'autoplay' | 'watch'>('play')
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -241,17 +235,14 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
           const r = e.result
           const st = starsOf(r, level)
           let outcome = { firstClear: true, newBest: true }
-          let prevBest = false
           let daily: DailyClear | null = null
           if (live) {
             const o = recordResult(level.id, r, starMask(st))
             outcome = o
             setBest(starCount(o.record.stars))
-            prevBest = o.newBest && !o.firstClear
             void postClear(level.id, { pid: getPid(), moves: r.moves, ticks: r.ticks, lh: ctl.lh })
             trackEvent('challenge_clear', level.id, r.ticks)
             if (modeRef.current === 'play') daily = onCleared?.({ stars: starCount(starMask(st)), moves: r.moves, ticks: r.ticks, mask: starMask(st) }) ?? null
-            void fetchHist(level.id).then((h) => setHist(h ? histBars(h, r.moves, r.ticks) : null))
           }
           if (modeRef.current === 'autoplay') document.body.dataset.autoplay = autoplayMark(r, level)
           const kind = clearKind(outcome)
@@ -267,7 +258,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
           }
           if (cardTimer.current) clearTimeout(cardTimer.current)
           cardTimer.current = setTimeout(() => {
-            setCard({ result: r, stars: st, newBest: prevBest, starGapMs: plan.starGapMs, key: Date.now(), solution: modeRef.current === 'watch', daily })
+            setCard({ result: r, stars: st, starGapMs: plan.starGapMs, key: Date.now(), solution: modeRef.current === 'watch', daily })
           }, plan.cardDelayMs)
           break
         }
@@ -295,7 +286,6 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
             fx.current.reset()
             if (cardTimer.current) clearTimeout(cardTimer.current)
             setCard(null)
-            setHist(null)
             if (modeRef.current === 'watch') setMode('play')
           }
           if (e.phase === 'run' && e.prev === 'setup') {
@@ -588,8 +578,8 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
       />
     </div>
   )
-  const resultCard = card && s.phase === 'cleared' && (SpillResult ? (
-    // 새 결과 화면(리디자인 P5, 프리뷰 빌드만) — classic(prod)은 SpillResult = null이라 아래 ResultCard 그대로
+  const resultCard = card && s.phase === 'cleared' && SpillResult && (
+    // 결과 화면(리디자인 P5). 옛 결과 카드(ResultCard)는 #108에서 지웠다 — classic 빌드는 next.config.ts가 막는다
     <SpillResult
       key={card.key}
       layout={l}
@@ -606,24 +596,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
       nextHref={nextId ? `/play/${nextId}` : null}
       onPractice={retry}
     />
-  ) : (
-    <ResultCard
-      key={card.key}
-      def={level}
-      result={card.result}
-      stars={card.stars}
-      newBest={card.newBest}
-      starGapMs={card.starGapMs}
-      nextId={nextId}
-      hist={hist}
-      onStar={(i) => audio.star(i)}
-      onRetry={retry}
-      onSkip={() => fx.current.skip()}
-      solution={card.solution}
-      bottom={l.safeBottom + 8}
-      share={share}
-    />
-  ))
+  )
 
   if (SpillHud) {
     // 새 HUD(리디자인 P4, 프리뷰 빌드만): 보드 위에 아무것도 얹지 않는다 — 메시지·보석·도구는 보드 밖으로

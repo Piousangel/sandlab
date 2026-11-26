@@ -3,7 +3,7 @@
  * **지금 동작 그대로**인지 잠근다. 코드를 바꾸지 않고 현재 동작을 고정하는 게 목적이라,
  * 새 셸(P6)이 이 파싱을 옮기거나 다시 짤 때 이 표가 깨지면 기존 링크가 깨진다는 뜻이다.
  *
- * - `#s=` 파싱·parent 결정은 P6에서 순수 함수(urlState.ts의 sceneIdFromHash·publishParent·publishedLinks)로 뺐다 — 옛 홈(SandCanvas)과 새 홈(ui-next/home)이 같은 함수를 부른다.
+ * - `#s=` 파싱·parent 결정은 P6에서 순수 함수(urlState.ts의 sceneIdFromHash·publishParent·publishedLinks)로 뺐다 — 홈(ui-next/home HomePour)이 그 함수를 부른다(옛 홈 SandCanvas는 #108에서 지움, 같은 검사를 HomePour로 옮김).
  * - `#g=`는 urlState.readShareUrl/buildShareUrl을 그대로 부른다.
  * - `/s/:id`와 업로드 parent는 worker/index.ts의 fetch를 가짜 D1로 직접 부른다.
  */
@@ -15,9 +15,9 @@ import { SCENE_HASH_RE, hasEmbeddedScene, publishParent, publishedLinks, sceneId
 import worker from '../../../worker/index'
 
 const src = (rel: string) => readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8')
-const SAND_CANVAS = src('../../components/SandCanvas.tsx')
-const GALLERY_BROWSER = src('../../components/GalleryBrowser.tsx')
 const HOME_POUR = src('../../ui-next/home/HomePour.tsx')
+const GALLERY_WALL = src('../../ui-next/gallery/GalleryWall.tsx')
+const GALLERY_MODEL = src('../../ui-next/gallery/model.ts')
 
 /** 1200×600, 바닥 10줄 sand(7) + 가운데 200×20 water(12). 11-19 현재 인코더로 만든 고정 블롭. */
 const GOLDEN_G = 'Y9zAeYOFYUuDGM8JRoYX7PQmpzwXZn8QCwA'
@@ -34,13 +34,13 @@ describe('골든셋: 홈 해시 링크(#s= · #g=)', () => {
     expect(`/${SCENE_HASH_RE.source}/`).toBe('/[#&]s=([A-Za-z0-9_-]{6,16})/')
     expect(SCENE_HASH_RE.flags).toBe('')
   })
-  it('SandCanvas 격자는 1200×600 — 다른 크기로 복원된 씬은 버린다', () => {
-    expect(SAND_CANVAS).toMatch(/^const W = 1200$/m)
-    expect(SAND_CANVAS).toMatch(/^const H = 600$/m)
-    expect(SAND_CANVAS).toContain('restored.w === W && restored.h === H')
+  it('홈(HomePour) 격자는 1200×600 — 다른 크기로 복원된 씬은 버린다', () => {
+    expect(HOME_POUR).toMatch(/^const W = 1200$/m)
+    expect(HOME_POUR).toMatch(/^const H = 600$/m)
+    expect(HOME_POUR).toContain('restored.w === W && restored.h === H')
   })
 
-  // 입력 해시 → 기대: s(갤러리 id) 또는 g(URL 내장) 경로. s가 잡히면 g는 보지 않는다(SandCanvas의 if/else).
+  // 입력 해시 → 기대: s(갤러리 id) 또는 g(URL 내장) 경로. s가 잡히면 g는 보지 않는다(홈의 if/else).
   const golden: { hash: string; s: string | null; g: 'scene' | null }[] = [
     { hash: '#s=AbC123', s: 'AbC123', g: null },
     { hash: '#s=abcdefghijklmnop', s: 'abcdefghijklmnop', g: null }, // 16자 상한
@@ -59,7 +59,7 @@ describe('골든셋: 홈 해시 링크(#s= · #g=)', () => {
     it(`${c.hash || '(빈 해시)'} → s=${c.s} g=${c.g}`, async () => {
       const s = sceneIdFromHash(c.hash)
       expect(s).toBe(c.s)
-      if (s) return // SandCanvas: s가 있으면 readShareUrl을 부르지 않는다
+      if (s) return // 홈: s가 있으면 readShareUrl을 부르지 않는다
       stubLocation(c.hash)
       const r = await readShareUrl()
       if (c.g === null) {
@@ -109,8 +109,8 @@ describe('골든셋: 리믹스 parent 연결(클라이언트, urlState 순수 �
     expect(hasEmbeddedScene(`#s=AbC123&g=${GOLDEN_G}`)).toBe(false)
     expect(hasEmbeddedScene('')).toBe(false)
   })
-  it('옛 홈·새 홈 모두 같은 함수를 쓴다(인라인 재구현 금지)', () => {
-    for (const [name, code] of [['SandCanvas', SAND_CANVAS], ['HomePour', HOME_POUR]] as const) {
+  it('홈이 같은 함수를 쓴다(인라인 재구현 금지)', () => {
+    for (const [name, code] of [['HomePour', HOME_POUR]] as const) {
       expect(code, name).toContain("from '@/lib/sand/urlState'")
       expect(code, name).toContain('sceneIdFromHash(location.hash)')
       expect(code, name).toContain('publishParent(loadedSceneId.current)')
@@ -119,13 +119,15 @@ describe('골든셋: 리믹스 parent 연결(클라이언트, urlState 순수 �
       expect(code, name).toContain('loadedSceneId.current = sid')
       expect(code, name).toContain('loadedSceneId.current = links.nextLoadedId')
       // 새 홈은 공유 시트(BottomSheet)가 history 칸을 넣으므로 주소를 시트가 닫힌 뒤에 넣는다(setAddress — DECISIONS 11-20 '공통 BottomSheet 이식')
-      expect(code, name).toContain(name === 'HomePour' ? 'setAddress(links.tabUrl)' : 'history.replaceState(null, \'\', links.tabUrl)')
+      expect(code, name).toContain('setAddress(links.tabUrl)')
       expect(code, name).not.toMatch(/location\.hash\.match\(/)
     }
   })
   it('갤러리 카드는 /#s=<id>, 원본 링크는 /#s=<parent>', () => {
-    expect(GALLERY_BROWSER).toContain('href={`/#s=${s.id}`}')
-    expect(GALLERY_BROWSER).toContain('href={`/#s=${s.parent}`}')
+    // 옛 GalleryBrowser(#108에서 지움)의 같은 검사를 새 벽(GalleryWall)으로 옮겼다
+    expect(GALLERY_MODEL).toContain('export const openHref = (id: string) => `/#s=${id}`')
+    expect(GALLERY_WALL).toContain('href={openHref(id)}')
+    expect(GALLERY_WALL).toContain('href={openHref(s.parent)}')
   })
 })
 
