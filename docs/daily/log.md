@@ -21,3 +21,4 @@
 | 2026-11-26 (09시) | [S1·prepro] 데일리 D2 브리프: 390 지층 병 첫 화면 밖 실측(y=747~765/844)·시안 2방향 요청(flash, ≈₩300)·"왜 별을 놓쳤나" 문장 규칙·채점표 D1~D5 (#123) | 팀 문서(사용자 화면 변화 없음) | verify·독립 혹평 | 측정 없음(데일리 공식 클리어는 슬라이스 머지 +14일) |
 | 2026-11-26 (01시) | [S1·high-risk] #108 P12 72시간 판정 '유지' 기록 + classic 옛 화면 코드 삭제(SandCanvas·GalleryBrowser·ResultCard·ChallengePlayer·DailyPlayer 등), classic 빌드는 next.config가 멈춤 | 화면 변화 없음(/, /gallery, 결과 화면 번들만 줄어듦) | verify·main 대비 out/ 페이지 목록·head·본문 텍스트 diff 0 | 북극성 13(부분, 11-26 파일) |
 | 2026-11-25 (14시) | [S2] #112 1단계: 홈 캔버스 아래 소개 절(HomeAbout)·/daily 규칙 본문 절(정적 HTML) | /, /daily | `pnpm verify` 통과, 빌드 실측 홈 main 65→470단어·/daily 11→316 | 측정 없음(색인 확인은 보강 뒤) |
+| 2026-11-26 (14시) | [S2] #112 2단계: 레벨 화면 11개(1-1~1-10·2-1)에 레벨 고유 노트(목표 장면·원리·막히는 지점 2~3개, `src/content/level-notes.ts`) | /play/<id> 11개 | `pnpm verify` 통과, 빌드 실측 `<main>` 194~282→309~400단어(전 11개 ≥300) | 측정 없음(색인 확인은 보강 뒤) |

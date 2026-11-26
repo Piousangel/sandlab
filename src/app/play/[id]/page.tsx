@@ -5,6 +5,7 @@ import { levelById, nextLevel, ordered, worldName } from '@/lib/spill/client/cat
 import { describeLevel } from '@/lib/spill/client/describe'
 import { materialStaticParams } from '@/lib/guide/reactions'
 import { guideFor } from '@/lib/spill/guide/guides'
+import { levelNoteFor } from '@/content/level-notes'
 // 리디자인 P8: 새 셸(프리뷰 빌드)은 설명 패널을 LevelAside로(인라인 색 없음, 목표 → 방법 순), classic(prod)은 null → 아래 지금 패널 그대로
 import { LevelAside } from '@ui-shell'
 
@@ -49,6 +50,7 @@ export default async function Page({ params }: Props) {
           verbs={d.verbs}
           materials={d.materials.map((m) => ({ slug: m, page: guidePages.has(m) }))}
           hint={level.hint ?? null}
+          notes={levelNoteFor(level.id)}
           guide={!!guideFor(level.id)}
           next={next ? { id: next.id, name: next.name } : null}
         />
