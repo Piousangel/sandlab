@@ -10,6 +10,7 @@
 - 오너 11-24: S1 = /play 월드 1~2 챌린지를 Steam 「Sandcastle Demo」급으로 — 1-1~1-3 버티컬 슬라이스 → 오너 10분 플레이 승인 → 확산.
 
 ## 진행 중·열린 PR
+- [S3] #126 오늘의 레벨 2-2 Fuse(W2 둘째, Line 동사 첫 출시) + 공략 — PR review, 15:37 리뷰 머지 대기. 다음 S3: 2-3(스펙 3.3 Plank Bridge = line plank) — 도화선 실측 수치는 PR 본문.
 - #119 `card/108-classic-removal` [S1] 72시간 판정 '유지' 기록 + classic 옛 화면 코드 삭제(24파일 −3196줄) — high-risk, 팀 내부 2중 리뷰 대기. cutover-e2e는 클라우드 환경에서 10/21(main도 같음) → 맥·라이브 21/21 확인 필요.
 - #107 `card/104-slice-prepro` S1 프리프로(draft) — QA 지적: `.claude/handoff/main.md` main과 충돌(main 쪽 받아 merge 커밋), D1의 `SandCanvas`→`HomePour`. 고친 뒤 머지. #99는 #107 머지 뒤 닫기.
 - #116 `card/112-home-daily-body` S2 홈·/daily 본문(draft) — QA 지적: 홈 소개 링크 6개 구분 불가(색·밑줄), /daily `sl-doc` 클래스 미정의, DailySpill children 중복 노출.
