@@ -9,6 +9,7 @@ import { M } from '@/lib/spill/sim/materials'
 import { SOON_MAX, WORLD_SIZE, galleryWorlds, primaryAction } from './galleryModel'
 import { THUMB_H, THUMB_W, thumbPixels } from './thumbPixels'
 import { LEVEL_READ_ONLY_NOTE, LevelAside } from './LevelAside'
+import { LEVEL_NOTES, levelNoteFor } from '@/content/level-notes'
 import { PlayWorlds } from './PlayWorlds'
 import type { LevelAsideProps, PlayGalleryLevel } from '../shell/playTypes'
 
@@ -109,6 +110,22 @@ describe('LevelAside(/play/[id] 새 셸 패널)', () => {
   })
   it('프리뷰 읽기 전용이면 안내 한 줄', () => {
     expect(renderToStaticMarkup(<LevelAside {...props} readOnly />)).toContain('data-sl-read-only')
+  })
+  it('레벨 노트: 있으면 절·막힘 목록을 그리고, 없으면 절을 숨긴다(#112 2단계)', () => {
+    const note = levelNoteFor('1-1')!
+    const html = renderToStaticMarkup(<LevelAside {...props} notes={note} />)
+    expect(html).toContain('Notes on 1-1 First Drop')
+    expect(html).toContain('If you are stuck')
+    for (const t of note.stuck) expect(html).toContain(`<li>${t}</li>`)
+    expect(renderToStaticMarkup(<LevelAside {...props} notes={null} />)).not.toContain('Notes on')
+  })
+  it('노트 id는 실제 레벨 id만, 막힘 1~3줄', () => {
+    const ids = new Set(LEVELS.map((l) => l.id))
+    for (const [id, n] of Object.entries(LEVEL_NOTES)) {
+      expect(ids.has(id), id).toBe(true)
+      expect(n.stuck.length).toBeGreaterThanOrEqual(1)
+      expect(n.stuck.length).toBeLessThanOrEqual(3)
+    }
   })
   it('spill.css의 인라인 덮어쓰기(!important) 두 규칙이 지워졌다', () => {
     const css = readFileSync(`${root}src/ui-next/spill/spill.css`, 'utf8')

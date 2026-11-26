@@ -35,6 +35,8 @@ export interface LevelAsideProps {
   /** 재료 slug와 /materials/<slug> 글이 있는지 */
   materials: { slug: string; page: boolean }[]
   hint: string | null
+  /** 레벨 고유 노트(src/content/level-notes) — 없으면 절을 숨긴다 */
+  notes?: { setup: string; principle: string; stuck: string[] } | null
   guide: boolean
   next: { id: string; name: string } | null
 }

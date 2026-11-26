@@ -319,6 +319,11 @@
 .sl-la p {
   margin: 0 0 10px;
 }
+.sl-la h3 {
+  margin: 14px 0 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
 .sl-la .sl-la-note {
   margin: 8px 0 10px;
   color: var(--sl-ink-2);

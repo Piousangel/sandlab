@@ -31,6 +31,19 @@ export function LevelAside(p: LevelAsideProps & { readOnly?: boolean }) {
       )}
       <h2>About this level</h2>
       <p>{p.summary}</p>
+      {p.notes && (
+        <>
+          <h2>Notes on {p.id} {p.name}</h2>
+          <p>{p.notes.setup}</p>
+          <p>{p.notes.principle}</p>
+          <h3>If you are stuck</h3>
+          <ul>
+            {p.notes.stuck.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
+        </>
+      )}
       {p.materials.length > 0 && (
         <>
           <h2>Materials</h2>
