@@ -34,8 +34,23 @@
       "out": "docs/design/critiques/slice-before-critique-1124.md",
       "model": "gemini-3.1-pro-preview",
       "at": "2026-11-26T01:40:14+00:00"
+    },
+    "daily-d2-a-jar-up": {
+      "out": "docs/design/daily-d2/concepts/daily-d2-a-jar-up.webp",
+      "model": "gemini-3.1-flash-image",
+      "at": "2026-11-26T01:56:40+00:00"
+    },
+    "daily-d2-b-mini-jar": {
+      "out": "docs/design/daily-d2/concepts/daily-d2-b-mini-jar.webp",
+      "model": "gemini-3.1-flash-image",
+      "at": "2026-11-26T01:56:48+00:00"
+    },
+    "daily-d2-before-critique-1126": {
+      "out": "docs/design/critiques/daily-d2-before-critique-1126.md",
+      "model": "gemini-3.1-pro-preview",
+      "at": "2026-11-26T01:57:14+00:00"
     }
   },
   "month": "2026-11",
-  "count": 7
+  "count": 10
 }
