@@ -868,6 +868,10 @@ h2.sl-home-label::after {
     gap: 32px;
     padding: 0 24px;
   }
+  .sl-home-about {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
   .sl-home-below-first {
     display: block;
     max-width: 640px;
@@ -886,4 +890,30 @@ h2.sl-home-label::after {
   .sl-share {
     max-width: 560px;
   }
+}
+
+/* 홈 소개 절(#112) — 글 본문. 읽기 폭을 제한하고 캔버스 아래에서만 보인다 */
+.sl-home-about {
+  max-width: 68ch;
+  padding-left: 16px;
+  padding-right: 16px;
+  box-sizing: content-box; /* 68ch는 글 폭, 거터는 바깥(아래 구역 .sl-home-below와 같은 16·24px) */
+}
+.sl-home-about p {
+  margin: 0 0 var(--sl-s-4, 16px);
+  line-height: 1.6;
+}
+.sl-home-about h3 {
+  margin: var(--sl-s-5, 20px) 0 var(--sl-s-2, 8px);
+  font-size: 1rem;
+}
+/* 링크는 본문과 구분돼야 한다(WCAG 1.4.1, #116 리뷰) — 글 페이지(.sl-cs a)와 같은 ember-text + 밑줄 */
+.sl-home-about a {
+  color: var(--sl-ember-text);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.sl-home-about a:hover {
+  text-decoration-thickness: 2px;
 }

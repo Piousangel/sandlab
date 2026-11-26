@@ -39,6 +39,7 @@ import { PREVIEW_READ_ONLY, READ_ONLY_NOTE } from '../shell/ReadOnlyNote'
 import { isSandlabPick, SANDLAB_CREATOR } from '../gallery/picks'
 import { Rack } from './Rack'
 import { StrataBand, TodayCard, WallPreview } from './HomeSections'
+import { HomeAbout } from './HomeAbout'
 import {
   BRUSH_SIZES,
   DEFAULT_BRUSH,
@@ -631,6 +632,7 @@ export function HomePour() {
             </div>
           </>
         )}
+        <HomeAbout />
       </main>
       <ShellFooter />
 
