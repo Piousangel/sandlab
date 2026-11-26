@@ -28,10 +28,12 @@ describe('전시실 모델', () => {
     expect(ws.flatMap((w) => w.cells.map((c) => c.id))).toEqual(levels.map((l) => l.id))
   })
   it('잠금은 prod 규칙 그대로: 월드 첫 칸은 늘 열림, 나머지는 앞 월드 레벨당 2별', () => {
-    const extra: PlayGalleryLevel[] = [...levels, { id: '2-2', world: 2, name: 'Fake', line: '', guide: false }]
+    // W2 둘째 칸(2-2 Fuse, 11-26 출시)이 실제로 있으니 가짜 레벨 없이 실제 목록으로 본다
+    const extra: PlayGalleryLevel[] = levels
+    expect(extra.filter((l) => l.world === 2).length).toBeGreaterThanOrEqual(2)
     const locked = galleryWorlds(extra, starsMap({}))
     const w2 = locked.find((w) => w.world === 2)!
-    expect(w2.cells.map((c) => c.open)).toEqual([true, false])
+    expect(w2.cells.map((c) => c.open)).toEqual(w2.cells.map((_, i) => i === 0))
     expect(w2.lock).toBe(`Earn ${levels.filter((l) => l.world === 1).length * 2} stars in World 1 to open this room.`)
     const opened = galleryWorlds(extra, starsMap(all(2)))
     expect(opened.find((w) => w.world === 2)!.cells.every((c) => c.open)).toBe(true)
@@ -72,8 +74,14 @@ describe('레벨 썸네일(정적 PNG)', () => {
 
 describe('PlayWorlds 정적 HTML(기록 없음 상태)', () => {
   const html = renderToStaticMarkup(<PlayWorlds levels={levels} />)
-  it('레벨마다 링크 하나 + 썸네일 img(크기 고정·alt 빈 값), 라이브 캔버스 없음', () => {
-    for (const l of levels) expect(html).toContain(`href="/play/${l.id}"`)
+  it('열린 레벨마다 링크 하나, 잠긴 레벨은 링크 없이 잠금 버튼 + 썸네일 img(크기 고정·alt 빈 값), 라이브 캔버스 없음', () => {
+    const cells = galleryWorlds(levels, () => 0).flatMap((w) => w.cells)
+    for (const c of cells.filter((x) => x.open)) expect(html).toContain(`href="/play/${c.id}"`)
+    for (const c of cells.filter((x) => !x.open)) {
+      expect(html).not.toContain(`href="/play/${c.id}"`)
+      expect(html).toContain(`aria-label="${c.id} ${c.name}, locked.`)
+    }
+    expect(cells.length).toBe(levels.length)
     expect(html.match(/<img /g)?.length).toBe(levels.length)
     expect(html).toContain('width="160"')
     expect(html).not.toContain('<canvas')
