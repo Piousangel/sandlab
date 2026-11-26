@@ -1,0 +1,34 @@
+[
+ {
+  "id": "daily-d2-a-jar-up",
+  "model": "gemini-3.1-flash-image",
+  "aspect": "9:16",
+  "size": 1024,
+  "refs": [
+   "docs/design/daily-d2/before/daily-solvedToday-390-fold.jpg"
+  ],
+  "out": "docs/design/daily-d2/concepts/daily-d2-a-jar-up.webp",
+  "prompt": "Redesign the reference image, the first screen of a mobile portrait page (390 wide) of a daily falling-sand puzzle page on a warm cream background. Keep the same header row, the same title block at the top, the same dark puzzle board thumbnail, the same big orange-brown primary button and the same cream page, thin warm-ink outlines and calm flat style. Direction A 'jar beside the board': the glass strata jar (a tall rounded glass jar with a lid, filled from the bottom with thin horizontal coloured layers of sand-like grains, one layer per solved day) moves UP into the first screen, standing right next to the puzzle board thumbnail at the same height as the board, about 140 px wide. Today's layer sits on top of the stack and is clearly the thickest and most visible: a fresh band of warm wood-brown grains with a soft light rim and a few grains still falling into the jar from above. Older layers stay thin, with small dark dot leader lines pointing to blank label pills to the right of the jar. The jar keeps its current height; today's band is about twice as thick as an older band. The reference is exactly the first screen a phone shows without scrolling (390 x 844); your image is that same single first screen, nothing below it. Right next to the jar show one small blank pill (the streak counter) and a row of seven tiny square dots where four are filled and three are empty (days left to the next vein milestone). Everything must be drawable as flat SVG shapes and small square grains - no 3D, no perspective, no photo textures, no characters. Do not imitate any existing game's art. No text, no numbers, no letters, no logos anywhere - leave every label as a blank pill shape."
+ },
+ {
+  "id": "daily-d2-b-mini-jar",
+  "model": "gemini-3.1-flash-image",
+  "aspect": "9:16",
+  "size": 1024,
+  "refs": [
+   "docs/design/daily-d2/before/daily-solvedToday-390-fold.jpg"
+  ],
+  "out": "docs/design/daily-d2/concepts/daily-d2-b-mini-jar.webp",
+  "prompt": "Redesign the reference image, the first screen of a mobile portrait page (390 wide) of a daily falling-sand puzzle page on a warm cream background. Keep the same header row, the same title block, the same dark puzzle board thumbnail, the same big orange-brown primary button and the same cream page, thin warm-ink outlines and calm flat style. Direction B 'mini jar in the today card': directly under the primary button, inside a small rounded cream card with a thin ink outline, show a compact horizontal strip: on the left a small glass jar about 56 px wide and 96 px tall seen from the front, filled with only the last seven days as thick horizontal bands of coloured sand grains (each band at least 10 px tall), today's band on top highlighted with a soft light rim and a few falling grains above it; on the right of the jar, two blank text pills and a row of three small round star dots, two filled and one empty. The full strata jar further down the page is out of this first screen. The reference is exactly the first screen a phone shows without scrolling (390 x 844); your image is that same single first screen, nothing below it. Right next to the jar show one small blank pill (the streak counter) and a row of seven tiny square dots where four are filled and three are empty (days left to the next vein milestone). Everything must be drawable as flat SVG shapes and small square grains - no 3D, no perspective, no photo textures, no characters. Do not imitate any existing game's art. No text, no numbers, no letters, no logos anywhere - leave every label as a blank pill shape."
+ },
+ {
+  "id": "daily-d2-before-critique-1126",
+  "type": "critique",
+  "refs": [
+   "docs/design/daily-d2/before/daily-solvedToday-390-fold.jpg",
+   "docs/design/daily-d2/before/daily-solvedToday-390.jpg",
+   "docs/design/daily-d2/before/daily-solvedToday-1440.jpg"
+  ],
+  "prompt": "까다로운 모바일 데일리 퍼즐 게임 UX 디렉터로서 한국어로 혹평해 주세요. 세 장 모두 오늘 퍼즐을 푼 뒤의 데일리 페이지입니다(아래쪽 '병'에 하루 한 층씩 지층이 쌓인다). 첫 장 = 폭 390 모바일에서 스크롤 없이 보이는 첫 화면(390×844), 둘째 장 = 같은 모바일 전체 페이지, 셋째 장 = 1440 데스크톱. 다음 5항목을 각각 10점 만점으로 매기고 근거 한 줄씩. 7점 기준 = '오늘 푼 사람이 첫 화면에서 내 병에 오늘 층이 쌓였다는 걸 2초 안에 본다'. D1 오늘 층 보임(첫 화면 안에서 오늘 층이 눈에 띄나) D2 쌓임의 손맛(층 두께·결·낙하가 보상처럼 느껴지나) D3 내일 이유(내일 다시 와야 할 이유 — 연속·광맥·다음 퍼즐 시각 — 가 보이나) D4 정보 밀도(병 빈 공간·지시선 글자가 읽기 쉬운가) D5 톤 통일(크림 페이지·보드·병이 한 앱으로 보이나). 마지막에 평균과 가장 약한 3가지에 대한 구체적 수정 지시."
+ }
+]
