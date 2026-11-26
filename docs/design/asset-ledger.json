@@ -14,8 +14,28 @@
       "out": "public/art/spill-ui-sketch-c-map.webp",
       "model": "gemini-3.1-flash-image",
       "at": "2026-11-18T17:13:17+00:00"
+    },
+    "slice13-a-glass-case": {
+      "out": "docs/design/challenge-v2/concepts/slice13-a-glass-case.webp",
+      "model": "gemini-3-pro-image",
+      "at": "2026-11-26T01:39:20+00:00"
+    },
+    "slice13-b-limestone": {
+      "out": "docs/design/challenge-v2/concepts/slice13-b-limestone.webp",
+      "model": "gemini-3-pro-image",
+      "at": "2026-11-26T01:39:34+00:00"
+    },
+    "slice13-c-night-lab": {
+      "out": "docs/design/challenge-v2/concepts/slice13-c-night-lab.webp",
+      "model": "gemini-3-pro-image",
+      "at": "2026-11-26T01:39:47+00:00"
+    },
+    "slice-before-critique-1124": {
+      "out": "docs/design/critiques/slice-before-critique-1124.md",
+      "model": "gemini-3.1-pro-preview",
+      "at": "2026-11-26T01:40:14+00:00"
     }
   },
   "month": "2026-11",
-  "count": 3
+  "count": 7
 }
