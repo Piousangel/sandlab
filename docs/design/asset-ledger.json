@@ -64,8 +64,23 @@
       "out": "docs/design/critiques/daily-d2-concepts-critique-1127.md",
       "model": "gemini-3.1-pro-preview",
       "at": "2026-11-27T01:39:42+00:00"
+    },
+    "slice13-b2-limestone-r2": {
+      "out": "docs/design/challenge-v2/concepts/slice13-b2-limestone-r2.webp",
+      "model": "gemini-3-pro-image",
+      "at": "2026-11-27T01:52:41+00:00"
+    },
+    "slice13-a2-specimen-r2": {
+      "out": "docs/design/challenge-v2/concepts/slice13-a2-specimen-r2.webp",
+      "model": "gemini-3-pro-image",
+      "at": "2026-11-27T01:52:56+00:00"
+    },
+    "slice13-concepts-critique-1127": {
+      "out": "docs/design/critiques/slice13-concepts-critique-1127.md",
+      "model": "gemini-3.1-pro-preview",
+      "at": "2026-11-27T01:53:29+00:00"
     }
   },
   "month": "2026-11",
-  "count": 13
+  "count": 16
 }
