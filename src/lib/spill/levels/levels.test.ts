@@ -115,10 +115,12 @@ describe('W1 Flow levels', () => {
       expect(r.ticks).toBeLessThanOrEqual(parTicks(l.par!.secs))
       expect(simulate(l, []).reason).toBe('stalled')
     })
-    it('a bridge with a gap, a slope or too deep in the pit fails', () => {
-      expect(simulate(l, [plank(18, 20, 24, 20)]).outcome).toBe('failed')
+    it('a slope or a bridge too deep in the pit fails; a gap at the ledge leaks and misses par', () => {
       expect(simulate(l, [plank(17, 18, 24, 25)]).outcome).toBe('failed')
-      expect(simulate(l, [plank(17, 28, 24, 28)]).outcome).toBe('failed')
+      expect(simulate(l, [plank(17, 25, 24, 18)]).outcome).toBe('failed')
+      expect(simulate(l, [plank(17, 36, 24, 36)]).outcome).toBe('failed')
+      const gap = simulate(l, [plank(18, 20, 24, 20)])
+      expect(gap.ticks).toBeGreaterThan(parTicks(l.par!.secs))
     })
     it('a level wall-to-wall bridge clears from several rows, slower when deeper', () => {
       const hi = simulate(l, [plank(17, 20, 24, 20)])
