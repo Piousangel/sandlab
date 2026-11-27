@@ -307,6 +307,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
     const overlayCanvas = overlayRef.current
     if (!canvas || !overlayCanvas) return
     const renderer = new SpillRenderer(canvas)
+    renderer.setBackdrop(ctl.level.targets)
     const overlay = new OverlayRenderer(overlayCanvas)
     let raf = 0
     let last = performance.now()
@@ -361,6 +362,7 @@ export default function SpillPlayer({ level, nextId, onCleared, children, badge,
           ghost: ghostRef.current,
           oldGhosts: s.phase === 'setup' ? s.ghosts : [],
           legal: legalFor(s),
+          backdrop: renderer.hasBackdrop,
           loupe: loupeRef.current && ghostRef.current && (ghostRef.current.action.verb === 'dig' || ghostRef.current.action.verb === 'line') ? { ...loupeRef.current, src: canvas } : null,
         },
         f,

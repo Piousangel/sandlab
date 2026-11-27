@@ -5,6 +5,7 @@ import { tilePath } from '../sim/actions'
 import { TILE, TW } from '../sim/grid'
 import { MATS } from '../sim/materials'
 import type { CellRect } from '../sim/sensors'
+import { isBackdropTarget } from './canvas'
 import type { Fx } from './fx'
 import type { GateWindowState } from '../play/gatewin'
 
@@ -149,6 +150,8 @@ export interface OverlayView {
   oldGhosts: readonly ActionInput[]
   legal: Uint8Array | null
   loupe?: { x: number; y: number; src: CanvasImageSource } | null
+  /** 본 층에 목표 셀 영역(backdrop)이 구워졌으면 true — 물 채우기 목표의 점선 사각형을 생략한다(카드 #139) */
+  backdrop?: boolean
 }
 
 const OK = 'rgba(238,241,246,0.55)'
@@ -158,6 +161,11 @@ const SKULL = '#ff4a3d'
 
 function matColor(m: number): string {
   return MATS[m]?.color ?? '#eef1f6'
+}
+
+/** 셀 영역이 목표를 그리고 있으면 덮개의 점선 사각형은 그리지 않는다. 채움 완료(latched) 실선은 그대로 */
+export function skipTargetStroke(t: { kind: TargetKind; mat: number; latched: boolean }, backdrop: boolean | undefined): boolean {
+  return !!backdrop && !t.latched && isBackdropTarget(t)
 }
 
 export class OverlayRenderer {
@@ -287,6 +295,11 @@ export class OverlayRenderer {
     const bad = t.kind === 'bad'
     const color = bad ? SKULL : t.latched ? LATCH : matColor(t.mat === 0 ? 14 : t.mat)
     const p = t.latched ? 1 : pulse(v.timeMs)
+    if (skipTargetStroke(t, v.backdrop)) {
+      const b = badgeBox(t.rect, cpc, v.cssW, v.cssH)
+      this.drawBadge(b, glyphFor(t.kind), color, ringProgress(t), false)
+      return
+    }
     c.save()
     c.lineWidth = t.latched ? 2 : 1.5
     c.strokeStyle = color

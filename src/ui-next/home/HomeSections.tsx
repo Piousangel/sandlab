@@ -45,7 +45,10 @@ export function TodayCard() {
         .then(([{ SpillController }, { SpillRenderer }]) => {
           if (off) return
           // 시작 전 판(틱 0) 한 장 — 데일리 시작 화면(P4)과 같은 방법, 시뮬은 돌리지 않는다
-          new SpillRenderer(c).draw(new SpillController(today.level).sim.grid, 0)
+          const ctl = new SpillController(today.level)
+          const r = new SpillRenderer(c)
+          r.setBackdrop(ctl.level.targets)
+          r.draw(ctl.sim.grid, 0)
         })
         .catch(() => {
           /* 2d 컨텍스트가 없거나 청크를 못 받으면 빈 유리 */

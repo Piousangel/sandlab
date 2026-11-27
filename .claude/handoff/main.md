@@ -4,16 +4,16 @@
 ## 지금 상태
 - P12 컷오버 완료(#97, 11-21): prod sandlab.app = 새 셸 「Glass & Grain」(`src/ui-next/`). 72시간 판정 = 유지(DECISIONS 11-26, #108). #108 PR 머지 뒤 되돌리기 = revert PR(고위험·리뷰 2회) — `SANDLAB_UI=classic` 변수 경로는 next.config.ts가 빌드를 멈춘다.
 - 72시간 확인 기한(11-23) 지남 — 판정 기록 없음. 지표 11-25(7일): landing 66 · first_stroke 14 · daily_start 16 · challenge_start 26 · challenge_clear 21 · gpu_unsupported 5 · 첫 붓기율 55%(11/20). 컷오버 전(11-22 파일): 46 · 2 · 8 · 15 · 8 · 8 → 핵심 흐름 끊김 없음, 실패 신호 늘지 않음(표본 작음).
-- 11-21 이후 main 머지 0(지표 커밋만) — 루틴 한도·운영안 v2 재편 중.
 - PR CI 초록 = 머지 조건(typecheck·lint:ui·contrast·margolus / vitest unit·sim / spill:verify 2갈래 / prod 빌드·verify-ads·갤러리 API / build:preview), 만성 실패 0.
 - 광고: `ADS_ENABLED = false`(ads/config.ts), AdSense 결과 대기. 재심사 신청 금지(사람 몫).
 - 오너 11-24: S1 = /play 월드 1~2 챌린지를 Steam 「Sandcastle Demo」급으로 — 1-1~1-3 버티컬 슬라이스 → 오너 10분 플레이 승인 → 확산.
 
 ## 진행 중·열린 PR
-- [S3] #135 오늘의 레벨 2-3 Plank Bridge(W2 셋째, 불 없음·Line 판자 첫 출시) + 공략 — PR review, 15:37 리뷰 머지 대기. 다음 S3: 2-4(스펙 3.3 Oil Film — 기름막 점화, salts-16 100%가 게이트). 판자 실측 수치는 PR 본문.
-- #130 `card/104-slice-g3-score` [S1 prepro] 슬라이스 관문 1 라운드 1 **보류**(A 5.5·B 6.2·C 5.3, 통과 0) + r2 요청 B2·A2(목표 = 셀 영역 틴트·윤곽) — 문서 등급, review. 머지 → gen-assets → #104 r2 채점. r2도 미달이면 결정 요청 `S1 보드 방향`(B 밝은 종이 / A 어두운 따뜻한 / 현 크롬 + 목표 규칙만).
+- [S3] 2-3 Plank Bridge 머지·출시(#136, 11-27). 다음 S3: 2-4(스펙 3.3 Oil Film — 기름막 점화, salts-16 100%가 게이트).
+- #104 [S1 prepro] 관문 1 r1·r2 미달(#130·#138 머지) → blocked, 결정 요청 `S1 보드 방향`(기본안 2: impl-map A2 상수를 실제 렌더로 캡처해 채점) — open.json 미등록, 08시 창에 올릴 것.
 - #131 `card/131-daily-d2-g3-score` [S1 prepro] 데일리 D2 관문 1 라운드 1 **보류**(A 6.2·B 7.0·C 6.6·현 5.2, 통과 0) + r2 요청 B2·B3(flash 2장, 오늘 층 2배·팔레트 색만) — PR #134 머지(11-27 21:37 리뷰) → gen-assets → 다음 S1 기획 run이 r2 채점. 미달이면 결정 요청 `데일리 D2 방향`.
-- #132 `card/132-slice-impl-map` [S1 prepro] slice 구현 지도 `docs/design/challenge-v2/slice-impl-map.md` — 문서 등급, review. 요점: 목표 셀 영역 = `paintCells` 빈 셀을 레벨 로드 때 구운 backdrop 배열로(프레임 비용 0), 지금 재료색은 B2·A2 둘 다 3:1 미달 → 테마 팔레트 덮기 필수, B2는 재료끼리 휘도 상한 ≈4.1(흑백에서 물↔흙 붙음), A2는 여유 큼. PR ① 배경·목표 ② 재료 명암·HUD ③ 클리어(polish).
+- #132 구현 지도 머지(#137) `docs/design/challenge-v2/slice-impl-map.md` — 목표 셀 영역 = backdrop, 재료색 테마 덮기 필수(B2 휘도 상한 ≈4.1), PR ① 배경·목표 ② 재료 명암·HUD ③ 클리어.
+- #139 `card/139-target-backdrop` [S1 slice] 목표 = 셀 영역 backdrop(지도 ①의 방향 무관 부분, 01:07 작업 루틴이 카드 생성) — 제품 등급, review. `SpillRenderer.setBackdrop(targets)`·`paintCells(…, backdrop)`·덮개 `skipTargetStroke`. 테마 팔레트 값·그라데이션·솔리드 명암(②)은 `S1 보드 방향` 결정 뒤. 대비 쌍은 check-contrast PAIRS hex(backdrop.test.ts가 일치 확인).
 - 열린 카드: #104 S1 prepro(ready, r2 채점 16:07) · #132 S1 prepro(review) · #112 S2(ready, 2-2 노트 빈 절 먼저) · #115·#117·#105 S2(ready).
 - 11-26 머지: #119(classic 삭제, high-risk) · #116·#128(#112 1·2단계) · #124(D2 브리프) · #127(2-2 Fuse) · #107(슬라이스 프리프로). #119 후속 메모: deploy.yml 41행 낡은 주석·고아 `fetchHist`(카드 없음, 고위험 경로라 S1 뒤).
 
