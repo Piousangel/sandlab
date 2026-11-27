@@ -72,7 +72,9 @@ export function DailyStart({ dayNumber, level, solved, onStart, children }: Dail
     try {
       // 시작 전 판(틱 0) 한 장만 그린다 — 시뮬은 돌리지 않는다
       const ctl = new SpillController(level)
-      new SpillRenderer(c).draw(ctl.sim.grid, 0)
+      const r = new SpillRenderer(c)
+      r.setBackdrop(ctl.level.targets)
+      r.draw(ctl.sim.grid, 0)
     } catch {
       /* 2d 컨텍스트가 없으면 빈 유리만 보인다 */
     }
