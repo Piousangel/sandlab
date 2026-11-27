@@ -4,6 +4,7 @@ import type { LevelGuide } from '@/lib/spill/guide/types'
 // 레벨 맵·par가 바뀌면 이 글도 다시 확인한다. 수치(par·목표량)는 페이지가 레벨 정의에서 직접 그린다.
 const D = '2026-11-18'
 const D2 = '2026-11-26' // 2-2: 불꽃 276칸 전수·도화선 행별·불꽃 위치별 실측(evaluate)
+const D3 = '2026-11-27' // 2-3: 구덩이 수평 판자 293개 전수(행·길이별 시간)·기울기·짧은 판자 실측(evaluate)
 
 export const W2_GUIDES: LevelGuide[] = [
   {
@@ -85,5 +86,44 @@ export const W2_GUIDES: LevelGuide[] = [
       },
     ],
     hints: ['Fire needs a road between the two doors.', 'Stretch the fuse under both plugs, then put the spark right against the cord.'],
+  },
+  {
+    id: '2-3',
+    title: '2-3 Plank Bridge guide: lay one plank across the pit, high and level',
+    description: 'Sandlab Spill 2-3 Plank Bridge solved: span the whole pit with one level plank just under the ledge. Why slopes, gaps and deep bridges cost you.',
+    published: D3,
+    updated: D3,
+    lesson: 'Planks are solid ground before they are fuel: a level plank that spans a gap carries water like stone would.',
+    sections: [
+      {
+        heading: 'Quick solution',
+        paragraphs: [
+          'Drag your single plank flat across the full width of the pit, one row below the top of the left ledge, and let it rest one square onto the far shelf. Water rolls off the ledge, runs over your bridge, drops onto the lower right shelf and pours into the pot. That placement was the fastest we found, 3.5 seconds. Nothing burns in this level; there is no spark at all.',
+          'Plank Bridge is the third stage of world two. A tall pool rests on a ledge at the upper left. Where the ledge stops, a pit eight tiles wide falls away into the dark. On the far side, a little lower than the ledge, a stone shelf holds a deep pot. Without help the pool simply empties down the hole and the run is called stuck after roughly fifteen and a half seconds.',
+        ],
+      },
+      {
+        heading: 'Close the gap completely',
+        paragraphs: [
+          'We tried every flat plank inside the pit, 293 placements of different lengths and heights, and 35 of them cleared. The quick ones all began at the lip of the ledge and reached the far side with no crack at either end. Leave a one square opening and a thin stream pours through it the whole time. The pot still fills in the end, but those runs took between seven and a half and twelve and a half seconds, far beyond par.',
+          'Slopes are a trap. A plank drawn at forty five degrees, rising or falling, is built from stepped squares, and water slips through the corners between them. All four slanted bridges we measured lost the pool into the pit.',
+        ],
+      },
+      {
+        heading: 'Height decides the clock',
+        paragraphs: [
+          'A level, full width plank works anywhere from the ledge row down to about seventeen rows below it, but the time climbs steadily with depth. A low bridge turns the pit into a basin that must fill before water can spill over the far lip. One or two rows under the ledge took 3.8 seconds. Six rows under the ledge took close to six, ten rows under near eight, and the deepest working row needed over thirteen.',
+          'Below that the pool runs out before the basin is full. Water just sits on your plank, nothing reaches the pot, and the run stalls.',
+          'Placed exactly level with the ledge top, the bridge works but is slower than one row lower, about 4.7 seconds, because water piles at the joint before it moves on.',
+        ],
+      },
+      {
+        heading: 'Chasing the par time',
+        paragraphs: [
+          'Par for this stage is one move. For the full score you also need to beat the par time, and only bridges one or two rows below the ledge top do it. Stretching the plank one square past the pit onto the far shelf shaves a little more, since water lands further along and slides straight down. If your bridge clears but feels sluggish, check both ends for a crack, raise it a row, and run it again.',
+        ],
+      },
+    ],
+    hints: ['Water needs a floor where the ledge ends.', 'Lay the plank flat from wall to wall, just below the height of the ledge.'],
   },
 ]

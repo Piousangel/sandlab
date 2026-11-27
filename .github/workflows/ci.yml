@@ -66,8 +66,11 @@ jobs:
         include:
           - part: 1-8 Cascade
             args: 1-8
+          # 2-3은 판자 후보 13363개 중 5000개 표본이 15초 정체까지 돌아 로컬 4코어 13분 — 나머지 갈래에 넣으면 25분을 넘는다(#136).
+          - part: 2-3 Plank Bridge
+            args: 2-3
           - part: 나머지 전 레벨
-            args: --exclude 1-8
+            args: --exclude 1-8,2-3
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
