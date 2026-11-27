@@ -1,4 +1,23 @@
 {
   "version": 1,
-  "decisions": []
+  "decisions": [
+    {
+      "id": "D-1128-01",
+      "site": "sandlab",
+      "title": "S1 보드 방향",
+      "options": [
+        "현 크롬 유지 + 목표 셀 규칙(틴트·1셀 윤곽·눈금, PR #140)만 적용",
+        "impl-map A2 팔레트를 실제 렌더로 캡처해 같은 격자 절차로 채점, 통과 시 그 색으로 slice(이미지 생성 없음) — 카드 #142",
+        "B 밝은 종이 보드로 진행(흑백 물↔흙 분리 상한 ≈4.1 감수)"
+      ],
+      "default": 2,
+      "deadline": "2026-11-28T13:30+09:00",
+      "reversible": true,
+      "highRisk": false,
+      "reason": "관문 1 r1·r2 모두 미달(r2 B2 6.0·A2 6.5), 이미지 모델이 배치·팔레트·크롬을 동시에 못 지켜 r3 비권장(#104·#138)",
+      "status": "open",
+      "answer": null,
+      "slackTs": "1795811992.529019"
+    }
+  ]
 }
